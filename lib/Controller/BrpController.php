@@ -604,7 +604,7 @@ class BrpController extends Controller {
 			return new JSONResponse(
 				[
 					'errorCode' => 'brp-unavailable',
-					'errorMessage' => $this->l10n->t('BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.'),
+					'errorMessage' => $this->unavailableMessage(responseCode: $fetch->result->responseCode),
 					'responseInCache' => false,
 					'lookupRequestId' => $requestUuid,
 				],
@@ -623,6 +623,23 @@ class BrpController extends Controller {
 			Http::STATUS_OK
 		);
 	}//end lookupResponse()
+
+	/**
+	 * Why a lookup could not be answered: no working integriq source, or the BRP is down.
+	 *
+	 * @param int|null $responseCode The failed lookup's status.
+	 *
+	 * @return string The translated message.
+	 *
+	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#scenario-without-integriq-a-lookup-fails-and-says-why
+	 */
+	private function unavailableMessage(?int $responseCode): string {
+		if ($responseCode === HaalCentraalClientInterface::NO_SOURCE_STATUS) {
+			return $this->l10n->t('BRP lookups go through integriq. Ask your administrator to set up the BRP connection there.');
+		}
+
+		return $this->l10n->t('BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.');
+	}//end unavailableMessage()
 
 	/**
 	 * POST /api/brp/contact/{id}/reveal-address — reveal a geheimhouding adres

@@ -96,7 +96,6 @@ class BsnSensitiveParameterTest extends TestCase {
 			[MailboxResolver::class, 'resolve', 'bsn'],
 			[HaalCentraalClient::class, 'lookupPersoon', 'bsn'],
 			[BsnLookup::class, '__construct', 'bsn'],
-			[HaalCentraalClient::class, 'lookupRequestOptions', 'bsn'],
 			[BrpLeafResults::class, 'askedPerson', 'bsn'],
 			[BsnValidationService::class, 'validate', 'bsnInput'],
 			[BsnValidationService::class, 'elevenTestModulo', 'bsnInput'],

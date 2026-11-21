@@ -34,11 +34,14 @@ audit-record (`actie: brp-adres-onthuld`).
 
 ## Voor admins
 
-### Configureren van HaalCentraal
-Onder *Beheerinstellingen → Pipelinq* zijn de BRP-instellingen te configureren
-via de REST-API `/api/brp/settings`:
-- OAuth2 endpoint, client ID en client secret (versleuteld via NC ICrypto).
-- Pad naar mTLS-certificaat, key en CA-bundle (PEM, op het host-filesystem).
+### De BRP-koppeling staat in integriq
+De koppeling met Haal Centraal (basis-URL, OAuth2-gegevens en het
+mTLS-certificaat) beheer je in integriq, op de bron `brp-haalcentraal`; de
+geheimen staan in keepiq. Pipelinq roept Haal Centraal niet zelf aan. Zonder
+werkende bron in integriq faalt een opvraging met de melding "BRP-opvragingen
+lopen via integriq. Vraag uw beheerder de BRP-koppeling daar in te richten."
+
+Wat pipelinq zelf bewaart, stel je in via de REST-API `/api/brp/settings`:
 - Cache TTL (default 24h) en retentie-termijn (default 7 dagen).
 - Lijst toegestane groepen (default `behandelaar-burgerzaken`, `behandelaar-avg`).
 
@@ -65,7 +68,7 @@ het secret wordt **éénmalig** in de response getoond en daarna alleen als
 | **AVG art. 30** (verwerkingsregister) | Elke bevraging schrijft een `BsnAuditRecord` (immutable schema). |
 | **Wet BRP art. 3.3** | Doelbinding wordt vastgelegd in het LookupVerzoek en in elk AuditRecord. |
 | **BSN-masking** | Raw BSN gaat NOOIT in logs/URLs/cookies/responses. Alleen `***XXXX*` of SHA-256-hash. |
-| **HaalCentraal API v2.0 / RvIG-aansluitvoorwaarden** | OAuth2 client_credentials + mutual TLS (PKIoverheid). |
+| **HaalCentraal API v2.0 / RvIG-aansluitvoorwaarden** | OAuth2 client_credentials + mutual TLS (PKIoverheid), door integriq op de bron `brp-haalcentraal`. |
 
 ## Architectuur
 
@@ -77,7 +80,7 @@ Contact-detail → BSN input → 11-proef (client-side)
 POST /api/brp/lookup → BrpController
    ├─ BsnValidationService.validate (server-side defense)
    ├─ BrpCacheService.get → cache-hit pad
-   ├─ HaalCentraalClient.lookupPersoon → OAuth2 + mTLS
+   ├─ HaalCentraalClient.lookupPersoon → integriq-bron brp-haalcentraal
    ├─ OptOutService.recordFromBrpResponse (indicatieGeheim)
    ├─ Contact stamp (verifiedBSN, brpPersoonId, geheimhouding)
    └─ BsnAuditService.recordLookup (altijd, ook bij errors)
@@ -106,7 +109,8 @@ Volledige specs en acceptance criteria staan in
   raw BSN bestaat alleen in de geheugenscope van een enkele request.
 - **`hash_equals` voor HMAC**: webhook-signature-vergelijking is timing-attack-safe.
 - **mTLS afgedwongen door de RvIG endpoint**: client-cert is verplicht per
-  HaalCentraal-aansluitvoorwaarden.
+  HaalCentraal-aansluitvoorwaarden; integriq zet de verbinding op, keepiq
+  bewaart het certificaat.
 - **Geen BSN in URL**: alle endpoints accepteren BSN in de request-body (POST);
   routes refereren alleen aan opaque UUID's voor `gekoppeldContact` /
   `gekoppeldVerzoek`.

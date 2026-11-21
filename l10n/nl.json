@@ -10246,6 +10246,7 @@
             "%n ontvanger heeft geen waarde voor {variable}",
             "%n ontvangers hebben geen waarde voor {variable}"
         ],
-        "%n recipients have no value for {variable}": "%n ontvangers hebben geen waarde voor {variable}"
+        "%n recipients have no value for {variable}": "%n ontvangers hebben geen waarde voor {variable}",
+        "BRP lookups go through integriq. Ask your administrator to set up the BRP connection there.": "BRP-opvragingen lopen via integriq. Vraag uw beheerder de BRP-koppeling daar in te richten."
     }
 }
