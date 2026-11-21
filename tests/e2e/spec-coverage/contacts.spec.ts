@@ -18,7 +18,7 @@ import {
 	trackPipelinqErrors,
 } from '../helpers/pipelinq.ts'
 
-// @e2e openspec/specs/contacts-sync/spec.md#contacts-index
+// @e2e openspec/specs/contacts-sync/spec.md
 test('Contacts: navigates from sidebar and shows index surface', async ({
 	page,
 }) => {
@@ -37,7 +37,7 @@ test('Contacts: navigates from sidebar and shows index surface', async ({
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-// @e2e openspec/specs/contacts-sync/spec.md#contacts-list-table
+// @e2e openspec/specs/contacts-sync/spec.md
 test('Contacts: list table and primary actions render', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Contacts', /\/contacts/)
@@ -54,7 +54,7 @@ test('Contacts: list table and primary actions render', async ({ page }) => {
 	).toBeVisible()
 })
 
-// @e2e openspec/specs/contacts-sync/spec.md#contacts-create-modal
+// @e2e openspec/specs/contacts-sync/spec.md
 test('Contacts: Add Contact opens a create modal with a form', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Contacts', /\/contacts/)

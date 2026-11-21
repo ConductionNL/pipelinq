@@ -57,11 +57,11 @@ class ContactDataBuilderTest extends TestCase {
 
 		$result = $this->builder->buildClientImportData($ncContact, 'uid-123');
 
-		$this->assertSame('John Doe', $result['name']);
-		$this->assertSame('person', $result['type']);
-		$this->assertSame('john@example.com', $result['email']);
-		$this->assertSame(['Acme Corp'], $result['industry']);
-		$this->assertSame('uid-123', $result['contactsUid']);
+		$this->assertSame(expected: 'John Doe', actual: $result['name']);
+		$this->assertSame(expected: 'person', actual: $result['type']);
+		$this->assertSame(expected: 'john@example.com', actual: $result['email']);
+		$this->assertSame(expected: ['Acme Corp'], actual: $result['industry']);
+		$this->assertSame(expected: 'uid-123', actual: $result['contactsUid']);
 	}//end testBuildClientImportDataPerson()
 
 	/**
@@ -77,8 +77,8 @@ class ContactDataBuilderTest extends TestCase {
 
 		$result = $this->builder->buildClientImportData($ncContact, 'uid-456');
 
-		$this->assertSame('Acme Corp', $result['name']);
-		$this->assertSame('organization', $result['type']);
+		$this->assertSame(expected: 'Acme Corp', actual: $result['name']);
+		$this->assertSame(expected: 'organization', actual: $result['type']);
 	}//end testBuildClientImportDataOrganization()
 
 	/**
@@ -94,8 +94,8 @@ class ContactDataBuilderTest extends TestCase {
 
 		$result = $this->builder->buildClientImportData($ncContact, 'uid-789');
 
-		$this->assertSame('Jane Smith', $result['name']);
-		$this->assertSame('jane@example.com', $result['email']);
+		$this->assertSame(expected: 'Jane Smith', actual: $result['name']);
+		$this->assertSame(expected: 'jane@example.com', actual: $result['email']);
 	}//end testBuildClientImportDataArrayValues()
 
 	/**
@@ -112,10 +112,10 @@ class ContactDataBuilderTest extends TestCase {
 
 		$result = $this->builder->buildContactImportData($ncContact, 'uid-123', 'client-1');
 
-		$this->assertSame('John Doe', $result['name']);
-		$this->assertSame('john@example.com', $result['email']);
-		$this->assertSame('Developer', $result['role']);
-		$this->assertSame('client-1', $result['client']);
+		$this->assertSame(expected: 'John Doe', actual: $result['name']);
+		$this->assertSame(expected: 'john@example.com', actual: $result['email']);
+		$this->assertSame(expected: 'Developer', actual: $result['role']);
+		$this->assertSame(expected: 'client-1', actual: $result['client']);
 	}//end testBuildContactImportData()
 
 	/**
@@ -128,7 +128,7 @@ class ContactDataBuilderTest extends TestCase {
 
 		$result = $this->builder->buildContactImportData($ncContact, 'uid-456', null);
 
-		$this->assertArrayNotHasKey('client', $result);
+		$this->assertArrayNotHasKey(key: 'client', array: $result);
 	}//end testBuildContactImportDataNoClient()
 
 	/**
@@ -144,8 +144,8 @@ class ContactDataBuilderTest extends TestCase {
 
 		$result = $this->builder->buildClientImportData($ncContact, 'uid-x');
 
-		$this->assertSame('SomeCorp', $result['name']);
-		$this->assertSame('organization', $result['type']);
+		$this->assertSame(expected: 'SomeCorp', actual: $result['name']);
+		$this->assertSame(expected: 'organization', actual: $result['type']);
 	}//end testBuildClientImportDataEmptyNameUsesOrg()
 
 	/**
@@ -170,22 +170,22 @@ class ContactDataBuilderTest extends TestCase {
 
 		$result = $this->builder->buildClientImportData($ncContact, 'uid-typed');
 
-		$this->assertSame('john@work.example', $result['email']);
-		$this->assertSame('+31611111111', $result['phone']);
+		$this->assertSame(expected: 'john@work.example', actual: $result['email']);
+		$this->assertSame(expected: '+31611111111', actual: $result['phone']);
 
 		$this->assertSame(
-			[
+			expected: [
 				['kind' => 'work', 'value' => 'john@work.example', 'primary' => true, 'verified' => false],
 				['kind' => 'private', 'value' => 'john@home.example', 'primary' => false, 'verified' => false],
 			],
-			$result['emails']
+			actual: $result['emails']
 		);
 		$this->assertSame(
-			[
+			expected: [
 				['kind' => 'mobile', 'value' => '+31611111111', 'primary' => true, 'verified' => false],
 				['kind' => 'work', 'value' => '+31622222222', 'primary' => false, 'verified' => false],
 			],
-			$result['phones']
+			actual: $result['phones']
 		);
 	}//end testBuildClientImportDataTypedEmailsAndPhones()
 
@@ -201,8 +201,8 @@ class ContactDataBuilderTest extends TestCase {
 		$result = $this->builder->buildClientImportData($ncContact, 'uid-untyped');
 
 		$this->assertSame(
-			[['kind' => 'other', 'value' => '+31699999999', 'primary' => true, 'verified' => false]],
-			$result['phones']
+			expected: [['kind' => 'other', 'value' => '+31699999999', 'primary' => true, 'verified' => false]],
+			actual: $result['phones']
 		);
 	}//end testBuildClientImportDataUntypedPhoneMapsToOther()
 
@@ -227,12 +227,15 @@ class ContactDataBuilderTest extends TestCase {
 		$result = $this->builder->buildClientImportData($ncContact, 'uid-social');
 
 		$this->assertSame(
-			[
-				['network' => 'linkedin', 'handle' => '', 'url' => 'https://linkedin.com/in/jane', 'verified' => false, 'followedByUs' => false, 'followsUs' => false],
+			expected: [
+				[
+					'network' => 'linkedin', 'handle' => '', 'url' => 'https://linkedin.com/in/jane',
+					'verified' => false, 'followedByUs' => false, 'followsUs' => false,
+				],
 				['network' => 'mastodon', 'handle' => '@jane@mastodon.social', 'url' => '', 'verified' => false, 'followedByUs' => false, 'followsUs' => false],
 				['network' => 'other', 'handle' => 'janedoe', 'url' => '', 'verified' => false, 'followedByUs' => false, 'followsUs' => false],
 			],
-			$result['socialProfiles']
+			actual: $result['socialProfiles']
 		);
 	}//end testBuildClientImportDataSocialProfiles()
 
@@ -246,11 +249,11 @@ class ContactDataBuilderTest extends TestCase {
 	public function testBuildClientImportDataNoChannelsYieldsEmptyArrays(): void {
 		$result = $this->builder->buildClientImportData(['FN' => 'No Channels'], 'uid-none');
 
-		$this->assertSame([], $result['emails']);
-		$this->assertSame([], $result['phones']);
-		$this->assertSame([], $result['socialProfiles']);
-		$this->assertArrayNotHasKey('email', $result);
-		$this->assertArrayNotHasKey('phone', $result);
+		$this->assertSame(expected: [], actual: $result['emails']);
+		$this->assertSame(expected: [], actual: $result['phones']);
+		$this->assertSame(expected: [], actual: $result['socialProfiles']);
+		$this->assertArrayNotHasKey(key: 'email', array: $result);
+		$this->assertArrayNotHasKey(key: 'phone', array: $result);
 	}//end testBuildClientImportDataNoChannelsYieldsEmptyArrays()
 
 	/**
@@ -267,10 +270,117 @@ class ContactDataBuilderTest extends TestCase {
 
 		$result = $this->builder->buildContactImportData($ncContact, 'uid-123', null);
 
-		$this->assertSame('john@work.example', $result['email']);
+		$this->assertSame(expected: 'john@work.example', actual: $result['email']);
 		$this->assertSame(
-			[['kind' => 'work', 'value' => 'john@work.example', 'primary' => true, 'verified' => false]],
-			$result['emails']
+			expected: [['kind' => 'work', 'value' => 'john@work.example', 'primary' => true, 'verified' => false]],
+			actual: $result['emails']
 		);
 	}//end testBuildContactImportDataTypedEmails()
+
+	/**
+	 * A nickname on the Nextcloud contact arrives as the preferred name.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-a-person-carries-a-preferred-name-req-cpn-001
+	 */
+	public function testImportReadsTheNicknameAsThePreferredName(): void {
+		$contact = $this->builder->buildContactImportData(['FN' => 'Johanna de Wit', 'NICKNAME' => ['Hanneke']], 'uid-1', null);
+		$person = $this->builder->buildClientImportData(['FN' => 'Johannes Jansen', 'NICKNAME' => ' Jan '], 'uid-2');
+
+		$this->assertSame(expected: 'Hanneke', actual: $contact['preferredName']);
+		$this->assertSame(expected: 'Jan', actual: $person['preferredName']);
+		$this->assertSame(expected: 'person', actual: $person['type']);
+	}//end testImportReadsTheNicknameAsThePreferredName()
+
+	/**
+	 * A nickname removed in the Contacts app clears the preferred name; a
+	 * contact that never carried one leaves the field out.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-a-person-carries-a-preferred-name-req-cpn-001
+	 */
+	public function testImportClearsOrLeavesThePreferredName(): void {
+		$cleared = $this->builder->buildContactImportData(['FN' => 'Johanna de Wit', 'NICKNAME' => ''], 'uid-1', null);
+		$absent = $this->builder->buildContactImportData(['FN' => 'Johanna de Wit'], 'uid-1', null);
+
+		$this->assertArrayHasKey(key: 'preferredName', array: $cleared);
+		$this->assertSame(expected: '', actual: $cleared['preferredName']);
+		$this->assertArrayNotHasKey(key: 'preferredName', array: $absent);
+	}//end testImportClearsOrLeavesThePreferredName()
+
+	/**
+	 * An organisation takes no preferred name from its card.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/clients-preferred-name/specs/client-preferred-name/spec.md#requirement-a-person-carries-a-preferred-name-req-cpn-001
+	 */
+	public function testImportGivesAnOrganisationNoPreferredName(): void {
+		$organisation = $this->builder->buildClientImportData(['FN' => 'Test Corp', 'ORG' => 'Test Corp', 'NICKNAME' => 'TC'], 'uid-3');
+
+		$this->assertSame(expected: 'organization', actual: $organisation['type']);
+		$this->assertArrayNotHasKey(key: 'preferredName', array: $organisation);
+	}//end testImportGivesAnOrganisationNoPreferredName()
+	/**
+	 * Array-shaped EMAIL, TEL and X-SOCIALPROFILE items are read without
+	 * casting the array to a string, so the build raises no PHP warning.
+	 *
+	 * @return void
+	 */
+	public function testTypedItemsBuildWithoutWarnings(): void {
+		$ncContact = [
+			'FN' => 'Jane',
+			'EMAIL' => [['type' => 'WORK', 'value' => 'jane@work.example'], 'jane@home.example'],
+			'TEL' => [['type' => 'CELL', 'value' => '+31600000000']],
+			'X-SOCIALPROFILE' => [['type' => 'linkedin', 'value' => 'https://linkedin.com/in/jane'], 'janedoe'],
+		];
+
+		$warnings = [];
+		set_error_handler(
+			static function (int $errno, string $message) use (&$warnings): bool {
+				$warnings[] = $message;
+				return true;
+			}
+		);
+		try {
+			$result = $this->builder->buildClientImportData(ncContact: $ncContact, uid: 'uid-warn');
+		} finally {
+			restore_error_handler();
+		}
+
+		$this->assertSame(expected: [], actual: $warnings);
+		$this->assertSame(expected: ['jane@work.example', 'jane@home.example'], actual: array_column($result['emails'], 'value'));
+		$this->assertSame(expected: ['+31600000000'], actual: array_column($result['phones'], 'value'));
+		$this->assertCount(expectedCount: 2, haystack: $result['socialProfiles']);
+	}//end testTypedItemsBuildWithoutWarnings()
+
+	/**
+	 * Golden: the network type is matched case-insensitively, an http URL is a url, an untyped
+	 * item is `other`, and an empty value is dropped.
+	 *
+	 * @return void
+	 */
+	public function testSocialProfileEdgeCasesAreExact(): void {
+		$result = $this->builder->buildClientImportData(
+			[
+				'FN' => 'Jane',
+				'X-SOCIALPROFILE' => [
+					['type' => 'LinkedIn', 'value' => 'http://linkedin.com/in/jane'],
+					'janedoe',
+					['type' => 'x', 'value' => ''],
+				],
+			],
+			'uid-edge'
+		);
+
+		$this->assertSame(
+			expected: [
+				['network' => 'linkedin', 'handle' => '', 'url' => 'http://linkedin.com/in/jane', 'verified' => false, 'followedByUs' => false, 'followsUs' => false],
+				['network' => 'other', 'handle' => 'janedoe', 'url' => '', 'verified' => false, 'followedByUs' => false, 'followsUs' => false],
+			],
+			actual: $result['socialProfiles']
+		);
+	}//end testSocialProfileEdgeCasesAreExact()
 }//end class

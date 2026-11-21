@@ -13,15 +13,15 @@
 import { generateUrl } from '@nextcloud/router'
 
 /**
- * Perform a JSON request against a pipelinq export endpoint.
+ * Perform a request against a pipelinq export endpoint. No export endpoint
+ * takes a body.
  *
  * @param {string} path The path under /apps/pipelinq/api/export.
  * @param {string} method The HTTP method.
- * @param {object} [body] The optional JSON body.
  * @return {Promise<object>} The parsed JSON response.
  * @throws {Error} When the response is not ok (message from the server error).
  */
-async function request(path, method, body) {
+async function request(path, method) {
 	const options = {
 		method,
 		headers: {
@@ -29,9 +29,6 @@ async function request(path, method, body) {
 			requesttoken: OC.requestToken,
 			'OCS-APIREQUEST': 'true',
 		},
-	}
-	if (body !== undefined) {
-		options.body = JSON.stringify(body)
 	}
 
 	const response = await fetch(
@@ -86,6 +83,17 @@ export const exportApi = {
 	 */
 	disableJob(id) {
 		return request(`/jobs/${id}/disable`, 'POST')
+	},
+
+	/**
+	 * A cron expression in words, in the user's Dutch or English.
+	 *
+	 * @param {string} expression The cron expression.
+	 * @return {Promise<object>} { expression, description, valid }.
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+	 */
+	describeSchedule(expression) {
+		return request(`/schedule/describe?expression=${encodeURIComponent(expression)}`, 'GET')
 	},
 
 	/**

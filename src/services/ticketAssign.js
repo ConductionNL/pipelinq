@@ -9,7 +9,7 @@
  * then opens it, because the next thing you do with a ticket you picked up
  * is work on it. TicketDetail offers the same action as a header action.
  *
- * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
+ * @spec openspec/specs/my-work/spec.md
  */
 
 /**
@@ -18,7 +18,7 @@
  * @param {string} id The ticket id.
  * @return {string} The app-relative path.
  *
- * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
+ * @spec openspec/specs/my-work/spec.md
  */
 export function assignToMePath(id) {
 	return `/apps/pipelinq/api/tickets/${encodeURIComponent(id)}/assign-to-me`
@@ -36,7 +36,7 @@ export function assignToMePath(id) {
  * @param {(app: string, text: string) => string} deps.translate The `t()` function.
  * @return {Record<string, (scope: {item?: object}) => Promise<boolean>>} The handlers.
  *
- * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
+ * @spec openspec/specs/my-work/spec.md
  */
 export function createTicketHandlers({
 	generateUrl,

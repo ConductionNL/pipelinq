@@ -35,7 +35,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
  */
 
 declare(strict_types=1);
@@ -46,51 +46,30 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCA\Pipelinq\Mcp\McpAnswer;
+use OCA\Pipelinq\Mcp\McpRecordUpdate;
+use OCA\Pipelinq\Mcp\McpTransition;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Resolver + read/write facade for the unified ticket schema.
  *
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods) Every curated ticket MCP tool is a public method here:
+ *   OpenRegister's attribute scanner reflects this class by contract (PipelinqScannableServices).
+ * @SuppressWarnings(PHPMD.TooManyMethods) The same tool surface, one method per lifecycle transition.
  */
-class TicketService {
-	/**
-	 * Ticket subtype: an inbound request / demand (formerly the `request` schema).
-	 *
-	 * @var string
-	 */
-	public const TYPE_REQUEST = 'request';
-
-	/**
-	 * Ticket subtype: a complaint / klacht (formerly the `complaint` schema).
-	 *
-	 * @var string
-	 */
-	public const TYPE_COMPLAINT = 'complaint';
-
-	/**
-	 * Ticket subtype: a logged interaction (formerly the `contactmoment` schema).
-	 *
-	 * @var string
-	 */
-	public const TYPE_CONTACTMOMENT = 'interaction';
-
-	/**
-	 * Every ticket subtype, in discriminator order.
-	 *
-	 * @var array<int, string>
-	 */
-	public const TYPES = [
-		self::TYPE_REQUEST,
-		self::TYPE_COMPLAINT,
-		self::TYPE_CONTACTMOMENT,
-	];
+class TicketService implements TicketServiceInterface {
 
 	/**
 	 * Every `format: date-time` property on the ticket schema.
@@ -107,20 +86,6 @@ class TicketService {
 	];
 
 	/**
-	 * The directions a contact moment can run in.
-	 *
-	 * Kept in step with `direction` in
-	 * lib/Settings/register.d/98-contactmoment-direction.json.
-	 *
-	 * @var array<int, string>
-	 */
-	public const DIRECTIONS = [
-		'inbound',
-		'outbound',
-		'internal',
-	];
-
-	/**
 	 * Properties that are required on one facet of the ticket supertype only.
 	 *
 	 * OpenRegister validates `required` per schema, and `ticket` holds three
@@ -131,7 +96,7 @@ class TicketService {
 	 *
 	 * @var array<string, array<int, string>>
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
 	 */
 	public const FACET_REQUIRED = [
 		self::TYPE_CONTACTMOMENT => ['direction'],
@@ -146,6 +111,7 @@ class TicketService {
 	 */
 	private const TYPE_VOCABULARY = [
 		self::TYPE_REQUEST => '/\b(request|requests|verzoek|verzoeken|aanvraag|aanvragen)\b/u',
+		self::TYPE_MELDING => '/\b(melding|meldingen)\b/u',
 		self::TYPE_CONTACTMOMENT => '/\b(contactmoment|contactmomenten|contact)\b/u',
 	];
 
@@ -156,12 +122,15 @@ class TicketService {
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 * @param McpAnswer $mcp Shapes what the MCP tools on this service answer.
+	 * @param McpTransition|null $transitions Runs the ticket's declared lifecycle transitions;
+	 *                                        null answers `not_configured` from the transition tools.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly McpAnswer $mcp,
+		private readonly ?McpTransition $transitions = null,
 	) {
 	}//end __construct()
 
@@ -172,7 +141,7 @@ class TicketService {
 	 *
 	 * @throws RuntimeException If OpenRegister is not available.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		// Injected (ADR-083): a property read throws nothing, so the old
@@ -193,10 +162,10 @@ class TicketService {
 	 *
 	 * @return string The register id ('' when unconfigured).
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function getRegisterId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "register" is not configured; ticket reads/writes are refused, not run unscoped'
@@ -219,10 +188,10 @@ class TicketService {
 	 *
 	 * @return string The schema id ('' when unconfigured).
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function getSchemaId(): string {
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'ticket_schema', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ticket_schema', '');
 		if ($schemaId === '') {
 			$this->logger->warning(
 				'Pipelinq: app-config "ticket_schema" is not configured; ticket reads/writes are refused, not run unscoped'
@@ -237,7 +206,7 @@ class TicketService {
 	 *
 	 * @return bool True when the ticket surface is usable.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function isConfigured(): bool {
 		return $this->getRegisterId() !== '' && $this->getSchemaId() !== '';
@@ -255,7 +224,7 @@ class TicketService {
 	 * @return string|null One of the TYPE_* constants, or null when the text
 	 *                     names no subtype.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function detectTypeInText(string $text): ?string {
 		$lower = mb_strtolower($text);
@@ -277,12 +246,13 @@ class TicketService {
 	 * @param string $ticketType One of the TYPE_* constants.
 	 * @param array<string, mixed> $extraFilters Additional OR filters merged in.
 	 * @param int $limit Max rows.
+	 * @param array<string, string> $sort Order, as `[field => asc|desc]`. Empty keeps the store's own order.
 	 *
 	 * @return array<int, mixed> The matching ticket rows.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
 	 */
-	public function findByType(string $ticketType, array $extraFilters = [], int $limit = 10000): array {
+	public function findByType(string $ticketType, array $extraFilters = [], int $limit = 10000, array $sort = []): array {
 		if ($this->isConfigured() === false) {
 			return [];
 		}
@@ -296,8 +266,25 @@ class TicketService {
 			$extraFilters
 		);
 
+		$query = ['filters' => $filters, 'limit' => $limit];
+		if ($sort !== []) {
+			$query['sort'] = $sort;
+		}
+
+		return $this->findAllLogged(query: $query, ticketType: $ticketType);
+	}//end findByType()
+
+	/**
+	 * The tickets matching the query, none (logged) when OpenRegister fails.
+	 *
+	 * @param array<string, mixed> $query      The findAll query.
+	 * @param string               $ticketType The subtype, for the log.
+	 *
+	 * @return array<int, mixed> The matching ticket rows.
+	 */
+	private function findAllLogged(array $query, string $ticketType): array {
 		try {
-			return $this->getObjectService()->findAll(['filters' => $filters, 'limit' => $limit]);
+			return $this->getObjectService()->findAll($query);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'TicketService.findByType failed',
@@ -305,7 +292,7 @@ class TicketService {
 			);
 			return [];
 		}
-	}//end findByType()
+	}//end findAllLogged()
 
 	/**
 	 * Create or update a ticket of one subtype.
@@ -329,7 +316,7 @@ class TicketService {
 	 *   because callers catch it to answer 400, and without the tag static
 	 *   analysis reads that catch as dead.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	public function save(string $ticketType, array $payload, ?string $uuid = null): object {
 		if ($this->isConfigured() === false) {
@@ -341,14 +328,70 @@ class TicketService {
 		$this->assertFacetFields(ticketType: $ticketType, payload: $payload);
 
 		$payload['ticketType'] = $ticketType;
+		if ($uuid === null) {
+			$payload = $this->withClientMunicipality(payload: $payload);
+		}
 
 		return $this->getObjectService()->saveObject(
 			object: $payload,
-			register: $this->getRegisterId(),
-			schema: $this->getSchemaId(),
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $this->getRegisterId(), schema: $this->getSchemaId()),
+				uuid: $uuid
+			)
 		);
 	}//end save()
+
+	/**
+	 * A new ticket without a municipality takes its client's. A municipality
+	 * given in the payload is kept, and without a client, a client without a
+	 * municipality or a client that cannot be read the payload is unchanged.
+	 *
+	 * @param array<string, mixed> $payload The new ticket's fields.
+	 *
+	 * @return array<string, mixed> The fields, with the client's municipality when it applies.
+	 *
+	 * @spec openspec/changes/requests-municipality-per-contact/specs/served-municipality/spec.md
+	 */
+	private function withClientMunicipality(array $payload): array {
+		$given = ($payload['municipality'] ?? null);
+		if (is_string($given) === true && trim($given) !== '') {
+			return $payload;
+		}
+
+		$clientId = ($payload['client'] ?? null);
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
+		if (is_string($clientId) === false || trim($clientId) === '' || $schema === '') {
+			return $payload;
+		}
+
+		try {
+			$client = $this->getObjectService()->find(
+				id: $clientId,
+				options: new ObjectFindOptions(register: $this->getRegisterId(), schema: $schema)
+			);
+		} catch (\Throwable $e) {
+			$this->logger->info(
+				'Pipelinq: the client of a new ticket could not be read; its municipality is not copied',
+				['client' => $clientId, 'exception' => $e->getMessage()]
+			);
+			return $payload;
+		}
+
+		if ($client === null) {
+			return $payload;
+		}
+
+		$municipality = ($client->getObject()['municipality'] ?? null);
+		if (is_array($municipality) === true) {
+			$municipality = ($municipality['id'] ?? ($municipality['@self']['id'] ?? null));
+		}
+
+		if (is_string($municipality) === true && trim($municipality) !== '') {
+			$payload['municipality'] = $municipality;
+		}
+
+		return $payload;
+	}//end withClientMunicipality()
 
 	/**
 	 * Refuse a write that omits a property its facet requires.
@@ -367,7 +410,7 @@ class TicketService {
 	 * @throws InvalidArgumentException When a required facet field is missing
 	 *   or carries a value the schema does not offer.
 	 *
-	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
 	 */
 	public function assertFacetFields(string $ticketType, array $payload): void {
 		foreach ((self::FACET_REQUIRED[$ticketType] ?? []) as $field) {
@@ -405,7 +448,7 @@ class TicketService {
 	 * @throws InvalidArgumentException When the set holds a duplicate, or the
 	 *   primary is not a member of it.
 	 *
-	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-one-reference-is-the-primary-one-and-it-is-named-req-cms-002
+	 * @spec openspec/specs/contactmomenten/spec.md#requirement-one-reference-is-the-primary-one-and-it-is-named-req-cms-002
 	 */
 	private function assertCaseSet(array $payload): void {
 		$set = ($payload['caseReferences'] ?? null);
@@ -413,6 +456,20 @@ class TicketService {
 			return;
 		}
 
+		$seen = $this->distinctCaseReferences(set: $set);
+		$this->assertPrimaryInCaseSet(payload: $payload, seen: $seen);
+	}//end assertCaseSet()
+
+	/**
+	 * The non-empty references of a case set, refusing a duplicate.
+	 *
+	 * @param array<mixed> $set The `caseReferences` set.
+	 *
+	 * @return array<int, string> The trimmed references.
+	 *
+	 * @throws InvalidArgumentException When the set holds a duplicate.
+	 */
+	private function distinctCaseReferences(array $set): array {
 		$seen = [];
 		foreach ($set as $reference) {
 			$reference = trim((string)$reference);
@@ -421,21 +478,33 @@ class TicketService {
 			}
 
 			if (in_array($reference, $seen, true) === true) {
-				throw new InvalidArgumentException(
-					"caseReferences already holds {$reference}; a contact moment is filed on a case once."
-				);
+				throw new InvalidArgumentException("caseReferences already holds {$reference}; a contact moment is filed on a case once.");
 			}
 
 			$seen[] = $reference;
 		}
 
+		return $seen;
+	}//end distinctCaseReferences()
+
+	/**
+	 * Refuse a primary case reference that is not a member of the set.
+	 *
+	 * @param array<string, mixed> $payload The ticket fields.
+	 * @param array<int, string>   $seen    The trimmed references of the set.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the primary is not a member of the set.
+	 */
+	private function assertPrimaryInCaseSet(array $payload, array $seen): void {
 		$primary = trim((string)($payload['primaryCaseReference'] ?? ''));
 		if ($primary !== '' && in_array($primary, $seen, true) === false) {
 			throw new InvalidArgumentException(
 				"primaryCaseReference {$primary} is not one of the cases this contact moment is filed on."
 			);
 		}
-	}//end assertCaseSet()
+	}//end assertPrimaryInCaseSet()
 
 	/**
 	 * Repair OpenRegister's read-side artefacts before a write.
@@ -454,7 +523,7 @@ class TicketService {
 	 *
 	 * @return array<string, mixed> The payload with date-times in ISO-8601.
 	 *
-	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	public function sanitizeForSave(array $payload): array {
 		foreach (self::DATE_TIME_FIELDS as $field) {
@@ -483,11 +552,13 @@ class TicketService {
 		name: 'logContactmoment',
 		subject: 'contactMoment',
 		action: 'create',
-		description: 'Log a client interaction as a contactmoment (client, channel, title and direction are required; outcome and notes are optional).',
+		description: 'Log a client interaction as a contactmoment (client, channel, title and direction are '
+			. 'required; outcome and notes are optional).',
 		readOnlyHint: false,
 		destructiveHint: false,
 		idempotentHint: false,
-		scope: 'create'
+		scope: 'create',
+		reach: 'instance'
 	)]
 	/**
 	 * Log a client interaction as a contactmoment (client, channel and title
@@ -520,64 +591,30 @@ class TicketService {
 		?string $outcome = null,
 		?string $notes = null,
 	): array {
-		$client = trim($client);
-		if ($client === '') {
-			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument client is missing.');
-		}
-
-		$channel = trim($channel);
-		if ($channel === '') {
-			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument channel is missing.');
-		}
-
-		$title = trim($title);
-		if ($title === '') {
-			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument title is missing.');
-		}
-
-		// Direction is required on a contactmoment (REQ-CMD-001) and is
-		// deliberately NOT defaulted: a tool that guessed `inbound` would
-		// assert who reached out to whom, silently and often wrongly. The
-		// parameter is optional in the SIGNATURE only, so an existing caller
-		// gets a named refusal instead of a TypeError.
-		$direction = trim($direction);
-		if ($direction === '') {
-			return $this->mcp->error(
-				code: 'invalid_arguments',
-				message: 'Required argument direction is missing.'
-			);
-		}
-
-		if (in_array($direction, self::DIRECTIONS, true) === false) {
-			return $this->mcp->error(
-				code: 'invalid_arguments',
-				message: 'Argument direction must be one of ' . implode(', ', self::DIRECTIONS) . '.'
-			);
-		}
-
-		if ($this->isConfigured() === false) {
-			return $this->mcp->error(
-				code: 'not_configured',
-				message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
-			);
-		}
-
-		$payload = [
-			'client' => $client,
-			'channel' => $channel,
-			'title' => $title,
-			'direction' => $direction,
-			'occurredAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+		$fields = [
+			'client' => trim($client),
+			'channel' => trim($channel),
+			'title' => trim($title),
+			'direction' => trim($direction),
 		];
 
-		if ($outcome !== null && $outcome !== '') {
-			$payload['outcome'] = $outcome;
+		$refusal = $this->contactmomentRefusal(fields: $fields);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		if ($notes !== null && $notes !== '') {
-			$payload['description'] = $notes;
-		}
+		$payload = $this->contactmomentPayload(fields: $fields, optional: ['outcome' => $outcome, 'description' => $notes]);
+		return $this->saveContactmoment(payload: $payload);
+	}//end logContactmoment()
 
+	/**
+	 * Save a contactmoment and answer with its id, or the MCP error.
+	 *
+	 * @param array<string, mixed> $payload The contactmoment fields.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function saveContactmoment(array $payload): array {
 		try {
 			$saved = $this->save(ticketType: self::TYPE_CONTACTMOMENT, payload: $payload);
 		} catch (\Exception $e) {
@@ -589,7 +626,445 @@ class TicketService {
 		return [
 			'ticketId' => (string)($data['id'] ?? $data['uuid'] ?? ''),
 		];
+	}//end saveContactmoment()
 
-	}//end logContactmoment()
+	/**
+	 * The refusal for an invalid logContactmoment() argument or an unconfigured app.
+	 *
+	 * @param array{client: string, channel: string, title: string, direction: string} $fields The trimmed required arguments.
+	 *
+	 * @return array<string, mixed>|null The error envelope, or null when the contactmoment may be saved.
+	 */
+	private function contactmomentRefusal(array $fields): ?array {
+		$refusal = $this->contactmomentArgumentError(fields: $fields);
+		if ($refusal !== null || $this->isConfigured() === true) {
+			return $refusal;
+		}
+
+		return $this->mcp->error(
+			code: 'not_configured',
+			message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
+		);
+	}//end contactmomentRefusal()
+
+	/**
+	 * The refusal for the first missing or invalid logContactmoment() argument.
+	 *
+	 * Direction is required on a contactmoment (REQ-CMD-001) and is
+	 * deliberately NOT defaulted: a tool that guessed `inbound` would assert
+	 * who reached out to whom, silently and often wrongly. The parameter is
+	 * optional in the SIGNATURE only, so an existing caller gets a named
+	 * refusal instead of a TypeError.
+	 *
+	 * @param array{client: string, channel: string, title: string, direction: string} $fields The trimmed required arguments.
+	 *
+	 * @return array<string, mixed>|null The error envelope, or null when every argument is valid.
+	 */
+	private function contactmomentArgumentError(array $fields): ?array {
+		foreach ($fields as $name => $value) {
+			if ($value === '') {
+				return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument ' . $name . ' is missing.');
+			}
+		}
+
+		if (in_array($fields['direction'], self::DIRECTIONS, true) === false) {
+			return $this->mcp->error(
+				code: 'invalid_arguments',
+				message: 'Argument direction must be one of ' . implode(', ', self::DIRECTIONS) . '.'
+			);
+		}
+
+		return null;
+	}//end contactmomentArgumentError()
+
+	/**
+	 * The contactmoment ticket payload; empty optional fields are left out.
+	 *
+	 * @param array<string, string>      $fields   The trimmed required arguments.
+	 * @param array<string, string|null> $optional The outcome and the notes (as `description`).
+	 *
+	 * @return array<string, mixed> The payload.
+	 */
+	private function contactmomentPayload(array $fields, array $optional): array {
+		$payload = $fields;
+		$payload['occurredAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+
+		foreach ($optional as $name => $value) {
+			if ($value !== null && $value !== '') {
+				$payload[$name] = $value;
+			}
+		}
+
+		return $payload;
+	}//end contactmomentPayload()
+
+	// The attribute sits ABOVE the docblock, which is the other way round
+	// from everywhere else in this app; see logContactmoment(). The same holds for every tool below.
+	#[McpTool(
+		name: 'createTicket',
+		subject: 'ticket',
+		action: 'create',
+		description: 'Create a request or complaint ticket. ticketType (request or complaint) and title are '
+			. 'required; client, description, priority (low, normal, high, urgent) and assignee are '
+			. 'optional. Log a contactmoment with pipelinq_logContactmoment instead.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create',
+		reach: 'instance'
+	)]
+	/**
+	 * Create a request or complaint ticket.
+	 *
+	 * Validates the arguments first, then writes through save(), which forces
+	 * the `ticketType` discriminator and normalises date-time fields.
+	 *
+	 * @param string      $ticketType  `request` or `complaint`.
+	 * @param string      $title       A short summary.
+	 * @param string|null $client      Optional client uuid.
+	 * @param string|null $description Optional description.
+	 * @param string|null $priority    Optional priority.
+	 * @param string|null $assignee    Optional Nextcloud user id of the handler.
+	 *
+	 * @return array<string, mixed> `['ticketId' => ...]`, or an MCP error envelope.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 * @orphaned-write-capability exclude MCP tool, reached by OpenRegister's AttributeToolScanner through ServiceRegistrar::MCP_SCANNABLE_SERVICES.
+	 */
+	public function createTicket(
+		string $ticketType,
+		string $title,
+		?string $client = null,
+		?string $description = null,
+		?string $priority = null,
+		?string $assignee = null,
+	): array {
+		$ticketType = trim($ticketType);
+		$fields = ['title' => trim($title), 'client' => $client, 'description' => $description, 'priority' => $priority, 'assignee' => $assignee];
+		$refusal = $this->createTicketRefusal(ticketType: $ticketType, title: $fields['title']);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		return $this->writeTicket(ticketType: $ticketType, payload: $this->records()->filled(fields: $fields), uuid: null);
+	}//end createTicket()
+
+	#[McpTool(
+		name: 'updateTicket',
+		subject: 'ticket',
+		action: 'update',
+		description: 'Change fields of an existing ticket by id: title, description, priority, assignee or '
+			. 'client. The status cannot be set here: use startTicket, completeTicket, convertTicket, '
+			. 'resolveTicket, rejectTicket or closeTicket.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Change fields of an existing ticket.
+	 *
+	 * Validates first (an id, at least one field, no `status`), reads the
+	 * ticket (a missing one is `not_found`), then saves the merged ticket
+	 * through save() under its own `ticketType`.
+	 *
+	 * @param string      $id          The ticket uuid.
+	 * @param string|null $title       New title.
+	 * @param string|null $description New description.
+	 * @param string|null $priority    New priority.
+	 * @param string|null $assignee    New handler.
+	 * @param string|null $client      New client uuid.
+	 * @param string|null $status      Refused: the state moves through the transition tools.
+	 *
+	 * @return array<string, mixed> `['ticketId' => ...]`, or an MCP error envelope.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 * @orphaned-write-capability exclude MCP tool, reached by OpenRegister's AttributeToolScanner through ServiceRegistrar::MCP_SCANNABLE_SERVICES.
+	 */
+	public function updateTicket(
+		string $id,
+		?string $title = null,
+		?string $description = null,
+		?string $priority = null,
+		?string $assignee = null,
+		?string $client = null,
+		?string $status = null,
+	): array {
+		$id = trim($id);
+		$changes = $this->records()->filled(
+			fields: [
+				'title' => trim((string)$title),
+				'description' => $description,
+				'priority' => $priority,
+				'assignee' => $assignee,
+				'client' => $client,
+			]
+		);
+		$refusal = ($this->records()->refusal(
+			id: $id,
+			changes: $changes,
+			status: $status,
+			statusRefusal: 'The status of a ticket cannot be set by updateTicket: use startTicket, completeTicket, '
+				. 'convertTicket, resolveTicket, rejectTicket or closeTicket.'
+		) ?? $this->configurationRefusal());
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$stored = $this->records()->stored(
+			find: fn (): mixed => $this->getObjectService()->find(
+				id: $id,
+				options: new ObjectFindOptions(register: $this->getRegisterId(), schema: $this->getSchemaId())
+			),
+			subject: 'ticket'
+		);
+		if (isset($stored['error']) === true) {
+			return $stored;
+		}
+
+		return $this->writeTicket(ticketType: (string)($stored['ticketType'] ?? ''), payload: array_merge($stored, $changes), uuid: $id);
+	}//end updateTicket()
+
+	/**
+	 * The refusal for a createTicket() call, or null when it may be written.
+	 *
+	 * @param string $ticketType The trimmed subtype.
+	 * @param string $title      The trimmed title.
+	 *
+	 * @return array<string, mixed>|null The envelope, or null.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 */
+	private function createTicketRefusal(string $ticketType, string $title): ?array {
+		if (in_array($ticketType, [self::TYPE_REQUEST, self::TYPE_COMPLAINT], true) === false) {
+			return $this->mcp->error(
+				code: 'invalid_arguments',
+				message: 'Argument ticketType must be request or complaint; log a contactmoment with logContactmoment.'
+			);
+		}
+
+		if ($title === '') {
+			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument title is missing.');
+		}
+
+		return $this->configurationRefusal();
+	}//end createTicketRefusal()
+
+	/**
+	 * The not_configured refusal when the ticket register or schema is missing, else null.
+	 *
+	 * @return array<string, mixed>|null The envelope, or null.
+	 */
+	private function configurationRefusal(): ?array {
+		if ($this->isConfigured() === true) {
+			return null;
+		}
+
+		return $this->mcp->error(
+			code: 'not_configured',
+			message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
+		);
+	}//end configurationRefusal()
+
+	/**
+	 * Save a ticket through save() and answer with its id, or the MCP error.
+	 *
+	 * @param string               $ticketType The subtype.
+	 * @param array<string, mixed> $payload    The fields.
+	 * @param string|null          $uuid       The ticket to update, or null to create.
+	 *
+	 * @return array<string, mixed> `['ticketId' => ...]`, or an MCP error envelope.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
+	 */
+	private function writeTicket(string $ticketType, array $payload, ?string $uuid): array {
+		$operation = 'update ticket';
+		if ($uuid === null) {
+			$operation = 'create ticket';
+		}
+
+		$saved = $this->records()->saved(
+			save: fn (): mixed => $this->save(ticketType: $ticketType, payload: $payload, uuid: $uuid),
+			operation: $operation
+		);
+		if (isset($saved['error']) === true) {
+			return $saved;
+		}
+
+		return ['ticketId' => (string)($saved['id'] ?? $saved['uuid'] ?? $uuid ?? '')];
+	}//end writeTicket()
+
+	#[McpTool(
+		name: 'startTicket',
+		subject: 'ticket',
+		action: 'start',
+		description: 'Pick up a new ticket for handling (new to in_progress), by id. Allowed for the assignee or '
+			. 'a member of the sales group. A ticket in another state answers conflict.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Apply the ticket's declared `start` transition.
+	 *
+	 * @param string $id The ticket uuid.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 * @spec   openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function startTicket(string $id): array {
+		return $this->transition(id: $id, action: 'start');
+	}//end startTicket()
+
+	#[McpTool(
+		name: 'completeTicket',
+		subject: 'ticket',
+		action: 'complete',
+		description: 'Resolve a request ticket successfully (in_progress to completed), by id. Allowed for the '
+			. 'assignee. A ticket in another state answers conflict.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Apply the ticket's declared `complete` transition.
+	 *
+	 * @param string $id The ticket uuid.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 * @spec   openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function completeTicket(string $id): array {
+		return $this->transition(id: $id, action: 'complete');
+	}//end completeTicket()
+
+	#[McpTool(
+		name: 'convertTicket',
+		subject: 'ticket',
+		action: 'convert',
+		description: 'Convert a request ticket into a case (new, in_progress or awaiting_customer to converted), '
+			. 'by id. Allowed for the assignee. A ticket in another state answers conflict.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Apply the ticket's declared `convert` transition.
+	 *
+	 * @param string $id The ticket uuid.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 * @spec   openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function convertTicket(string $id): array {
+		return $this->transition(id: $id, action: 'convert');
+	}//end convertTicket()
+
+	#[McpTool(
+		name: 'resolveTicket',
+		subject: 'ticket',
+		action: 'resolve',
+		description: 'Resolve a complaint ticket (in_progress to resolved), by id. Allowed for the assignee. A '
+			. 'ticket in another state answers conflict.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Apply the ticket's declared `resolve` transition.
+	 *
+	 * @param string $id The ticket uuid.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 * @spec   openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function resolveTicket(string $id): array {
+		return $this->transition(id: $id, action: 'resolve');
+	}//end resolveTicket()
+
+	#[McpTool(
+		name: 'rejectTicket',
+		subject: 'ticket',
+		action: 'reject',
+		description: 'Reject a ticket as unfounded or out of scope (new or in_progress to rejected), by id. '
+			. 'Allowed for the assignee or a member of the sales group. A ticket in another state answers '
+			. 'conflict.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Apply the ticket's declared `reject` transition.
+	 *
+	 * @param string $id The ticket uuid.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 * @spec   openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function rejectTicket(string $id): array {
+		return $this->transition(id: $id, action: 'reject');
+	}//end rejectTicket()
+
+	#[McpTool(
+		name: 'closeTicket',
+		subject: 'ticket',
+		action: 'close',
+		description: 'Close a contactmoment ticket (new or in_progress to closed), by id. Allowed for the '
+			. 'assignee. A ticket in another state answers conflict.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: true,
+		scope: 'update',
+		reach: 'instance'
+	)]
+	/**
+	 * Apply the ticket's declared `close` transition.
+	 *
+	 * @param string $id The ticket uuid.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 * @spec   openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	public function closeTicket(string $id): array {
+		return $this->transition(id: $id, action: 'close');
+	}//end closeTicket()
+
+	/**
+	 * The steps the ticket tools share with the other curated update tools.
+	 *
+	 * @return McpRecordUpdate
+	 */
+	private function records(): McpRecordUpdate {
+		return new McpRecordUpdate(mcp: $this->mcp);
+	}//end records()
+
+	/**
+	 * Run one of the ticket's declared transitions.
+	 *
+	 * @param string $id     The ticket uuid.
+	 * @param string $action The transition.
+	 *
+	 * @return array<string, mixed> `['ticket' => ...]`, or an MCP error envelope.
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-lifecycle-transitions-are-curated-tools-one-per-action
+	 */
+	private function transition(string $id, string $action): array {
+		if ($this->transitions === null) {
+			return $this->mcp->error(code: 'not_configured', message: 'Ticket transitions are not available on this instance.');
+		}
+
+		return $this->transitions->run(objectId: $id, action: $action, subject: 'ticket');
+	}//end transition()
 
 }//end class

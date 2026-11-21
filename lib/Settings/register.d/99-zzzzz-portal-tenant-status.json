@@ -1,0 +1,28 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "A portal tenant can be prepared before it goes live (openspec portal-tenants-on-one-admin-tab, board PqBeheerPortaal). Optional: a record without a status reads as live, so every existing portal keeps working."
+	},
+	"components": {
+		"schemas": {
+			"portalTenantConfig": {
+				"slug": "portalTenantConfig",
+				"version": "1.1.0",
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": ["live", "draft"],
+						"default": "live",
+						"title": "Status",
+						"description": "Whether residents can use the portal (live) or it is still being prepared (draft).",
+						"x-enum-labels": {
+							"live": "Live",
+							"draft": "Draft"
+						}
+					}
+				}
+			}
+		}
+	}
+}

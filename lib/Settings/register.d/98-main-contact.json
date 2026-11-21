@@ -1,0 +1,19 @@
+{
+  "_note": "client-main-contact. The contact person who speaks for an organisation first (PqOrganisatie Hoofdcontact). A flag on the contact, set by the user; the organisation page shows the flagged contact, else the first contact person.",
+  "components": {
+    "schemas": {
+      "contact": {
+        "slug": "contact",
+        "properties": {
+          "mainContact": {
+            "type": "boolean",
+            "title": "Main contact",
+            "description": "This person is the organisation's main contact.",
+            "default": false,
+            "facetable": true
+          }
+        }
+      }
+    }
+  }
+}

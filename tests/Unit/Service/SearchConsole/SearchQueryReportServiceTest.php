@@ -168,4 +168,53 @@ class SearchQueryReportServiceTest extends TestCase {
 		$this->assertSame('2026-08-10', $report['to']);
 		$this->assertSame('sc-domain:example.org', $this->objectService->calls[0]['config']['filters']['property']);
 	}//end testExplicitWindowAndPropertyAreForwarded()
+
+	/**
+	 * A start after the end collapses onto the end day.
+	 *
+	 * @return void
+	 */
+	public function testAStartAfterTheEndCollapsesOntoTheEnd(): void {
+		$report = $this->build()->topQueries(from: '2026-08-20', to: '2026-08-10');
+
+		$this->assertSame('2026-08-10', $report['from']);
+		$this->assertSame('2026-08-10', $report['to']);
+		$this->assertSame(['gte' => '2026-08-10', 'lt' => '2026-08-11'], $this->objectService->calls[0]['config']['filters']['date']);
+	}//end testAStartAfterTheEndCollapsesOntoTheEnd()
+
+	/**
+	 * Dates that match the pattern but name no calendar day fall back to the default window.
+	 *
+	 * @return void
+	 */
+	public function testImpossibleCalendarDatesFallBackToTheDefaultWindow(): void {
+		$result = $this->build()->rows(from: '2026-02-30', to: '2026-13-01');
+
+		$this->assertSame('2026-08-07', $result['from']);
+		$this->assertSame('2026-09-04', $result['to']);
+		$this->assertSame([], $result['rows']);
+	}//end testImpossibleCalendarDatesFallBackToTheDefaultWindow()
+
+	/**
+	 * Without OpenRegister the report is empty and the failure is logged as a warning.
+	 *
+	 * @return void
+	 */
+	public function testWithoutOpenRegisterTheReportIsEmptyAndAWarningIsLogged(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(static fn (string $app, string $key, string $default = ''): string => $default);
+		$time = $this->createMock(ITimeFactory::class);
+		$time->method('getTime')->willReturn(self::NOW);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willThrowException(new \RuntimeException('app disabled'));
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning')->with(
+			'SearchQueryReportService: OpenRegister unavailable',
+			['exception' => 'app disabled']
+		);
+
+		$report = (new SearchQueryReportService($container, $appConfig, $time, $logger))->topQueries();
+
+		$this->assertSame(['from' => '2026-08-07', 'to' => '2026-09-04', 'rows' => [], 'totalQueries' => 0], $report);
+	}//end testWithoutOpenRegisterTheReportIsEmptyAndAWarningIsLogged()
 }//end class

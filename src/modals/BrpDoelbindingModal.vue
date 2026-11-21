@@ -6,13 +6,13 @@
   - and an optional aanvullende toelichting before a BRP lookup may proceed.
   - Compliance: REQ-BSN-002 (lookup requires doelbinding).
   -
-  - @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
-  - @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002
+  - @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
+  - @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-002
   -->
 <template>
-	<NcDialog
+	<CnDialog
+		width="form"
 		:name="t('pipelinq', 'Request purpose limitation')"
-		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<form class="brp-doelbinding" @submit.prevent="submit">
@@ -40,7 +40,7 @@
 				"
 				rows="3" />
 			<NcCheckboxRadioSwitch v-model="form.vogScreening" type="checkbox">
-				{{ t('pipelinq', 'VOG-screening (extra Justis-vlag)') }}
+				{{ t('pipelinq', 'VOG screening (extra Justis flag)') }}
 			</NcCheckboxRadioSwitch>
 		</form>
 		<template #actions>
@@ -51,14 +51,14 @@
 				{{ t('pipelinq', 'Retrieve') }}
 			</NcButton>
 		</template>
-	</NcDialog>
+	</CnDialog>
 </template>
 
 <script>
+import { CnDialog } from '@conduction/nextcloud-vue'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
-	NcDialog,
 	NcSelect,
 	NcTextArea,
 } from '@nextcloud/vue'
@@ -67,7 +67,7 @@ export default {
 	name: 'BrpDoelbindingModal',
 	components: {
 		NcButton,
-		NcDialog,
+		CnDialog,
 		NcSelect,
 		NcTextArea,
 		NcCheckboxRadioSwitch,
@@ -87,7 +87,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		reasonOptions() {
 			return [
@@ -95,19 +95,19 @@ export default {
 					value: 'Behandeling AVG-inzageverzoek art. 15',
 					label: this.t(
 						'pipelinq',
-						'Behandeling AVG-inzageverzoek art. 15',
+						'Handling GDPR access request art. 15',
 					),
 				},
 				{
 					value: 'Behandeling AVG-verwijderverzoek art. 17',
 					label: this.t(
 						'pipelinq',
-						'Behandeling AVG-verwijderverzoek art. 17',
+						'Handling GDPR erasure request art. 17',
 					),
 				},
 				{
 					value: 'VOG-screening',
-					label: this.t('pipelinq', 'VOG-screening'),
+					label: this.t('pipelinq', 'VOG screening'),
 				},
 				{
 					value: 'Reguliere verzoekbehandeling',
@@ -118,31 +118,31 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		bindingOptions() {
 			return [
 				{
 					value: 'Publieke taak — Wet BRP art. 3.3',
-					label: this.t('pipelinq', 'Publieke taak — Wet BRP art. 3.3'),
+					label: this.t('pipelinq', 'Public task — Wet BRP art. 3.3'),
 				},
 				{
 					value: 'AVG art. 6 lid 1 sub e',
 					label: this.t(
 						'pipelinq',
-						'AVG art. 6 lid 1 sub e (publieke taak)',
+						'GDPR art. 6(1)(e) (public task)',
 					),
 				},
 				{
 					value: 'Rechtmatig belang',
-					label: this.t('pipelinq', 'Rechtmatig belang'),
+					label: this.t('pipelinq', 'Legitimate interest'),
 				},
 				{ value: 'Overig', label: this.t('pipelinq', 'Other') },
 			]
 		},
 
 		/**
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		valid() {
 			return (
@@ -153,7 +153,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
+		 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
 		 */
 		submit() {
 			if (!this.valid) return

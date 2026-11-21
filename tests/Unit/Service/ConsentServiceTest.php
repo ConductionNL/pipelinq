@@ -14,7 +14,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.3
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
@@ -28,12 +28,15 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for ConsentService — opt-out gate, append-only history,
  * keyword detection, and GDPR erasure cascade.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#8.3
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class ConsentServiceTest extends TestCase {
 	private ContainerInterface $container;
@@ -78,7 +81,9 @@ class ConsentServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($schema === 'contact') {
 					return ($this->contacts[$id] ?? null);
 				}
@@ -95,7 +100,10 @@ class ConsentServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === null || $uuid === '') {
 					$uuid = ('row-' . (++$this->nextId));
 				}
@@ -140,7 +148,10 @@ class ConsentServiceTest extends TestCase {
 			 *
 			 * @return void
 			 */
-			public function deleteObject(string $uuid, $register = null, $schema = null): void {
+			public function deleteObject(ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): void {
+				$uuid = $deletion->uuid;
+				$register = $deletion->target->register;
+				$schema = $deletion->target->schema;
 				if (isset($this->store[$uuid]) === true) {
 					unset($this->store[$uuid]);
 					$this->deleted++;

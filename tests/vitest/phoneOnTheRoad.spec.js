@@ -24,6 +24,17 @@ vi.mock('../../src/store/modules/object.js', () => ({
 	useObjectStore: () => storeMock,
 }))
 vi.mock('@nextcloud/dialogs', () => dialogs)
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnDialog: {
+		name: 'CnDialog',
+		render() {
+			return h('div', { class: 'nc-dialog' }, [
+				this.$slots.default?.(),
+				this.$slots.actions?.(),
+			])
+		},
+	},
+}))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: {
 		name: 'NcButton',
@@ -171,12 +182,21 @@ describe('callers', () => {
 
 	it('client, contact and lead pages declare them', () => {
 		const pages = JSON.parse(read('src/manifest.json')).pages
-		const widgets = (id) =>
-			pages.find((p) => p.id === id).config.bodyWidgets.map((w) => w.component)
-		expect(widgets('ClientDetail')).toEqual(
-			expect.arrayContaining(['ContactLinks', 'LogVisitAction']),
-		)
-		expect(widgets('ContactDetail')).toContain('ContactLinks')
+		// The client page draws them in its contact strip (PqKlant), in the band.
+		const client = pages.find((p) => p.id === 'ClientDetail').config
+		const stripId = client.widgets.find((w) => w.type === 'PartyContactStripWidget').id
+		expect(client.band.map((entry) => entry.widgetId)).toContain(stripId)
+		const strip = read('src/components/PartyContactStrip.vue')
+		expect(strip).toContain('<ContactLinks')
+		expect(strip).toContain('<LogVisitAction')
+		// The contact person page calls and mails from its header instead
+		// (PqContactpersoon on the shared relation frame): tel: and mailto:
+		// links, quick actions, so a phone still reaches them in one tap.
+		const contact = pages.find((p) => p.id === 'ContactDetail').config
+		const targets = contact.headerActions
+			.filter((a) => contact.quickActions.includes(a.id))
+			.map((a) => a.target)
+		expect(targets).toEqual(['tel:@object.phone', 'mailto:@object.email'])
 		expect(pages.find((p) => p.id === 'LeadDetail').actionsComponent).toBe(
 			'LogVisitAction',
 		)

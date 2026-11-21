@@ -17,14 +17,17 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-001
+ * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use DateTimeImmutable;
+use DateTimeInterface;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 
@@ -48,7 +51,7 @@ use OCP\IAppConfig;
  * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
  *   scenario to admin-settings, which never grew one
  */
-class ForecastDealService {
+class ForecastDealService implements ForecastDealServiceInterface {
 	/**
 	 * Schema slug whose `x-pipelinq-forecast-lifecycle` declares the partition.
 	 *
@@ -72,34 +75,12 @@ class ForecastDealService {
 	public const CLOSED_CATEGORIES = ['closed_won', 'closed_lost'];
 
 	/**
-	 * Fallback default forecast category assigned to a new deal. The canonical
-	 * source of truth is `x-pipelinq-forecast-lifecycle.default`.
-	 *
-	 * @var string
-	 */
-	public const DEFAULT_CATEGORY = 'pipeline';
-
-	/**
 	 * Fallback open forecast categories a rep may freely choose. The canonical
 	 * source of truth is `x-pipelinq-forecast-lifecycle.open`.
 	 *
 	 * @var array<int, string>
 	 */
 	public const OPEN_CATEGORIES = ['commit', 'best_case', 'pipeline', 'omitted'];
-
-	/**
-	 * App-config key for the commit justification threshold (in reporting currency).
-	 *
-	 * @var string
-	 */
-	public const COMMIT_THRESHOLD_KEY = 'forecast_commit_threshold';
-
-	/**
-	 * Default commit justification threshold when none is configured.
-	 *
-	 * @var int
-	 */
-	public const COMMIT_THRESHOLD_DEFAULT = 50000;
 
 	/**
 	 * Minimum number of characters required in a commit justification.
@@ -109,14 +90,21 @@ class ForecastDealService {
 	public const JUSTIFICATION_MIN_LENGTH = 10;
 
 	/**
+	 * The open categories whose deals must say why they slip out of their period (REQ-FRC-012).
+	 */
+	public const SLIP_CATEGORIES = ForecastSlipRule::CATEGORIES;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param SchemaLifecycleGraph $lifecycleGraph Reads the forecast-category partition from the lead schema.
+	 * @param ForecastSlipRule $slipRule Whether a close date slipped out of its fiscal period.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private SchemaLifecycleGraph $lifecycleGraph = new SchemaLifecycleGraph(),
+		private ForecastSlipRule $slipRule = new ForecastSlipRule(),
 	) {
 	}//end __construct()
 
@@ -187,7 +175,7 @@ class ForecastDealService {
 	 *
 	 * @return bool True when the category is closed_won or closed_lost.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-002
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002
 	 */
 	public function isClosedCategory(?string $category): bool {
 		return $category !== null && in_array($category, $this->closedCategories(), true);
@@ -203,7 +191,7 @@ class ForecastDealService {
 	 *
 	 * @return array<string, mixed>|null The mutated data to persist, or null when unchanged.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-001-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-001-01
 	 */
 	public function applyDefaultCategory(array $data): ?array {
 		$current = $data['forecast_category'] ?? null;
@@ -229,7 +217,7 @@ class ForecastDealService {
 	 *
 	 * @return string|null The error key (translatable) or null when the change is valid.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-002-01, REQ-FRC-003-01
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002-01, REQ-FRC-003-01
 	 */
 	public function validateTransition(array $oldData, array $newData): ?string {
 		$oldCategory = $oldData['forecast_category'] ?? null;
@@ -251,8 +239,72 @@ class ForecastDealService {
 			}
 		}
 
-		return null;
+		return $this->slipError(oldData: $oldData, newData: $newData);
 	}//end validateTransition()
+
+	/**
+	 * The refusal of a slip without a reason (REQ-FRC-012).
+	 *
+	 * @param array<string, mixed> $oldData The deal before the update.
+	 * @param array<string, mixed> $newData The deal after the update.
+	 *
+	 * @return string|null `forecast.error.slip_reason_required`, or null.
+	 */
+	private function slipError(array $oldData, array $newData): ?string {
+		if ($this->slips(oldData: $oldData, newData: $newData) === true
+			&& mb_strlen(trim((string)($newData['slip_reason'] ?? ''))) < self::JUSTIFICATION_MIN_LENGTH
+		) {
+			return 'forecast.error.slip_reason_required';
+		}
+
+		return null;
+	}//end slipError()
+
+	/**
+	 * Whether an update moves a commit or best-case deal's expected close date past
+	 * the end of the fiscal period its old close date was in (REQ-FRC-012).
+	 *
+	 * @param array<string, mixed> $oldData The deal before the update.
+	 * @param array<string, mixed> $newData The deal after the update.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/forecast-slip-reason/proposal.md
+	 */
+	public function slips(array $oldData, array $newData): bool {
+		return $this->slipRule->slips(oldData: $oldData, newData: $newData);
+	}//end slips()
+
+	/**
+	 * Record a valid slip on the deal: where the close date slipped from and when.
+	 *
+	 * @param array<string, mixed>   $oldData The deal before the update.
+	 * @param array<string, mixed>   $newData The deal after the update.
+	 * @param DateTimeInterface|null $now     The moment of the slip; now when omitted.
+	 *
+	 * @return array<string, mixed>|null The deal with `slipped_from` and `slipped_at`,
+	 *                                    or null when the update is no slip or is already recorded.
+	 *
+	 * @spec openspec/changes/forecast-slip-reason/proposal.md
+	 */
+	public function applySlip(array $oldData, array $newData, ?DateTimeInterface $now = null): ?array {
+		if ($this->slips(oldData: $oldData, newData: $newData) === false
+			|| $this->validateTransition(oldData: $oldData, newData: $newData) !== null
+		) {
+			return null;
+		}
+
+		$from = substr(trim((string)$oldData['expectedCloseDate']), 0, 10);
+		if (($newData['slipped_from'] ?? null) === $from) {
+			return null;
+		}
+
+		$newData['slipped_from'] = $from;
+		$newData['slipped_at'] = ($now ?? new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+
+		return $newData;
+	}//end applySlip()
+
 
 	/**
 	 * Whether a commit on this deal requires a justification.
@@ -263,7 +315,7 @@ class ForecastDealService {
 	 *
 	 * @return bool True when a justification is required.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-003-04
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-003-04
 	 */
 	public function requiresJustification(array $data): bool {
 		$value = (float)($data['value'] ?? 0);
@@ -275,11 +327,11 @@ class ForecastDealService {
 	 *
 	 * @return int The threshold in the reporting currency.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-003-05
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-003-05
 	 */
 	public function getCommitThreshold(): int {
 		$configured = $this->appConfig->getValueInt(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::COMMIT_THRESHOLD_KEY,
 			self::COMMIT_THRESHOLD_DEFAULT
 		);
@@ -302,7 +354,7 @@ class ForecastDealService {
 	 *
 	 * @return array<string, mixed>|null The mutated data to persist, or null when no reset applies.
 	 *
-	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-002-03
+	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002-03
 	 */
 	public function applyReopenReset(array $oldData, array $newData): ?array {
 		$newCategory = $newData['forecast_category'] ?? null;

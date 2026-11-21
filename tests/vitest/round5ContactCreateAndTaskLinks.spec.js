@@ -14,8 +14,8 @@
  *    in OpenRegister's name fallback), so the activity read "Task <uuid>
  *    updated" and the page heading fell back to "Task".
  *
- * @spec openspec/changes/round5-contact-create-and-task-links/specs/client-management/spec.md
- * @spec openspec/changes/round5-contact-create-and-task-links/specs/notifications-activity/spec.md
+ * @spec openspec/specs/client-management/spec.md
+ * @spec openspec/specs/notifications-activity/spec.md
  */
 
 import fs from 'fs'
@@ -57,6 +57,9 @@ const manifest = readJson('src', 'manifest.json')
 function merge(base, overlay) {
 	const isObject = (v) => v && typeof v === 'object' && !Array.isArray(v)
 	for (const [key, value] of Object.entries(overlay)) {
+		if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+			continue
+		}
 		if (isObject(value) && isObject(base[key])) {
 			merge(base[key], value)
 		} else {

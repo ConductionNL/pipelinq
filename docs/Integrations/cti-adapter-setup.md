@@ -84,6 +84,33 @@ Adapter signature verification is fail-closed; an invalid signature is logged
 to `ctiEventLog` and responds with `422 Unprocessable Entity` (the platform is
 expected to retry on 5xx, not on 4xx, so signature failures do not snowball).
 
+## What the agent sees
+
+When a call rings on your line, a card shows in the top right of pipelinq, on
+whichever page you are. It names the number, the queue and the line, and counts
+the seconds.
+
+- **One client has the number.** The card names them. Click **Answer and open**
+  to open their page. Click **Not this client** if it is someone else.
+  Under the name the card shows three facts: **Open** (their open requests,
+  complaints and meldingen), **Last contact** (the day of their last activity)
+  and **Waiting** (how many of those wait for their answer). For a contact
+  person the facts are those of their client. You only see them when you may
+  read that client.
+- **Several contacts share the number.** Click **Choose contact** and pick one.
+- **Nobody has the number.** Click **New contact**, fill in a name and save.
+
+The call is logged as a contact moment from the moment it rings. Opening a
+record links that contact moment to it. You pick up on your phone: the card does
+not answer the call for you.
+
+Close the card with the cross if you do not need it. It also goes when the call
+ends. The next call shows a new card.
+
+No card shows when no telephony platform is configured, or when **Screen pop**
+is switched off in the telephony settings. With a delay set there, the card
+waits that long, so you hear the greeting first.
+
 ## Disposition outcomes
 
 The Vue `CtiDispositionModal` collects subject + outcome + notes after every

@@ -167,19 +167,33 @@ final class FleetAppId
      */
     public static function appPath(IAppManager $appManager, string $canonical, string $suffix = ''): ?string
     {
-        $id = self::resolve(appManager: $appManager, canonical: $canonical);
-        if ($id === null) {
+        return self::pathOf(appId: self::resolve(appManager: $appManager, canonical: $canonical), suffix: $suffix);
+
+    }//end appPath()
+
+
+    /**
+     * The app-scoped path of an installed app id, or null when no app is installed.
+     *
+     * @param string|null $appId  The installed app id, or null.
+     * @param string      $suffix Path after the app segment, no leading slash.
+     *
+     * @return string|null The path.
+     */
+    private static function pathOf(?string $appId, string $suffix): ?string
+    {
+        if ($appId === null) {
             return null;
         }
 
-        $path = '/apps/'.$id;
+        $path = '/apps/'.$appId;
         if ($suffix !== '') {
             $path .= '/'.ltrim($suffix, '/');
         }
 
         return $path;
 
-    }//end appPath()
+    }//end pathOf()
 
 
     /**
@@ -264,7 +278,22 @@ final class FleetAppId
      */
     public static function getService(ContainerInterface $container, string $canonical, string $relative): ?object
     {
-        foreach (self::classCandidates(canonical: $canonical, relative: $relative) as $fqcn) {
+        return self::firstService(container: $container, candidates: self::classCandidates(canonical: $canonical, relative: $relative));
+
+    }//end getService()
+
+
+    /**
+     * The first candidate the container resolves to an object.
+     *
+     * @param ContainerInterface $container  The service container.
+     * @param list<string>       $candidates Candidate FQCNs, newest first.
+     *
+     * @return object|null The service, or null when no candidate resolves.
+     */
+    private static function firstService(ContainerInterface $container, array $candidates): ?object
+    {
+        foreach ($candidates as $fqcn) {
             try {
                 $service = $container->get($fqcn);
                 if (is_object($service) === true) {
@@ -279,7 +308,7 @@ final class FleetAppId
 
         return null;
 
-    }//end getService()
+    }//end firstService()
 
 
 }//end class

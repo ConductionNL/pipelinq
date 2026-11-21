@@ -43,6 +43,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for SearchConsoleImportService.
@@ -85,10 +86,11 @@ class SearchConsoleImportServiceTest extends TestCase {
 	 * @param array<int, string> $responses JSON bodies the HTTP client answers in order; a body starting with `!` throws.
 	 * @param bool $withKey Whether a key is configured.
 	 * @param string $properties The stored property list.
+	 * @param string|null $tokenError When set, the token exchange throws with this message.
 	 *
 	 * @return SearchConsoleImportService
 	 */
-	private function build(array $responses = [], bool $withKey = true, string $properties = "https://example.org/\nsc-domain:example.net"): SearchConsoleImportService {
+	private function build(array $responses = [], bool $withKey = true, string $properties = "https://example.org/\nsc-domain:example.net", ?string $tokenError = null): SearchConsoleImportService {
 		$this->config = ['register' => 'pipelinq', SearchConsoleImportService::PROPERTIES_KEY => $properties];
 		if ($withKey === true) {
 			$this->config[SearchConsoleImportService::KEY_KEY] = '{"type":"service_account","client_email":"svc@example.iam.gserviceaccount.com","private_key":"unused","token_uri":"https://oauth2.googleapis.com/token"}';
@@ -126,7 +128,11 @@ class SearchConsoleImportServiceTest extends TestCase {
 		$clientService->method('newClient')->willReturn($client);
 
 		$auth = $this->createMock(GoogleServiceAccountAuth::class);
-		$auth->method('accessToken')->willReturn('tok-1');
+		if ($tokenError === null) {
+			$auth->method('accessToken')->willReturn('tok-1');
+		} else {
+			$auth->method('accessToken')->willThrowException(new \RuntimeException($tokenError));
+		}
 		$auth->method('parseKey')->willReturnCallback(
 			static function (string $json): ?array {
 				$decoded = json_decode($json, true);
@@ -164,7 +170,10 @@ class SearchConsoleImportServiceTest extends TestCase {
 			}//end findAll()
 
 			/** @return array<string, mixed> */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === null) {
 					$this->created++;
 					$uuid = ('obj-' . $this->created);
@@ -330,6 +339,59 @@ class SearchConsoleImportServiceTest extends TestCase {
 	}//end testAnApiErrorOnOnePropertyIsReportedAndTheOthersContinue()
 
 	/**
+	 * An answer that is not JSON fails the property with its own message, and
+	 * a run where no property succeeded leaves the last-import stamp alone.
+	 *
+	 * @return void
+	 */
+	public function testAnAnswerThatIsNotJsonFailsThePropertyAndStampsNothing(): void {
+		$importer = $this->build(['<html>', '!down']);
+		$result = $importer->importRecent();
+
+		$this->assertSame(
+			['properties' => 0, 'rows' => 0, 'errors' => [
+				'https://example.org/' => 'Search Console: the API answered with something that is not JSON',
+				'sc-domain:example.net' => 'down',
+			]],
+			$result
+		);
+		$this->assertSame('', $importer->lastImportAt());
+	}//end testAnAnswerThatIsNotJsonFailsThePropertyAndStampsNothing()
+
+	/**
+	 * The request carries the bearer, the window and the paging, and a
+	 * successful run stamps the import moment.
+	 *
+	 * @return void
+	 */
+	public function testTheRequestCarriesTheWindowAndASuccessStampsTheMoment(): void {
+		$importer = $this->build([$this->page([]), $this->page([])]);
+		$importer->importRecent(days: 2);
+
+		$this->assertCount(2, $this->posts);
+		$this->assertStringContainsString(rawurlencode('https://example.org/'), $this->posts[0]['url']);
+		$this->assertStringContainsString(rawurlencode('sc-domain:example.net'), $this->posts[1]['url']);
+		$today = gmdate('Y-m-d', self::NOW);
+		$from = gmdate('Y-m-d', (self::NOW - (2 * 86400)));
+		$this->assertSame(
+			[
+				'headers' => ['Authorization' => 'Bearer tok-1', 'Accept' => 'application/json'],
+				'json' => [
+					'startDate' => $from,
+					'endDate' => $today,
+					'dimensions' => ['date', 'query', 'page'],
+					'rowLimit' => 5000,
+					'startRow' => 0,
+					'dataState' => 'all',
+				],
+				'timeout' => 60,
+			],
+			$this->posts[0]['options']
+		);
+		$this->assertSame(gmdate('Y-m-d\TH:i:s\Z', self::NOW), $importer->lastImportAt());
+	}//end testTheRequestCarriesTheWindowAndASuccessStampsTheMoment()
+
+	/**
 	 * @return void
 	 */
 	public function testATransportFailureIsReportedPerProperty(): void {
@@ -339,4 +401,49 @@ class SearchConsoleImportServiceTest extends TestCase {
 		$this->assertSame(1, $result['properties']);
 		$this->assertSame('connection refused', $result['errors']['https://example.org/']);
 	}//end testATransportFailureIsReportedPerProperty()
+
+	/**
+	 * A refused token exchange reports one '*' error, queries nothing and stamps nothing.
+	 *
+	 * @return void
+	 */
+	public function testARefusedTokenExchangeFailsTheWholeRunAndStampsNothing(): void {
+		$importer = $this->build([$this->page([])], tokenError: 'invalid_grant');
+
+		$result = $importer->importRecent();
+
+		$this->assertSame(['properties' => 0, 'rows' => 0, 'errors' => ['*' => 'invalid_grant']], $result);
+		$this->assertSame([], $this->posts);
+		$this->assertArrayNotHasKey(SearchConsoleImportService::LAST_IMPORT_KEY, $this->config);
+		$this->assertSame([], $this->objectService->store);
+	}//end testARefusedTokenExchangeFailsTheWholeRunAndStampsNothing()
+
+	/**
+	 * Rows with too few keys, a malformed date, or that are not arrays are skipped; the rest are saved.
+	 *
+	 * @return void
+	 */
+	public function testMalformedRowsAreSkippedAndTheValidOnesSaved(): void {
+		$body = (string)json_encode(
+			[
+				'rows' => [
+					['keys' => ['2026-09-02', 'only two keys'], 'clicks' => 1, 'impressions' => 2],
+					['keys' => ['02-09-2026', 'q', 'https://example.org/a'], 'clicks' => 1, 'impressions' => 2],
+					['keys' => '2026-09-02', 'clicks' => 1],
+					'not a row',
+					['keys' => ['2026-09-03', 'kept', 'https://example.org/b'], 'clicks' => 4, 'impressions' => 8, 'ctr' => 0.5, 'position' => 1.0],
+				],
+			]
+		);
+		$importer = $this->build([$body, $this->page([])]);
+
+		$result = $importer->importRecent();
+
+		$this->assertSame(['properties' => 2, 'rows' => 1, 'errors' => []], $result);
+		$this->assertCount(1, $this->objectService->store);
+		$saved = array_values($this->objectService->store)[0];
+		$this->assertSame('2026-09-03', $saved['date']);
+		$this->assertSame('kept', $saved['query']);
+		$this->assertSame('https://example.org/b', $saved['page']);
+	}//end testMalformedRowsAreSkippedAndTheValidOnesSaved()
 }//end class

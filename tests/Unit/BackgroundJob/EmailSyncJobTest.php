@@ -181,4 +181,70 @@ class EmailSyncJobTest extends TestCase {
 		$ref = new \ReflectionMethod($job, 'run');
 		$ref->invoke($job, null);
 	}//end testUpdatesSyncTimeForEnabledUser()
+
+	/**
+	 * A failure while walking the users is logged as an error and does not
+	 * escape the job.
+	 *
+	 * @return void
+	 */
+	public function testAFailingUserWalkIsLogged(): void {
+		$this->userManager->method('callForAllUsers')
+			->willThrowException(new \RuntimeException('user backend down'));
+
+		$this->emailSyncService->expects($this->never())->method('updateLastSyncTime');
+		$this->logger->expects($this->once())
+			->method('error')
+			->with('EmailSyncJob: Error during sync', ['exception' => 'user backend down']);
+		$infos = [];
+		$this->logger->method('info')->willReturnCallback(
+			static function (string $message) use (&$infos): void {
+				$infos[] = $message;
+			}
+		);
+
+		$job = $this->makeJob();
+		$ref = new \ReflectionMethod($job, 'run');
+		$ref->invoke($job, null);
+
+		$this->assertSame(['EmailSyncJob: Starting email sync'], $infos);
+	}//end testAFailingUserWalkIsLogged()
+
+	/**
+	 * A completed run logs each synced user with its account count, then the
+	 * completion of the whole run.
+	 *
+	 * @return void
+	 */
+	public function testACompletedRunIsLogged(): void {
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('user1');
+		$this->userManager->method('callForAllUsers')
+			->willReturnCallback(
+				function (callable $callback) use ($user): void {
+					$callback($user);
+				}
+			);
+		$this->emailSyncService->method('isSyncEnabled')->willReturn(true);
+		$this->emailSyncService->method('getSyncAccounts')->willReturn([1, 2, 3]);
+
+		$logged = [];
+		$this->logger->method('info')->willReturnCallback(
+			static function (string $message, array $context = []) use (&$logged): void {
+				$logged[] = [$message, $context];
+			}
+		);
+
+		$job = $this->makeJob();
+		$ref = new \ReflectionMethod($job, 'run');
+		$ref->invoke($job, null);
+
+		$this->assertSame(
+			[
+				['EmailSyncJob: Sync run completed for user', ['userId' => 'user1', 'accounts' => 3]],
+				['EmailSyncJob: Email sync completed', []],
+			],
+			array_slice($logged, -2)
+		);
+	}//end testACompletedRunIsLogged()
 }//end class

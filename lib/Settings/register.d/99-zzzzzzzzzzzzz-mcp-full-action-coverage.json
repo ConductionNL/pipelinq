@@ -1,0 +1,131 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "openspec change mcp-full-action-coverage. Declares the derived MCP tools OpenRegister serves for the CRM core: full search/get/create/update on contact and crmTask (the spec's `task`), create/update on client, and update/delete on leadProduct lines. lead and ticket keep search/get only: their writes are the curated LeadService/TicketService tools. Reach per tool (reads `user`, writes `instance`) is declared on the curated #[McpTool] attributes; on these derived entries it waits for openregister's x-openregister-mcp `reach` key (companion mcp-reach-annotation), whose validator refuses an unknown key today. Sorted last so the versions it stamps are the merged ones."
+  },
+  "components": {
+    "schemas": {
+      "contact": {
+        "slug": "contact",
+        "version": "1.2.1",
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search contact persons of clients by name, email or phone, optionally filtered by the client they belong to. Returns RBAC-scoped contact summaries.",
+                "scope": "read",
+                "filters": ["client"],
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single contact person by id, with their role, contact details and the client they belong to.",
+                "scope": "read",
+                "readOnlyHint": true
+              },
+              "create": {
+                "description": "Add a contact person to a client. Only name is required; give client (the client uuid) to link them.",
+                "scope": "create",
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": false
+              },
+              "update": {
+                "description": "Change fields of an existing contact person, such as their role, email or phone.",
+                "scope": "update",
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "crmTask": {
+        "slug": "crmTask",
+        "version": "1.2.1",
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search CRM tasks, optionally filtered by type (callbackRequest, followUpTask or informationRequest), status or the client they are for (clientId). Returns RBAC-scoped tasks.",
+                "scope": "read",
+                "filters": ["type", "status", "clientId"],
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single CRM task by id, with its type, deadline, assignee and the client, lead or contact it is about.",
+                "scope": "read",
+                "readOnlyHint": true
+              },
+              "create": {
+                "description": "Create a CRM task. subject and type are required; type is one of callbackRequest (call the client back), followUpTask or informationRequest. Give clientId, leadId or contactId to link it.",
+                "scope": "create",
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": false
+              },
+              "update": {
+                "description": "Change fields of an existing CRM task, such as its deadline, priority, assignee or result text.",
+                "scope": "update",
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "client": {
+        "slug": "client",
+        "version": "1.8.1",
+        "configuration": {
+          "x-openregister-mcp": {
+            "tools": {
+              "create": {
+                "description": "Create a client: a person or an organization. name and type (person or organization) are required; email, phone, address, website, industry and notes are optional.",
+                "scope": "create",
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": false
+              },
+              "update": {
+                "description": "Change fields of an existing client, such as its contact details, industry or notes.",
+                "scope": "update",
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      },
+      "leadProduct": {
+        "slug": "leadProduct",
+        "version": "1.2.1",
+        "configuration": {
+          "x-openregister-mcp": {
+            "tools": {
+              "update": {
+                "description": "Correct a priced line on a lead: its quantity, unitPrice, discount, discountType or notes. Do NOT send `total`: OpenRegister calculates it and does not accept a written value.",
+                "scope": "update",
+                "readOnlyHint": false,
+                "destructiveHint": false,
+                "idempotentHint": true
+              },
+              "delete": {
+                "description": "Remove a priced line from a lead, by id. The line is gone from the offer.",
+                "scope": "delete",
+                "readOnlyHint": false,
+                "destructiveHint": true,
+                "idempotentHint": true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

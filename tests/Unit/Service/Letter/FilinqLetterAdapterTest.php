@@ -74,14 +74,19 @@ class FilinqLetterAdapterTest extends TestCase
      * @param object|null $templates The TemplateService stand-in, or null for absent.
      * @param object|null $documents The DocumentService stand-in, or null for absent.
      * @param string|null $uid       The acting user, or null.
+     * @param object|null $slugs     The TemplateSlugResolver stand-in, or null for absent.
      *
      * @return FilinqLetterAdapter
      */
-    private function adapter(?object $templates, ?object $documents, ?string $uid='ann'): FilinqLetterAdapter
+    private function adapter(?object $templates, ?object $documents, ?string $uid='ann', ?object $slugs=null): FilinqLetterAdapter
     {
-        $container = $this->createMock(ContainerInterface::class);
+        $container = $this->createMock(originalClassName: ContainerInterface::class);
         $container->method('get')->willReturnCallback(
-            static function (string $id) use ($templates, $documents): object {
+            static function (string $id) use ($templates, $documents, $slugs): object {
+                if ($id === 'OCA\Filinq\Service\TemplateSlugResolver' && $slugs !== null) {
+                    return $slugs;
+                }
+
                 if ($id === 'OCA\Filinq\Service\TemplateService' && $templates !== null) {
                     return $templates;
                 }
@@ -94,16 +99,20 @@ class FilinqLetterAdapterTest extends TestCase
             }
         );
 
-        $session = $this->createMock(IUserSession::class);
+        $session = $this->createMock(originalClassName: IUserSession::class);
         $user    = null;
         if ($uid !== null) {
-            $user = $this->createMock(IUser::class);
+            $user = $this->createMock(originalClassName: IUser::class);
             $user->method('getUID')->willReturn($uid);
         }
 
         $session->method('getUser')->willReturn($user);
 
-        return new FilinqLetterAdapter($container, $session, $this->createMock(LoggerInterface::class));
+        return new FilinqLetterAdapter(
+	container: $container,
+	userSession: $session,
+	logger: $this->createMock(originalClassName: LoggerInterface::class)
+);
 
     }//end adapter()
 
@@ -198,6 +207,20 @@ class FilinqLetterAdapterTest extends TestCase
             }
 
 
+            /**
+             * @param string                        $templateId Template.
+             * @param array<int, array<string, mixed>> $dataRefs   Refs.
+             * @param array<string, mixed>          $options    Options.
+             *
+             * @return array<string, mixed>
+             */
+            public function generateMergePreview(string $templateId, array $dataRefs, array $options=[]): array
+            {
+                $this->calls[] = ['generateMergePreview', $templateId, $dataRefs, $options];
+                return $this->result;
+            }
+
+
         };
 
     }//end documents()
@@ -212,16 +235,16 @@ class FilinqLetterAdapterTest extends TestCase
     {
         $adapter = $this->adapter(templates: null, documents: null);
 
-        $this->assertStringStartsWith('filinq_unavailable', (string) $adapter->unavailableReason());
+        $this->assertStringStartsWith(prefix: 'filinq_unavailable', string: (string) $adapter->unavailableReason());
 
         try {
             $adapter->render('tpl-1', [], 'Letter');
-            $this->fail('render() without filinq must throw');
+            $this->fail(message: 'render() without filinq must throw');
         } catch (RuntimeException $e) {
-            $this->assertStringStartsWith('filinq_unavailable', $e->getMessage());
+            $this->assertStringStartsWith(prefix: 'filinq_unavailable', string: $e->getMessage());
         }
 
-        $this->expectExceptionMessageMatches('/^filinq_unavailable/');
+        $this->expectExceptionMessageMatches(regularExpression: '/^filinq_unavailable/');
         $adapter->listTemplates();
 
     }//end testFilinqAbsentIsNamedNotFaked()
@@ -234,9 +257,9 @@ class FilinqLetterAdapterTest extends TestCase
      */
     public function testHalfOfFilinqIsAbsent(): void
     {
-        $adapter = $this->adapter(templates: $this->templates([]), documents: null);
+        $adapter = $this->adapter(templates: $this->templates(rows: []), documents: null);
 
-        $this->assertNotNull($adapter->unavailableReason());
+        $this->assertNotNull(actual: $adapter->unavailableReason());
 
     }//end testHalfOfFilinqIsAbsent()
 
@@ -250,25 +273,25 @@ class FilinqLetterAdapterTest extends TestCase
     {
         $adapter = $this->adapter(
             templates: $this->templates(
-                [
+                rows: [
                     ['id' => 't-2', 'name' => 'Welcome letter', 'namespace' => 'pipelinq'],
                     ['id' => 't-1', 'name' => 'Appointment letter', 'namespace' => 'pipelinq', 'description' => 'Invites to a visit'],
                     ['id' => 't-9', 'name' => 'Decision', 'namespace' => 'dossiq'],
                     ['name' => 'No id', 'namespace' => 'pipelinq'],
                 ]
             ),
-            documents: $this->documents([])
+            documents: $this->documents(result: [])
         );
 
-        $this->assertNull($adapter->unavailableReason());
+        $this->assertNull(actual: $adapter->unavailableReason());
         $this->assertSame(
-            [
+            expected: [
                 ['id' => 't-1', 'name' => 'Appointment letter', 'description' => 'Invites to a visit'],
                 ['id' => 't-2', 'name' => 'Welcome letter', 'description' => ''],
             ],
-            $adapter->listTemplates()
+            actual: $adapter->listTemplates()
         );
-        $this->assertSame([['getTemplatesByNamespace', 'pipelinq']], $this->calls->getArrayCopy());
+        $this->assertSame(expected: [['getTemplatesByNamespace', 'pipelinq']], actual: $this->calls->getArrayCopy());
 
     }//end testListsPipelinqTemplatesByName()
 
@@ -282,17 +305,17 @@ class FilinqLetterAdapterTest extends TestCase
     {
         $adapter = $this->adapter(
             templates: $this->templates(
-                [
+                rows: [
                     ['id' => 't-1', 'name' => 'Appointment letter', 'namespace' => 'pipelinq'],
                     ['id' => 't-9', 'name' => 'Decision', 'namespace' => 'dossiq'],
                 ]
             ),
-            documents: $this->documents([])
+            documents: $this->documents(result: [])
         );
 
-        $this->assertSame('Appointment letter', $adapter->findTemplate('t-1')['name'] ?? null);
-        $this->assertNull($adapter->findTemplate('t-9'));
-        $this->assertNull($adapter->findTemplate('nope'));
+        $this->assertSame(expected: 'Appointment letter', actual: $adapter->findTemplate('t-1')['name'] ?? null);
+        $this->assertNull(actual: $adapter->findTemplate('t-9'));
+        $this->assertNull(actual: $adapter->findTemplate('nope'));
 
     }//end testFindTemplateRefusesAnotherAppsTemplate()
 
@@ -305,9 +328,9 @@ class FilinqLetterAdapterTest extends TestCase
     public function testRenderPassesReferencesAndAsksForBoth(): void
     {
         $adapter = $this->adapter(
-            templates: $this->templates([]),
+            templates: $this->templates(rows: []),
             documents: $this->documents(
-                [
+                result: [
                     'content'  => '%PDF-1.7 letter',
                     'format'   => 'pdf',
                     'warnings' => ['Variable "client.salutation" is empty'],
@@ -323,16 +346,16 @@ class FilinqLetterAdapterTest extends TestCase
         $letter = $adapter->render('tpl-1', $refs, 'Appointment letter Bakkerij 2026-09-30');
 
         $this->assertSame(
-            [
+            expected: [
                 'content'  => '%PDF-1.7 letter',
                 'fileId'   => 4711,
                 'path'     => '/DocuDesk/Letter.pdf',
                 'warnings' => ['Variable "client.salutation" is empty'],
             ],
-            $letter
+            actual: $letter
         );
         $this->assertSame(
-            [
+            expected: [
                 'generateDocument',
                 'tpl-1',
                 $refs,
@@ -343,10 +366,126 @@ class FilinqLetterAdapterTest extends TestCase
                     'output'   => ['mode' => 'both'],
                 ],
             ],
-            $this->calls[0]
+            actual: $this->calls[0]
         );
 
     }//end testRenderPassesReferencesAndAsksForBoth()
+
+
+    /**
+     * A download-only render asks filinq for the PDF back and no copy in Files.
+     *
+     * @return void
+     */
+    public function testADownloadOnlyRenderAsksForReturnOnly(): void
+    {
+        $adapter = $this->adapter(
+            templates: $this->templates(rows: []),
+            documents: $this->documents(result: ['content' => '%PDF-1.7 letter', 'output' => ['mode' => 'return']])
+        );
+
+        $adapter->render(templateId: 'tpl-1', dataRefs: [], filename: 'Letter', outputMode: 'return');
+
+        $this->assertSame(expected: ['mode' => 'return'], actual: $this->calls[0][3]['output']);
+
+    }//end testADownloadOnlyRenderAsksForReturnOnly()
+
+
+    /**
+     * Ad-hoc data (a quote's number, totals and lines) reaches filinq as its
+     * `adHocData` option; without it the option is left out.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-the-quote-shows-vat-per-rate-req-qslice-003
+     */
+    public function testAdHocDataReachesFilinq(): void
+    {
+        $adapter = $this->adapter(
+            templates: $this->templates(rows: []),
+            documents: $this->documents(result: ['content' => '%PDF-1.7 quote', 'output' => ['mode' => 'both']])
+        );
+
+        $data = ['quote' => ['number' => 'OFF-2026-0042'], 'totals' => ['totalInclVat' => 1755.0]];
+        $adapter->render(templateId: 'tpl-q', dataRefs: [], filename: 'OFF-2026-0042', outputMode: 'both', adHocData: $data);
+        $adapter->render(templateId: 'tpl-q', dataRefs: [], filename: 'OFF-2026-0043');
+
+        $this->assertSame(expected: $data, actual: $this->calls[0][3]['adHocData']);
+        $this->assertArrayNotHasKey(key: 'adHocData', array: $this->calls[1][3]);
+
+    }//end testAdHocDataReachesFilinq()
+
+
+    /**
+     * A preview hands filinq the references and passes its fields on.
+     *
+     * @return void
+     */
+    public function testPreviewPassesTheFieldsOn(): void
+    {
+        $adapter = $this->adapter(
+            templates: $this->templates(rows: []),
+            documents: $this->documents(
+                result: [
+                    'html'     => '<p>Geachte heer De Jong,</p>',
+                    'warnings' => [],
+                    'fields'   => [
+                        [
+                            'path'   => 'aanhef',
+                            'label'  => 'Aanhef',
+                            'source' => 'op basis van het opgegeven geslacht',
+                            'value'  => 'Geachte heer De Jong,',
+                            'filled' => true,
+                        ],
+                    ],
+                    'complete' => true,
+                ]
+            )
+        );
+
+        $refs    = [['register' => '7', 'schema' => 'client', 'id' => 'c-1']];
+        $preview = $adapter->preview(templateId: 'tpl-1', dataRefs: $refs);
+
+        $this->assertSame(expected: ['generateMergePreview', 'tpl-1', $refs, []], actual: $this->calls[0]);
+        $this->assertSame(expected: '<p>Geachte heer De Jong,</p>', actual: $preview['html']);
+        $this->assertSame(
+            expected: [
+                ['label' => 'Aanhef', 'value' => 'Geachte heer De Jong,', 'source' => 'op basis van het opgegeven geslacht', 'filled' => true],
+            ],
+            actual: $preview['fields']
+        );
+        $this->assertTrue(condition: $preview['complete']);
+
+    }//end testPreviewPassesTheFieldsOn()
+
+
+    /**
+     * A filinq without the merge preview is named, not faked.
+     *
+     * @return void
+     */
+    public function testPreviewWithoutTheMergePreviewIsNamed(): void
+    {
+        $documents = new class {
+
+
+            /**
+             * @return array<string, mixed>
+             */
+            public function generateDocument(): array
+            {
+                return [];
+            }
+
+
+        };
+        $adapter   = $this->adapter(templates: $this->templates(rows: []), documents: $documents);
+
+        $this->expectException(exception: \RuntimeException::class);
+        $this->expectExceptionMessage(message: 'filinq_preview_unsupported');
+        $adapter->preview(templateId: 'tpl-1', dataRefs: []);
+
+    }//end testPreviewWithoutTheMergePreviewIsNamed()
 
 
     /**
@@ -356,9 +495,9 @@ class FilinqLetterAdapterTest extends TestCase
      */
     public function testRenderWithoutAUserIsRefused(): void
     {
-        $adapter = $this->adapter(templates: $this->templates([]), documents: $this->documents(['content' => 'x']), uid: null);
+        $adapter = $this->adapter(templates: $this->templates(rows: []), documents: $this->documents(result: ['content' => 'x']), uid: null);
 
-        $this->expectExceptionMessageMatches('/^user_required/');
+        $this->expectExceptionMessageMatches(regularExpression: '/^user_required/');
         $adapter->render('tpl-1', [], 'Letter');
 
     }//end testRenderWithoutAUserIsRefused()
@@ -371,12 +510,107 @@ class FilinqLetterAdapterTest extends TestCase
      */
     public function testAnEmptyDocumentIsAFailure(): void
     {
-        $adapter = $this->adapter(templates: $this->templates([]), documents: $this->documents(['content' => '']));
+        $adapter = $this->adapter(templates: $this->templates(rows: []), documents: $this->documents(result: ['content' => '']));
 
-        $this->expectExceptionMessageMatches('/^filinq_render_failed/');
+        $this->expectExceptionMessageMatches(regularExpression: '/^filinq_render_failed/');
         $adapter->render('tpl-1', [], 'Letter');
 
     }//end testAnEmptyDocumentIsAFailure()
+
+
+
+    /**
+     * A TemplateSlugResolver stand-in holding the Offerte template under its slug.
+     *
+     * @return object
+     */
+    private function slugs(): object
+    {
+        return new class($this->calls) {
+
+
+            /**
+             * @param \ArrayObject $calls Call log.
+             */
+            public function __construct(private \ArrayObject $calls)
+            {
+            }
+
+
+            /**
+             * @param string      $namespace The namespace.
+             * @param string      $slug      The slug.
+             * @param string|null $tenantId  The tenant.
+             *
+             * @return array<string, mixed>
+             */
+            public function resolve(string $namespace, string $slug, ?string $tenantId=null): array
+            {
+                $this->calls[] = ['resolve', $namespace, $slug];
+                if ($namespace === 'pipelinq' && $slug === 'offerte') {
+                    return ['id' => '4f1c0d6e-9b2a-4c3d-8e5f-6a7b8c9d0e1f', 'name' => 'Offerte', 'namespace' => 'pipelinq'];
+                }
+
+                throw new RuntimeException(message: 'No template found', code: 404);
+            }
+
+
+        };
+
+    }//end slugs()
+
+
+    /**
+     * A template named by its slug is found in pipelinq's namespace through filinq's slug resolver.
+     *
+     * @spec openspec/specs/record-documents/spec.md#requirement-a-configured-record-type-has-a-document
+     *
+     * @return void
+     */
+    public function testFindTemplateResolvesASlugInPipelinqsNamespace(): void
+    {
+        $adapter = $this->adapter(templates: $this->templates(rows: []), documents: $this->documents(result: []), slugs: $this->slugs());
+
+        $this->assertSame(
+            expected: ['id' => '4f1c0d6e-9b2a-4c3d-8e5f-6a7b8c9d0e1f', 'name' => 'Offerte', 'description' => ''],
+            actual: $adapter->findTemplate(templateId: 'offerte')
+        );
+        $this->assertSame(expected: [['resolve', 'pipelinq', 'offerte']], actual: $this->calls->getArrayCopy());
+
+    }//end testFindTemplateResolvesASlugInPipelinqsNamespace()
+
+
+    /**
+     * An unknown slug, or no slug resolver, finds nothing.
+     *
+     * @return void
+     */
+    public function testAnUnknownSlugFindsNothing(): void
+    {
+        $withResolver    = $this->adapter(templates: $this->templates(rows: []), documents: $this->documents(result: []), slugs: $this->slugs());
+        $withoutResolver = $this->adapter(templates: $this->templates(rows: []), documents: $this->documents(result: []));
+
+        $this->assertNull(actual: $withResolver->findTemplate(templateId: 'unknown'));
+        $this->assertNull(actual: $withoutResolver->findTemplate(templateId: 'offerte'));
+
+    }//end testAnUnknownSlugFindsNothing()
+
+
+    /**
+     * The render hands filinq the lists the template reads beside the record.
+     *
+     * @return void
+     */
+    public function testRenderPassesListReferences(): void
+    {
+        $adapter  = $this->adapter(templates: $this->templates(rows: []), documents: $this->documents(result: ['content' => '%PDF-1.7']));
+        $listRefs = [['register' => '7', 'schema' => 'salesQuoteLine', 'filter' => ['quote' => 'q-1'], 'as' => 'lines']];
+
+        $adapter->render(templateId: 'tpl-1', dataRefs: [], filename: 'Offerte', outputMode: 'return', listRefs: $listRefs);
+
+        $this->assertSame(expected: $listRefs, actual: $this->calls[0][3]['listRefs']);
+
+    }//end testRenderPassesListReferences()
 
 
 }//end class

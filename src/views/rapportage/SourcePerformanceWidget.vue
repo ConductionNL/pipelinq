@@ -18,6 +18,7 @@
 <script>
 import { CnDataTable } from '@conduction/nextcloud-vue'
 import { NcEmptyContent } from '@nextcloud/vue'
+import { leadSourceLabel } from '../../services/leadSourceLabels.js'
 
 export default {
 	name: 'SourcePerformanceWidget',
@@ -56,21 +57,38 @@ export default {
 					label: t('pipelinq', 'Conversion %'),
 					sortable: true,
 					align: 'right',
-					format: (v) => `${v}%`,
+					// CnDataTable takes a format spec, not a function: the
+					// functions here were ignored and the cells read "33.3" and
+					// "7000".
+					format: { style: 'percent', decimals: 1 },
 				},
 				{
 					key: 'avgWonValue',
 					label: t('pipelinq', 'Avg deal value'),
 					sortable: true,
 					align: 'right',
-					format: (v) =>
-						v > 0 ? `EUR ${v.toLocaleString('nl-NL')}` : '—',
+					// In the reporting currency, in the user's locale.
+					format: { style: 'currency', decimals: 0 },
 				},
 			]
 		},
 
+		/**
+		 * The rows with the source as its label ("Doorverwijzing", not the
+		 * stored "referral"). The stored value stays on the row as
+		 * `sourceValue`.
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
 		rows() {
-			return Array.isArray(this.data) ? this.data : []
+			if (!Array.isArray(this.data)) {
+				return []
+			}
+			return this.data.map((row) => ({
+				...row,
+				sourceValue: row.source,
+				source: leadSourceLabel(row.source),
+			}))
 		},
 	},
 }

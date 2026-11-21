@@ -163,3 +163,21 @@ The composer SHALL take one body, media, a link, the accounts the post goes to a
 - **WHEN** a marketer opens the Social posts page
 - **THEN** scheduled posts SHALL be listed by the moment they go out
 - **AND** a failed post SHALL show its reason and offer a retry
+
+### Requirement: Events of the same moment keep their order in the send monitor
+
+The send monitor's Recent events MUST list the newest event first, and events with the same timestamp MUST keep the order in which the deliveries are returned.
+
+#### Scenario: Eight deliveries in the same minute
+- GIVEN eight deliveries of "Subsidieronde voor buurtinitiatieven" all sent at 10:02, returned a***@ziggo first and r***@sportcentrum last
+- WHEN Pieter opens the send monitor
+- THEN Recent events lists them in that order
+
+### Requirement: A custom view's page title starts 28px under the content top
+
+The Weekly review, Search insight and Forecast views MUST start their page header 28px under the content top, so the title stands where the Dq page headers stand.
+
+#### Scenario: Opening the weekly review
+- GIVEN the board look
+- WHEN Pieter opens Weekoverzicht
+- THEN its title stands 28px under the top of the content, as on DqProcesanalyse

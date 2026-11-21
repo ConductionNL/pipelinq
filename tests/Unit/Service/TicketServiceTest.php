@@ -30,11 +30,14 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Mcp\McpAnswer;
+use OCA\Pipelinq\Mcp\McpTransition;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use ReflectionMethod;
@@ -104,7 +107,7 @@ class TicketServiceTest extends TestCase {
 			appConfig: $this->appConfig,
 			logger: $this->logger,
 			objectService: $this->objectService,
-			mcp: new McpAnswer(new NullLogger()),
+			mcp: new McpAnswer(logger: new NullLogger()),
 		);
 	}//end buildService()
 
@@ -288,6 +291,72 @@ class TicketServiceTest extends TestCase {
 	}//end testLogContactmomentWritesTicketAndReturnsUuid()
 
 	/**
+	 * logContactmoment() names each missing or invalid argument, in argument
+	 * order, trims what it is given and writes nothing on a refusal.
+	 *
+	 * @return void
+	 */
+	public function testLogContactmomentRefusalMessagesInArgumentOrder(): void {
+		$objectService = $this->mockObjectService();
+		$objectService->expects($this->never())->method('saveObject');
+		$service = $this->buildService();
+
+		$cases = [
+			[['  ', 'telefoon', 'T', 'inbound'], 'Required argument client is missing.'],
+			[[self::NIL_UUID, ' ', '', ''], 'Required argument channel is missing.'],
+			[[self::NIL_UUID, 'telefoon', "\t", ''], 'Required argument title is missing.'],
+			[[self::NIL_UUID, 'telefoon', 'T', ''], 'Required argument direction is missing.'],
+			[[self::NIL_UUID, 'telefoon', 'T', '  '], 'Required argument direction is missing.'],
+			[[self::NIL_UUID, 'telefoon', 'T', 'sideways'], 'Argument direction must be one of ' . implode(', ', TicketService::DIRECTIONS) . '.'],
+			[[self::NIL_UUID, 'telefoon', 'T', 'Inbound'], 'Argument direction must be one of ' . implode(', ', TicketService::DIRECTIONS) . '.'],
+		];
+		foreach ($cases as [[$client, $channel, $title, $direction], $message]) {
+			$result = $service->logContactmoment(client: $client, channel: $channel, title: $title, direction: $direction);
+			$this->assertSame(expected: ['error' => ['code' => 'invalid_arguments', 'message' => $message]], actual: $result, message: $message);
+		}
+	}//end testLogContactmomentRefusalMessagesInArgumentOrder()
+
+	/**
+	 * logContactmoment() trims client, channel, title and direction, leaves
+	 * empty optional fields out and stamps occurredAt.
+	 *
+	 * @return void
+	 */
+	public function testLogContactmomentTrimsAndOmitsEmptyOptionals(): void {
+		$this->stubConfigured();
+
+		$captured = [];
+		$objectService = $this->mockObjectService();
+		$objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$captured): ObjectEntityInterface {
+				$captured = $object;
+				$entity = new ObjectEntity();
+				$entity->setUuid(self::NIL_UUID);
+				$entity->setObject($object);
+				return $entity;
+			}
+		);
+
+		$result = $this->buildService()->logContactmoment(
+			client: ' ' . self::NIL_UUID . ' ',
+			channel: ' email ',
+			title: ' Vraag ',
+			direction: ' outbound ',
+			outcome: '',
+			notes: ''
+		);
+
+		$this->assertSame(expected: ['ticketId' => self::NIL_UUID], actual: $result);
+		$this->assertSame(expected: self::NIL_UUID, actual: $captured['client']);
+		$this->assertSame(expected: 'email', actual: $captured['channel']);
+		$this->assertSame(expected: 'Vraag', actual: $captured['title']);
+		$this->assertSame(expected: 'outbound', actual: $captured['direction']);
+		$this->assertArrayNotHasKey(key: 'outcome', array: $captured);
+		$this->assertArrayNotHasKey(key: 'description', array: $captured);
+		$this->assertNotFalse(condition: \DateTimeImmutable::createFromFormat(format: \DateTimeInterface::ATOM, datetime: $captured['occurredAt']));
+	}//end testLogContactmomentTrimsAndOmitsEmptyOptionals()
+
+	/**
 	 * logContactmoment() denied by RBAC maps to a forbidden envelope, not a success.
 	 *
 	 * @return void
@@ -334,6 +403,20 @@ class TicketServiceTest extends TestCase {
 		$this->assertNull(actual: $service->detectTypeInText(text: 'How many leads are open?'));
 		$this->assertNull(actual: $service->detectTypeInText(text: ''));
 	}//end testDetectTypeInTextRecognisesSubtypeVocabulary()
+
+	/**
+	 * A melding is a ticket subtype like the others: it is in TYPES, so the
+	 * per-type summaries count it, and its words name it.
+	 *
+	 * @return void
+	 */
+	public function testMeldingIsATicketSubtype(): void {
+		$this->assertContains(needle: TicketService::TYPE_MELDING, haystack: TicketService::TYPES);
+		$this->assertSame(
+			expected: TicketService::TYPE_MELDING,
+			actual: $this->buildService()->detectTypeInText(text: 'Hoeveel meldingen staan er open?')
+		);
+	}//end testMeldingIsATicketSubtype()
 	/**
 	 * A contactmoment written without a direction is refused, naming the field.
 	 *
@@ -351,8 +434,8 @@ class TicketServiceTest extends TestCase {
 		$objectService = $this->mockObjectService();
 		$objectService->expects($this->never())->method('saveObject');
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('direction');
+		$this->expectException(exception: \InvalidArgumentException::class);
+		$this->expectExceptionMessage(message: 'direction');
 
 		$this->buildService()->save(
 			ticketType: TicketService::TYPE_CONTACTMOMENT,
@@ -371,8 +454,8 @@ class TicketServiceTest extends TestCase {
 		$this->stubConfigured();
 		$this->mockObjectService();
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('inbound, outbound, internal');
+		$this->expectException(exception: \InvalidArgumentException::class);
+		$this->expectExceptionMessage(message: 'inbound, outbound, internal');
 
 		$this->buildService()->save(
 			ticketType: TicketService::TYPE_CONTACTMOMENT,
@@ -429,8 +512,8 @@ class TicketServiceTest extends TestCase {
 		$objectService = $this->mockObjectService();
 		$objectService->expects($this->never())->method('saveObject');
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('already holds case-a');
+		$this->expectException(exception: \InvalidArgumentException::class);
+		$this->expectExceptionMessage(message: 'already holds case-a');
 
 		$this->buildService()->save(
 			ticketType: TicketService::TYPE_CONTACTMOMENT,
@@ -455,8 +538,8 @@ class TicketServiceTest extends TestCase {
 		$objectService = $this->mockObjectService();
 		$objectService->expects($this->never())->method('saveObject');
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessage('case-c is not one of the cases');
+		$this->expectException(exception: \InvalidArgumentException::class);
+		$this->expectExceptionMessage(message: 'case-c is not one of the cases');
 
 		$this->buildService()->save(
 			ticketType: TicketService::TYPE_CONTACTMOMENT,
@@ -509,4 +592,277 @@ class TicketServiceTest extends TestCase {
 		$this->assertSame(expected: ['case-a', 'case-b'], actual: $captured['caseReferences']);
 		$this->assertSame(expected: 'case-b', actual: $captured['primaryCaseReference']);
 	}//end testAPrimaryInsideTheSetIsAccepted()
+
+	/**
+	 * An order asked for reaches the store, with the type filter still forced.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
+	 */
+	public function testFindByTypeHandsAnOrderToTheStore(): void {
+		$this->stubConfigured();
+
+		$captured = [];
+		$this->mockObjectService()->method('findAll')->willReturnCallback(
+			static function (array $query) use (&$captured): array {
+				$captured = $query;
+				return [];
+			}
+		);
+
+		$this->buildService()->findByType(
+			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			extraFilters: ['assignee' => 'agent-1'],
+			limit: 5,
+			sort: ['started_at' => 'desc'],
+		);
+
+		$this->assertSame(expected: ['started_at' => 'desc'], actual: $captured['sort']);
+		$this->assertSame(expected: 5, actual: $captured['limit']);
+		$this->assertSame(expected: TicketService::TYPE_CONTACTMOMENT, actual: $captured['filters']['ticketType']);
+		$this->assertSame(expected: 'agent-1', actual: $captured['filters']['assignee']);
+	}//end testFindByTypeHandsAnOrderToTheStore()
+
+	/**
+	 * Without an order the query is the one every earlier caller sent: no sort key.
+	 *
+	 * @return void
+	 */
+	public function testFindByTypeWithoutAnOrderSendsNoSortKey(): void {
+		$this->stubConfigured();
+
+		$captured = [];
+		$this->mockObjectService()->method('findAll')->willReturnCallback(
+			static function (array $query) use (&$captured): array {
+				$captured = $query;
+				return [];
+			}
+		);
+
+		$this->buildService()->findByType(ticketType: TicketService::TYPE_REQUEST);
+
+		$this->assertSame(expected: ['filters', 'limit'], actual: array_keys($captured));
+	}//end testFindByTypeWithoutAnOrderSendsNoSortKey()
+	// =========================================================================
+	// createTicket / updateTicket / transitions (mcp-full-action-coverage)
+	// =========================================================================
+
+	/**
+	 * Record what saveObject() receives and answer with a saved entity.
+	 *
+	 * @param array<string, mixed>|null $captured Receives the object and uuid.
+	 *
+	 * @return void
+	 */
+	private function captureSaves(?array &$captured): void {
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$captured = ['object' => $object, 'uuid' => $options->uuid, 'schema' => $options->target->schema];
+				$entity = new ObjectEntity();
+				$entity->setUuid($options->uuid ?? self::NIL_UUID);
+				$entity->setObject(['id' => $options->uuid ?? self::NIL_UUID] + $object);
+				return $entity;
+			}
+		);
+	}//end captureSaves()
+
+	/**
+	 * A request ticket is written through save() with the discriminator forced.
+	 *
+	 * @return void
+	 */
+	public function testCreateTicketWritesARequest(): void {
+		$this->stubConfigured();
+		$captured = null;
+		$this->captureSaves(captured: $captured);
+
+		$result = $this->buildService()->createTicket(ticketType: 'request', title: '  Parking permit  ', priority: 'high', description: '');
+
+		$this->assertSame(expected: ['ticketId' => self::NIL_UUID], actual: $result);
+		$this->assertSame(expected: 'request', actual: $captured['object']['ticketType']);
+		$this->assertSame(expected: 'Parking permit', actual: $captured['object']['title']);
+		$this->assertSame(expected: 'high', actual: $captured['object']['priority']);
+		$this->assertArrayNotHasKey(key: 'description', array: $captured['object'], message: 'an empty optional is left out');
+		$this->assertNull(actual: $captured['uuid']);
+		$this->assertSame(expected: 'sch-ticket', actual: $captured['schema']);
+	}//end testCreateTicketWritesARequest()
+
+	/**
+	 * A contactmoment, or any other subtype, is refused and pointed at logContactmoment.
+	 *
+	 * @return void
+	 */
+	public function testCreateTicketRefusesAContactmoment(): void {
+		$this->stubConfigured();
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		foreach (['contactmoment', 'interaction', 'melding', ''] as $type) {
+			$result = $this->buildService()->createTicket(ticketType: $type, title: 'Call');
+			$this->assertSame(expected: 'invalid_arguments', actual: $result['error']['code'], message: $type);
+			$this->assertStringContainsString(needle: 'logContactmoment', haystack: $result['error']['message']);
+		}
+	}//end testCreateTicketRefusesAContactmoment()
+
+	/**
+	 * A complaint without a title is invalid; an unconfigured app is not_configured.
+	 *
+	 * @return void
+	 */
+	public function testCreateTicketWithoutTitleOrConfiguration(): void {
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$noTitle = $this->buildService()->createTicket(ticketType: 'complaint', title: ' ');
+		$unconfigured = $this->buildService()->createTicket(ticketType: 'complaint', title: 'Noise');
+
+		$this->assertSame(expected: 'Required argument title is missing.', actual: $noTitle['error']['message']);
+		$this->assertSame(expected: 'not_configured', actual: $unconfigured['error']['code']);
+	}//end testCreateTicketWithoutTitleOrConfiguration()
+
+	/**
+	 * A create the RBAC refuses is forbidden.
+	 *
+	 * @return void
+	 */
+	public function testCreateTicketDeniedByRbacIsForbidden(): void {
+		$this->stubConfigured();
+		$this->objectService->method('saveObject')->willThrowException(new \Exception('permission denied'));
+
+		$result = $this->buildService()->createTicket(ticketType: 'complaint', title: 'Noise');
+
+		$this->assertSame(expected: 'forbidden', actual: $result['error']['code']);
+	}//end testCreateTicketDeniedByRbacIsForbidden()
+
+	/**
+	 * An update merges onto the stored ticket and saves it under its own uuid and subtype.
+	 *
+	 * @return void
+	 */
+	public function testUpdateTicketMergesOntoTheStoredTicket(): void {
+		$this->stubConfigured();
+		$stored = new ObjectEntity();
+		$stored->setObject(['ticketType' => 'complaint', 'title' => 'Noise', 'status' => 'new', 'priority' => 'normal']);
+		$this->objectService->method('find')->willReturn($stored);
+		$captured = null;
+		$this->captureSaves(captured: $captured);
+
+		$result = $this->buildService()->updateTicket(id: self::NIL_UUID, priority: 'urgent');
+
+		$this->assertSame(expected: ['ticketId' => self::NIL_UUID], actual: $result);
+		$this->assertSame(expected: self::NIL_UUID, actual: $captured['uuid']);
+		$this->assertSame(expected: 'complaint', actual: $captured['object']['ticketType']);
+		$this->assertSame(expected: 'urgent', actual: $captured['object']['priority']);
+		$this->assertSame(expected: 'Noise', actual: $captured['object']['title']);
+		$this->assertSame(expected: 'new', actual: $captured['object']['status'], message: 'the state is not touched');
+	}//end testUpdateTicketMergesOntoTheStoredTicket()
+
+	/**
+	 * A status argument is refused before anything is read, naming the transition tools.
+	 *
+	 * @return void
+	 */
+	public function testUpdateTicketRefusesStatus(): void {
+		$this->stubConfigured();
+		$this->objectService->expects($this->never())->method('find');
+
+		$result = $this->buildService()->updateTicket(id: self::NIL_UUID, title: 'x', status: 'closed');
+
+		$this->assertSame(expected: 'invalid_arguments', actual: $result['error']['code']);
+		$this->assertStringContainsString(needle: 'closeTicket', haystack: $result['error']['message']);
+	}//end testUpdateTicketRefusesStatus()
+
+	/**
+	 * An update of a ticket the caller cannot find is not_found; one without fields is invalid.
+	 *
+	 * @return void
+	 */
+	public function testUpdateTicketNotFoundAndNoFields(): void {
+		$this->stubConfigured();
+		$this->objectService->method('find')->willReturn(null);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$missing = $this->buildService()->updateTicket(id: self::NIL_UUID, title: 'x');
+		$empty = $this->buildService()->updateTicket(id: self::NIL_UUID);
+
+		$this->assertSame(expected: ['error' => ['code' => 'not_found', 'message' => 'No ticket with that id.']], actual: $missing);
+		$this->assertSame(expected: 'Give at least one field to change.', actual: $empty['error']['message']);
+	}//end testUpdateTicketNotFoundAndNoFields()
+
+	/**
+	 * Each ticket transition tool drives its own declared transition.
+	 *
+	 * @return void
+	 */
+	public function testEachTransitionToolRunsItsDeclaredTransition(): void {
+		$calls = [];
+		$engine = new class($calls) {
+			/**
+			 * Constructor.
+			 *
+			 * @param list<string> $calls The recorded actions.
+			 */
+			public function __construct(private array &$calls) {
+			}
+
+			/**
+			 * The engine's transition().
+			 *
+			 * @param string $objectId The ticket.
+			 * @param string $action   The transition.
+			 *
+			 * @return ObjectEntity The moved ticket.
+			 */
+			public function transition(string $objectId, string $action): ObjectEntity {
+				$this->calls[] = $objectId . ':' . $action;
+				return new ObjectEntity();
+			}
+		};
+		$engines = $this->createMock(originalClassName: ContainerInterface::class);
+		$engines->method('get')->willReturn($engine);
+		$service = new TicketService(
+			appConfig: $this->appConfig,
+			logger: $this->logger,
+			objectService: $this->objectService,
+			mcp: new McpAnswer(logger: new NullLogger()),
+			transitions: new McpTransition(container: $engines, mcp: new McpAnswer(logger: new NullLogger()), logger: new NullLogger()),
+		);
+
+		$tools = ['startTicket' => 'start', 'completeTicket' => 'complete', 'convertTicket' => 'convert',
+			'resolveTicket' => 'resolve', 'rejectTicket' => 'reject', 'closeTicket' => 'close'];
+		foreach (array_keys($tools) as $tool) {
+			$this->assertArrayHasKey(key: 'ticket', array: $service->$tool(id: self::NIL_UUID), message: $tool);
+		}
+
+		$this->assertSame(
+			expected: array_map(static fn (string $action): string => self::NIL_UUID . ':' . $action, array_values($tools)),
+			actual: $calls
+		);
+	}//end testEachTransitionToolRunsItsDeclaredTransition()
+
+	/**
+	 * The new ticket tools declare their scope, reach and hints; a final target is destructive.
+	 *
+	 * @return void
+	 */
+	public function testNewTicketToolsDeclareScopeReachAndHints(): void {
+		$expected = [
+			'createTicket' => ['create', false, false],
+			'updateTicket' => ['update', false, true],
+			'startTicket' => ['update', false, true],
+			'completeTicket' => ['update', true, true],
+			'convertTicket' => ['update', true, true],
+			'resolveTicket' => ['update', true, true],
+			'rejectTicket' => ['update', true, true],
+			'closeTicket' => ['update', true, true],
+		];
+		foreach ($expected as $method => [$scope, $destructive, $idempotent]) {
+			$attribute = (new ReflectionMethod(TicketService::class, $method))->getAttributes(McpTool::class)[0]->newInstance();
+			$this->assertSame(expected: $method, actual: $attribute->name);
+			$this->assertSame(expected: 'ticket', actual: $attribute->subject);
+			$this->assertSame(expected: $scope, actual: $attribute->scope, message: $method);
+			$this->assertSame(expected: 'instance', actual: $attribute->reach, message: $method);
+			$this->assertSame(expected: $destructive, actual: $attribute->destructiveHint, message: $method);
+			$this->assertSame(expected: $idempotent, actual: $attribute->idempotentHint, message: $method);
+		}
+	}//end testNewTicketToolsDeclareScopeReachAndHints()
 }//end class

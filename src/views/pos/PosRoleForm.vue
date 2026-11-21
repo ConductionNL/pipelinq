@@ -4,7 +4,7 @@
   -
   - POS role admin form (create / edit).
   -
-  - @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.2
+  - @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.2
   -->
 <template>
 	<div class="pos-role-form">
@@ -92,8 +92,6 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -101,6 +99,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
+import posRecordFormMixin from './posRecordFormMixin.js'
 
 export default {
 	name: 'PosRoleForm',
@@ -112,9 +111,7 @@ export default {
 		NcTextField,
 	},
 
-	props: {
-		id: { type: String, default: '' },
-	},
+	mixins: [posRecordFormMixin],
 
 	emits: ['done'],
 
@@ -129,18 +126,11 @@ export default {
 				canNoSale: false,
 			},
 
-			loading: false,
-			saving: false,
-			errorMessage: '',
-			showDeleteConfirm: false,
+			recordPath: 'roles',
 		}
 	},
 
 	computed: {
-		isNew() {
-			return !this.id
-		},
-
 		canSave() {
 			return (
 				!!this.form.name
@@ -158,61 +148,33 @@ export default {
 
 	methods: {
 		async load() {
-			this.loading = true
-			try {
-				const url = generateUrl('/apps/pipelinq/api/pos/roles/{id}', {
-					id: this.id,
-				})
-				const response = await axios.get(url)
-				const role = response?.data?.role || {}
-				this.form.name = role.name || ''
-				this.form.description = role.description || ''
-				this.form.canVoid = !!role.canVoid
-				this.form.maxDiscountPercent = Number(role.maxDiscountPercent || 0)
-				this.form.canRefund = !!role.canRefund
-				this.form.canNoSale = !!role.canNoSale
-			} catch (error) {
-				this.errorMessage =
-					error?.response?.data?.error
-					|| t('pipelinq', 'Failed to load role')
-			} finally {
-				this.loading = false
-			}
+			await this.loadRecord({
+				read: (data) => this.readRole(data.role || {}),
+				failure: t('pipelinq', 'Failed to load role'),
+			})
 		},
 
 		/**
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.2
+		 * @param {object} role The stored role.
+		 * @return {void}
+		 */
+		readRole(role) {
+			this.form.name = role.name || ''
+			this.form.description = role.description || ''
+			this.form.canVoid = !!role.canVoid
+			this.form.maxDiscountPercent = Number(role.maxDiscountPercent || 0)
+			this.form.canRefund = !!role.canRefund
+			this.form.canNoSale = !!role.canNoSale
+		},
+
+		/**
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.2
 		 */
 		async save() {
-			this.saving = true
-			this.errorMessage = ''
-			try {
-				const url = this.isNew
-					? generateUrl('/apps/pipelinq/api/pos/roles')
-					: generateUrl('/apps/pipelinq/api/pos/roles/{id}', {
-							id: this.id,
-						})
-				const method = this.isNew ? 'post' : 'put'
-				await axios[method](url, { ...this.form })
-				this.$emit('done')
-			} catch (error) {
-				this.errorMessage =
-					error?.response?.data?.error
-					|| t('pipelinq', 'Failed to save role')
-			} finally {
-				this.saving = false
-			}
-		},
-
-		/**
-		 * Open the delete confirmation.
-		 *
-		 * @return {void}
-		 *
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.2
-		 */
-		confirmDelete() {
-			this.showDeleteConfirm = true
+			await this.saveRecord({
+				payload: { ...this.form },
+				failure: t('pipelinq', 'Failed to save role'),
+			})
 		},
 
 		/**
@@ -220,35 +182,10 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.2
+		 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#8.2
 		 */
 		async performDelete() {
-			this.showDeleteConfirm = false
-			this.saving = true
-			this.errorMessage = ''
-			try {
-				const url = generateUrl('/apps/pipelinq/api/pos/roles/{id}', {
-					id: this.id,
-				})
-				await axios.delete(url)
-				this.$emit('done')
-			} catch (error) {
-				this.errorMessage =
-					error?.response?.data?.error
-					|| t('pipelinq', 'Failed to delete role')
-			} finally {
-				this.saving = false
-			}
-		},
-
-		/**
-		 * Leave the form. The host (PosRoleManager, on the admin page) closes the
-		 * dialog — this form no longer routes back to a list page of its own.
-		 *
-		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
-		 */
-		goBack() {
-			this.$emit('done')
+			await this.deleteRecord(t('pipelinq', 'Failed to delete role'))
 		},
 	},
 }

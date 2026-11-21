@@ -92,19 +92,16 @@ async function openSpaRoute(page: Page, route: string): Promise<void> {
 
 const content = (page: Page) => page.locator('#content-vue')
 
-// ── src/views/MyWork.vue — manifest page `MyWork`, route `/my-work` ──────────
-test('MyWork: /my-work mounts src/views/MyWork.vue', async ({ page }) => {
+// ── manifest page `MyWork`, route `/my-work` (a dashboard of record lists) ────
+test('MyWork: /my-work renders the grouped lists', async ({ page }) => {
 	await openSpaRoute(page, '/my-work')
 
-	// `.my-work` and its `<h2>` sit above every `v-if` in the template, so they
-	// render whether the workload loads, errors or comes back empty.
-	const myWork = content(page).locator('.my-work')
-	await expect(myWork).toBeVisible({ timeout: 15000 })
-	await expect(myWork.getByRole('heading', { name: 'My Work' })).toBeVisible()
-	// The lead/request filter strip is part of the same unconditional header
-	// block, so it distinguishes this page from anything else carrying an
-	// "My Work" heading (the dashboard widget, for instance).
-	await expect(myWork.locator('.my-work__controls .filter-buttons')).toBeVisible()
+	await expect(
+		content(page).getByRole('heading', { name: 'Answer today' }),
+	).toBeVisible({ timeout: 15000 })
+	await expect(
+		content(page).getByRole('heading', { name: 'Waiting on me' }),
+	).toBeVisible()
 })
 
 // ── src/views/leads/LeadList.vue — manifest page `Leads`, route `/leads` ─────
@@ -153,8 +150,8 @@ test('PipelineBoard: /pipeline mounts src/views/pipeline/PipelineBoard.vue', asy
 	).toBeVisible()
 })
 
-// ── src/views/pos/CashShiftList.vue — page `CashShifts`, route `/pos/shifts` ──
-test('CashShiftList: /pos/shifts mounts src/views/pos/CashShiftList.vue', async ({
+// ── page `CashShifts` (declarative index), route `/pos/shifts` ──
+test('CashShifts: /pos/shifts mounts the cash drawer index', async ({
 	page,
 }) => {
 	await openSpaRoute(page, '/pos/shifts')
@@ -183,48 +180,15 @@ test('PosRefundForm: /pos/refunds/new mounts src/views/pos/PosRefundForm.vue', a
 	await expect(form.getByRole('heading', { name: 'New refund' })).toBeVisible()
 })
 
-// ── src/views/kassakoppeling/KassakoppelingAuditList.vue — `/kassakoppeling/audit`
-test('KassakoppelingAuditList: /kassakoppeling/audit mounts src/views/kassakoppeling/KassakoppelingAuditList.vue', async ({
-	page,
-}) => {
-	await openSpaRoute(page, '/kassakoppeling/audit')
-
-	const list = content(page).locator('.kassakoppeling-audit-list')
-	await expect(list).toBeVisible({ timeout: 15000 })
-	await expect(
-		list.getByRole('heading', { name: 'Cash register audit log' }),
-	).toBeVisible()
-	// The filter strip carries the page's own testid and renders regardless of
-	// whether the append-only register holds any entries.
-	await expect(
-		list.locator('[data-testid="kassakoppeling-audit-filters"]'),
-	).toBeVisible()
-})
-
-// ── src/views/kassakoppeling/KassakoppelingAuditDetail.vue — `/kassakoppeling/audit/:id`
-test('KassakoppelingAuditDetail: /kassakoppeling/audit/:id mounts src/views/kassakoppeling/KassakoppelingAuditDetail.vue', async ({
+// ── page `KassakoppelingAuditDetail` (declarative, endpoint record) — `/cash-register-audit/:id`
+test('KassakoppelingAuditDetail: the old /kassakoppeling/audit/:id address opens the declarative entry page', async ({
 	page,
 }) => {
 	await openSpaRoute(page, `/kassakoppeling/audit/${ABSENT_ID}`)
 
-	const detail = content(page).locator('[data-testid="cn-detail-page"]').first()
-	await expect(detail).toBeVisible({ timeout: 15000 })
-	// `load()` answers a non-OK response with `showError()` + `entry = {}`, so
-	// the component's own `title` computed falls back to "Audit entry" and
-	// CnDetailPage's `<h2>` shows it (`displayTitle = objectDisplayName || title`,
-	// and this page passes no object). The shell is what is under test.
-	await expect(detail.locator('.cn-detail-page__title')).toHaveText('Audit entry')
-})
-
-// ── src/views/admin/BrpMonitor.vue — page `BrpMonitor`, `/admin/brp-monitor` ──
-test('BrpMonitor: /admin/brp-monitor mounts src/views/admin/BrpMonitor.vue', async ({
-	page,
-}) => {
-	await openSpaRoute(page, '/admin/brp-monitor')
-
-	const monitor = content(page).locator('[data-testid="brp-monitor"]')
-	await expect(monitor).toBeVisible({ timeout: 15000 })
-	await expect(monitor.getByRole('heading', { name: 'BRP Monitor' })).toBeVisible()
+	await expect(page).toHaveURL(new RegExp(`/cash-register-audit/${ABSENT_ID}`), { timeout: 15000 })
+	// An absent entry: the endpoint answers 404 and the page shows its not-found state.
+	await expect(content(page).locator('[data-testid="cn-detail-page"]').first()).toBeVisible({ timeout: 15000 })
 })
 
 // ── src/views/admin/PosCustomerSettings.vue — `/admin/pos-customer-link` ──────

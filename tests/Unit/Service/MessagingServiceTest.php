@@ -27,6 +27,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
+use OCA\Pipelinq\Service\Messaging\MessageContent;
+use OCA\Pipelinq\Service\Messaging\MessageRoute;
 use OCA\Pipelinq\Service\MessagingService;
 use OCA\Pipelinq\Service\SmsAdapter;
 use OCA\Pipelinq\Service\WhatsAppAdapter;
@@ -84,12 +86,8 @@ class MessagingServiceTest extends TestCase {
 		$this->smsAdapter->method('send')->willReturn(['status' => 'sent', 'messageId' => 'm1', 'vendor' => 'messagebird']);
 
 		$outcome = $this->service->send(
-			contact: ['uuid' => 'c1', 'phoneNumber' => '+31611111111'],
-			channel: 'sms',
-			body: 'hi',
-			templateId: null,
-			parameters: [],
-			providerHint: null,
+			route: new MessageRoute(contact: ['uuid' => 'c1', 'phoneNumber' => '+31611111111']),
+			content: new MessageContent(channel: 'sms', body: 'hi', templateId: null),
 			actor: 'agent-1'
 		);
 
@@ -107,12 +105,8 @@ class MessagingServiceTest extends TestCase {
 		$this->smsAdapter->method('send')->willReturn(['status' => 'failed', 'error' => 'HTTP 500 from rest.messagebird.com']);
 
 		$outcome = $this->service->send(
-			contact: ['uuid' => 'c1'],
-			channel: 'sms',
-			body: 'hi',
-			templateId: null,
-			parameters: [],
-			providerHint: null,
+			route: new MessageRoute(contact: ['uuid' => 'c1']),
+			content: new MessageContent(channel: 'sms', body: 'hi', templateId: null),
 			actor: 'agent-1'
 		);
 
@@ -129,12 +123,8 @@ class MessagingServiceTest extends TestCase {
 		$this->whatsAppAdapter->method('send')->willReturn(['status' => 'sessionWindowExpired']);
 
 		$outcome = $this->service->send(
-			contact: ['uuid' => 'c1'],
-			channel: 'whatsapp',
-			body: 'hi',
-			templateId: null,
-			parameters: [],
-			providerHint: null,
+			route: new MessageRoute(contact: ['uuid' => 'c1']),
+			content: new MessageContent(channel: 'whatsapp', body: 'hi', templateId: null),
 			actor: 'agent-1'
 		);
 
@@ -150,12 +140,8 @@ class MessagingServiceTest extends TestCase {
 		$this->whatsAppAdapter->method('send')->willReturn(['status' => 'templateParameterMismatch']);
 
 		$outcome = $this->service->send(
-			contact: ['uuid' => 'c1'],
-			channel: 'whatsapp',
-			body: '',
-			templateId: 'tpl-1',
-			parameters: [],
-			providerHint: null,
+			route: new MessageRoute(contact: ['uuid' => 'c1']),
+			content: new MessageContent(channel: 'whatsapp', body: '', templateId: 'tpl-1'),
 			actor: 'agent-1'
 		);
 

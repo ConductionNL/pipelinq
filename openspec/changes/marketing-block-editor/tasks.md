@@ -15,6 +15,7 @@
   - Verify: Vitest `tests/vitest/mailBlockEditor.spec.js`: adding, moving by button and removing blocks updates the array; the footer has no Remove; focus follows a moved block
 - [x] 2.2 Mount the editor in `TemplateForm.vue` with the mode switch, the confirmation on Blocks to HTML, and the preview pane at desktop and phone width fed by `POST /api/templates/render` (done: in `src/dialogs/TemplateFormDialog.vue`, the form that replaced TemplateForm.vue; `templateFormReplyTo.spec.js`)
   - Verify: Playwright `tests/e2e/template-block-editor.spec.ts`: create a template with a heading, a text, a button and the articles block, save, reopen, and read the same blocks; the preview shows the button label
+  - `tests/e2e/template-block-editor.spec.ts` is written, not yet run (needs a seeded instance)
 - [x] 2.3 Send the Reply-to field in the save payload
   - Verify: Vitest asserts `replyTo` in the payload
 
@@ -26,3 +27,9 @@
   - Verify: `npm run test:l10n` exit 0
 - [ ] 3.3 User doc `docs/Features/mail-block-editor.md`: build a mailing from blocks, what the footer is for, the mail clients checked (not run: the doc is written; the hand check of the rendering in Outlook, Gmail and Apple Mail needs a live send and is owed)
   - Verify: docs build exit 0
+
+## 4. The list from nextcloud-vue
+
+- [x] 4.1 `MailBlockEditor` draws its list with nextcloud-vue `CnBlockListEditor` (palette, drag, Move up and Move down, open by name) and keeps only the per-type properties and the footer; the list helpers `addBlock`, `moveBlock` and `removeBlock` are removed
+  - Verify: `mailBlockEditor.spec.js`, `mailBlocks.spec.js`
+- [x] 4.2 Bump `@conduction/nextcloud-vue` once a release contains `CnBlockListEditor` (development, merge #2088)

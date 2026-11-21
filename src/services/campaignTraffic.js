@@ -24,7 +24,7 @@
  *
  * @return {'no-blasts'|'unreadable'|'answered'} What the block should say.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
  */
 export function trafficOutcome({ asked, answered }) {
 	// Order matters. `asked === 0` has to win, because answered is then also 0
@@ -38,4 +38,107 @@ export function trafficOutcome({ asked, answered }) {
 	}
 
 	return 'answered'
+}
+
+/**
+ * Read every blast's site traffic, a few blasts at a time, in list order.
+ *
+ * The first answer that says no portal is connected stops the reads that
+ * have not started yet: every blast would answer the same.
+ *
+ * @param {Array<object>} blasts      The listed blasts.
+ * @param {Function}      read        Async `(id) => performance answer` for one blast.
+ * @param {number}        concurrency How many reads may be in flight at once.
+ *
+ * @return {Promise<{rows: Array<object>, connected: boolean|null, asked: number, answered: number}>}
+ *
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+ */
+export async function readTrafficRows(blasts, read, concurrency) {
+	const run = {
+		queue: blasts
+			.map((blast) => ({ id: blast.id || blast.uuid || blast.slug, name: blast.name }))
+			.filter((entry) => Boolean(entry.id)),
+		read,
+		found: new Map(),
+		connected: null,
+		asked: 0,
+		answered: 0,
+		stopped: false,
+	}
+
+	const worker = async () => {
+		for (;;) {
+			const entry = run.stopped ? undefined : run.queue.shift()
+			if (entry === undefined) {
+				return
+			}
+			await readTrafficEntry(run, entry)
+		}
+	}
+
+	const order = run.queue.map((entry) => entry.id)
+	await Promise.all(Array.from({ length: Math.min(concurrency, run.queue.length) }, worker))
+
+	return {
+		rows: order.map((id) => run.found.get(id)).filter(Boolean),
+		connected: run.connected,
+		asked: run.asked,
+		answered: run.answered,
+	}
+}
+
+/**
+ * Read one blast's traffic. A failed read is skipped; an answer that is not
+ * connected stops the whole run; a blast with site sessions gets a row.
+ *
+ * @param {object} run The read in progress: queue, reader, rows found and counters.
+ * @param {{id: string, name: (string|undefined)}} entry The blast.
+ * @return {Promise<void>}
+ */
+async function readTrafficEntry(run, entry) {
+	run.asked += 1
+	let data
+	try {
+		data = await run.read(entry.id)
+	} catch {
+		return
+	}
+	run.answered += 1
+	if (!data?.connected) {
+		run.connected = false
+		run.stopped = true
+		return
+	}
+	run.connected = true
+	if ((data.site?.sessions || 0) > 0) {
+		run.found.set(entry.id, trafficRow(entry, data))
+	}
+}
+
+/**
+ * @param {{id: string, name: (string|undefined)}} entry The blast.
+ * @param {object} data Its traffic.
+ * @return {object} The blast's row.
+ */
+function trafficRow(entry, data) {
+	return {
+		id: entry.id,
+		name: entry.name || entry.id,
+		campaign: data.campaign || '',
+		...trafficCounts(data),
+	}
+}
+
+/**
+ * @param {object} data A blast's traffic.
+ * @return {{opened: number, clicked: number, sessions: number, dealCount: number}} Its counts, 0 when missing.
+ */
+function trafficCounts(data) {
+	return {
+		opened: data.email?.opened || 0,
+		clicked: data.email?.clicked || 0,
+		sessions: data.site?.sessions || 0,
+		dealCount: data.deals?.dealCount || 0,
+	}
 }

@@ -27,10 +27,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Pipelinq\Kernel\Contracts\EligibilityServiceInterface;
+use OCA\Pipelinq\Util\ConfiguredRegisterId;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Util\NullablePayloadToArray;
+use OCA\Pipelinq\Util\RowIdOf;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Resolve which Resources are eligible to perform a Service.
@@ -52,7 +57,12 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class EligibilityService {
+class EligibilityService implements EligibilityServiceInterface {
+	use NullablePayloadToArray;
+	use RowIdOf;
+	use ConfiguredRegisterId;
+	use InjectedObjectService;
+
 	/**
 	 * App-config key for the Service schema id/slug.
 	 *
@@ -121,6 +131,179 @@ class EligibilityService {
 	}//end getEligibleResources()
 
 	/**
+	 * Return the Resources that MATCH a Service: the skill-eligible resources
+	 * (the booking path's rule, REQ-APT-004) that are also active and bookable
+	 * and of a resource type the Service asks for.
+	 *
+	 * The skill match is exactly {@see getEligibleResources()}; this adds the
+	 * three filters REQ-SRG-002 names on top of it, so the list and the service
+	 * page count the resources that could really be booked, not every skilled
+	 * one. A Service that names no `requiredResourceTypes` accepts any type.
+	 *
+	 * @param string $serviceId Service UUID/slug. Empty returns an empty list.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-each-service-shows-the-resources-that-match-it-req-srg-002
+	 */
+	public function getMatchingResources(string $serviceId): array {
+		if ($serviceId === '') {
+			return [];
+		}
+
+		$service = $this->loadService(serviceId: $serviceId);
+		if ($service === null) {
+			return [];
+		}
+
+		$types = $this->normaliseSkillList(value: ($service['requiredResourceTypes'] ?? []));
+
+		$matching = [];
+		foreach ($this->getEligibleResources(serviceId: $serviceId) as $resource) {
+			if ($this->isActiveBookable(resource: $resource) === false) {
+				continue;
+			}
+
+			if ($types !== [] && in_array((string)($resource['type'] ?? ''), $types, true) === false) {
+				continue;
+			}
+
+			$matching[] = $resource;
+		}
+
+		return $matching;
+	}//end getMatchingResources()
+
+	/**
+	 * The number of Resources that match a Service.
+	 *
+	 * @param string $serviceId Service UUID/slug.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-each-service-shows-the-resources-that-match-it-req-srg-002
+	 */
+	public function countMatchingResources(string $serviceId): int {
+		return count($this->getMatchingResources(serviceId: $serviceId));
+	}//end countMatchingResources()
+
+	/**
+	 * The matching-resource count per Service, for the services list. An empty
+	 * `$serviceIds` counts every Service on the configured register/schema.
+	 *
+	 * @param array<int, string> $serviceIds The services to count, or [] for all.
+	 *
+	 * @return array<string, int> Service id to matching-resource count.
+	 *
+	 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-each-service-shows-the-resources-that-match-it-req-srg-002
+	 */
+	public function matchingResourceCounts(array $serviceIds = []): array {
+		$ids = $serviceIds;
+		if ($ids === []) {
+			$ids = $this->allServiceIds();
+		}
+
+		$counts = [];
+		foreach ($ids as $serviceId) {
+			$id = (string)$serviceId;
+			if ($id === '' || array_key_exists($id, $counts) === true) {
+				continue;
+			}
+
+			$counts[$id] = $this->countMatchingResources(serviceId: $id);
+		}
+
+		return $counts;
+	}//end matchingResourceCounts()
+
+	/**
+	 * Whether a Resource is active and bookable. A missing `status` is the
+	 * schema default `active`; a missing `bookable` is bookable, and only an
+	 * explicit `false` hides it (as the booking availability search reads it).
+	 *
+	 * @param array<string, mixed> $resource The resource row.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/services-and-resources-at-a-glance/specs/appointment-booking/spec.md#requirement-each-service-shows-the-resources-that-match-it-req-srg-002
+	 */
+	private function isActiveBookable(array $resource): bool {
+		$status = (string)($resource['status'] ?? 'active');
+		if ($status !== 'active') {
+			return false;
+		}
+
+		return ($resource['bookable'] ?? true) !== false;
+	}//end isActiveBookable()
+
+	/**
+	 * The ids of every Service on the configured register/schema.
+	 *
+	 * @return array<int, string>
+	 */
+	private function allServiceIds(): array {
+		$rows = $this->listRows(schemaKey: self::SERVICE_SCHEMA_KEY, failure: 'Pipelinq: service list failed for eligibility counts');
+
+		$ids = [];
+		foreach ($rows as $row) {
+			$service = $this->toArray(object: $row);
+			if ($service === null) {
+				continue;
+			}
+
+			$id = $this->serviceIdOf(service: $service);
+			if ($id !== '') {
+				$ids[] = $id;
+			}
+		}
+
+		return $ids;
+	}//end allServiceIds()
+
+	/**
+	 * Every row of a schema on the configured register ([] when unconfigured or unreadable).
+	 *
+	 * @param string $schemaKey The app-config key of the schema.
+	 * @param string $failure   The warning logged when the read fails.
+	 *
+	 * @return iterable<mixed>
+	 */
+	private function listRows(string $schemaKey, string $failure): iterable {
+		$register = $this->registerId();
+		$schema = $this->schemaId(key: $schemaKey);
+		if ($register === '' || $schema === '') {
+			return [];
+		}
+
+		try {
+			$rows = $this->getObjectService()->findAll(
+				config: ['filters' => ['register' => $register, 'schema' => $schema]]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning($failure);
+			return [];
+		}
+
+		return ($rows ?? []);
+	}//end listRows()
+
+	/**
+	 * A Service's id: its @self id, else its own id.
+	 *
+	 * @param array<string, mixed> $service The Service entity.
+	 *
+	 * @return string
+	 */
+	private function serviceIdOf(array $service): string {
+		$self = [];
+		if (is_array($service['@self'] ?? null) === true) {
+			$self = $service['@self'];
+		}
+
+		return (string)($self['id'] ?? ($service['id'] ?? ''));
+	}//end serviceIdOf()
+
+	/**
 	 * Return per-step eligibility for a multi-step Service.
 	 *
 	 * For each step in `Service.multiStep`, produce an entry containing the
@@ -148,39 +331,83 @@ class EligibilityService {
 		}
 
 		$resources = $this->loadResources();
-		$steps = $this->normaliseSteps(
-			multiStep: ($service['multiStep'] ?? []),
-			fallbackSkills: $this->normaliseSkillList(value: ($service['requiredSkills'] ?? [])),
-			fallbackDuration: (int)($service['durationMinutes'] ?? 0)
-		);
+		$steps = $this->stepsOf(service: $service);
 
 		$out = [];
 		foreach ($steps as $index => $step) {
-			$required = [];
-			if ($step['skillRequired'] !== '') {
-				$required = [$step['skillRequired']];
-			}
-
-			$eligibleForStep = [];
-			if ($step['allowGap'] === false) {
-				foreach ($resources as $resource) {
-					if ($this->matchesSkillRequirements(resource: $resource, requiredSkills: $required) === true) {
-						$eligibleForStep[] = $resource;
-					}
-				}
-			}
-
 			$out[] = [
 				'stepIndex' => $index,
 				'durationMinutes' => $step['durationMinutes'],
 				'skillRequired' => $step['skillRequired'],
 				'allowGap' => $step['allowGap'],
-				'eligibleResources' => $eligibleForStep,
+				'eligibleResources' => $this->eligibleForStep(step: $step, resources: $resources),
 			];
-		}//end foreach
+		}
 
 		return $out;
 	}//end getEligibleResourcesPerStep()
+
+	/**
+	 * A Service's normalised steps.
+	 *
+	 * Empty `multiStep` produces a single synthetic step using the Service's
+	 * top-level `requiredSkills` (joined into one synthetic step that requires
+	 * the full skill set; we collapse to one skill key for the step view by
+	 * stringifying the first required skill — callers that need the full set
+	 * should call {@see getEligibleResources()} instead) and its duration.
+	 *
+	 * @param array<string, mixed> $service The Service entity.
+	 *
+	 * @return array<int, array{durationMinutes: int, skillRequired: string, resourceType: string, allowGap: bool}>
+	 */
+	private function stepsOf(array $service): array {
+		$multiStep = ($service['multiStep'] ?? []);
+		$fallbackSkills = $this->normaliseSkillList(value: ($service['requiredSkills'] ?? []));
+		$fallbackDuration = (int)($service['durationMinutes'] ?? 0);
+		if (is_array($multiStep) === true && $multiStep !== []) {
+			return $this->normaliseStepList(multiStep: $multiStep);
+		}
+
+		$skill = '';
+		if ($fallbackSkills !== []) {
+			$skill = (string)$fallbackSkills[0];
+		}
+
+		return [
+			[
+				'durationMinutes' => max(0, $fallbackDuration),
+				'skillRequired' => $skill,
+				'resourceType' => '',
+				'allowGap' => false,
+			],
+		];
+	}//end stepsOf()
+
+	/**
+	 * The resources qualified for a step (none for a gap step).
+	 *
+	 * @param array<string, mixed>             $step      The normalised step.
+	 * @param array<int, array<string, mixed>> $resources Every resource.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function eligibleForStep(array $step, array $resources): array {
+		$required = [];
+		if ($step['skillRequired'] !== '') {
+			$required = [$step['skillRequired']];
+		}
+
+		$eligibleForStep = [];
+		if ($step['allowGap'] === false) {
+			foreach ($resources as $resource) {
+				if ($this->matchesSkillRequirements(resource: $resource, requiredSkills: $required) === true) {
+					$eligibleForStep[] = $resource;
+				}
+			}
+		}
+
+		return $eligibleForStep;
+	}//end eligibleForStep()
 
 	/**
 	 * Return Resources eligible AND available for a Service on a given date/duration.
@@ -208,6 +435,18 @@ class EligibilityService {
 			return [];
 		}
 
+		return $this->withFreeSlots(eligible: $eligible, slot: ['date' => $date, 'durationMinutes' => $durationMinutes]);
+	}//end getEligibleResourcesForSlot()
+
+	/**
+	 * The resources that have at least one free slot on a date.
+	 *
+	 * @param array<int, array<string, mixed>>       $eligible The skill-qualified resources.
+	 * @param array{date: string, durationMinutes: int} $slot     ISO date `YYYY-MM-DD` and service duration in minutes.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function withFreeSlots(array $eligible, array $slot): array {
 		$withSlots = [];
 		foreach ($eligible as $resource) {
 			$resourceId = $this->idOf(object: $resource);
@@ -217,8 +456,8 @@ class EligibilityService {
 
 			$slots = $this->availabilityService->computeAvailability(
 				resourceId: $resourceId,
-				date: $date,
-				serviceDurationMinutes: $durationMinutes
+				date: $slot['date'],
+				serviceDurationMinutes: $slot['durationMinutes']
 			);
 			if ($slots === []) {
 				continue;
@@ -228,7 +467,7 @@ class EligibilityService {
 		}
 
 		return $withSlots;
-	}//end getEligibleResourcesForSlot()
+	}//end withFreeSlots()
 
 	/**
 	 * Skill-match primitive — the booking domain's single ADR-012 seam.
@@ -284,8 +523,7 @@ class EligibilityService {
 		try {
 			$result = $this->getObjectService()->find(
 				id: $serviceId,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -304,28 +542,10 @@ class EligibilityService {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function loadResources(): array {
-		$register = $this->registerId();
-		$schema = $this->schemaId(key: self::RESOURCE_SCHEMA_KEY);
-		if ($register === '' || $schema === '') {
-			return [];
-		}
-
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-				]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: resource list failed for eligibility');
-			return [];
-		}
+		$rows = $this->listRows(schemaKey: self::RESOURCE_SCHEMA_KEY, failure: 'Pipelinq: resource list failed for eligibility');
 
 		$out = [];
-		foreach (($rows ?? []) as $row) {
+		foreach ($rows as $row) {
 			$resource = $this->toArray(object: $row);
 			if ($resource !== null) {
 				$out[] = $resource;
@@ -336,53 +556,40 @@ class EligibilityService {
 	}//end loadResources()
 
 	/**
-	 * Normalise a multiStep payload into a uniform list.
+	 * Normalise each array entry of a multiStep list; other entries are dropped.
 	 *
-	 * Empty `$multiStep` produces a single synthetic step using the Service's
-	 * top-level `requiredSkills` (joined into one synthetic step that requires
-	 * the full skill set; we collapse to one skill key for the step view by
-	 * stringifying the first required skill — callers that need the full set
-	 * should call {@see getEligibleResources()} instead).
-	 *
-	 * @param mixed $multiStep The raw `multiStep` value.
-	 * @param array<int, string> $fallbackSkills Service-level required skills (for the synthetic step).
-	 * @param int $fallbackDuration Service duration to use for the synthetic step.
+	 * @param array<mixed> $multiStep The raw `multiStep` list.
 	 *
 	 * @return array<int, array{durationMinutes: int, skillRequired: string, resourceType: string, allowGap: bool}>
 	 */
-	private function normaliseSteps(mixed $multiStep, array $fallbackSkills, int $fallbackDuration): array {
-		if (is_array($multiStep) === true && $multiStep !== []) {
-			$out = [];
-			foreach ($multiStep as $step) {
-				if (is_array($step) === false) {
-					continue;
-				}
-
-				$out[] = [
-					'durationMinutes' => max(0, (int)($step['durationMinutes'] ?? 0)),
-					'skillRequired' => (string)($step['skillRequired'] ?? ''),
-					'resourceType' => (string)($step['resourceType'] ?? ''),
-					'allowGap' => (bool)($step['allowGap'] ?? false),
-				];
+	private function normaliseStepList(array $multiStep): array {
+		$out = [];
+		foreach ($multiStep as $step) {
+			if (is_array($step) === false) {
+				continue;
 			}
 
-			return $out;
+			$out[] = $this->normaliseStep(step: $step);
 		}
 
-		$skill = '';
-		if ($fallbackSkills !== []) {
-			$skill = (string)$fallbackSkills[0];
-		}
+		return $out;
+	}//end normaliseStepList()
 
+	/**
+	 * Normalise one multiStep entry.
+	 *
+	 * @param array<string, mixed> $step The raw step.
+	 *
+	 * @return array{durationMinutes: int, skillRequired: string, resourceType: string, allowGap: bool}
+	 */
+	private function normaliseStep(array $step): array {
 		return [
-			[
-				'durationMinutes' => max(0, $fallbackDuration),
-				'skillRequired' => $skill,
-				'resourceType' => '',
-				'allowGap' => false,
-			],
+			'durationMinutes' => max(0, (int)($step['durationMinutes'] ?? 0)),
+			'skillRequired' => (string)($step['skillRequired'] ?? ''),
+			'resourceType' => (string)($step['resourceType'] ?? ''),
+			'allowGap' => (bool)($step['allowGap'] ?? false),
 		];
-	}//end normaliseSteps()
+	}//end normaliseStep()
 
 	/**
 	 * Coerce a raw `skills` / `requiredSkills` value into a list of strings.
@@ -414,116 +621,4 @@ class EligibilityService {
 
 		return $out;
 	}//end normaliseSkillList()
-
-	/**
-	 * Pull the canonical id out of a normalised object.
-	 *
-	 * @param array<string, mixed> $object Object data.
-	 *
-	 * @return string
-	 */
-	private function idOf(array $object): string {
-		if (isset($object['@self']) === true && is_array($object['@self']) === true) {
-			$self = $object['@self'];
-			if (isset($self['id']) === true) {
-				return (string)$self['id'];
-			}
-
-			if (isset($self['uuid']) === true) {
-				return (string)$self['uuid'];
-			}
-		}
-
-		if (isset($object['id']) === true) {
-			return (string)$object['id'];
-		}
-
-		if (isset($object['uuid']) === true) {
-			return (string)$object['uuid'];
-		}
-
-		return '';
-	}//end idOf()
-
-	/**
-	 * Normalise an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object Entity, array, or null.
-	 *
-	 * @return array<string, mixed>|null
-	 */
-	private function toArray(mixed $object): ?array {
-		if ($object === null) {
-			return null;
-		}
-
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true) {
-			if (method_exists($object, 'jsonSerialize') === true) {
-				$serialised = $object->jsonSerialize();
-				if (is_array($serialised) === true) {
-					return $serialised;
-				}
-			}
-
-			if (method_exists($object, 'toArray') === true) {
-				$arr = $object->toArray();
-				if (is_array($arr) === true) {
-					return $arr;
-				}
-			}
-
-			return (array)$object;
-		}
-
-		return null;
-	}//end toArray()
-
-	/**
-	 * Resolve the pipelinq register id from app config.
-	 *
-	 * Fails closed: '' means "unconfigured", and every caller refuses the
-	 * OpenRegister call on it. An empty register must never be handed to
-	 * OpenRegister — ObjectService skips setRegister() for an empty value, so
-	 * the query silently inherits whatever register context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @return string The configured register id, or '' when unconfigured.
-	 */
-	private function registerId(): string {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($registerId === '') {
-			$this->logger->warning(
-				'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
-			);
-		}
-
-		return $registerId;
-	}//end registerId()
-
-	/**
-	 * Resolve a schema id by app-config key.
-	 *
-	 * @param string $key App-config key, e.g. `service_schema`.
-	 *
-	 * @return string
-	 */
-	private function schemaId(string $key): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $key, '');
-	}//end schemaId()
-
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

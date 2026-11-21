@@ -30,17 +30,19 @@
  *
  * @link https://docs.x.com/x-api/posts/creation-of-a-post
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Social;
 
+use OCA\Pipelinq\Service\Social\Support\PostMetricsCall;
+
 /**
  * X, with a price per post.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+ * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) Eleven of the twelve are the
  *  `SocialNetworkAdapter` contract itself, which every network implements; the
@@ -48,6 +50,8 @@ namespace OCA\Pipelinq\Service\Social;
  *  off without splitting the interface.
  */
 class XAdapter extends AbstractSocialAdapter {
+	use PostMetricsCall;
+
 	/**
 	 * The budget provider id every X spend is charged against. It is the
 	 * broker provider name rather than a `channelProvider` UUID, because for
@@ -80,7 +84,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The network name.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function network(): string {
 		return 'x';
@@ -91,7 +95,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The provider identifier.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
 	 */
 	public function brokerProvider(): string {
 		return 'x';
@@ -103,7 +107,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return int The character limit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function bodyLimit(): int {
 		return 280;
@@ -114,7 +118,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return int The media limit.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 	 */
 	public function maxMedia(): int {
 		return 4;
@@ -125,7 +129,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return float The cost in euros.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
 	 */
 	public function costPerPost(): float {
 		return self::COST_PER_POST_EUR;
@@ -136,7 +140,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return float The cost in euros.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
+	 * @spec openspec/specs/social-posts/spec.md#requirement-publishing-to-x-stops-at-the-tenants-spend-budget
 	 */
 	public function costPerRead(): float {
 		return self::COST_PER_READ_EUR;
@@ -149,7 +153,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return SocialAdapterCall The request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	public function publishCall(SocialPublishRequest $request): SocialAdapterCall {
 		return new SocialAdapterCall(
@@ -166,7 +170,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The post id.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedId(array $payload): string {
 		$data = ($payload['data'] ?? []);
@@ -185,7 +189,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string The public address, or an empty string.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
+	 * @spec openspec/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {
 		$id = $this->readPublishedId(payload: $payload);
@@ -205,20 +209,13 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return SocialAdapterCall|null The request, or null without an id.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) A post is addressed by
 	 *  its own id.
 	 */
 	public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {
-		if (trim($externalId) === '') {
-			return null;
-		}
-
-		return new SocialAdapterCall(
-			method: 'GET',
-			path: '/2/tweets/' . rawurlencode($externalId) . '?tweet.fields=public_metrics',
-		);
+		return $this->postMetricsGet(externalId: $externalId, path: '/2/tweets/' . rawurlencode($externalId) . '?tweet.fields=public_metrics');
 	}//end metricsCall()
 
 	/**
@@ -230,7 +227,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return array{views: int, likes: int, comments: int, shares: int, clicks: int} The normalised numbers.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Same as above.
 	 */
@@ -253,7 +250,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return SocialAdapterCall|null The request.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The credential names the
 	 *  account, so the path takes no argument.
@@ -269,7 +266,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return int The follower count.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
+	 * @spec openspec/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	public function readFollowers(array $payload): int {
 		return $this->readInt(payload: $payload, path: ['data', 'public_metrics', 'followers_count']);
@@ -282,7 +279,7 @@ class XAdapter extends AbstractSocialAdapter {
 	 *
 	 * @return string An address that opens the composer.
 	 *
-	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
+	 * @spec openspec/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
 	 */
 	public function composerUrl(SocialPublishRequest $request): string {
 		return 'https://x.com/intent/post?text=' . rawurlencode($request->bodyWithLink());

@@ -267,8 +267,8 @@ class ConnectionsDeclarationTest extends TestCase {
 	 */
 	public function testEverySettingsLinkLandsOnSomethingThatExists(): void {
 		$anchors = [
-			'/settings/admin/pipelinq#section-cti' => 'src/views/settings/CtiPage.vue',
-			'/settings/admin/pipelinq#section-mail-transports' => 'src/views/settings/DeliverabilitySettings.vue',
+			'/settings/admin/pipelinq?tab=connections#section-cti' => 'src/views/settings/CtiSettings.vue',
+			'/settings/admin/pipelinq?tab=marketing#section-mail-transports' => 'src/views/settings/DeliverabilitySettings.vue',
 		];
 		$socialFragment = (string)file_get_contents($this->root() . '/src/manifest.d/78-social-publishing.json');
 		$linked         = 0;

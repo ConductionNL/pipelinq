@@ -1,0 +1,1149 @@
+{
+    "audiences": [
+        "client",
+        "customer",
+        "citizen"
+    ],
+    "audience": "client",
+    "contribution: client": {
+        "label": "Vragen en contact",
+        "collections": [
+            {
+                "id": "clientRequests",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "filter": {
+                    "ticketType": "request"
+                },
+                "scopeField": "client",
+                "scopeClaim": "clientId",
+                "label": "Verzoeken van uw organisatie",
+                "listable": true,
+                "fields": [
+                    "title",
+                    "category",
+                    "status",
+                    "description",
+                    "occurredAt",
+                    "customerMessage"
+                ],
+                "columns": [
+                    {
+                        "field": "title",
+                        "label": "Onderwerp"
+                    },
+                    {
+                        "field": "category",
+                        "label": "Categorie"
+                    },
+                    {
+                        "field": "status",
+                        "label": "Status",
+                        "render": "badge",
+                        "valueLabels": {
+                            "new": "Ontvangen",
+                            "in_progress": "In behandeling",
+                            "awaiting_customer": "Wacht op uw reactie",
+                            "resolved": "Opgelost",
+                            "completed": "Afgerond",
+                            "rejected": "Afgewezen",
+                            "converted": "Omgezet in een zaak",
+                            "closed": "Gesloten"
+                        }
+                    },
+                    {
+                        "field": "occurredAt",
+                        "label": "Ingediend",
+                        "render": "date"
+                    }
+                ],
+                "detail": {
+                    "layout": "card",
+                    "fields": [
+                        "title",
+                        "category",
+                        "status",
+                        "description",
+                        "occurredAt",
+                        "customerMessage"
+                    ]
+                },
+                "defaultSort": {
+                    "field": "occurredAt",
+                    "direction": "desc"
+                }
+            },
+            {
+                "id": "clientComplaints",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "filter": {
+                    "ticketType": "complaint"
+                },
+                "scopeField": "client",
+                "scopeClaim": "clientId",
+                "label": "Klachten van uw organisatie",
+                "listable": true,
+                "fields": [
+                    "title",
+                    "complaintCategory",
+                    "status",
+                    "description",
+                    "occurredAt",
+                    "customerMessage"
+                ]
+            },
+            {
+                "id": "clientContracts",
+                "register": "pipelinq",
+                "schema": "salesContract",
+                "scopeField": "clientRef",
+                "scopeClaim": "clientId",
+                "label": "Contracten",
+                "listable": true
+            },
+            {
+                "id": "clientContactmoments",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "filter": {
+                    "ticketType": "interaction"
+                },
+                "scopeField": "client",
+                "scopeClaim": "clientId",
+                "label": "Contactmomenten",
+                "listable": true,
+                "fields": [
+                    "title",
+                    "channel",
+                    "outcome",
+                    "occurredAt"
+                ]
+            },
+            {
+                "id": "myQuestions",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "filter": {
+                    "ticketType": "request",
+                    "channel": "portal"
+                },
+                "scopeField": "portalSubject",
+                "label": "Mijn vragen",
+                "listable": true,
+                "fields": [
+                    "title",
+                    "description",
+                    "status",
+                    "occurredAt",
+                    "customerMessage",
+                    "portalReplies",
+                    "subjectReference"
+                ],
+                "columns": [
+                    {
+                        "field": "title",
+                        "label": "Onderwerp"
+                    },
+                    {
+                        "field": "status",
+                        "label": "Status",
+                        "render": "badge",
+                        "valueLabels": {
+                            "new": "Ontvangen",
+                            "in_progress": "In behandeling",
+                            "awaiting_customer": "Wacht op uw reactie",
+                            "resolved": "Opgelost",
+                            "completed": "Afgerond",
+                            "rejected": "Afgewezen",
+                            "converted": "Omgezet in een Woo-verzoek",
+                            "closed": "Gesloten"
+                        }
+                    },
+                    {
+                        "field": "occurredAt",
+                        "label": "Gesteld",
+                        "render": "date"
+                    }
+                ],
+                "detail": {
+                    "layout": "card",
+                    "fields": [
+                        "title",
+                        "status",
+                        "occurredAt"
+                    ]
+                },
+                "timeline": {
+                    "label": "Vraag en antwoord",
+                    "provider": "questionTimeline"
+                },
+                "itemList": {
+                    "label": "Waar uw vraag over gaat",
+                    "provider": "questionDossierItems"
+                },
+                "defaultSort": {
+                    "field": "occurredAt",
+                    "direction": "desc"
+                }
+            },
+            {
+                "id": "ownRequests",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "filter": {
+                    "ticketType": "request",
+                    "channel": "web"
+                },
+                "scopeField": "portalSubject",
+                "label": "Mijn verzoeken",
+                "listable": true,
+                "fields": [
+                    "title",
+                    "category",
+                    "status",
+                    "description",
+                    "occurredAt",
+                    "customerMessage"
+                ],
+                "columns": [
+                    {
+                        "field": "title",
+                        "label": "Onderwerp"
+                    },
+                    {
+                        "field": "status",
+                        "label": "Status",
+                        "render": "badge",
+                        "valueLabels": {
+                            "new": "Ontvangen",
+                            "in_progress": "In behandeling",
+                            "awaiting_customer": "Wacht op uw reactie",
+                            "resolved": "Opgelost",
+                            "completed": "Afgerond",
+                            "rejected": "Afgewezen",
+                            "converted": "Omgezet in een zaak",
+                            "closed": "Gesloten"
+                        }
+                    },
+                    {
+                        "field": "occurredAt",
+                        "label": "Ingediend",
+                        "render": "date"
+                    }
+                ],
+                "detail": {
+                    "layout": "card",
+                    "fields": [
+                        "title",
+                        "category",
+                        "status",
+                        "description",
+                        "occurredAt",
+                        "customerMessage"
+                    ]
+                },
+                "defaultSort": {
+                    "field": "occurredAt",
+                    "direction": "desc"
+                }
+            },
+            {
+                "id": "ownComplaints",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "filter": {
+                    "ticketType": "complaint"
+                },
+                "scopeField": "portalSubject",
+                "label": "Mijn klachten",
+                "listable": true,
+                "fields": [
+                    "title",
+                    "complaintCategory",
+                    "status",
+                    "description",
+                    "occurredAt",
+                    "customerMessage"
+                ],
+                "columns": [
+                    {
+                        "field": "title",
+                        "label": "Onderwerp"
+                    },
+                    {
+                        "field": "status",
+                        "label": "Status",
+                        "render": "badge",
+                        "valueLabels": {
+                            "new": "Ontvangen",
+                            "in_progress": "In behandeling",
+                            "awaiting_customer": "Wacht op uw reactie",
+                            "resolved": "Opgelost",
+                            "completed": "Afgerond",
+                            "rejected": "Afgewezen",
+                            "converted": "Omgezet in een zaak",
+                            "closed": "Gesloten"
+                        }
+                    },
+                    {
+                        "field": "occurredAt",
+                        "label": "Ingediend",
+                        "render": "date"
+                    }
+                ],
+                "detail": {
+                    "layout": "card",
+                    "fields": [
+                        "title",
+                        "complaintCategory",
+                        "status",
+                        "description",
+                        "occurredAt",
+                        "customerMessage"
+                    ]
+                },
+                "defaultSort": {
+                    "field": "occurredAt",
+                    "direction": "desc"
+                }
+            }
+        ],
+        "actions": [
+            {
+                "id": "createRequest",
+                "type": "create",
+                "label": "Een verzoek indienen namens uw organisatie",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "defaults": {
+                    "ticketType": "request"
+                },
+                "scopeField": "client",
+                "scopeClaim": "clientId",
+                "fields": [
+                    "title",
+                    "description",
+                    "category"
+                ],
+                "fieldConfigs": {
+                    "title": {
+                        "label": "Onderwerp",
+                        "required": true,
+                        "size": "large",
+                        "placeholder": "Waar gaat uw verzoek over?"
+                    },
+                    "description": {
+                        "label": "Omschrijving",
+                        "required": true,
+                        "size": "full",
+                        "placeholder": "Beschrijf uw verzoek zo volledig mogelijk"
+                    },
+                    "category": {
+                        "label": "Categorie"
+                    }
+                },
+                "optionsProviders": {
+                    "category": {
+                        "type": "static",
+                        "options": [
+                            {
+                                "value": "Support",
+                                "label": "Support"
+                            },
+                            {
+                                "value": "Facturatie",
+                                "label": "Facturatie"
+                            },
+                            {
+                                "value": "Technisch",
+                                "label": "Technisch"
+                            },
+                            {
+                                "value": "Accountbeheer",
+                                "label": "Accountbeheer"
+                            },
+                            {
+                                "value": "Sales",
+                                "label": "Sales"
+                            },
+                            {
+                                "value": "Integratie",
+                                "label": "Integratie"
+                            }
+                        ]
+                    }
+                },
+                "submitLabel": "Verzoek indienen",
+                "successMessage": "Uw verzoek is ingediend"
+            },
+            {
+                "id": "createComplaint",
+                "type": "create",
+                "label": "Een klacht indienen namens uw organisatie",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "defaults": {
+                    "ticketType": "complaint"
+                },
+                "scopeField": "client",
+                "scopeClaim": "clientId",
+                "fields": [
+                    "title",
+                    "description",
+                    "complaintCategory"
+                ]
+            },
+            {
+                "id": "askQuestion",
+                "type": "create",
+                "label": "Stel een vraag",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "defaults": {
+                    "ticketType": "request",
+                    "channel": "portal"
+                },
+                "scopeField": "portalSubject",
+                "fields": [
+                    "title",
+                    "description"
+                ],
+                "requiredFields": [
+                    "title",
+                    "description"
+                ],
+                "fieldConfigs": {
+                    "title": {
+                        "label": "Onderwerp",
+                        "required": true,
+                        "placeholder": "Waar gaat uw vraag over?"
+                    },
+                    "description": {
+                        "label": "Uw vraag",
+                        "required": true,
+                        "size": "full"
+                    }
+                },
+                "createdAtField": "occurredAt",
+                "confirmationMail": "contact-confirmation",
+                "topicField": "title",
+                "submitLabel": "Vraag versturen",
+                "successMessage": "Wij hebben uw vraag ontvangen. U vindt hem terug bij Mijn vragen."
+            },
+            {
+                "id": "replyToQuestion",
+                "label": "Reageren op het antwoord",
+                "endpoint": "/index.php/apps/pipelinq/api/portal/questions/reply",
+                "method": "POST",
+                "attachTo": {
+                    "app": "pipelinq",
+                    "schema": "ticket",
+                    "collection": "myQuestions"
+                },
+                "rowField": "ticket",
+                "rowWhen": {
+                    "field": "status",
+                    "in": [
+                        "awaiting_customer"
+                    ]
+                },
+                "fields": [
+                    "ticket",
+                    "message"
+                ],
+                "requiredFields": [
+                    "message"
+                ],
+                "fieldConfigs": {
+                    "ticket": {
+                        "visible": false,
+                        "required": true
+                    },
+                    "message": {
+                        "label": "Uw reactie",
+                        "required": true,
+                        "size": "full"
+                    }
+                },
+                "submitLabel": "Reactie versturen",
+                "successMessage": "Uw reactie is verstuurd."
+            },
+            {
+                "id": "createOwnRequest",
+                "type": "create",
+                "label": "Een verzoek indienen",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "defaults": {
+                    "ticketType": "request",
+                    "channel": "web"
+                },
+                "scopeField": "portalSubject",
+                "fields": [
+                    "title",
+                    "description",
+                    "category"
+                ],
+                "fieldConfigs": {
+                    "title": {
+                        "label": "Onderwerp",
+                        "required": true,
+                        "size": "large",
+                        "placeholder": "Waar gaat uw verzoek over?"
+                    },
+                    "description": {
+                        "label": "Omschrijving",
+                        "required": true,
+                        "size": "full",
+                        "placeholder": "Beschrijf uw verzoek zo volledig mogelijk"
+                    },
+                    "category": {
+                        "label": "Categorie"
+                    }
+                },
+                "submitLabel": "Verzoek indienen",
+                "successMessage": "Uw verzoek is ingediend"
+            },
+            {
+                "id": "createOwnComplaint",
+                "type": "create",
+                "label": "Een klacht indienen",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "defaults": {
+                    "ticketType": "complaint",
+                    "channel": "web"
+                },
+                "scopeField": "portalSubject",
+                "fields": [
+                    "title",
+                    "description",
+                    "complaintCategory"
+                ],
+                "fieldConfigs": {
+                    "title": {
+                        "label": "Onderwerp",
+                        "required": true,
+                        "size": "large",
+                        "placeholder": "Waar gaat uw klacht over?"
+                    },
+                    "description": {
+                        "label": "Omschrijving",
+                        "required": true,
+                        "size": "full",
+                        "placeholder": "Wat ging er mis?"
+                    },
+                    "complaintCategory": {
+                        "label": "Soort klacht"
+                    }
+                },
+                "submitLabel": "Klacht indienen",
+                "successMessage": "Uw klacht is ingediend"
+            }
+        ],
+        "pages": [
+            {
+                "id": "requests",
+                "label": "Mijn verzoeken",
+                "group": "Vragen en contact",
+                "icon": "MessageText",
+                "blocks": [
+                    {
+                        "type": "richText",
+                        "markdown": "Dien een nieuw verzoek in of bekijk de status van uw lopende verzoeken."
+                    },
+                    {
+                        "type": "action",
+                        "action": "createOwnRequest"
+                    },
+                    {
+                        "type": "collection",
+                        "collection": "ownRequests"
+                    }
+                ]
+            },
+            {
+                "id": "complaints",
+                "label": "Mijn klachten",
+                "group": "Vragen en contact",
+                "icon": "AlertCircle",
+                "blocks": [
+                    {
+                        "type": "richText",
+                        "markdown": "Dien een klacht in of bekijk hoe het met uw klachten staat."
+                    },
+                    {
+                        "type": "action",
+                        "action": "createOwnComplaint"
+                    },
+                    {
+                        "type": "collection",
+                        "collection": "ownComplaints"
+                    }
+                ]
+            },
+            {
+                "id": "organisationRequests",
+                "label": "Verzoeken van uw organisatie",
+                "group": "Namens uw organisatie",
+                "icon": "OfficeBuilding",
+                "blocks": [
+                    {
+                        "type": "richText",
+                        "markdown": "Dien een verzoek in namens uw organisatie of bekijk de status van haar lopende verzoeken."
+                    },
+                    {
+                        "type": "action",
+                        "action": "createRequest"
+                    },
+                    {
+                        "type": "collection",
+                        "collection": "clientRequests"
+                    }
+                ]
+            },
+            {
+                "id": "organisationComplaints",
+                "label": "Klachten van uw organisatie",
+                "group": "Namens uw organisatie",
+                "icon": "AlertCircle",
+                "blocks": [
+                    {
+                        "type": "action",
+                        "action": "createComplaint"
+                    },
+                    {
+                        "type": "collection",
+                        "collection": "clientComplaints"
+                    }
+                ]
+            },
+            {
+                "id": "contracts",
+                "label": "Contracten",
+                "group": "Namens uw organisatie",
+                "icon": "FileDocument",
+                "blocks": [
+                    {
+                        "type": "collection",
+                        "collection": "clientContracts"
+                    }
+                ]
+            },
+            {
+                "id": "contactmoments",
+                "label": "Contactmomenten",
+                "group": "Namens uw organisatie",
+                "icon": "Phone",
+                "blocks": [
+                    {
+                        "type": "collection",
+                        "collection": "clientContactmoments"
+                    }
+                ]
+            },
+            {
+                "id": "questions",
+                "label": "Mijn vragen",
+                "group": "Vragen en contact",
+                "icon": "CommentQuestion",
+                "blocks": [
+                    {
+                        "type": "richText",
+                        "markdown": "Hier leest u de antwoorden op vragen die u over uw dossiers stelde."
+                    },
+                    {
+                        "type": "collection",
+                        "collection": "myQuestions"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "myQuestions"
+                    }
+                ]
+            }
+        ],
+        "notifications": [
+            "pipelinq.question.answered"
+        ]
+    },
+    "contribution: customer": {
+        "label": "Afspraken en klantenkaart",
+        "pages": [
+            {
+                "id": "customerLoyalty",
+                "label": "Mijn klantenkaart",
+                "group": "Afspraken en klantenkaart",
+                "blocks": [
+                    {
+                        "type": "collection",
+                        "collection": "customerLoyalty"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "customerLoyalty"
+                    }
+                ]
+            },
+            {
+                "id": "customerBookings",
+                "label": "Mijn afspraken",
+                "group": "Afspraken en klantenkaart",
+                "blocks": [
+                    {
+                        "type": "collection",
+                        "collection": "customerBookings"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "customerBookings"
+                    }
+                ]
+            }
+        ],
+        "collections": [
+            {
+                "id": "customerLoyalty",
+                "register": "pipelinq",
+                "schema": "customerLoyaltyAccount",
+                "scopeField": "customerId",
+                "scopeClaim": "customerUid",
+                "label": "Mijn klantenkaart",
+                "listable": true
+            },
+            {
+                "id": "customerBookings",
+                "register": "pipelinq",
+                "schema": "appointmentBooking",
+                "scopeField": "customerId",
+                "scopeClaim": "customerUid",
+                "label": "Mijn afspraken",
+                "listable": true,
+                "minTrust": "substantial",
+                "fields": [
+                    "serviceId",
+                    "startAt",
+                    "endAt",
+                    "status",
+                    "notes",
+                    "depositAmount",
+                    "depositPaidAt"
+                ]
+            }
+        ],
+        "actions": [],
+        "notifications": []
+    },
+    "contribution: citizen": {
+        "label": "Vragen en contact",
+        "collections": [
+            {
+                "id": "myQuestions",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "filter": {
+                    "ticketType": "request",
+                    "channel": "portal"
+                },
+                "scopeField": "portalSubject",
+                "label": "Mijn vragen",
+                "listable": true,
+                "fields": [
+                    "title",
+                    "description",
+                    "status",
+                    "occurredAt",
+                    "customerMessage",
+                    "portalReplies",
+                    "subjectReference"
+                ],
+                "columns": [
+                    {
+                        "field": "title",
+                        "label": "Onderwerp"
+                    },
+                    {
+                        "field": "status",
+                        "label": "Status",
+                        "render": "badge",
+                        "valueLabels": {
+                            "new": "Ontvangen",
+                            "in_progress": "In behandeling",
+                            "awaiting_customer": "Wacht op uw reactie",
+                            "resolved": "Opgelost",
+                            "completed": "Afgerond",
+                            "rejected": "Afgewezen",
+                            "converted": "Omgezet in een Woo-verzoek",
+                            "closed": "Gesloten"
+                        }
+                    },
+                    {
+                        "field": "occurredAt",
+                        "label": "Gesteld",
+                        "render": "date"
+                    }
+                ],
+                "detail": {
+                    "layout": "card",
+                    "fields": [
+                        "title",
+                        "status",
+                        "occurredAt"
+                    ]
+                },
+                "timeline": {
+                    "label": "Vraag en antwoord",
+                    "provider": "questionTimeline"
+                },
+                "itemList": {
+                    "label": "Waar uw vraag over gaat",
+                    "provider": "questionDossierItems"
+                },
+                "defaultSort": {
+                    "field": "occurredAt",
+                    "direction": "desc"
+                }
+            },
+            {
+                "id": "ownRequests",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "filter": {
+                    "ticketType": "request",
+                    "channel": "web"
+                },
+                "scopeField": "portalSubject",
+                "label": "Mijn verzoeken",
+                "listable": true,
+                "fields": [
+                    "title",
+                    "category",
+                    "status",
+                    "description",
+                    "occurredAt",
+                    "customerMessage"
+                ],
+                "columns": [
+                    {
+                        "field": "title",
+                        "label": "Onderwerp"
+                    },
+                    {
+                        "field": "status",
+                        "label": "Status",
+                        "render": "badge",
+                        "valueLabels": {
+                            "new": "Ontvangen",
+                            "in_progress": "In behandeling",
+                            "awaiting_customer": "Wacht op uw reactie",
+                            "resolved": "Opgelost",
+                            "completed": "Afgerond",
+                            "rejected": "Afgewezen",
+                            "converted": "Omgezet in een zaak",
+                            "closed": "Gesloten"
+                        }
+                    },
+                    {
+                        "field": "occurredAt",
+                        "label": "Ingediend",
+                        "render": "date"
+                    }
+                ],
+                "detail": {
+                    "layout": "card",
+                    "fields": [
+                        "title",
+                        "category",
+                        "status",
+                        "description",
+                        "occurredAt",
+                        "customerMessage"
+                    ]
+                },
+                "defaultSort": {
+                    "field": "occurredAt",
+                    "direction": "desc"
+                }
+            },
+            {
+                "id": "ownComplaints",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "filter": {
+                    "ticketType": "complaint"
+                },
+                "scopeField": "portalSubject",
+                "label": "Mijn klachten",
+                "listable": true,
+                "fields": [
+                    "title",
+                    "complaintCategory",
+                    "status",
+                    "description",
+                    "occurredAt",
+                    "customerMessage"
+                ],
+                "columns": [
+                    {
+                        "field": "title",
+                        "label": "Onderwerp"
+                    },
+                    {
+                        "field": "status",
+                        "label": "Status",
+                        "render": "badge",
+                        "valueLabels": {
+                            "new": "Ontvangen",
+                            "in_progress": "In behandeling",
+                            "awaiting_customer": "Wacht op uw reactie",
+                            "resolved": "Opgelost",
+                            "completed": "Afgerond",
+                            "rejected": "Afgewezen",
+                            "converted": "Omgezet in een zaak",
+                            "closed": "Gesloten"
+                        }
+                    },
+                    {
+                        "field": "occurredAt",
+                        "label": "Ingediend",
+                        "render": "date"
+                    }
+                ],
+                "detail": {
+                    "layout": "card",
+                    "fields": [
+                        "title",
+                        "complaintCategory",
+                        "status",
+                        "description",
+                        "occurredAt",
+                        "customerMessage"
+                    ]
+                },
+                "defaultSort": {
+                    "field": "occurredAt",
+                    "direction": "desc"
+                }
+            }
+        ],
+        "actions": [
+            {
+                "id": "askQuestion",
+                "type": "create",
+                "label": "Stel een vraag",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "defaults": {
+                    "ticketType": "request",
+                    "channel": "portal"
+                },
+                "scopeField": "portalSubject",
+                "fields": [
+                    "title",
+                    "description"
+                ],
+                "requiredFields": [
+                    "title",
+                    "description"
+                ],
+                "fieldConfigs": {
+                    "title": {
+                        "label": "Onderwerp",
+                        "required": true,
+                        "placeholder": "Waar gaat uw vraag over?"
+                    },
+                    "description": {
+                        "label": "Uw vraag",
+                        "required": true,
+                        "size": "full"
+                    }
+                },
+                "createdAtField": "occurredAt",
+                "confirmationMail": "contact-confirmation",
+                "topicField": "title",
+                "submitLabel": "Vraag versturen",
+                "successMessage": "Wij hebben uw vraag ontvangen. U vindt hem terug bij Mijn vragen."
+            },
+            {
+                "id": "replyToQuestion",
+                "label": "Reageren op het antwoord",
+                "endpoint": "/index.php/apps/pipelinq/api/portal/questions/reply",
+                "method": "POST",
+                "attachTo": {
+                    "app": "pipelinq",
+                    "schema": "ticket",
+                    "collection": "myQuestions"
+                },
+                "rowField": "ticket",
+                "rowWhen": {
+                    "field": "status",
+                    "in": [
+                        "awaiting_customer"
+                    ]
+                },
+                "fields": [
+                    "ticket",
+                    "message"
+                ],
+                "requiredFields": [
+                    "message"
+                ],
+                "fieldConfigs": {
+                    "ticket": {
+                        "visible": false,
+                        "required": true
+                    },
+                    "message": {
+                        "label": "Uw reactie",
+                        "required": true,
+                        "size": "full"
+                    }
+                },
+                "submitLabel": "Reactie versturen",
+                "successMessage": "Uw reactie is verstuurd."
+            },
+            {
+                "id": "createOwnRequest",
+                "type": "create",
+                "label": "Een verzoek indienen",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "defaults": {
+                    "ticketType": "request",
+                    "channel": "web"
+                },
+                "scopeField": "portalSubject",
+                "fields": [
+                    "title",
+                    "description",
+                    "category"
+                ],
+                "fieldConfigs": {
+                    "title": {
+                        "label": "Onderwerp",
+                        "required": true,
+                        "size": "large",
+                        "placeholder": "Waar gaat uw verzoek over?"
+                    },
+                    "description": {
+                        "label": "Omschrijving",
+                        "required": true,
+                        "size": "full",
+                        "placeholder": "Beschrijf uw verzoek zo volledig mogelijk"
+                    },
+                    "category": {
+                        "label": "Categorie"
+                    }
+                },
+                "submitLabel": "Verzoek indienen",
+                "successMessage": "Uw verzoek is ingediend"
+            },
+            {
+                "id": "createOwnComplaint",
+                "type": "create",
+                "label": "Een klacht indienen",
+                "register": "pipelinq",
+                "schema": "ticket",
+                "defaults": {
+                    "ticketType": "complaint",
+                    "channel": "web"
+                },
+                "scopeField": "portalSubject",
+                "fields": [
+                    "title",
+                    "description",
+                    "complaintCategory"
+                ],
+                "fieldConfigs": {
+                    "title": {
+                        "label": "Onderwerp",
+                        "required": true,
+                        "size": "large",
+                        "placeholder": "Waar gaat uw klacht over?"
+                    },
+                    "description": {
+                        "label": "Omschrijving",
+                        "required": true,
+                        "size": "full",
+                        "placeholder": "Wat ging er mis?"
+                    },
+                    "complaintCategory": {
+                        "label": "Soort klacht"
+                    }
+                },
+                "submitLabel": "Klacht indienen",
+                "successMessage": "Uw klacht is ingediend"
+            }
+        ],
+        "pages": [
+            {
+                "id": "requests",
+                "label": "Mijn verzoeken",
+                "group": "Vragen en contact",
+                "icon": "MessageText",
+                "blocks": [
+                    {
+                        "type": "richText",
+                        "markdown": "Dien een nieuw verzoek in of bekijk de status van uw lopende verzoeken."
+                    },
+                    {
+                        "type": "action",
+                        "action": "createOwnRequest"
+                    },
+                    {
+                        "type": "collection",
+                        "collection": "ownRequests"
+                    }
+                ]
+            },
+            {
+                "id": "complaints",
+                "label": "Mijn klachten",
+                "group": "Vragen en contact",
+                "icon": "AlertCircle",
+                "blocks": [
+                    {
+                        "type": "richText",
+                        "markdown": "Dien een klacht in of bekijk hoe het met uw klachten staat."
+                    },
+                    {
+                        "type": "action",
+                        "action": "createOwnComplaint"
+                    },
+                    {
+                        "type": "collection",
+                        "collection": "ownComplaints"
+                    }
+                ]
+            },
+            {
+                "id": "questions",
+                "label": "Mijn vragen",
+                "group": "Vragen en contact",
+                "icon": "CommentQuestion",
+                "blocks": [
+                    {
+                        "type": "richText",
+                        "markdown": "Hier leest u de antwoorden op vragen die u over uw dossiers stelde."
+                    },
+                    {
+                        "type": "collection",
+                        "collection": "myQuestions"
+                    },
+                    {
+                        "type": "detail",
+                        "collection": "myQuestions"
+                    }
+                ]
+            }
+        ],
+        "notifications": [
+            "pipelinq.question.answered"
+        ]
+    },
+    "contribution: employee": null,
+    "contribution: (empty)": null,
+    "contribution: CLIENT": null,
+    "contribution: no audience": null
+}

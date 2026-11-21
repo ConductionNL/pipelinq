@@ -143,7 +143,7 @@ class Customer360SummaryServiceTest extends TestCase {
 	}//end stubTicketsByType()
 
 	/**
-	 * Open tickets are counted across all three ticketTypes, spanning statuses
+	 * Open tickets are counted across all four ticketTypes, spanning statuses
 	 * the equality-only declarative primitives cannot express as one filter.
 	 *
 	 * @return void
@@ -153,16 +153,17 @@ class Customer360SummaryServiceTest extends TestCase {
 			[
 				TicketService::TYPE_REQUEST => [['title' => 'R1']],
 				TicketService::TYPE_COMPLAINT => [['title' => 'C1']],
+				TicketService::TYPE_MELDING => [['title' => 'ML1']],
 				TicketService::TYPE_CONTACTMOMENT => [['title' => 'M1'], ['title' => 'M2']],
 			]
 		);
 
 		$summary = $this->service->getSummary('client-1');
 
-		$this->assertSame(4, $summary['openTicketCount']);
+		$this->assertSame(expected: 5, actual: $summary['openTicketCount']);
 		$this->assertSame(
-			['request' => 1, 'complaint' => 1, 'interaction' => 2],
-			$summary['openTicketsByType']
+			expected: ['request' => 1, 'complaint' => 1, 'melding' => 1, 'interaction' => 2],
+			actual: $summary['openTicketsByType']
 		);
 	}//end testOpenTicketCountSpansAllTicketTypes()
 
@@ -313,4 +314,74 @@ class Customer360SummaryServiceTest extends TestCase {
 		$this->assertSame(0, $summary['sla']['breached']);
 		$this->assertSame(0, $summary['sla']['atRisk']);
 	}//end testMissingSlaDeadlineIsSkippedNotThrown()
+
+	/**
+	 * The tickets waiting for the client are its requests, complaints and
+	 * meldingen in status `awaiting_customer`, each asked with the client and
+	 * the status; contact moments are never asked.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/screen-pop-incoming-call/tasks.md#task-2.3
+	 */
+	public function testAwaitingCustomerCountsTheClientsWaitingTickets(): void {
+		$asked = [];
+		$this->ticketService->method('findByType')->willReturnCallback(
+			static function (string $ticketType, array $extraFilters = []) use (&$asked): array {
+				if (($extraFilters['status'] ?? null) !== 'awaiting_customer') {
+					return [];
+				}
+
+				$asked[] = [$ticketType, $extraFilters];
+				return match ($ticketType) {
+					TicketService::TYPE_REQUEST => [
+						['client' => 'client-1', 'status' => 'awaiting_customer'],
+						['client' => 'client-1', 'status' => 'awaiting_customer'],
+					],
+					TicketService::TYPE_COMPLAINT => [['client' => 'client-1', 'status' => 'awaiting_customer']],
+					TicketService::TYPE_CONTACTMOMENT => [['client' => 'client-1', 'status' => 'awaiting_customer']],
+					default => [],
+				};
+			}
+		);
+
+		$summary = $this->service->getSummary('client-1');
+
+		$this->assertSame(expected: 3, actual: $summary['awaitingCustomerCount']);
+		$this->assertSame(
+			expected: [
+				[TicketService::TYPE_REQUEST, ['client' => 'client-1', 'status' => 'awaiting_customer']],
+				[TicketService::TYPE_COMPLAINT, ['client' => 'client-1', 'status' => 'awaiting_customer']],
+				[TicketService::TYPE_MELDING, ['client' => 'client-1', 'status' => 'awaiting_customer']],
+			],
+			actual: $asked
+		);
+	}//end testAwaitingCustomerCountsTheClientsWaitingTickets()
+
+	/**
+	 * A row of another client, or one that is not waiting, is not counted even
+	 * when the store hands it back for the filter.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/screen-pop-incoming-call/tasks.md#task-2.3
+	 */
+	public function testAwaitingCustomerRechecksEveryRow(): void {
+		$this->ticketService->method('findByType')->willReturnCallback(
+			static function (string $ticketType, array $extraFilters = []): array {
+				if (($extraFilters['status'] ?? null) !== 'awaiting_customer' || $ticketType !== TicketService::TYPE_REQUEST) {
+					return [];
+				}
+
+				return [
+					['client' => 'client-1', 'status' => 'awaiting_customer'],
+					['client' => 'client-2', 'status' => 'awaiting_customer'],
+					['client' => 'client-1', 'status' => 'in_progress'],
+					['status' => 'awaiting_customer'],
+				];
+			}
+		);
+
+		$this->assertSame(expected: 1, actual: $this->service->getSummary('client-1')['awaitingCustomerCount']);
+	}//end testAwaitingCustomerRechecksEveryRow()
 }//end class

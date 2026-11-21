@@ -31,6 +31,8 @@ use OCA\Pipelinq\Controller\ForecastController;
 use OCA\Pipelinq\Lifecycle\ForecastAccessPolicy;
 use OCA\Pipelinq\Service\ForecastExportService;
 use OCA\Pipelinq\Service\ForecastOverrideService;
+use OCA\Pipelinq\Tests\Unit\Support\Autowire;
+use OCA\Pipelinq\Tests\Unit\Support\NextcloudDispatch;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -102,14 +104,32 @@ class ForecastControllerTest extends TestCase {
 		$this->overrideService = $this->createMock(ForecastOverrideService::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->controller = new ForecastController($this->request,
-			$this->userSession,
-			$this->accessPolicy,
-			$this->exportService,
-			$this->overrideService,
-			$logger
+		$this->controller = Autowire::build(
+			class: ForecastController::class,
+			doubles: [
+				IRequest::class => $this->request,
+				IUserSession::class => $this->userSession,
+				ForecastAccessPolicy::class => $this->accessPolicy,
+				ForecastExportService::class => $this->exportService,
+				ForecastOverrideService::class => $this->overrideService,
+				LoggerInterface::class => $logger,
+			]
 		);
 	}//end setUp()
+
+	/**
+	 * Call snapshots() as Nextcloud dispatches it, with these request parameters.
+	 *
+	 * @param array<string, mixed> $params The request parameters.
+	 *
+	 * @return mixed The response.
+	 */
+	private function snapshots(array $params): mixed {
+		$this->request->method('getParam')->willReturnCallback(
+			static fn (string $key, mixed $default = null): mixed => (isset($params[$key]) === true ? $params[$key] : $default)
+		);
+		return NextcloudDispatch::call(controller: $this->controller, method: 'snapshots', params: $params);
+	}//end snapshots()
 
 	/**
 	 * Stub the acting user (or none).
@@ -138,7 +158,7 @@ class ForecastControllerTest extends TestCase {
 		$this->authenticate(null);
 		$this->exportService->expects($this->never())->method('exportSnapshots');
 
-		$response = $this->controller->snapshots(periodId: 'FY26-Q1', level: 'team');
+		$response = $this->snapshots(params: ['periodId' => 'FY26-Q1', 'level' => 'team']);
 
 		$this->assertInstanceOf(JSONResponse::class, $response);
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
@@ -154,7 +174,7 @@ class ForecastControllerTest extends TestCase {
 		$this->authenticate('alice');
 		$this->exportService->expects($this->never())->method('exportSnapshots');
 
-		$response = $this->controller->snapshots(periodId: '', level: 'team');
+		$response = $this->snapshots(params: ['periodId' => '', 'level' => 'team']);
 
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 		$this->assertSame(['error' => 'A valid period and level are required.'], $response->getData());
@@ -169,7 +189,7 @@ class ForecastControllerTest extends TestCase {
 		$this->authenticate('alice');
 		$this->accessPolicy->expects($this->never())->method('canRead');
 
-		$response = $this->controller->snapshots(periodId: 'FY26-Q1', level: 'galaxy');
+		$response = $this->snapshots(params: ['periodId' => 'FY26-Q1', 'level' => 'galaxy']);
 
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 	}//end testSnapshotsRejectsUnknownLevel()
@@ -184,7 +204,7 @@ class ForecastControllerTest extends TestCase {
 		$this->accessPolicy->method('canRead')->willReturn(false);
 		$this->exportService->expects($this->never())->method('exportSnapshots');
 
-		$response = $this->controller->snapshots(periodId: 'FY26-Q1', level: 'division');
+		$response = $this->snapshots(params: ['periodId' => 'FY26-Q1', 'level' => 'division']);
 
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 		$this->assertSame(['error' => 'You may not read forecasts at this scope.'], $response->getData());
@@ -207,7 +227,7 @@ class ForecastControllerTest extends TestCase {
 			]
 		);
 
-		$response = $this->controller->snapshots(periodId: 'FY26-Q1', level: 'team');
+		$response = $this->snapshots(params: ['periodId' => 'FY26-Q1', 'level' => 'team']);
 		$data = $response->getData();
 
 		$this->assertInstanceOf(JSONResponse::class, $response);
@@ -238,7 +258,7 @@ class ForecastControllerTest extends TestCase {
 			)
 			->willReturn(['snapshots' => [], 'total' => 0, 'limit' => 200, 'offset' => 0]);
 
-		$response = $this->controller->snapshots(periodId: 'FY26-Q1', level: 'company', limit: 100000, offset: -5);
+		$response = $this->snapshots(params: ['periodId' => 'FY26-Q1', 'level' => 'company', 'limit' => 100000, 'offset' => -5]);
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 	}//end testSnapshotsClampsPageSize()
@@ -262,7 +282,7 @@ class ForecastControllerTest extends TestCase {
 			->with([['as_of_date' => '2026-01-31']])
 			->willReturn("as_of_date\r\n2026-01-31\r\n");
 
-		$response = $this->controller->snapshots(periodId: 'FY26-Q1', level: 'team', format: 'CSV');
+		$response = $this->snapshots(params: ['periodId' => 'FY26-Q1', 'level' => 'team', 'format' => 'CSV']);
 
 		$this->assertInstanceOf(DataDownloadResponse::class, $response);
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());

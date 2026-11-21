@@ -21,11 +21,11 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-mailbox-003
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-receipt-005
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-inbound-006
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-retry-012
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-MAILBOX-003
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-RECEIPT-005
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-INBOUND-006
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-RETRY-012
  */
 
 declare(strict_types=1);
@@ -35,6 +35,8 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
+use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
 use OCA\Pipelinq\Service\BerichtenboxService;
 use OCA\Pipelinq\Service\DeliveryAuditLogger;
 use OCA\Pipelinq\Service\DutchHolidayCalendar;
@@ -49,6 +51,7 @@ use OCP\IConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for BerichtenboxService.
@@ -157,6 +160,7 @@ class BerichtenboxServiceTest extends TestCase {
 		$service = $this->createMock(ObjectServiceInterface::class);
 		$service->method('saveObject')->willReturnCallback(
 			function (...$args): ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				foreach ($args as $arg) {
 					if (is_array($arg) === true) {
 						$this->savedMessages[] = $arg;
@@ -233,12 +237,8 @@ class BerichtenboxServiceTest extends TestCase {
 		);
 
 		$result = $service->queueOutboundMessage(
-			'Z-2026-1',
-			'cm-1',
-			'handled',
-			'123456789',
-			null,
-			['caseType' => 'paspoort']
+			new CaseStatusMessage('Z-2026-1', 'cm-1', 'handled', '123456789'),
+			new MessageOptions(null, ['caseType' => 'paspoort'])
 		);
 
 		$this->assertIsArray($result);
@@ -547,6 +547,7 @@ class BerichtenboxServiceTest extends TestCase {
 		$captured = [];
 		$objectService->method('saveObject')->willReturnCallback(
 			static function (...$args) use (&$captured): ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				foreach ($args as $arg) {
 					if (is_array($arg) === true) {
 						$captured[] = $arg;

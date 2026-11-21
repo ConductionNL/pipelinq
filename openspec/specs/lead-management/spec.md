@@ -43,20 +43,29 @@ See [ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) for the full Lead entity de
 
 ### Requirement: Lead CRUD [MVP]
 
-The system MUST support creating, reading, updating, and deleting lead records. Each lead MUST have a `title`, a `pipeline` and a `client`. All leads are stored as OpenRegister objects in the `pipelinq` register using the `lead` schema.
+The system MUST support creating, reading, updating, and deleting lead records. Each lead MUST have a `title` and a `pipeline`. A `client` is optional: a lead MAY exist with no client linked (decision 207, 12 October 2026). All leads are stored as OpenRegister objects in the `pipelinq` register using the `lead` schema.
 
-A lead does not exist on its own: it is always work being done on a pipeline, for a client. `contact` stays optional because not every deal has a named person yet, and products are optional and many, carried as `leadProduct` lines rather than on the lead itself.
+A lead is always work being done on a pipeline. `client` and `contact` are optional, because a deal can start before anyone knows who the customer is: a website visitor who names no organisation, or a tip a salesperson logs on the way out of a meeting. Products are optional and many, carried as `leadProduct` lines rather than on the lead itself.
 
-`pipeline` and `client` are enforced by the schema, not only by the form. OpenRegister validates `required` on EVERY save, so a lead that predates the constraint cannot be edited until it has both — which is why the constraint ships together with the backfill that supplies them.
+`pipeline` is enforced by the schema, not only by the form. OpenRegister validates `required` on EVERY save, so a lead without a pipeline cannot be edited at all; a repair step gives every stored lead a pipeline and a stage. That repair step MUST NOT link or create a client for a lead that has none.
 
 #### Scenario 1: Create a minimal lead
 
 - GIVEN a user with CRM access
-- WHEN they submit a new lead form with title "Website redesign project", a pipeline and a client
+- WHEN they submit a new lead form with title "Website redesign project" and a pipeline
 - THEN the system MUST create an OpenRegister object with `@type` set to `schema:Demand`
 - AND the lead MUST have `priority` defaulted to `normal`
 - AND if a default pipeline exists, the lead MUST be placed on the first non-closed stage of that pipeline
 - AND the audit trail MUST record the creation event with the creating user's identity
+
+#### Scenario 1b: Create a lead without a client
+
+- GIVEN the New Lead form with a title and a pipeline, and no client selected
+- THEN the client field MUST NOT be marked as required and MUST say it may stay empty
+- WHEN the user saves
+- THEN the lead MUST be stored with no `client`
+- AND no client MUST be created or linked for it, at the save or on a later upgrade
+- AND wherever a list shows a lead's client, that cell MUST read as empty for this lead
 
 #### Scenario 2: Create a lead with full sales fields
 
@@ -113,7 +122,7 @@ The lead and request create forms MUST let a user pick the client and the contac
 
 The client field MUST offer existing clients without requiring a search term, and MUST offer to create a new client when the typed name matches none. Creating MUST open the full client create form rather than saving the typed name alone: the `client` schema marks `contactsUid` REQUIRED and that identity is provisioned server-side from the Nextcloud addressbook, so a name on its own cannot satisfy the schema.
 
-The contact field MUST be scoped to the selected client, and MUST be unavailable until a client is selected. Changing the client MUST clear a contact that no longer belongs under it.
+The contact field MUST be scoped to the selected client. Changing the client MUST clear a contact that no longer belongs under it. On the request form the contact field MUST be unavailable until a client is selected. On the lead form the client is optional, so the contact field MUST be available without one and MUST then offer every contact.
 
 #### Scenario 1: Browse clients without typing
 
@@ -133,16 +142,16 @@ The contact field MUST be scoped to the selected client, and MUST be unavailable
 #### Scenario 3: Contact is scoped to the client
 
 - GIVEN the New Lead form with no client selected
-- THEN the contact field MUST be disabled and MUST say a client is needed first
+- THEN the contact field MUST be available
 - WHEN a client is selected
-- THEN the contact field MUST become available
-- AND it MUST offer only contacts belonging to that client
+- THEN the contact field MUST offer only contacts belonging to that client
 - AND selecting a different client MUST clear a contact that belonged to the previous one
 
 #### Scenario 4: The same behaviour on requests
 
 - GIVEN the New Request form
-- THEN the client and contact fields MUST behave as above
+- THEN the client field MUST behave as above
+- AND the contact field MUST be disabled until a client is selected, and MUST say a client is needed first
 
 ### Requirement: Lead Validation [MVP]
 
@@ -152,7 +161,7 @@ The system MUST enforce validation rules on lead properties to maintain data int
 
 - GIVEN a user creating a new lead
 - WHEN they submit the form without a title (empty string or missing)
-- THEN the system MUST reject the request with validation error "Title is required"
+- THEN the system MUST reject the request with validation error "Titel is verplicht" (Title is required)
 - AND the lead MUST NOT be created
 - AND the form MUST highlight the title field as invalid
 
@@ -276,7 +285,7 @@ The system MUST provide a detail view for each lead that displays all properties
 - AND the current stage (Qualified) MUST be highlighted as "current"
 - AND future stages (Proposal, Negotiation, Won, Lost) MUST be shown with an empty indicator
 - AND a "Move to Proposal" action button MUST be displayed to advance to the next stage
-- AND the pipeline name ("Sales Pipeline") MUST be displayed below the progress indicator
+- AND the pipeline name ("Verkooppijplijn" (Sales Pipeline)) MUST be displayed below the progress indicator
 
 #### Scenario 23: View lead detail -- client and contact links
 
@@ -285,15 +294,15 @@ The system MUST provide a detail view for each lead that displays all properties
 - THEN the client name MUST be a clickable link navigating to the client detail view
 - AND the client's email and phone MUST be displayed
 - AND the contact person's name, email, and role MUST be displayed
-- AND if no client is linked, the system MUST show "No client linked" with an "Add client" action
+- AND if no client is linked, the Deal block MUST show the client field as empty, and selecting that field MUST let the user link a client
 
 #### Scenario 24: View lead detail -- assignee section
 
 - GIVEN a lead assigned to Nextcloud user "jan" (display name "Jan de Vries")
 - WHEN the user views the lead detail
 - THEN the system MUST display the assignee's display name and avatar
-- AND a "Reassign" button MUST be present to change the assignee
-- AND if no assignee is set, the system MUST show "Unassigned" with an "Assign" action
+- AND a "Hertoewijzen" (Reassign) button MUST be present to change the assignee
+- AND if no assignee is set, the system MUST show "Unassigned" with an "Toewijzen" (Assign) action
 
 #### Scenario 25: View lead detail -- activity timeline
 
@@ -305,7 +314,7 @@ The system MUST provide a detail view for each lead that displays all properties
 - WHEN the user views the lead detail
 - THEN the activity timeline MUST display events in reverse chronological order (newest first)
 - AND each event MUST show: date, event description, and actor
-- AND an "Add note" button MUST be present at the top of the timeline
+- AND an "Notitie toevoegen" (Add note) button MUST be present at the top of the timeline
 - AND the timeline MUST support pagination for leads with extensive history
 
 ---
@@ -319,7 +328,7 @@ The system MUST support tracking where leads originate from. Source values are m
 - GIVEN a user creating a new lead
 - WHEN they select source "referral" from the source dropdown
 - THEN the lead MUST store `source: "referral"`
-- AND the source MUST be displayed in the lead list as a human-readable label ("Referral")
+- AND the source MUST be displayed in the lead list as a human-readable label ("Doorverwijzing" (Referral))
 - AND the source MUST be displayed in the lead detail view
 
 #### Scenario 27: Source dropdown shows all options
@@ -502,7 +511,7 @@ The system MUST support quick actions on lead cards (in kanban and list views) t
 
 #### Scenario 45: Quick move stage from kanban card
 
-- GIVEN a lead card "Gemeente ABC deal" in the "New" column
+- GIVEN a lead card "Gemeente ABC deal" in the "Nieuw" (New) column
 - WHEN the user right-clicks or opens the card action menu and selects "Move to stage"
 - THEN a dropdown MUST appear listing all stages in the pipeline
 - AND selecting "Qualified" MUST move the lead to the Qualified stage
@@ -511,7 +520,7 @@ The system MUST support quick actions on lead cards (in kanban and list views) t
 #### Scenario 46: Quick assign from kanban card
 
 - GIVEN an unassigned lead card on the kanban board
-- WHEN the user opens the card action menu and selects "Assign"
+- WHEN the user opens the card action menu and selects "Toewijzen" (Assign)
 - THEN a user picker MUST appear
 - AND selecting a user MUST immediately update the assignment
 - AND the card MUST update to show the new assignee's avatar
@@ -537,7 +546,7 @@ The system MUST detect leads with no activity for a configurable number of days 
 - WHEN the system evaluates staleness
 - THEN the lead MUST be flagged as stale
 - AND the lead list and kanban card MUST display a stale indicator (e.g., "41 days since last activity")
-- AND a filter option "Stale leads" SHOULD be available in the lead list
+- AND a view "Verouderd" SHOULD be available in the lead list
 
 #### Scenario 49: Lead becomes active again
 
@@ -561,7 +570,7 @@ The system MUST display how long a lead has been in its current stage to help id
 
 #### Scenario 51: Aging resets on stage change
 
-- GIVEN a lead showing "12d in stage" for the "Proposal" stage
+- GIVEN a lead showing "12d in stage" for the "Voorstel" (Proposal) stage
 - WHEN the lead is moved to the "Negotiation" stage
 - THEN the aging counter MUST reset to "0d in stage"
 - AND the previous stage duration SHOULD be preserved in the activity timeline
@@ -676,13 +685,13 @@ Operations for lead editing and lead-product linking screens MUST tolerate missi
 
 ### Requirement: Lead Capture from External Sources [V1]
 
-The system SHOULD support creating leads from external channels beyond manual entry. This includes web form submissions, email parsing, and integration with the prospect discovery module. External lead capture reduces data entry and ensures no potential opportunity is missed.
+The system SHALL support creating leads from external channels beyond manual entry. This includes web form submissions, email parsing, and integration with the prospect discovery module. External lead capture reduces data entry and ensures no potential opportunity is missed.
 
 #### Scenario: Create lead from prospect discovery widget
 @e2e exclude V1 prospect feature; not yet implemented
 
 - GIVEN the prospect discovery widget displays a prospect "TechBedrijf BV" (KVK: 12345678, SBI: 62 - IT-dienstverlening, fitScore: 82%, city: Amsterdam)
-- WHEN the user clicks "Create Lead" on the prospect card
+- WHEN the user clicks "Lead aanmaken" (Create Lead) on the prospect card
 - THEN the system MUST call the `/api/prospects/create-lead` endpoint with the prospect data
 - AND a new lead MUST be created with `title` set to the prospect's trade name ("TechBedrijf BV")
 - AND the lead's `source` MUST be set to "prospect_discovery"
@@ -724,7 +733,7 @@ The system SHOULD support creating leads from external channels beyond manual en
 
 ### Requirement: Lead Qualification Scoring [V1]
 
-The system SHOULD support scoring leads based on configurable qualification criteria to help sales teams prioritize effort. Scoring provides an objective measure complementing the subjective pipeline stage progression.
+The system SHALL support scoring leads based on configurable qualification criteria to help sales teams prioritize effort. Scoring provides an objective measure complementing the subjective pipeline stage progression.
 
 #### Scenario: Configure scoring criteria in admin settings
 @e2e exclude V1 scoring; not yet implemented
@@ -775,7 +784,7 @@ The system SHOULD support scoring leads based on configurable qualification crit
 
 ### Requirement: Lead-to-Client Conversion [V1]
 
-The system SHOULD support converting a lead into a client record when the lead reaches a sufficient qualification stage. Unlike EspoCRM's atomic conversion that creates separate Account + Contact + Opportunity, Pipelinq's unified model keeps the lead as the deal record and promotes the associated entity to a full client.
+The system SHALL support converting a lead into a client record when the lead reaches a sufficient qualification stage. Unlike EspoCRM's atomic conversion that creates separate Account + Contact + Opportunity, Pipelinq's unified model keeps the lead as the deal record and promotes the associated entity to a full client.
 
 #### Scenario: Convert lead with no existing client
 @e2e exclude requires existing lead record
@@ -812,7 +821,7 @@ The system SHOULD support converting a lead into a client record when the lead r
 
 ### Requirement: Lead Assignment Rules [V1]
 
-The system SHOULD support automated lead assignment based on configurable rules to distribute incoming leads fairly across the sales team.
+The system SHALL support automated lead assignment based on configurable rules to distribute incoming leads fairly across the sales team.
 
 #### Scenario: Configure round-robin assignment
 @e2e exclude Enterprise assignment feature; not yet implemented
@@ -855,7 +864,7 @@ The system SHOULD support automated lead assignment based on configurable rules 
 
 ### Requirement: Lead Deduplication [V1]
 
-The system SHOULD detect and help resolve duplicate leads to maintain data quality. Deduplication checks during creation and provides a merge interface for existing duplicates.
+The system SHALL detect and help resolve duplicate leads to maintain data quality. Deduplication checks during creation and provides a merge interface for existing duplicates.
 
 #### Scenario: Warn on potential duplicate during creation
 @e2e exclude requires existing leads
@@ -893,7 +902,7 @@ The system SHOULD detect and help resolve duplicate leads to maintain data quali
 
 ### Requirement: Lead Tagging and Categorization [V1]
 
-The system SHOULD support tagging leads with user-defined labels beyond the single `category` field to enable flexible grouping and filtering. Tags use the same TagManager pattern as lead sources.
+The system SHALL support tagging leads with user-defined labels beyond the single `category` field to enable flexible grouping and filtering. Tags use the same TagManager pattern as lead sources.
 
 #### Scenario: Add tags to a lead
 
@@ -953,7 +962,7 @@ The system MUST support automated nurturing workflows that trigger actions based
 - GIVEN an n8n workflow configured with a stale lead trigger (threshold: 14 days)
 - WHEN a lead has had no activity for 14 days and is in a non-closed stage
 - THEN the workflow MUST send a notification to the assigned user: "Lead '{title}' has been inactive for 14 days"
-- AND the workflow SHOULD offer quick actions in the notification: "Add Note", "View Lead", "Mark as Lost"
+- AND the workflow SHOULD offer quick actions in the notification: "Add Note", "View Lead", "Markeer als verloren" (Mark as Lost)
 
 #### Scenario: Escalate high-value stale leads
 @e2e exclude Enterprise automation; not yet implemented
@@ -968,7 +977,7 @@ The system MUST support automated nurturing workflows that trigger actions based
 
 ### Requirement: Lead Reporting and Analytics [V1]
 
-The system SHOULD provide reporting and analytics for lead management performance, pipeline health, and conversion metrics. Reports complement the existing dashboard KPIs with deeper drill-down capabilities.
+The system SHALL provide reporting and analytics for lead management performance, pipeline health, and conversion metrics. Reports complement the existing dashboard KPIs with deeper drill-down capabilities.
 
 #### Scenario: Pipeline value summary by stage
 
@@ -1059,7 +1068,7 @@ The system MUST support attaching products as line items to leads to detail the 
 
 ### Requirement: The lead list shows and sorts by score (REQ-LSCORE-001)
 
-The Leads list MUST have a sortable "Score" column showing the stored qualification score with a text band label, and a "Call first" quick filter that orders open leads by score descending.
+The Leads list MUST have a sortable "Score" column showing the stored qualification score with a text band label, and a "Eerst bellen" (Call first) quick filter that orders open leads by score descending.
 
 #### Scenario: Call first
 
@@ -1083,7 +1092,7 @@ A lead card on the pipeline board MUST show the score as a number with an access
 
 - **GIVEN** a lead has a score of 92
 - **WHEN** Pieter views the board
-- **THEN** its card shows "92" and a screen reader announces "Score 92, high"
+- **THEN** its card shows "92" and a screen reader announces "Score 92, hoog" (Score 92, high)
 
 ### Requirement: A person can see why a lead has its score (REQ-LSCORE-003)
 
@@ -1208,6 +1217,40 @@ SHALL format in the reporting currency.
 - WHEN the salesperson opens it
 - THEN one block titled "Deal" shows the value, stage, win chance, close date and owner
 - AND the deal value KPI reads "€250,000"
+
+### Requirement: A lead shows its contacts with their role
+
+The lead overview MUST list the contacts that have a role on the deal, with the role label and the note, decision maker first. A user MUST be able to add a role, which is stored as a relationship from the lead to the contact with category `CRM Rol`.
+
+#### Scenario: the roles on a lead
+
+- GIVEN lead "Woonportaal voor huurders" has M. Hendriks as decision maker and Peter Lam as gatekeeper
+- WHEN the lead opens
+- THEN "Contacts and their role" lists M. Hendriks with "Decision maker" before Peter Lam with "Gatekeeper"
+- AND "Add contact role" stores a relationship with `fromType` lead
+
+### Requirement: The lead page reads as the board
+
+The lead page MUST name the owner by display name in its header line. It MUST offer Log contact first. In the qualified and proposal stages, the "what now" card's button MUST make a quote for the lead. The Deal card MUST show the eight deal facts in two columns, and the win chance MUST read as a percentage.
+
+#### Scenario: Woonportaal voor huurders
+- GIVEN the qualified lead "Woonportaal voor huurders" owned by Pieter Jansen
+- THEN the header reads "... eigenaar Pieter Jansen", the what-now card offers "Offerte maken", and Winkans reads "62%"
+
+### Requirement: The Related card names earlier deals and hours
+
+`GET /api/leads/{id}/related-summary` MUST answer `earlier`, which counts the client's other closed deals and says how they ended ("2 earlier deals, both won"), and `hours`, the hours written on the lead. Each MUST be empty when there is nothing to say. Only a caller who may read the lead MUST get an answer. The lead page's Related card MUST start with "Prospect data from the KVK", the earlier deals and the hours, above the related objects.
+
+#### Scenario: A client with earlier deals
+- GIVEN a lead whose client has two other closed deals, both won, and 6 hours written on the lead
+- WHEN a user who may read the lead opens its page
+- THEN the Related card starts with "Prospect data from the KVK", then "2 earlier deals, both won" and the 6 hours, above the related objects
+
+#### Scenario: Nothing to say, or no access
+- GIVEN a lead whose client has no other closed deals and no hours written
+- WHEN `GET /api/leads/{id}/related-summary` is called by a user who may read the lead
+- THEN `earlier` and `hours` are empty
+- AND a caller who may not read the lead gets no answer
 
 ## UI Reference
 

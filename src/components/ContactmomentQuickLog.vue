@@ -9,21 +9,75 @@
   - `ticketType: 'interaction'`. The form therefore writes the unified ticket
   - fields (title / description / occurredAt / assignee / parentTicket) while the
   - UI keeps the familiar contactmoment wording (Subject, Summary, Request).
+  -
+  - While the agent types, the form is kept as that same ticket in
+  - OpenRegister's status `draft` (contact-moments-keep-draft, decisions 180
+  - and 216): two seconds after the last change and when the tab goes hidden.
+  - Opening the quick log again offers the draft back. Save makes the draft
+  - definitive through OpenRegister's owner action, and a save that fails
+  - because the session ended keeps the text on screen.
   -->
 
 <template>
-	<div class="contactmoment-quicklog">
+	<div
+		class="contactmoment-quicklog"
+		:class="{ 'cn-board-form': inline }"
+		data-testid="contactmoment-quicklog">
 		<h3 v-if="!inline">
 			{{ t('pipelinq', 'Log contactmoment') }}
 		</h3>
+
+		<NcNoteCard
+			v-if="offeredDraft"
+			type="info"
+			data-testid="contactmoment-draft-offer">
+			<p>
+				{{
+					t(
+						'pipelinq',
+						'You have an unsaved contact moment from {time}.',
+						{
+							time: offeredDraftTime,
+						},
+					)
+				}}
+			</p>
+			<div class="draft-actions">
+				<NcButton
+					variant="primary"
+					data-testid="contactmoment-draft-restore"
+					@click="restoreDraft">
+					{{ t('pipelinq', 'Restore draft') }}
+				</NcButton>
+				<NcButton
+					variant="tertiary"
+					data-testid="contactmoment-draft-discard"
+					@click="discardDraft">
+					{{ t('pipelinq', 'Discard') }}
+				</NcButton>
+			</div>
+		</NcNoteCard>
+
+		<NcNoteCard
+			v-if="sessionEnded"
+			type="warning"
+			data-testid="contactmoment-session-ended">
+			{{
+				t(
+					'pipelinq',
+					'Your session has ended. Log in again in a new tab, then press Save here.',
+				)
+			}}
+		</NcNoteCard>
 
 		<!-- Subject → ticket.title -->
 		<div class="form-group">
 			<NcTextField
 				:modelValue="form.title"
 				:label="t('pipelinq', 'Subject')"
-				:error="!!errors.title"
-				:helperText="errors.title"
+				:error="!!shownErrors.title"
+				:helperText="shownErrors.title"
+				@blur="touched.title = true"
 				@update:modelValue="(v) => (form.title = v)" />
 		</div>
 
@@ -117,37 +171,45 @@
 
 		<!-- Summary → ticket.description -->
 		<div class="form-group">
-			<NcTextField
+			<NcTextArea
 				:modelValue="form.description"
 				:label="t('pipelinq', 'Summary')"
+				resize="vertical"
+				rows="3"
 				@update:modelValue="(v) => (form.description = v)" />
 		</div>
 
 		<!-- Duration -->
 		<div class="form-group">
-			<NcTextField
-				:modelValue="form.duration"
-				:label="t('pipelinq', 'Duration (e.g. PT5M, PT1H30M)')"
-				@update:modelValue="(v) => (form.duration = v)" />
+			<CnDurationField
+				ref="durationClock"
+				:modelValue="form.duration || null"
+				:inputLabel="t('pipelinq', 'Duration')"
+				timer
+				autoStart
+				data-testid="quicklog-duration"
+				@update:modelValue="(v) => (form.duration = v || '')" />
 		</div>
 
 		<!-- Notes -->
 		<div class="form-group">
-			<NcTextField
+			<NcTextArea
 				:modelValue="form.notes"
 				:label="t('pipelinq', 'Notes')"
+				resize="vertical"
+				rows="3"
 				@update:modelValue="(v) => (form.notes = v)" />
 		</div>
 
 		<!-- Actions -->
 		<div class="form-actions">
-			<NcButton variant="tertiary" @click="$emit('cancel')">
+			<NcButton variant="secondary" @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				variant="primary"
 				:disabled="!isValid || saving"
-				@click="onSave">
+				@click="stopClockAndSave">
 				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 			</NcButton>
 		</div>
@@ -159,26 +221,32 @@
 </template>
 
 <script>
-import { CnResourceSelect } from '@conduction/nextcloud-vue'
+import { CnDurationField, CnResourceSelect } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcNoteCard, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
 import ClientCreateDialog from '../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../dialogs/ContactCreateDialog.vue'
+import contactMomentDraftMixin from '../mixins/contactMomentDraftMixin.js'
 import linkedPartyCascadeMixin from '../mixins/linkedPartyCascadeMixin.js'
+import { buildContactMoment } from '../services/contactMomentDraft.js'
+import { openRequestOptions } from '../services/contactMomentRequests.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 export default {
 	name: 'ContactmomentQuickLog',
 	components: {
 		ClientCreateDialog,
+		CnDurationField,
 		CnResourceSelect,
 		ContactCreateDialog,
 		NcButton,
+		NcNoteCard,
 		NcSelect,
+		NcTextArea,
 		NcTextField,
 	},
 
-	mixins: [linkedPartyCascadeMixin],
+	mixins: [linkedPartyCascadeMixin, contactMomentDraftMixin],
 
 	props: {
 		clientId: {
@@ -236,29 +304,31 @@ export default {
 
 			saving: false,
 			errorMessage: '',
+			// Fields the agent has left; their errors show from then on.
+			touched: { title: false },
 		}
 	},
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-23
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-23
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
+		 * The open requests of the chosen client.
+		 *
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
+		 * @spec openspec/changes/specify-capability-rows/specs/contactmomenten/spec.md#requirement-a-contact-moment-is-filed-on-an-open-request
 		 */
 		requestSelectOptions() {
-			return this.requests.map((r) => ({
-				value: r.id,
-				label: r.title || r.id,
-			}))
+			return openRequestOptions(this.requests, this.form.client, this.form.parentTicket)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
 		 */
 		errors() {
 			const errors = {}
@@ -271,13 +341,35 @@ export default {
 			return errors
 		},
 
+		/**
+		 * The errors of the fields the agent has left, so an empty form does
+		 * not open with a complaint.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
+		 */
+		shownErrors() {
+			return Object.fromEntries(Object.entries(this.errors).filter(([field]) => this.touched[field]))
+		},
+
 		isValid() {
 			return this.form.title?.trim() && this.form.channel
+		},
+
+		/**
+		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+		 */
+		draftContext() {
+			return {
+				author: this.author,
+				clientId: this.clientId || null,
+				requestId: this.requestId || null,
+			}
 		},
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
 	 */
 	async created() {
 		// Clients and contacts are no longer fetched here: CnResourceSelect
@@ -304,11 +396,24 @@ export default {
 				this.form.client = req.client
 			}
 		}
+
+		await this.loadDraft()
 	},
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24
+		 * Stop the running duration clock, so the saved duration is the time it shows, then save.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-duration-runs-as-a-clock
+		 */
+		stopClockAndSave() {
+			this.$refs.durationClock?.stop()
+			return this.onSave()
+		},
+
+		/**
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24
 		 */
 		async onSave() {
 			if (!this.isValid) return
@@ -319,42 +424,39 @@ export default {
 			// A contactmoment is a `ticket` with ticketType 'interaction'
 			// (unify-ticket-supertype): subject→title, summary→description,
 			// contactedAt→occurredAt, agent→assignee, request→parentTicket.
-			const data = {
-				ticketType: 'interaction',
-				title: this.form.title,
-				channel: this.form.channel,
-				occurredAt: new Date().toISOString(),
-				assignee: window.OC?.getCurrentUser?.()?.uid,
-				channelMetadata: {},
-			}
-
-			if (this.form.outcome) data.outcome = this.form.outcome
-			if (this.form.client) data.client = this.form.client
-			if (this.form.contact) data.contact = this.form.contact
-			if (this.form.parentTicket) data.parentTicket = this.form.parentTicket
-			if (this.form.description) data.description = this.form.description
-			if (this.form.duration) data.duration = this.form.duration
-			if (this.form.notes) data.notes = this.form.notes
+			const data = buildContactMoment(this.form, {
+				author: this.author,
+				now: new Date(),
+			})
 
 			try {
-				const result = await this.objectStore.saveObject('ticket', data)
+				const result = await this.saveContactMoment(data)
 				if (result) {
 					showSuccess(t('pipelinq', 'Contactmoment logged successfully'))
 					this.$emit('saved', result)
-				} else {
-					const error = this.objectStore.getError('ticket')
-					this.errorMessage =
-						error?.message
-						|| t('pipelinq', 'Failed to save contactmoment')
-					showError(this.errorMessage)
 				}
 			} catch (error) {
-				this.errorMessage =
-					error.message || t('pipelinq', 'Failed to save contactmoment')
-				showError(this.errorMessage)
+				this.keepFormAfterFailure(error)
 			} finally {
 				this.saving = false
 			}
+		},
+
+		/**
+		 * A failed save keeps the form and its draft. An ended session gets
+		 * its own message instead of the raw error.
+		 *
+		 * @param {Error} error The failure `saveContactMoment` threw.
+		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.4
+		 */
+		keepFormAfterFailure(error) {
+			if (error?.sessionEnded) {
+				this.errorMessage = ''
+				return
+			}
+			this.errorMessage =
+				error?.message || t('pipelinq', 'Failed to save contactmoment')
+			showError(this.errorMessage)
 		},
 	},
 }
@@ -363,6 +465,7 @@ export default {
 <style scoped>
 .contactmoment-quicklog {
 	max-width: 600px;
+	min-width: 0;
 }
 
 .contactmoment-quicklog h3 {
@@ -370,7 +473,14 @@ export default {
 }
 
 .form-group {
+	min-width: 0;
 	margin-bottom: 16px;
+}
+
+/* NcSelect keeps a 260px minimum, which pushed a half-width card's paired fields past its edge. */
+.form-group :deep(.v-select.select) {
+	min-width: 0;
+	width: 100%;
 }
 
 .form-group label {
@@ -381,17 +491,41 @@ export default {
 	font-size: 13px;
 }
 
-.form-row {
-	display: flex;
-	gap: 16px;
+/* Board look (PqKlant, PqOrganisatie "Contactmoment registreren"): the
+   inline form's own labels are 14/600 in the main ink, 6px above their
+   field, the fields 14px apart and the buttons 10px apart; nc-vue's
+   `cn-board-form` raises the text fields' labels the same way. */
+.cn-look-board .cn-board-form .form-group {
+	margin-bottom: 14px;
 }
 
-.form-row .form-group {
-	flex: 1;
+.cn-look-board .cn-board-form .form-group label {
+	margin-bottom: 6px;
+	color: var(--color-main-text);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.cn-look-board .cn-board-form .form-actions {
+	gap: 10px;
+	margin-top: 0;
+}
+
+.form-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 12px;
+}
+
+.draft-actions {
+	display: flex;
+	gap: 8px;
+	margin-top: 8px;
 }
 
 .form-actions {
 	display: flex;
+	justify-content: flex-end;
 	gap: 8px;
 	margin-top: 20px;
 }

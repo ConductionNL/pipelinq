@@ -1,0 +1,89 @@
+{
+	"$comment": "pipelinq's start page in the Zuiddrecht set, as PqDashboard draws it for Pieter: Sanne's question about the planning of the Lindelaan cycle path waiting on him, and two more callback requests (Stichting Kindzorg about its Woo request, R. Smit about noise from the A16). The other drawn rows are elsewhere: M. de Graaf's callback is taak-degraaf-terugbellen in the main file, and the Kerkplein and waiting-time tickets are in 49-board-tickets.json and 51-board-meldingen.json. Tile counts are measurements and are recounted from the set.",
+	"objects": [
+		{
+			"key": "client-rsmit",
+			"register": "pipelinq",
+			"schema": "client",
+			"data": {
+				"name": "R. Smit",
+				"type": "person",
+				"address": "Rijksweg 4, 2999BP Zuiddrecht",
+				"contactsUid": "example-rsmit",
+				"lifecycleStage": "customer",
+				"accountStatus": "active",
+				"preferredChannel": "phone",
+				"language": "nl",
+				"correspondenceLanguage": "nl",
+				"notes": "Woont vlak bij de A16."
+			}
+		},
+		{
+			"key": "ticket-sanne-fietspad-planning",
+			"register": "pipelinq",
+			"schema": "ticket",
+			"data": {
+				"ticketType": "request",
+				"title": "Planning van het fietspad Lindelaan",
+				"reference": "PQ-2026-0413",
+				"client": "{{object:client-sanne.id}}",
+				"assignee": "{{cast:pieter.uid}}",
+				"status": "in_progress",
+				"priority": "normal",
+				"channel": "portal",
+				"occurredAt": "{{datetime:-1 16:30}}",
+				"category": "verkeer",
+				"description": "Sanne de Vries vraagt wanneer het fietspad aan de Lindelaan wordt aangelegd en of de verlichting meteen meekomt.",
+				"portalAnswers": [
+					{
+						"message": "De aanleg staat gepland voor het voorjaar van 2027. De verlichting komt in dezelfde ronde.",
+						"createdAt": "{{datetime:0 08:20}}"
+					}
+				],
+				"portalReplies": [
+					{
+						"message": "Dank u. Komt er ook een oversteekplaats bij de school?",
+						"createdAt": "{{datetime:0 09:50}}"
+					}
+				]
+			}
+		},
+		{
+			"key": "taak-kindzorg-woo-status",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "callbackRequest",
+				"subject": "Status van het Woo-verzoek",
+				"status": "open",
+				"priority": "normal",
+				"deadline": "{{datetime:1 10:00}}",
+				"assigneeUserId": "{{cast:pieter.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-kindzorg.id}}",
+				"callbackPhoneNumber": "078 612 77 40",
+				"contactMomentSummary": "Belde over de stand van hun Woo-verzoek. Wij bellen terug als de behandelaar de termijn weet.",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		},
+		{
+			"key": "taak-rsmit-geluidsoverlast-a16",
+			"register": "pipelinq",
+			"schema": "crmTask",
+			"data": {
+				"type": "callbackRequest",
+				"subject": "Geluidsoverlast van de A16",
+				"status": "open",
+				"priority": "normal",
+				"deadline": "{{datetime:7 11:00}}",
+				"assigneeUserId": "{{cast:pieter.uid}}",
+				"assigneeGroupId": "{{cast:kcc.gid}}",
+				"clientId": "{{object:client-rsmit.id}}",
+				"callbackPhoneNumber": "06 27 81 45 02",
+				"preferredTimeSlot": "Woensdagochtend",
+				"contactMomentSummary": "Klaagt over het verkeerslawaai van de A16 sinds het nieuwe asfalt. Wil woensdag teruggebeld worden.",
+				"createdBy": "{{cast:pieter.uid}}"
+			}
+		}
+	]
+}

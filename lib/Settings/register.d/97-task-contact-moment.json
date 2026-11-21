@@ -1,0 +1,27 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "The contact moment a task was created from (PqTaak, Related: Oorspronkelijk contactmoment)."
+	},
+	"components": {
+		"schemas": {
+			"crmTask": {
+				"slug": "crmTask",
+				"version": "1.2.0",
+				"properties": {
+					"contactMoment": {
+						"type": "string",
+						"format": "uuid",
+						"$ref": "ticket",
+						"x-relation-filter": {
+							"client": "@object.clientId"
+						},
+						"title": "Original contact moment",
+						"description": "The contact moment this task was created from."
+					}
+				}
+			}
+		}
+	}
+}

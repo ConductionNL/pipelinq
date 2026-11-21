@@ -41,7 +41,26 @@ Pick the target calendar from the *Callback calendar* dropdown. You have two pat
 
 ![Calendar sync](/screenshots/user-guide/admin/05-calendar.png)
 
-### 5. Save
+### 5. Meetings on leads, contacts and clients (calendar leaf)
+
+The *Meetings* card on a lead, contact or client shows the events linked to that record through OpenRegister's calendar leaf, and the client's Activity timeline lists them too. Pipelinq reads these links live; it keeps no copy and writes to no calendar.
+
+Events that were tagged on the Calendar side, or by an older version of the leaf, only reach the link table through OpenRegister's backfill. On an instance that already holds such events, enable it once and run it:
+
+```bash
+occ config:app:set openregister backfill_calendar_links --value=yes
+occ background-job:execute 'OCA\OpenRegister\BackgroundJob\BackfillCalendarLinksJob'
+```
+
+What works today: links made through the leaf (the *Meetings* card's create and link actions) show up at once. Continuous two-way sync of events created or moved in Nextcloud Calendar arrives with OpenRegister's companion change `calendar-leaf-inbound`; until then a meeting moved in Calendar keeps its old time on the link until the backfill runs again.
+
+Pipelinq reminds the assignee of a lead before a linked meeting, and the assignee of an open follow-up task before its deadline, as a Nextcloud notification. The look-ahead window is 24 hours by default:
+
+```bash
+occ config:app:set pipelinq followup_reminder_window_hours --value=48
+```
+
+### 6. Save
 
 Users can now enable contacts sync from their own settings, and new callbacks appear in the configured calendar.
 
@@ -57,6 +76,7 @@ Users can now enable contacts sync from their own settings, and new callbacks ap
 |---|---|
 | No address books listed | The Contacts app isn't enabled, or the admin account has no access to any address book. |
 | Callbacks don't appear in the calendar | The Calendar app isn't enabled, or the selected calendar is read-only for the assignee. |
+| Older tagged events are missing from *Meetings* | Enable `backfill_calendar_links` in OpenRegister and run the backfill job (step 5). |
 
 ## Reference
 

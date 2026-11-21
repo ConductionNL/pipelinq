@@ -18,7 +18,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-audit-009
+ * @spec openspec/specs/berichtenbox/spec.md#REQ-AUDIT-009
  */
 
 declare(strict_types=1);
@@ -32,6 +32,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for DeliveryAuditLogger.
@@ -54,6 +55,7 @@ class DeliveryAuditLoggerTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$args) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				foreach ($args as $arg) {
 					if (is_array($arg) === true && isset($arg['event']) === true) {
 						$this->captured[] = $arg;

@@ -18,22 +18,22 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosRoleService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosRoleServiceInterface;
+use OCA\Pipelinq\Controller\Support\AdminOnlyResponse;
+use OCA\Pipelinq\Controller\Support\PosControllerResponses;
+use OCA\Pipelinq\Controller\Support\PosJsonAction;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -51,14 +51,18 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4
+ * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4
  */
 class PosRoleController extends Controller {
+	use AdminOnlyResponse;
+	use PosControllerResponses;
+	use PosJsonAction;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PosRoleService $service The POS role service.
+	 * @param PosRoleServiceInterface $service The POS role service.
 	 * @param IUserSession $userSession The user session.
 	 * @param IGroupManager $groupManager The group manager (admin gate).
 	 * @param IL10N $l10n The localization service.
@@ -66,13 +70,13 @@ class PosRoleController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private PosRoleService $service,
+		private PosRoleServiceInterface $service,
 		private IUserSession $userSession,
 		private IGroupManager $groupManager,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -80,7 +84,7 @@ class PosRoleController extends Controller {
 	 *
 	 * @return JSONResponse The role list.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -102,7 +106,7 @@ class PosRoleController extends Controller {
 	 *
 	 * @return JSONResponse The role.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -124,15 +128,10 @@ class PosRoleController extends Controller {
 	 *
 	 * @return JSONResponse The created role.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	public function create(): JSONResponse {
-		$forbidden = $this->requireAdmin();
-		if ($forbidden instanceof JSONResponse) {
-			return $forbidden;
-		}
-
-		return $this->run(
+		return $this->runAsAdmin(
 			action: fn (): array => ['role' => $this->service->saveRole(data: $this->payload())],
 			label: 'create'
 		);
@@ -148,7 +147,7 @@ class PosRoleController extends Controller {
 	 * @auth admin-only Rewrites a POS permission role; the body additionally
 	 *       enforces it with an explicit requireAdmin() guard.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	public function update(string $id): JSONResponse {
 		$forbidden = $this->requireAdmin();
@@ -176,15 +175,10 @@ class PosRoleController extends Controller {
 	 * @auth admin-only Deletes a POS permission role; the body additionally
 	 *       enforces it with an explicit requireAdmin() guard.
 	 *
-	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
+	 * @spec openspec/changes/archive/2026-06-14-pos-staff-pin-permissions/tasks.md#4.1
 	 */
 	public function destroy(string $id): JSONResponse {
-		$forbidden = $this->requireAdmin();
-		if ($forbidden instanceof JSONResponse) {
-			return $forbidden;
-		}
-
-		return $this->run(
+		return $this->runAsAdmin(
 			action: function () use ($id): array {
 				$this->service->deleteRole(id: $id);
 				return ['deleted' => true];
@@ -208,71 +202,4 @@ class PosRoleController extends Controller {
 			'canNoSale' => (bool)$this->request->getParam('canNoSale', false),
 		];
 	}//end payload()
-
-	/**
-	 * Require an authenticated user.
-	 *
-	 * @return string|JSONResponse The acting user UID, or a 401 response.
-	 */
-	private function requireUserId(): string|JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		return $user->getUID();
-	}//end requireUserId()
-
-	/**
-	 * Require an authenticated admin user.
-	 *
-	 * @return null|JSONResponse Null when the caller is an admin; 401/403 otherwise.
-	 */
-	private function requireAdmin(): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Authentication required')],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
-
-		if ($this->groupManager->isAdmin($user->getUID()) === false) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('Admin privileges required')],
-				Http::STATUS_FORBIDDEN
-			);
-		}
-
-		return null;
-	}//end requireAdmin()
-
-	/**
-	 * Run an action with shared error handling.
-	 *
-	 * @param callable $action The action.
-	 * @param string $label A short label for log context.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function run(callable $action, string $label): JSONResponse {
-		try {
-			return new JSONResponse($action());
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
-		} catch (\Throwable $e) {
-			$this->logger->error('PosRoleController::' . $label . ' failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('An unexpected error occurred')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
-	}//end run()
 }//end class

@@ -1,0 +1,31 @@
+{
+	"$comment": "pipelinq's extras for Sanne de Vries in the Zuiddrecht set: Fatma Yildiz's note about the street plan and the last change in her history, as PqKlant draws them.",
+	"notes": [
+		{
+			"key": "sanne-fatma-straatplan",
+			"data": {
+				"user": "{{cast:fatmayildiz.uid}}",
+				"objectUuid": "{{object:client-sanne.id}}",
+				"message": "@Pieter het straatplan voor de Parkstraat staat bij Documenten.",
+				"createdAt": "{{datetime:-3 10:40}}"
+			}
+		}
+	],
+	"auditEntries": [
+		{
+			"key": "sanne-pieter-notitie-woo",
+			"data": {
+				"object": "{{object:client-sanne.id}}",
+				"action": "update",
+				"user": "{{cast:pieter.uid}}",
+				"at": "{{datetime:-4 15:12}}",
+				"changed": {
+					"notes": {
+						"old": "",
+						"new": "Heeft een Woo-verzoek lopen over de verlichting van het fietspad aan de Lindelaan."
+					}
+				}
+			}
+		}
+	]
+}

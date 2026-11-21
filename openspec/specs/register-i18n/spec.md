@@ -12,7 +12,7 @@ Enable multi-language support for Pipelinq's register objects, allowing users to
 
 ## Requirements
 
-### REQ-I18N-001: Language-Tagged Fields
+### Requirement: Language-tagged fields (REQ-I18N-001)
 The following Pipelinq-specific fields MUST support multi-language content via OpenRegister's `translatable` flag:
 
 **Pipelines:**
@@ -38,7 +38,7 @@ The following Pipelinq-specific fields MUST support multi-language content via O
 - THEN the system MUST store the multi-language value
 - AND display the name in the user's preferred language
 
-### REQ-I18N-002: Language Fallback Chain
+### Requirement: Language fallback chain (REQ-I18N-002)
 The system MUST follow the Nextcloud user's language preference with a defined fallback chain: user language -> app default language -> nl -> en -> first available. The system MUST display a fallback indicator when showing non-preferred language.
 
 #### Scenario: Fallback to Dutch when preferred language unavailable
@@ -48,7 +48,7 @@ The system MUST follow the Nextcloud user's language preference with a defined f
 - THEN the system MUST display the Dutch (nl) translation as the fallback
 - AND a fallback indicator MUST be shown
 
-### REQ-I18N-003: Frontend Language Switching
+### Requirement: Frontend language switching (REQ-I18N-003)
 The system MUST show a language selector on detail pages when translated content exists. The system MUST preserve current language selection across navigation within the app, and language switching MUST NOT require page reload.
 
 #### Scenario: Switch language on pipeline detail page
@@ -57,7 +57,7 @@ The system MUST show a language selector on detail pages when translated content
 - THEN the pipeline name MUST update to the English translation without a page reload
 - AND navigating to another page and back MUST preserve the English language selection
 
-### REQ-I18N-004: API Language Support
+### Requirement: API language support (REQ-I18N-004)
 API responses MUST accept `Accept-Language` header and MUST include `Content-Language` header. The `?lang=nl` query parameter MUST override Accept-Language. Listing endpoints MUST return content in requested language with fallback.
 
 #### Scenario: API returns content in requested language
@@ -66,7 +66,6 @@ API responses MUST accept `Accept-Language` header and MUST include `Content-Lan
 - THEN the response MUST return the product name as "Consultation"
 - AND the response MUST include the header `Content-Language: en`
 
-## Requirements
 
 ### Requirement: App UI MUST provide complete Dutch and English translations per ADR-005
 

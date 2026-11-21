@@ -47,6 +47,7 @@
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { productWeight } from '../../services/productTariffs.js'
 
 export default {
 	name: 'ProductSupplyWidget',
@@ -77,7 +78,7 @@ export default {
 		 * The plain supply fields that have a value.
 		 *
 		 * @return {Array<{key: string, label: string, value: string}>}
-		 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+		 * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
 		 */
 		rows() {
 			const product = this.objectData || {}
@@ -95,10 +96,7 @@ export default {
 				{
 					key: 'weight',
 					label: t('pipelinq', 'Weight'),
-					value:
-						typeof product.weight === 'number'
-							? `${this.number(product.weight)} kg`
-							: '',
+					value: productWeight(product),
 				},
 				{
 					key: 'dimensions',
@@ -113,7 +111,7 @@ export default {
 		 * The Stock tracked value.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-untracked-products-and-missing-stock-read-plainly-req-pst-002
+		 * @spec openspec/specs/product-stock/spec.md#requirement-untracked-products-and-missing-stock-read-plainly-req-pst-002
 		 */
 		stockText() {
 			const stock = this.stock
@@ -139,7 +137,7 @@ export default {
 		 * On hand and reserved, for the tooltip.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+		 * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
 		 */
 		stockTooltip() {
 			if (!this.stock || this.stock.state !== 'ok') {
@@ -155,7 +153,7 @@ export default {
 		 * The locations, when there are two or more.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+		 * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
 		 */
 		locationsLine() {
 			const locations =
@@ -176,7 +174,7 @@ export default {
 		 * The stock list in shillinq.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+		 * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
 		 */
 		shillinqUrl() {
 			return generateUrl('/apps/shillinq/inventory/stock')
@@ -187,7 +185,7 @@ export default {
 		objectId: {
 			immediate: true,
 			/**
-			 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+			 * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
 			 */
 			handler() {
 				this.load()
@@ -201,7 +199,7 @@ export default {
 		/**
 		 * Read the stock line from the server.
 		 *
-		 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+		 * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
 		 */
 		async load() {
 			if (!this.objectId) {
@@ -230,7 +228,7 @@ export default {
 		 *
 		 * @param {number} value The number.
 		 * @return {string}
-		 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+		 * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
 		 */
 		number(value) {
 			return Number(value || 0).toLocaleString()
@@ -241,7 +239,7 @@ export default {
 		 *
 		 * @param {object} dimensions The dimensions object.
 		 * @return {string}
-		 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
+		 * @spec openspec/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
 		 */
 		dimensions(dimensions) {
 			if (!dimensions || typeof dimensions !== 'object') {

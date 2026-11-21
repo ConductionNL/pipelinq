@@ -12,7 +12,7 @@
  * has changed, or for every field once a save was attempted
  * (`markSaveAttempted()`). Validity itself is unchanged.
  *
- * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-errors-wait-for-the-user
+ * @spec openspec/specs/client-forms/spec.md#requirement-errors-wait-for-the-user
  */
 export default {
 	data() {
@@ -28,7 +28,7 @@ export default {
 		 * The errors to show: touched fields only, or all after a save attempt.
 		 *
 		 * @return {Record<string, string>} The visible errors.
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-errors-wait-for-the-user
+		 * @spec openspec/specs/client-forms/spec.md#requirement-errors-wait-for-the-user
 		 */
 		shownErrors() {
 			if (this.saveAttempted) {
@@ -50,7 +50,7 @@ export default {
 			 * Mark every field whose value changed as touched.
 			 *
 			 * @param {object} value The form.
-			 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-errors-wait-for-the-user
+			 * @spec openspec/specs/client-forms/spec.md#requirement-errors-wait-for-the-user
 			 */
 			handler(value) {
 				const snapshot = JSON.parse(JSON.stringify(value || {}))
@@ -78,7 +78,7 @@ export default {
 		 * From now on, show every error.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-errors-wait-for-the-user
+		 * @spec openspec/specs/client-forms/spec.md#requirement-errors-wait-for-the-user
 		 */
 		markSaveAttempted() {
 			this.saveAttempted = true

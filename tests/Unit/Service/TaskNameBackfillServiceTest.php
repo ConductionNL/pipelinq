@@ -14,7 +14,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+ * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
  */
 
 declare(strict_types=1);
@@ -34,6 +34,7 @@ use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * A task without a name gets its subject, once, and nobody is told.
@@ -44,7 +45,7 @@ use RuntimeException;
  * the scope was up at that moment, which is what decides in OpenRegister
  * whether the update event (and so the notification and activity) fires.
  *
- * @spec openspec/changes/round5-task-name-backfill/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
+ * @spec openspec/specs/repair-steps/spec.md#requirement-existing-tasks-are-named-after-their-subject-without-telling-anyone
  */
 class TaskNameBackfillServiceTest extends TestCase {
 	/**
@@ -102,19 +103,15 @@ class TaskNameBackfillServiceTest extends TestCase {
 			fn (array $config = [], bool $_rbac = true, bool $_multitenancy = true): array => array_values($this->store)
 		);
 		$objectService->method('saveObject')->willReturnCallback(
-			function (
-				array $object,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $silent = false,
-				bool $_validation = true,
-				?array $uploadedFiles = null,
-				?IUser $currentUser = null,
-			) use ($failOn): ObjectEntity {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true) use ($failOn): ObjectEntity {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				$silent = $options->policy->silent ?? false;
+				$_validation = $options->policy->validation ?? true;
+				$uploadedFiles = $options->uploadedFiles;
+				$currentUser = $options->actor->currentUser;
 				$this->writes[] = [
 					'object' => $object,
 					'register' => $register,

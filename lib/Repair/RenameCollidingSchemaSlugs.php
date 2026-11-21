@@ -49,6 +49,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use OCA\Pipelinq\Repair\Support\SchemaSlugTable;
+use OCA\Pipelinq\Repair\Support\SlugMatches;
+use OCA\Pipelinq\Repair\Support\SlugMove;
 use OCP\DB\Exception;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
@@ -141,13 +144,6 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 	];
 
 	/**
-	 * The owning application, as stored on the schema row.
-	 *
-	 * @var string
-	 */
-	private const APPLICATION = 'pipelinq';
-
-	/**
 	 * Constructor.
 	 *
 	 * @param IDBConnection $db Database connection.
@@ -181,80 +177,130 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 	 */
 	public function run(IOutput $output): void {
 		foreach (self::RENAMES as $from => $rename) {
-			$this->renameOne(output: $output, from: $from, to: $rename['to'], with: $rename['with']);
+			$this->renameOne(
+				run: new SlugRenameRun(output: $output, move: new SlugMove(from: $from, to: $rename['to']))
+			);
 		}
 	}//end run()
 
 	/**
-	 * Rename one slug.
+	 * Rename one slug, unless doing so would be ambiguous.
 	 *
-	 * @param IOutput $output Repair output.
-	 * @param string $from The slug being moved away from.
-	 * @param string $to The namespaced slug.
-	 * @param string $with The app this slug collided with.
+	 * @param SlugRenameRun $run The slug being renamed.
 	 *
 	 * @return void
 	 */
-	private function renameOne(IOutput $output, string $from, string $to, string $with): void {
-		$old = $this->schemaIds(slug: $from);
-		$new = $this->schemaIds(slug: $to);
-
-		if ($old === null || $new === null) {
-			$output->info('RenameCollidingSchemaSlugs: schema table unreadable; leaving `' . $from . '` alone.');
+	private function renameOne(SlugRenameRun $run): void {
+		$matches = new SlugMatches(
+			old: $this->schemaIds(slug: $run->move->from),
+			new: $this->schemaIds(slug: $run->move->to)
+		);
+		if ($this->reportsNothingToRename(run: $run, matches: $matches) === true) {
 			return;
 		}
 
-		if ($old === []) {
-			$output->info('RenameCollidingSchemaSlugs: no `' . $from . '` on this install; nothing to do.');
-			return;
+		$this->renameSchema(run: $run, id: $matches->oldId());
+	}//end renameOne()
+
+	/**
+	 * Report why nothing is renamed, when that is so.
+	 *
+	 * @param SlugRenameRun $run     The slug being renamed.
+	 * @param SlugMatches   $matches The ids under both slugs.
+	 *
+	 * @return bool True when there is nothing to rename.
+	 */
+	private function reportsNothingToRename(SlugRenameRun $run, SlugMatches $matches): bool {
+		if ($matches->isUnreadable() === true) {
+			$run->output->info('RenameCollidingSchemaSlugs: schema table unreadable; leaving `' . $run->move->from . '` alone.');
+			return true;
 		}
 
-		if ($new !== []) {
-			// Both slugs present: each may own objects, and renaming would collide
-			// with the new row. Abandoning either set of objects is not a call a
-			// repair step gets to make without being asked.
-			$this->logger->warning(
-				'RenameCollidingSchemaSlugs: both slugs exist; refusing to merge them.',
-				['from' => $from, 'to' => $to, 'old' => $old, 'new' => $new]
-			);
-			$output->warning(
-				'RenameCollidingSchemaSlugs: both `' . $from . '` and `' . $to
-				. '` exist; refusing to merge them. Resolve by hand.'
-			);
-			return;
+		if ($matches->old === []) {
+			$run->output->info('RenameCollidingSchemaSlugs: no `' . $run->move->from . '` on this install; nothing to do.');
+			return true;
 		}
 
-		if (count($old) > 1) {
+		return $this->refusesAmbiguousRename(run: $run, matches: $matches);
+	}//end reportsNothingToRename()
+
+	/**
+	 * Refuse a rename that would merge two schemas or pick one of several.
+	 *
+	 * @param SlugRenameRun $run     The slug being renamed.
+	 * @param SlugMatches   $matches The ids under both slugs.
+	 *
+	 * @return bool True when the rename is refused.
+	 */
+	private function refusesAmbiguousRename(SlugRenameRun $run, SlugMatches $matches): bool {
+		if ($matches->new !== []) {
+			$this->refuseMerge(run: $run, matches: $matches);
+			return true;
+		}
+
+		if (count($matches->old) > 1) {
 			$this->logger->warning(
 				'RenameCollidingSchemaSlugs: duplicate slugs; refusing to guess.',
-				['from' => $from, 'ids' => $old]
+				['from' => $run->move->from, 'ids' => $matches->old]
 			);
-			$output->warning('RenameCollidingSchemaSlugs: duplicate `' . $from . '` schemas; refusing to guess.');
-			return;
+			$run->output->warning('RenameCollidingSchemaSlugs: duplicate `' . $run->move->from . '` schemas; refusing to guess.');
+			return true;
 		}
 
+		return false;
+	}//end refusesAmbiguousRename()
+
+	/**
+	 * Refuse to merge the two slugs.
+	 *
+	 * Both slugs present: each may own objects, and renaming would collide
+	 * with the new row. Abandoning either set of objects is not a call a
+	 * repair step gets to make without being asked.
+	 *
+	 * @param SlugRenameRun $run     The slug being renamed.
+	 * @param SlugMatches   $matches The ids under both slugs.
+	 *
+	 * @return void
+	 */
+	private function refuseMerge(SlugRenameRun $run, SlugMatches $matches): void {
+		$this->logger->warning(
+			'RenameCollidingSchemaSlugs: both slugs exist; refusing to merge them.',
+			['from' => $run->move->from, 'to' => $run->move->to, 'old' => $matches->old, 'new' => $matches->new]
+		);
+		$run->output->warning(
+			'RenameCollidingSchemaSlugs: both `' . $run->move->from . '` and `' . $run->move->to
+			. '` exist; refusing to merge them. Resolve by hand.'
+		);
+	}//end refuseMerge()
+
+	/**
+	 * Move the one old schema to the namespaced slug, in place.
+	 *
+	 * @param SlugRenameRun $run The slug being renamed.
+	 * @param mixed         $id  The schema id.
+	 *
+	 * @return void
+	 */
+	private function renameSchema(SlugRenameRun $run, mixed $id): void {
 		try {
-			$this->db->executeStatement(
-				'UPDATE `*PREFIX*openregister_schemas` SET slug = ? WHERE id = ?',
-				[$to, $old[0]]
-			);
+			$this->slugTable()->renameSchema(id: $id, slug: $run->move->to);
 		} catch (Exception $e) {
 			// A failure here is safe: the import then creates a new schema rather
 			// than updating this one, which is the pre-existing behaviour. Loud,
 			// because the objects on the old schema stop being reachable.
 			$this->logger->error(
 				'RenameCollidingSchemaSlugs: slug rename failed; the import will create a second schema.',
-				['from' => $from, 'id' => $old[0], 'exception' => $e->getMessage()]
+				['from' => $run->move->from, 'id' => $id, 'exception' => $e->getMessage()]
 			);
-			$output->warning('RenameCollidingSchemaSlugs: renaming `' . $from . '` failed; see the log.');
+			$run->output->warning('RenameCollidingSchemaSlugs: renaming `' . $run->move->from . '` failed; see the log.');
 			return;
 		}
 
-		$output->info(
-			'RenameCollidingSchemaSlugs: schema ' . $old[0] . ' renamed `' . $from . '` -> `' . $to
-			. '` (collided with ' . $with . '); its objects stay attached.'
+		$run->output->info(
+			'RenameCollidingSchemaSlugs: schema ' . $id . ' renamed `' . $run->move->from . '` -> `' . $run->move->to
+			. '` (collided with ' . self::RENAMES[$run->move->from]['with'] . '); its objects stay attached.'
 		);
-	}//end renameOne()
+	}//end renameSchema()
 
 	/**
 	 * Ids of this application's schemas carrying the given slug.
@@ -265,12 +311,7 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 	 */
 	private function schemaIds(string $slug): ?array {
 		try {
-			$rows = $this->db->executeQuery(
-				'SELECT id FROM `*PREFIX*openregister_schemas` WHERE slug = ? AND application = ?',
-				[$slug, self::APPLICATION]
-			)->fetchAll(\PDO::FETCH_COLUMN);
-
-			return array_values((array)$rows);
+			return $this->slugTable()->idsWithSlug(slug: $slug);
 		} catch (Exception $e) {
 			$this->logger->warning(
 				'RenameCollidingSchemaSlugs: could not read the schema table; skipping.',
@@ -279,4 +320,13 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 			return null;
 		}
 	}//end schemaIds()
+
+	/**
+	 * The schema rows this step reads and renames.
+	 *
+	 * @return SchemaSlugTable The table.
+	 */
+	private function slugTable(): SchemaSlugTable {
+		return new SchemaSlugTable(db: $this->db);
+	}//end slugTable()
 }//end class
