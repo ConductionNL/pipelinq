@@ -10170,7 +10170,9 @@ OC.L10N.register(
         "Team member": "Teamlid",
         "Back to team": "Terug naar het team",
         "My items": "Mijn items",
-        "Cannot initiate call while on another call": "Bellen kan niet tijdens een ander gesprek"
+        "Cannot initiate call while on another call": "Bellen kan niet tijdens een ander gesprek",
+        "A variant for %s already exists on this product": "Er bestaat al een variant voor %s bij dit product",
+        "Two variants of this product have the code %s": "Twee varianten van dit product hebben de code %s"
     },
     "nplurals=2; plural=(n != 1);"
 )

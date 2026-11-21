@@ -123,6 +123,10 @@ class ListenerRegistrar {
 		// (pipeline-stage-limit).
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: StageLimitGuard::class);
 		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: StageLimitGuard::class);
+		// Two variants of one product never share their values or their code,
+		// from any screen (specify-capability-rows 29.1).
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: ProductVariantGuard::class);
+		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: ProductVariantGuard::class);
 		// A template a scheduled mailing uses cannot be deleted, from any screen
 		// (marketing-mail-templates REQ-MMT-001).
 		$context->registerEventListener(event: ObjectDeletingEvent::class, listener: TemplateInUseGuard::class);
