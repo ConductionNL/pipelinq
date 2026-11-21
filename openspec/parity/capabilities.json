@@ -5881,9 +5881,9 @@
 					"openspec/specs/appointment-booking :: REQ-APT-001 Service Entity Schema",
 					"openspec/specs/appointment-booking :: REQ-APT-003 Availability Computation",
 					"openspec/specs/appointment-booking :: REQ-APT-009 Cancellation with Policy Enforcement",
-					"openspec/specs/appointment-booking :: REQ-APT-015 Admin Booking Management"
-				],
-				"change": "openspec/changes/booking-and-service-pages"
+					"openspec/specs/appointment-booking :: REQ-APT-015 Admin Booking Management",
+					"openspec/specs/appointment-booking :: A service's composition is edited in place and can name products (REQ-BSP-001)"
+				]
 			},
 			"note": "Decision 99 (8 Oct): boards PqServices and PqService draw it and no row had it. Built; the board details still missing (buffer and Booked on columns, matching resources, bookings figure) are in services-and-resources-at-a-glance under portal-booking-capacity.",
 			"source": "spec-round-2026-10-08",
