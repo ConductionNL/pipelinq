@@ -3,10 +3,10 @@
 /**
  * Pipelinq BrpAdminController.
  *
- * Admin-only endpoints for HaalCentraal / BRP integration configuration. Secrets are
- * encrypted via ICrypto before being persisted. File-path settings reference paths on
- * the Nextcloud host filesystem (admin uploads PEM bundles via the standard server
- * filesystem; no in-app upload to limit attack surface).
+ * Admin-only endpoints for what pipelinq keeps of the BRP: the cache, the
+ * retention, who may look up, the mutation webhook secret and the pseudonym
+ * secret. The connection itself (base URL, OAuth2 credentials, certificates)
+ * is managed in integriq, not here.
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -20,7 +20,7 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
- * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
+ * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#requirement-brp-person-lookup-goes-through-integriq-only
  */
 
 declare(strict_types=1);
@@ -33,15 +33,11 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
-use OCP\IL10N;
 use OCP\IRequest;
-use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
-use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
- * Admin-only configuration for the HaalCentraal client.
+ * Admin-only configuration of what pipelinq keeps of the BRP; the connection is managed in integriq.
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
  */
@@ -52,35 +48,22 @@ class BrpAdminController extends Controller {
 	 * @var array<string, string>
 	 */
 	private const SETTING_PARAMS = [
-		'brp.base_url' => 'baseUrl',
-		'brp.oauth_endpoint' => 'oauthEndpoint',
-		'brp.client_id' => 'clientId',
-		'brp.cert_path' => 'certPath',
-		'brp.key_path' => 'keyPath',
-		'brp.ca_bundle' => 'caBundle',
 		'brp.cache_ttl_hours' => 'cacheTtlHours',
 		'brp.retention_days' => 'retentionDays',
-		'brp.health_timezone' => 'healthTimezone',
 		'brp.allowed_groups' => 'allowedGroups',
 	];
 
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest $request Request.
-	 * @param IAppConfig $appConfig App config.
-	 * @param ICrypto $crypto Crypto for secret encryption.
-	 * @param ISecureRandom $secureRandom Secure random for webhook secret rotation.
-	 * @param IL10N $l10n i18n.
-	 * @param LoggerInterface $logger Logger.
+	 * @param IRequest      $request      Request.
+	 * @param IAppConfig    $appConfig    App config.
+	 * @param ISecureRandom $secureRandom Secure random for webhook and pseudonym secret rotation.
 	 */
 	public function __construct(
 		IRequest $request,
 		private IAppConfig $appConfig,
-		private ICrypto $crypto,
 		private ISecureRandom $secureRandom,
-		private IL10N $l10n,
-		private LoggerInterface $logger,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
@@ -88,27 +71,21 @@ class BrpAdminController extends Controller {
 	/**
 	 * GET /api/brp/settings — return masked configuration for the admin UI.
 	 *
-	 * Secrets are returned as either `'***SET***'` (already configured) or empty string.
+	 * The webhook secret is returned only as whether it is set. The answer
+	 * names integriq as the place the connection is managed.
 	 *
 	 * @return JSONResponse
 	 * @spec openspec/specs/brp-lookup/spec.md
+	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#requirement-pipelinq-does-not-monitor-the-brp-connection
 	 */
 	#[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
 	public function get(): JSONResponse {
-		$hasSecret = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.client_secret_encrypted', '') !== '';
 		$hasWebhookSecret = $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.webhook_secret', '') !== '';
 		return new JSONResponse(
 			[
-				'baseUrl' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.base_url', ''),
-				'oauthEndpoint' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.oauth_endpoint', ''),
-				'clientId' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.client_id', ''),
-				'clientSecretSet' => $hasSecret,
-				'certPath' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.cert_path', ''),
-				'keyPath' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.key_path', ''),
-				'caBundle' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.ca_bundle', ''),
+				'connectionManagedBy' => 'integriq',
 				'cacheTtlHours' => (int)$this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.cache_ttl_hours', '24'),
 				'retentionDays' => (int)$this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.retention_days', '7'),
-				'healthTimezone' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.health_timezone', 'UTC'),
 				'allowedGroups' => $this->appConfig->getValueString(AppIdentity::APP_ID, 'brp.allowed_groups', ''),
 				'webhookSecretSet' => $hasWebhookSecret,
 			],
@@ -119,8 +96,8 @@ class BrpAdminController extends Controller {
 	/**
 	 * POST /api/brp/settings — save the configuration.
 	 *
-	 * Body parameters mirror the GET shape. Empty `clientSecret` keeps the existing value;
-	 * a non-empty string is encrypted via ICrypto before storage.
+	 * Body parameters mirror the GET shape. Connection settings are not taken:
+	 * they live in integriq.
 	 *
 	 * @return JSONResponse
 	 * @spec openspec/specs/brp-lookup/spec.md
@@ -128,12 +105,6 @@ class BrpAdminController extends Controller {
 	#[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
 	public function save(): JSONResponse {
 		$this->storeGivenSettings();
-
-		// Client secret — encrypt on save.
-		$refusal = $this->storeNewClientSecret();
-		if ($refusal !== null) {
-			return $refusal;
-		}
 
 		// Pseudonym secret (for RTBF) — rotated only on explicit request.
 		$this->rotatePseudonymSecretWhenAsked();
@@ -155,34 +126,6 @@ class BrpAdminController extends Controller {
 			$this->appConfig->setValueString(AppIdentity::APP_ID, $configKey, (string)$value);
 		}
 	}//end storeGivenSettings()
-
-	/**
-	 * Store a new client secret encrypted; an empty one keeps the stored secret.
-	 *
-	 * @return JSONResponse|null The 500 when it cannot be encrypted, else null.
-	 */
-	private function storeNewClientSecret(): ?JSONResponse {
-		$clientSecret = $this->request->getParam('clientSecret');
-		if (is_string($clientSecret) === false || $clientSecret === '') {
-			return null;
-		}
-
-		try {
-			$encrypted = $this->crypto->encrypt($clientSecret);
-			$this->appConfig->setValueString(AppIdentity::APP_ID, 'brp.client_secret_encrypted', $encrypted);
-		} catch (Throwable $e) {
-			$this->logger->error('Failed to encrypt BRP client secret', ['error' => $e->getMessage()]);
-			return new JSONResponse(
-				[
-					'errorCode' => 'crypto-failed',
-					'errorMessage' => $this->l10n->t('Kon BRP client-secret niet versleutelen.'),
-				],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}
-
-		return null;
-	}//end storeNewClientSecret()
 
 	/**
 	 * Rotate the pseudonym secret when the request explicitly asks for it.

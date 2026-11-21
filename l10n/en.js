@@ -10091,7 +10091,8 @@ OC.L10N.register(
         "The lead could not be saved.": "The lead could not be saved.",
         "New ticket": "New ticket",
         "%n recipient has no value for {variable}": ["%n recipient has no value for {variable}","%n recipients have no value for {variable}"],
-        "%n recipients have no value for {variable}": "%n recipients have no value for {variable}"
+        "%n recipients have no value for {variable}": "%n recipients have no value for {variable}",
+        "BRP lookups go through integriq. Ask your administrator to set up the BRP connection there.": "BRP lookups go through integriq. Ask your administrator to set up the BRP connection there."
     },
     "nplurals=2; plural=(n != 1);"
 )
