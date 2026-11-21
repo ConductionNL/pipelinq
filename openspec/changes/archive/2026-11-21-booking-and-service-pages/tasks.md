@@ -15,7 +15,8 @@
 - [x] 2.2 Register BookingContextWidget, BookingAssignmentsWidget, BookingTimelineWidget
 - [x] 2.3 BookingDetail manifest: tabs Timeline, Resources, Notes (notes leaf), Documents; no body section
   - Verify: live, every tab renders on a demo booking
-- [ ] 2.4 Swap the Timeline tab to the library `timeline` widget once nextcloud-vue releases it
+- [x] 2.4 Swap the Timeline tab to the library `timeline` widget once nextcloud-vue releases it
+  - Done since #2205 (nextcloud-vue 2.66.0): `booking-timeline` in `src/manifest.d/80-appointment-booking-admin.json` is `type: timeline` with the booking's dates and its `statusHistory`. Verify: `tests/vitest/serviceSteps.spec.js` (shows the timeline through the library timeline widget)
 
 ## 3. Text
 
