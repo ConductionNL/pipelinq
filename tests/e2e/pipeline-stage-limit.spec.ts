@@ -17,9 +17,8 @@
  * open stage "Qualified" without a limit, two leads in Proposal and one in
  * Qualified. The refusal is StageLimitGuard's "Stage %1$s is full (%2$s of
  * %3$s)"; the board shows it as an error toast (PipelineBoard.vue
- * moveItemToStage), the edit form as its save error. Task 1.5 leaves open
- * whether the form shows it under the stage field itself; that placement is
- * a soft assertion, the refusal itself is a hard one.
+ * moveItemToStage), the edit form under its stage field (LeadEditDialog
+ * through stageRefusal(), task 1.5).
  *
  * @spec openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits/spec.md#requirement-a-stage-can-carry-a-limit-req-psl-001
  * @spec openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits/spec.md#requirement-no-write-puts-an-item-into-a-full-stage-req-psl-002
@@ -242,12 +241,11 @@ test.describe.serial('stage limit', () => {
 		await dialog.getByRole('button', { name: /^(Save|Opslaan)$/ }).click()
 
 		await expect(page.getByText(FULL).first()).toBeVisible({ timeout: 15_000 })
-		await expect
-			.soft(
-				stageField.getByText(FULL),
-				'task 1.5: the message sits under the stage field',
-			)
-			.toBeVisible()
+		await expect(
+			stageField.getByText(FULL),
+			'task 1.5: the message sits under the stage field',
+		).toBeVisible()
+		await expect(dialog).toBeVisible()
 		expect(await storedStage('q1')).toBe('Qualified')
 	})
 
