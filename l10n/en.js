@@ -10088,7 +10088,8 @@ OC.L10N.register(
         "At least {count} characters.": "At least {count} characters.",
         "Save with reason": "Save with reason",
         "Not saved: a deal that slips out of its forecast period needs a slip reason.": "Not saved: a deal that slips out of its forecast period needs a slip reason.",
-        "The lead could not be saved.": "The lead could not be saved."
+        "The lead could not be saved.": "The lead could not be saved.",
+        "New ticket": "New ticket"
     },
     "nplurals=2; plural=(n != 1);"
 )

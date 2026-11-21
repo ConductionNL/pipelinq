@@ -10787,7 +10787,25 @@
 				"descriptionSource": {
 					"url": "/apps/pipelinq/api/worklist/summary"
 				},
+				"_headerActionsNote": "Quick actions (REQ-MW-100, board PqMijnWerk): New ticket opens the New request dialog with the agent as handler and Open after creating unticked, so the agent stays here and the lists read again (cn:page:refresh) and show the new ticket; New contact opens the contact dialog, which opens the new contact. No New lead, as the board draws.",
 				"headerActions": [
+					{
+						"id": "my-work-new-ticket",
+						"label": "New ticket",
+						"type": "open-modal",
+						"target": "RequestCreateDialog",
+						"icon": "TicketOutline",
+						"props": {
+							"stayAfterCreate": true
+						}
+					},
+					{
+						"id": "my-work-new-contact",
+						"label": "New contact",
+						"type": "open-modal",
+						"target": "ContactCreateDialog",
+						"icon": "AccountPlusOutline"
+					},
 					{
 						"id": "my-work-download",
 						"label": "Download",

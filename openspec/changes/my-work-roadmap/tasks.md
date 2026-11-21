@@ -10,8 +10,10 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 2. Quick actions (REQ-MW-100)
 
-- [ ] 2.1 Header buttons "New ticket" and "New contact" (no "New lead", as on `PqMijnWerk`) in `src/views/MyWork.vue`, each opening the entity's existing create modal from `src/modals/` with the assignee preset.
-- [ ] 2.2 Refresh the list after a ticket is saved.
+- [x] 2.1 Header buttons "New ticket" and "New contact" (no "New lead", as on `PqMijnWerk`) in `src/views/MyWork.vue`, each opening the entity's existing create modal from `src/modals/` with the assignee preset.
+  - Built as manifest config: My work is a dashboard page, so the buttons are its `headerActions` (`my-work-new-ticket`, `my-work-new-contact`), `open-modal` on the registered `RequestCreateDialog` (whose board layout presets the agent as handler) and `ContactCreateDialog` (a contact has no assignee). Vitest `tests/vitest/myWorkQuickActions.spec.js`
+- [x] 2.2 Refresh the list after a ticket is saved.
+  - `RequestCreateDialog` takes `stayAfterCreate` (My work sets it, so Open after creating starts unticked) and emits `cn:page:refresh` after a create that stays, which the record lists read again on. Vitest `tests/vitest/myWorkQuickActions.spec.js`; Playwright `tests/e2e/spec-coverage/my-work-quick-actions.spec.ts` is written, not yet run (needs a seeded instance)
 
 ## 3. Recent activity (REQ-MW-110)
 
