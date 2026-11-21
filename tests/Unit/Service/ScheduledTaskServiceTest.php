@@ -45,6 +45,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Contract\ObjectDeletion as PublishedObjectDeletion;
+use OCA\OpenRegister\Contract\ObjectSaveOptions as PublishedObjectSaveOptions;
 
 /**
  * Tests for ScheduledTaskService.
@@ -694,7 +696,7 @@ class RecordingObjectService extends ObjectService {
 	 */
 	public function saveObject(
 		array|ObjectEntity $object,
-		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		ObjectSaveOptions|PublishedObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true
 	): ObjectEntityInterface {
@@ -737,7 +739,7 @@ class RecordingObjectService extends ObjectService {
 	 * @return bool Always true.
 	 */
 	public function deleteObject(
-		ObjectDeletion $deletion,
+		ObjectDeletion|PublishedObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_retentionSweep = false
