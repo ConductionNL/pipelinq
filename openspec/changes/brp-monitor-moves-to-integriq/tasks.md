@@ -25,5 +25,6 @@ Spec only in this PR. Build after integriq `brp-connection-monitor-from-pipelinq
 
 ## 4. Verify
 
-- [ ] 4.1 `COMPOSER_PROCESS_TIMEOUT=0 composer check:strict`, `npm run lint`, `npm run test:l10n` once before push.
+- [x] 4.1 `COMPOSER_PROCESS_TIMEOUT=0 composer check:strict`, `npm run lint`, `npm run test:l10n` once before push.
+  - Ran on the 2.1/3.1 branch: PHPUnit all green, phpstan clean, `npm run lint` 0 errors, `npm run test:l10n` OK. The phpmd and psalm findings that remain are the ones development already carries, in files this change does not add to.
 - [ ] 4.2 Live check: a BRP lookup on the customer workplace succeeds through integriq with the pipelinq keys cleared.

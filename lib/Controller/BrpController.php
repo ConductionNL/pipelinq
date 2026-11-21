@@ -585,6 +585,8 @@ class BrpController extends Controller {
 	 * @param string      $requestUuid The saved verzoek's id, or ''.
 	 *
 	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#scenario-without-integriq-a-lookup-fails-and-says-why
 	 */
 	private function lookupResponse(PersonFetch $fetch, string $requestUuid): JSONResponse {
 		$outcome = $fetch->result->outcome;
@@ -601,10 +603,17 @@ class BrpController extends Controller {
 		}
 
 		if ($outcome === 'error' || $outcome === 'timeout') {
+			// Without a working integriq source the message names integriq
+			// (brp-monitor-moves-to-integriq); otherwise the BRP is down.
+			$message = $this->l10n->t('BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.');
+			if ($fetch->result->responseCode === HaalCentraalClientInterface::NO_SOURCE_STATUS) {
+				$message = $this->l10n->t('BRP lookups go through integriq. Ask your administrator to set up the BRP connection there.');
+			}
+
 			return new JSONResponse(
 				[
 					'errorCode' => 'brp-unavailable',
-					'errorMessage' => $this->unavailableMessage(responseCode: $fetch->result->responseCode),
+					'errorMessage' => $message,
 					'responseInCache' => false,
 					'lookupRequestId' => $requestUuid,
 				],
@@ -623,23 +632,6 @@ class BrpController extends Controller {
 			Http::STATUS_OK
 		);
 	}//end lookupResponse()
-
-	/**
-	 * Why a lookup could not be answered: no working integriq source, or the BRP is down.
-	 *
-	 * @param int|null $responseCode The failed lookup's status.
-	 *
-	 * @return string The translated message.
-	 *
-	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#scenario-without-integriq-a-lookup-fails-and-says-why
-	 */
-	private function unavailableMessage(?int $responseCode): string {
-		if ($responseCode === HaalCentraalClientInterface::NO_SOURCE_STATUS) {
-			return $this->l10n->t('BRP lookups go through integriq. Ask your administrator to set up the BRP connection there.');
-		}
-
-		return $this->l10n->t('BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.');
-	}//end unavailableMessage()
 
 	/**
 	 * POST /api/brp/contact/{id}/reveal-address — reveal a geheimhouding adres
