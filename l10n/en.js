@@ -10089,7 +10089,9 @@ OC.L10N.register(
         "Save with reason": "Save with reason",
         "Not saved: a deal that slips out of its forecast period needs a slip reason.": "Not saved: a deal that slips out of its forecast period needs a slip reason.",
         "The lead could not be saved.": "The lead could not be saved.",
-        "New ticket": "New ticket"
+        "New ticket": "New ticket",
+        "%n recipient has no value for {variable}": ["%n recipient has no value for {variable}","%n recipients have no value for {variable}"],
+        "%n recipients have no value for {variable}": "%n recipients have no value for {variable}"
     },
     "nplurals=2; plural=(n != 1);"
 )

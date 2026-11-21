@@ -17272,6 +17272,63 @@
                 }
             }
         },
+        "/templates/{id}/empty-variables": {
+            "get": {
+                "operationId": "templateVariable-emptyVariables",
+                "summary": "GET /api/templates/:id/empty-variables — recipients without a value, per variable",
+                "description": "For a template and an audience (segmentId or listId), how many of the recipients the send would queue get no value for each variable the template uses. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "template"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "Template UUID or slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "segmentId",
+                        "in": "query",
+                        "required": false,
+                        "description": "Segment UUID or slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "listId",
+                        "in": "query",
+                        "required": false,
+                        "description": "Mailing list UUID or slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
         "/templates/{id}/validate": {
             "post": {
                 "operationId": "template-validate",
