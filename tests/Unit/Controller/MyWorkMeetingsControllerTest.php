@@ -79,7 +79,7 @@ class MyWorkMeetingsControllerTest extends TestCase {
 	 */
 	public function testTheSessionUsersMeetings(): void {
 		$meetings = [['id' => 'e1', 'title' => 'Kennismaking']];
-		$response = $this->controller(uid: 'daan', meetings: $meetings)->index();
+		$response = $this->controller(uid: 'daan', meetings: $meetings)->upcoming();
 
 		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
 		$this->assertSame(expected: ['items' => $meetings], actual: $response->getData());
@@ -91,7 +91,7 @@ class MyWorkMeetingsControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFailedReadIsAnEmptyList(): void {
-		$response = $this->controller(uid: 'daan', meetings: null)->index();
+		$response = $this->controller(uid: 'daan', meetings: null)->upcoming();
 
 		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
 		$this->assertSame(expected: ['items' => []], actual: $response->getData());
@@ -103,6 +103,6 @@ class MyWorkMeetingsControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testSignedOutIsRefused(): void {
-		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $this->controller(uid: null, meetings: [])->index()->getStatus());
+		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $this->controller(uid: null, meetings: [])->upcoming()->getStatus());
 	}//end testSignedOutIsRefused()
 }//end class

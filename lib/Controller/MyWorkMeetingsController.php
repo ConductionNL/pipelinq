@@ -71,19 +71,28 @@ class MyWorkMeetingsController extends Controller {
 	 * @spec openspec/changes/my-work-roadmap/tasks.md#task-5.2
 	 */
 	#[NoAdminRequired]
-	public function index(): JSONResponse {
+	public function upcoming(): JSONResponse {
 		$uid = $this->session->getUser()?->getUID();
 		if ($uid === null) {
 			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
+		return new JSONResponse(['items' => $this->meetingsOf(uid: $uid)]);
+	}//end upcoming()
+
+	/**
+	 * The user's meetings; none when a calendar cannot be read.
+	 *
+	 * @param string $uid The user.
+	 *
+	 * @return array<int, array<string, string>> The meetings.
+	 */
+	private function meetingsOf(string $uid): array {
 		try {
-			$items = $this->meetings->upcoming(userId: $uid);
+			return $this->meetings->upcoming(userId: $uid);
 		} catch (Throwable $e) {
 			$this->logger->info('Pipelinq: My work read no meetings', ['exception' => $e->getMessage()]);
-			$items = [];
+			return [];
 		}
-
-		return new JSONResponse(['items' => $items]);
-	}//end index()
+	}//end meetingsOf()
 }//end class

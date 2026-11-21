@@ -147,7 +147,7 @@ class MyWorkCalendarService {
 	 * @return array<string, string>|null The meeting.
 	 */
 	private function meeting(array $event): ?array {
-		$record = $this->links->in(texts: [self::text(event: $event, name: 'DESCRIPTION'), self::text(event: $event, name: 'LOCATION')]);
+		$record = $this->links->recordIn(texts: [self::text(event: $event, name: 'DESCRIPTION'), self::text(event: $event, name: 'LOCATION')]);
 		if ($record === null) {
 			return null;
 		}

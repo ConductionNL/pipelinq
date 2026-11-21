@@ -62,7 +62,7 @@ class MeetingRecordLink {
 	 *
 	 * @spec openspec/changes/my-work-roadmap/tasks.md#task-5.1
 	 */
-	public function in(array $texts): ?array {
+	public function recordIn(array $texts): ?array {
 		foreach ($texts as $text) {
 			if (preg_match(self::PATTERN, $text, $match) === 1) {
 				return self::KINDS[$match[1]] + ['id' => strtolower($match[2])];
@@ -70,5 +70,5 @@ class MeetingRecordLink {
 		}
 
 		return null;
-	}//end in()
+	}//end recordIn()
 }//end class

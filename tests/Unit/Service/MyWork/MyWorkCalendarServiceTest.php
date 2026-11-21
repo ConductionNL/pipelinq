@@ -250,11 +250,11 @@ class MyWorkCalendarServiceTest extends TestCase {
 	public function testTheLinkReader(): void {
 		$links = new MeetingRecordLink();
 
-		$this->assertNull(actual: $links->in(texts: ['', 'Room 3']));
-		$this->assertNull(actual: $links->in(texts: ['/apps/pipelinq/clients/not-a-uuid']));
+		$this->assertNull(actual: $links->recordIn(texts: ['', 'Room 3']));
+		$this->assertNull(actual: $links->recordIn(texts: ['/apps/pipelinq/clients/not-a-uuid']));
 		$this->assertSame(
 			expected: ['kind' => 'contact', 'schemaKey' => 'contact_schema', 'route' => 'ContactDetail', 'id' => self::CLIENT],
-			actual: $links->in(texts: ['Agenda', 'https://nc.example/apps/pipelinq/contacts/' . self::CLIENT . '?tab=notes'])
+			actual: $links->recordIn(texts: ['Agenda', 'https://nc.example/apps/pipelinq/contacts/' . self::CLIENT . '?tab=notes'])
 		);
 	}//end testTheLinkReader()
 }//end class
