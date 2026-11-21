@@ -73,12 +73,7 @@
 
 		<template #actions>
 			<BulkPreviewActions
-				:previewed="Boolean(preview) && !refusal"
-				:canPreview="canPreview"
-				:previewing="previewing"
-				:committing="committing"
-				:changed="summary.changed"
-				testidPrefix="bulk-change"
+				v-bind="previewActions"
 				@close="$emit('close')"
 				@preview="runPreview"
 				@confirm="confirm" />
@@ -91,12 +86,10 @@ import { CnDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
 import { NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import BulkPreviewActions from '../components/BulkPreviewActions.vue'
-import bulkJobConfirmMixin from '../mixins/bulkJobConfirmMixin.js'
+import bulkPreviewJobMixin from '../mixins/bulkPreviewJobMixin.js'
 import {
 	changeSummary,
 	createSetPropertiesJob,
-	refusalReason,
-	resolveScope,
 	writablePropertiesOf,
 } from '../services/bulkJobs.js'
 import { getSchemaProperties } from '../services/viewService.js'
@@ -114,7 +107,8 @@ export default {
 		NcTextField,
 	},
 
-	mixins: [bulkJobConfirmMixin],
+	mixins: [bulkPreviewJobMixin],
+	previewTestidPrefix: 'bulk-change',
 
 	props: {
 		/** The selected records, merged in by the bulk action. */
@@ -254,28 +248,18 @@ export default {
 		},
 
 		/**
-		 * Ask OpenRegister for a previewed job. Nothing is written. A refusal
-		 * shows its reason in the dialog.
+		 * Ask OpenRegister for a previewed job on the resolved scope. Nothing is written.
 		 *
-		 * @return {Promise<void>}
+		 * @param {{register: string, schema: string}} scope The register and schema.
+		 * @return {Promise<object>} The previewed job.
 		 */
-		async runPreview() {
-			this.previewing = true
-			this.refusal = ''
-			this.preview = null
-			try {
-				const scope = await resolveScope(this.register, this.schema, this.selectedIds[0])
-				this.preview = await createSetPropertiesJob({
-					register: scope.register,
-					schema: scope.schema,
-					ids: this.selectedIds,
-					properties: { [this.property]: this.typedValue() },
-				})
-			} catch (error) {
-				this.refusal = refusalReason(error, this.t('pipelinq', 'OpenRegister refused this change.'))
-			} finally {
-				this.previewing = false
-			}
+		createPreviewJob(scope) {
+			return createSetPropertiesJob({
+				register: scope.register,
+				schema: scope.schema,
+				ids: this.selectedIds,
+				properties: { [this.property]: this.typedValue() },
+			})
 		},
 	},
 }

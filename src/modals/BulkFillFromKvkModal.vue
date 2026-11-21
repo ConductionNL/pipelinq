@@ -40,12 +40,7 @@
 
 		<template #actions>
 			<BulkPreviewActions
-				:previewed="Boolean(preview) && !refusal"
-				:canPreview="selectedIds.length > 0"
-				:previewing="previewing"
-				:committing="committing"
-				:changed="summary.changed"
-				testidPrefix="bulk-fill-kvk"
+				v-bind="previewActions"
 				@close="$emit('close')"
 				@preview="runPreview"
 				@confirm="confirm" />
@@ -57,13 +52,11 @@
 import { CnDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { NcNoteCard } from '@nextcloud/vue'
 import BulkPreviewActions from '../components/BulkPreviewActions.vue'
-import bulkJobConfirmMixin from '../mixins/bulkJobConfirmMixin.js'
+import bulkPreviewJobMixin from '../mixins/bulkPreviewJobMixin.js'
 import {
 	changeSummary,
 	createActionJob,
 	FILL_FROM_KVK_ACTION,
-	refusalReason,
-	resolveScope,
 } from '../services/bulkJobs.js'
 
 export default {
@@ -75,7 +68,8 @@ export default {
 		NcNoteCard,
 	},
 
-	mixins: [bulkJobConfirmMixin],
+	mixins: [bulkPreviewJobMixin],
+	previewTestidPrefix: 'bulk-fill-kvk',
 
 	props: {
 		/** The selected records, merged in by the bulk action. */
@@ -107,32 +101,33 @@ export default {
 		summary() {
 			return changeSummary(this.preview)
 		},
+
+		/**
+		 * Whether there is a selection to preview the fill on.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.2
+		 */
+		canPreview() {
+			return this.selectedIds.length > 0
+		},
 	},
 
 	methods: {
 		/**
-		 * Ask OpenRegister for a previewed fill. Nothing is written.
+		 * Ask OpenRegister for a previewed fill on the resolved scope. Nothing is written.
 		 *
-		 * @return {Promise<void>}
+		 * @param {{register: string, schema: string}} scope The register and schema.
+		 * @return {Promise<object>} The previewed job.
 		 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.2
 		 */
-		async runPreview() {
-			this.previewing = true
-			this.refusal = ''
-			this.preview = null
-			try {
-				const scope = await resolveScope(this.register, this.schema, this.selectedIds[0])
-				this.preview = await createActionJob({
-					action: FILL_FROM_KVK_ACTION,
-					register: scope.register,
-					schema: scope.schema,
-					ids: this.selectedIds,
-				})
-			} catch (error) {
-				this.refusal = refusalReason(error, this.t('pipelinq', 'OpenRegister refused this change.'))
-			} finally {
-				this.previewing = false
-			}
+		createPreviewJob(scope) {
+			return createActionJob({
+				action: FILL_FROM_KVK_ACTION,
+				register: scope.register,
+				schema: scope.schema,
+				ids: this.selectedIds,
+			})
 		},
 	},
 }

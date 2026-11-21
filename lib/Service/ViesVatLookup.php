@@ -26,10 +26,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use Throwable;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * One VAT number checked in VIES, through shillinq.
