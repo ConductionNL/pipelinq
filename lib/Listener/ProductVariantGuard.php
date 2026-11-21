@@ -24,7 +24,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
@@ -83,11 +82,11 @@ class ProductVariantGuard implements IEventListener {
 	 * Refuse the write when it is a product whose variants clash.
 	 *
 	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event  The event to stop.
-	 * @param ObjectEntity                            $entity The object as it will be saved.
+	 * @param \OCA\OpenRegister\Db\ObjectEntity       $entity The object as it will be saved.
 	 *
 	 * @return void
 	 */
-	private function judge(ObjectCreatingEvent|ObjectUpdatingEvent $event, ObjectEntity $entity): void {
+	private function judge(ObjectCreatingEvent|ObjectUpdatingEvent $event, \OCA\OpenRegister\Db\ObjectEntity $entity): void {
 		if ($this->schemaMap->resolveEntityType(schemaId: (string)$entity->getSchema()) !== 'product') {
 			return;
 		}

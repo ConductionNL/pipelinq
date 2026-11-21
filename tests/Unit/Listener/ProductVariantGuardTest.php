@@ -144,6 +144,6 @@ class ProductVariantGuardTest extends TestCase {
 		$this->assertFalse(condition: $plain->isPropagationStopped());
 
 		$this->guard()->handle(event: new Event());
-		$this->addToAssertionCount(1);
+		$this->addToAssertionCount(count: 1);
 	}//end testAnythingElsePasses()
 }//end class

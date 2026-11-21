@@ -76,7 +76,11 @@ final class VariantCombinations {
 	public function duplicateSku(array $variants): ?string {
 		$seen = [];
 		foreach ($variants as $variant) {
-			$sku = trim((string)(is_array($variant) === true ? ($variant['sku'] ?? '') : ''));
+			if (is_array($variant) === false) {
+				continue;
+			}
+
+			$sku = trim((string)($variant['sku'] ?? ''));
 			if ($sku === '') {
 				continue;
 			}
