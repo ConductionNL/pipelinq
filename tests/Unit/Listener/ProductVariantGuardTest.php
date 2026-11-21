@@ -149,7 +149,10 @@ class ProductVariantGuardTest extends TestCase {
 		$this->assertSame(expected: 'Variant WS-X has no value for Maat', actual: $sizeless->getErrors()['message']);
 
 		$coloured = new ObjectCreatingEvent(
-			$this->entity(schema: 's-product', data: ['variantAttributes' => $declared, 'variants' => [['sku' => 'WS-S', 'attributes' => ['Maat' => 'S', 'Kleur' => 'Wit']]]])
+			$this->entity(
+				schema: 's-product',
+				data: ['variantAttributes' => $declared, 'variants' => [['sku' => 'WS-S', 'attributes' => ['Maat' => 'S', 'Kleur' => 'Wit']]]]
+			)
 		);
 		$this->guard()->handle(event: $coloured);
 		$this->assertSame(expected: 'Kleur is not an attribute of this product', actual: $coloured->getErrors()['message']);
