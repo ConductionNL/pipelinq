@@ -192,7 +192,8 @@ class HaalCentraalClientTest extends TestCase {
 		$httpClient = $this->createMock(IClient::class);
 		$httpClient->method('get')->willReturn($response);
 
-		$person = $this->buildClient(httpClient: $httpClient, logger: $this->createMock(originalClassName: LoggerInterface::class))->lookupPersoon(self::DEMO_BSN);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$person = $this->buildClient(httpClient: $httpClient, logger: $logger)->lookupPersoon(self::DEMO_BSN);
 
 		self::assertSame('de Vries', $person['surname']);
 	}//end testLookupReadsThePersonWhoseBsnItAskedFor()
@@ -215,7 +216,8 @@ class HaalCentraalClientTest extends TestCase {
 		$httpClient = $this->createMock(IClient::class);
 		$httpClient->method('get')->willReturn($response);
 
-		$person = $this->buildClient(httpClient: $httpClient, logger: $this->createMock(originalClassName: LoggerInterface::class))->lookupPersoon(self::DEMO_BSN);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$person = $this->buildClient(httpClient: $httpClient, logger: $logger)->lookupPersoon(self::DEMO_BSN);
 
 		self::assertSame(['Sanne', 'de', 'Vries'], [$person['givenNames'], $person['namePrefix'], $person['surname']]);
 	}//end testLookupReadsTheDutchNameShape()
