@@ -119,6 +119,61 @@ final class CompanyRegistryHttp {
 	}//end leafRows()
 
 	/**
+	 * GET an OpenRegister integration leaf and say what it answered: the HTTP status
+	 * and the rows under `results`.
+	 *
+	 * Unlike leafRows() a 404 is not folded into "unusable": a check has to tell a
+	 * number the register does not know (404, or 200 without it) from a register it
+	 * cannot reach (a 5xx, or no answer at all, which reads as status 0).
+	 *
+	 * @param string $url The absolute leaf URL.
+	 *
+	 * @return array{status: int, rows: array<int, array<string, mixed>>|null} The status and the rows.
+	 *
+	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-2.2
+	 */
+	public function leafAnswer(string $url): array {
+		try {
+			$client = $this->clientService->newClient();
+			$response = $client->get(
+				$url,
+				[
+					'timeout' => 15,
+					'connect_timeout' => 3,
+					'http_errors' => false,
+					'headers' => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
+					'nextcloud' => ['allow_local_address' => true],
+				]
+			);
+		} catch (Throwable $e) {
+			$this->logger->debug('Registry leaf did not answer', ['exception' => $e]);
+			return ['status' => self::statusOf(exception: $e), 'rows' => null];
+		}
+
+		return ['status' => $response->getStatusCode(), 'rows' => $this->resultRows(body: (string)$response->getBody())];
+	}//end leafAnswer()
+
+	/**
+	 * The HTTP status a transport exception carries, or 0 when it carries none.
+	 *
+	 * @param Throwable $exception The exception.
+	 *
+	 * @return int The status.
+	 */
+	private static function statusOf(Throwable $exception): int {
+		if (method_exists($exception, 'getResponse') === false) {
+			return 0;
+		}
+
+		$response = $exception->getResponse();
+		if (is_object($response) === false || method_exists($response, 'getStatusCode') === false) {
+			return 0;
+		}
+
+		return (int)$response->getStatusCode();
+	}//end statusOf()
+
+	/**
 	 * The array entries of a leaf body's `results` list, or null when it has none.
 	 *
 	 * @param string $body The raw body.
