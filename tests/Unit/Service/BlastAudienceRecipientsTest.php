@@ -33,7 +33,7 @@ class BlastAudienceRecipientsTest extends TestCase {
 	 * @return void
 	 */
 	public function testReturnsTheResolvedMembers(): void {
-		$blast = $this->getMockBuilder(BlastService::class)
+		$blast = $this->getMockBuilder(className: BlastService::class)
 			->disableOriginalConstructor()
 			->onlyMethods(['resolveAudience'])
 			->getMock();
@@ -41,7 +41,7 @@ class BlastAudienceRecipientsTest extends TestCase {
 			->with('seg-1', '', 'email')
 			->willReturn(['members' => [['contactId' => 'c-1']], 'missingConsent' => ['c-2'], 'suppressed' => []]);
 
-		self::assertSame([['contactId' => 'c-1']], $blast->audienceRecipients('seg-1', '', 'email'));
+		self::assertSame(expected: [['contactId' => 'c-1']], actual: $blast->audienceRecipients(segmentId: 'seg-1', listId: '', channel: 'email'));
 	}//end testReturnsTheResolvedMembers()
 
 	/**
@@ -50,12 +50,12 @@ class BlastAudienceRecipientsTest extends TestCase {
 	 * @return void
 	 */
 	public function testNoAudienceResolvesNothing(): void {
-		$blast = $this->getMockBuilder(BlastService::class)
+		$blast = $this->getMockBuilder(className: BlastService::class)
 			->disableOriginalConstructor()
 			->onlyMethods(['resolveAudience'])
 			->getMock();
 		$blast->expects(self::never())->method('resolveAudience');
 
-		self::assertSame([], $blast->audienceRecipients('', '', 'email'));
+		self::assertSame(expected: [], actual: $blast->audienceRecipients(segmentId: '', listId: '', channel: 'email'));
 	}//end testNoAudienceResolvesNothing()
 }//end class

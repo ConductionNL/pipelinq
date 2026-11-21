@@ -27,6 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
+
 /**
  * Counts the recipients without a value for each variable a template uses.
  *
@@ -69,12 +72,51 @@ class EmptyVariableCounter {
 	/**
 	 * Constructor.
 	 *
-	 * @param RecipientNameReader $recipientNames Reads the name a recipient is greeted by.
+	 * @param ComplianceServiceInterface $templates      Reads the template.
+	 * @param BlastServiceInterface      $audiences      Resolves an audience the way the send does.
+	 * @param RecipientNameReader        $recipientNames Reads the name a recipient is greeted by.
 	 */
 	public function __construct(
+		private readonly ComplianceServiceInterface $templates,
+		private readonly BlastServiceInterface $audiences,
 		private readonly RecipientNameReader $recipientNames,
 	) {
 	}//end __construct()
+
+	/**
+	 * For a template and an audience, the recipients and the variables they lack.
+	 *
+	 * The audience is a segment or a mailing list, gated for consent as the
+	 * send gates it, on the template's channel. Without either there are no
+	 * recipients and so no gaps.
+	 *
+	 * @param string $templateId Template UUID or slug.
+	 * @param string $segmentId  Segment UUID or slug, or ''.
+	 * @param string $listId     MailingList UUID or slug, or ''.
+	 *
+	 * @return array{recipients: int, variables: array<int, string>, gaps: array<int, array{variable: string, count: int}>}|null
+	 *         The report, or null for an unknown template.
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 */
+	public function report(string $templateId, string $segmentId, string $listId): ?array {
+		$template = $this->templates->getTemplateById(templateId: $templateId);
+		if ($template === null) {
+			return null;
+		}
+
+		$recipients = $this->audiences->audienceRecipients(
+			segmentId: $segmentId,
+			listId: $listId,
+			channel: (string)($template['channel'] ?? 'email'),
+		);
+
+		return [
+			'recipients' => count($recipients),
+			'variables' => $this->usedVariables(template: $template),
+			'gaps' => $this->count(template: $template, recipients: $recipients),
+		];
+	}//end report()
 
 	/**
 	 * The variables a template uses, in the order they first appear.

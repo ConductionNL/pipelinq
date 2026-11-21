@@ -19,14 +19,31 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 
+use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
 use OCA\Pipelinq\Service\Marketing\EmptyVariableCounter;
 use OCA\Pipelinq\Service\Marketing\RecipientNameReader;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
  * EmptyVariableCounter.
  */
 class EmptyVariableCounterTest extends TestCase {
+
+	/**
+	 * The template reader.
+	 *
+	 * @var ComplianceServiceInterface&MockObject
+	 */
+	private ComplianceServiceInterface&MockObject $templates;
+
+	/**
+	 * The audience resolver.
+	 *
+	 * @var BlastServiceInterface&MockObject
+	 */
+	private BlastServiceInterface&MockObject $audiences;
 
 	/**
 	 * A counter whose name reader knows the given names by contact id.
@@ -36,12 +53,14 @@ class EmptyVariableCounterTest extends TestCase {
 	 * @return EmptyVariableCounter The counter.
 	 */
 	private function counter(array $names = []): EmptyVariableCounter {
-		$reader = $this->createMock(RecipientNameReader::class);
+		$reader = $this->createMock(originalClassName: RecipientNameReader::class);
 		$reader->method('greetingName')->willReturnCallback(
 			static fn (string $recipientId): string => ($names[$recipientId] ?? '')
 		);
+		$this->templates = $this->createMock(originalClassName: ComplianceServiceInterface::class);
+		$this->audiences = $this->createMock(originalClassName: BlastServiceInterface::class);
 
-		return new EmptyVariableCounter(recipientNames: $reader);
+		return new EmptyVariableCounter(templates: $this->templates, audiences: $this->audiences, recipientNames: $reader);
 	}//end counter()
 
 	/**
@@ -57,8 +76,8 @@ class EmptyVariableCounterTest extends TestCase {
 		];
 
 		self::assertSame(
-			['preferredName', 'unsubscribe_link', 'city'],
-			$this->counter()->usedVariables(template: $template)
+			expected: ['preferredName', 'unsubscribe_link', 'city'],
+			actual: $this->counter()->usedVariables(template: $template)
 		);
 	}//end testUsedVariablesReadsSubjectAndBothBodies()
 
@@ -77,8 +96,8 @@ class EmptyVariableCounterTest extends TestCase {
 		];
 
 		self::assertSame(
-			[['variable' => 'preferredName', 'count' => 2]],
-			$counter->count(template: $template, recipients: $recipients)
+			expected: [['variable' => 'preferredName', 'count' => 2]],
+			actual: $counter->count(template: $template, recipients: $recipients)
 		);
 	}//end testARecipientWithoutANameIsCounted()
 
@@ -91,8 +110,8 @@ class EmptyVariableCounterTest extends TestCase {
 		$recipients = array_fill(0, 12, ['contactId' => 'c', 'email' => 'x@example.nl']);
 
 		self::assertSame(
-			[['variable' => 'city', 'count' => 12]],
-			$this->counter()->count(template: ['bodyText' => 'From {{city}}'], recipients: $recipients)
+			expected: [['variable' => 'city', 'count' => 12]],
+			actual: $this->counter()->count(template: ['bodyText' => 'From {{city}}'], recipients: $recipients)
 		);
 	}//end testAVariableTheSendDoesNotFillCountsEveryone()
 
@@ -109,8 +128,8 @@ class EmptyVariableCounterTest extends TestCase {
 		];
 
 		self::assertSame(
-			[['variable' => 'unsubscribe_link', 'count' => 1]],
-			$this->counter()->count(template: $template, recipients: $recipients)
+			expected: [['variable' => 'unsubscribe_link', 'count' => 1]],
+			actual: $this->counter()->count(template: $template, recipients: $recipients)
 		);
 	}//end testRowValuesAreReadAsTheSendReadsThem()
 
@@ -120,7 +139,44 @@ class EmptyVariableCounterTest extends TestCase {
 	 * @return void
 	 */
 	public function testNothingMissingIsAnEmptyList(): void {
-		self::assertSame([], $this->counter()->count(template: ['subject' => '{{city}}'], recipients: []));
-		self::assertSame([], $this->counter()->count(template: ['subject' => 'Plain'], recipients: [['contactId' => 'c']]));
+		self::assertSame(expected: [], actual: $this->counter()->count(template: ['subject' => '{{city}}'], recipients: []));
+		self::assertSame(expected: [], actual: $this->counter()->count(template: ['subject' => 'Plain'], recipients: [['contactId' => 'c']]));
 	}//end testNothingMissingIsAnEmptyList()
+
+	/**
+	 * The report reads the template, resolves the audience on its channel and counts.
+	 *
+	 * @return void
+	 */
+	public function testTheReportResolvesTheAudienceOnTheTemplatesChannel(): void {
+		$counter = $this->counter(names: ['c-1' => 'Anna']);
+		$this->templates->method('getTemplateById')->with('welcome')->willReturn(
+			['subject' => 'Dear {{preferredName}}', 'bodyText' => '{{city}}', 'channel' => 'sms']
+		);
+		$this->audiences->expects(self::once())->method('audienceRecipients')
+			->with('seg-1', '', 'sms')
+			->willReturn([['contactId' => 'c-1'], ['contactId' => 'c-2']]);
+
+		self::assertSame(
+			expected: [
+				'recipients' => 2,
+				'variables' => ['preferredName', 'city'],
+				'gaps' => [['variable' => 'preferredName', 'count' => 1], ['variable' => 'city', 'count' => 2]],
+			],
+			actual: $counter->report(templateId: 'welcome', segmentId: 'seg-1', listId: '')
+		);
+	}//end testTheReportResolvesTheAudienceOnTheTemplatesChannel()
+
+	/**
+	 * An unknown template has no report and resolves no audience.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownTemplateHasNoReport(): void {
+		$counter = $this->counter();
+		$this->templates->method('getTemplateById')->willReturn(null);
+		$this->audiences->expects(self::never())->method('audienceRecipients');
+
+		self::assertNull(actual: $counter->report(templateId: 'missing', segmentId: 'seg-1', listId: ''));
+	}//end testAnUnknownTemplateHasNoReport()
 }//end class

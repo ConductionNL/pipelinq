@@ -28,16 +28,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
-use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Marketing\EmptyVariableCounter;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * GET /api/templates/{id}/empty-variables: the recipients without a value, per variable.
@@ -48,20 +44,14 @@ class TemplateVariableController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                   $request           The request.
-	 * @param ComplianceServiceInterface $complianceService The template reader.
-	 * @param BlastServiceInterface      $blastService      Resolves an audience the way the send does.
-	 * @param EmptyVariableCounter       $counter           Counts the recipients without a value.
-	 * @param IUserSession               $userSession       The user session.
-	 * @param ObjectOwnerAccessPolicy    $policy            The CRM privilege policy.
+	 * @param IRequest             $request The request.
+	 * @param EmptyVariableCounter $counter Reads the template and audience and counts the gaps.
+	 * @param CrmCallerGate        $gate    Lets only a CRM-privileged user through.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ComplianceServiceInterface $complianceService,
-		private readonly BlastServiceInterface $blastService,
 		private readonly EmptyVariableCounter $counter,
-		private readonly IUserSession $userSession,
-		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly CrmCallerGate $gate,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
@@ -69,8 +59,7 @@ class TemplateVariableController extends Controller {
 	/**
 	 * For a template and an audience, how many recipients lack each variable it uses.
 	 *
-	 * The audience is a `segmentId` or a `listId` query parameter, gated for
-	 * consent as the send gates it. Without either the answer has no gaps.
+	 * The audience is a `segmentId` or a `listId` query parameter.
 	 *
 	 * @param string $id Template UUID or slug.
 	 *
@@ -80,29 +69,20 @@ class TemplateVariableController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function emptyVariables(string $id): JSONResponse {
-		$gate = new CrmCallerGate(userSession: $this->userSession, policy: $this->policy);
-		$uid  = $gate->privilegedUserId();
+		$uid = $this->gate->privilegedUserId();
 		if ($uid instanceof JSONResponse) {
 			return $uid;
 		}
 
-		$template = $this->complianceService->getTemplateById(templateId: $id);
-		if ($template === null) {
+		$report = $this->counter->report(
+			templateId: $id,
+			segmentId: trim((string)$this->request->getParam('segmentId', '')),
+			listId: trim((string)$this->request->getParam('listId', '')),
+		);
+		if ($report === null) {
 			return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
 		}
 
-		$recipients = $this->blastService->audienceRecipients(
-			segmentId: trim((string)$this->request->getParam('segmentId', '')),
-			listId: trim((string)$this->request->getParam('listId', '')),
-			channel: (string)($template['channel'] ?? 'email'),
-		);
-
-		return new JSONResponse(
-			[
-				'recipients' => count($recipients),
-				'variables' => $this->counter->usedVariables(template: $template),
-				'gaps' => $this->counter->count(template: $template, recipients: $recipients),
-			]
-		);
+		return new JSONResponse($report);
 	}//end emptyVariables()
 }//end class
