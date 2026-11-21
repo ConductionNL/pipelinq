@@ -6736,12 +6736,11 @@
 			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "Not built: PosRefundManagerGuard requires a manager for every refund, with no limit below which a till user may refund (decision 390). Was: lib/Lifecycle/PosRefundManagerGuard.php",
+				"state": "built",
+				"evidence": "lib/Lifecycle/PosRefundManagerGuard.php:127",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/pos-lifecycle-guard-adoption",
-				"requirement": "openspec/changes/pos-refund-limit/specs/pos-lifecycle-guard-adoption :: A refund up to the configured limit SHALL need no manager (REQ-PLG-007)",
-				"plan": "openspec/changes/pos-refund-limit"
+				"requirement": "openspec/specs/pos-lifecycle-guard-adoption :: A refund up to the configured limit SHALL need no manager (REQ-PLG-007)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: https://knowledge.hubspot.com/payments/issue-payment-receipts-and-refunds-for-your-buyers names permissions for branding but no refund limit or manager approval above an amount (read 2026-09-26). Note: Was no without a source.",
