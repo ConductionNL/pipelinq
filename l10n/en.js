@@ -9897,6 +9897,7 @@ OC.L10N.register(
         "Agree": "Agree",
         "Not agreed yet": "Not agreed yet",
         "Reviews of your calls": "Reviews of your calls",
+        "Upcoming meetings": "Upcoming meetings",
         "No reviews of your calls yet.": "No reviews of your calls yet.",
         "Call transcription": "Call transcription",
         "Transcribe a recorded call and summarise it on its contact moment. The audio is sent to the app that provides speech to text and is not kept.": "Transcribe a recorded call and summarise it on its contact moment. The audio is sent to the app that provides speech to text and is not kept.",
