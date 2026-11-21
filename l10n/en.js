@@ -10154,7 +10154,8 @@ OC.L10N.register(
         "Your team": "Your team",
         "Team member": "Team member",
         "Back to team": "Back to team",
-        "My items": "My items"
+        "My items": "My items",
+        "Cannot initiate call while on another call": "Cannot initiate call while on another call"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -10169,7 +10169,8 @@ OC.L10N.register(
         "Your team": "Jouw team",
         "Team member": "Teamlid",
         "Back to team": "Terug naar het team",
-        "My items": "Mijn items"
+        "My items": "Mijn items",
+        "Cannot initiate call while on another call": "Bellen kan niet tijdens een ander gesprek"
     },
     "nplurals=2; plural=(n != 1);"
 )
