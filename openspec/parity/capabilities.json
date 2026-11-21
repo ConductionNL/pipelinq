@@ -9387,10 +9387,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-registry-numbers-and-enrichment",
+				"spec": "openspec/specs/client-registry-numbers",
 				"requirement": [
-					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: An organisation client holds its official numbers (REQ-CRN-001)",
-					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: A number can be checked against its register (REQ-CRN-002)"
+					"openspec/specs/client-registry-numbers :: An organisation client holds its official numbers (REQ-CRN-001)",
+					"openspec/specs/client-registry-numbers :: A number can be checked against its register (REQ-CRN-002)"
 				]
 			},
 			"note": "a custom field could hold a number, but nothing checks it. Specified 2026-09-28 in openspec/changes/clients-registry-numbers-and-enrichment (OpenSpec pass).",
@@ -9585,10 +9585,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-registry-numbers-and-enrichment",
+				"spec": "openspec/specs/client-registry-numbers",
 				"requirement": [
-					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: Empty person details can be filled from a public source in bulk (REQ-CRN-004)",
-					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: Empty company details can be filled from KvK in bulk (REQ-CRN-003)"
+					"openspec/specs/client-registry-numbers :: Empty person details can be filled from a public source in bulk (REQ-CRN-004)",
+					"openspec/specs/client-registry-numbers :: Empty company details can be filled from KvK in bulk (REQ-CRN-003)"
 				]
 			},
 			"evidence": {
