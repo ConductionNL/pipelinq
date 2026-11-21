@@ -26,3 +26,25 @@ export async function previewTemplate(templateId) {
 	)
 	return data
 }
+
+/**
+ * How many recipients of an audience get no value for each variable a
+ * template uses, counted on the recipients the send would queue.
+ *
+ * @param {string} templateId The template id.
+ * @param {{segmentId?: string, listId?: string}} audience The chosen segment or mailing list.
+ * @return {Promise<Array<{variable: string, count: number}>>} The gaps; empty when nothing is missing or no audience is chosen.
+ * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+ */
+export async function emptyVariables(templateId, audience = {}) {
+	const segmentId = audience.segmentId || ''
+	const listId = audience.listId || ''
+	if (!templateId || (!segmentId && !listId)) {
+		return []
+	}
+	const { data } = await axios.get(
+		generateUrl(`/apps/pipelinq/api/templates/${templateId}/empty-variables`),
+		{ params: { segmentId, listId } },
+	)
+	return Array.isArray(data?.gaps) ? data.gaps : []
+}

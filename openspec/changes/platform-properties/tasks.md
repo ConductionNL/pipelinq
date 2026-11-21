@@ -7,7 +7,8 @@
 ## 2. Checks that keep the properties true
 - [x] 2.1 `tests/Unit/Platform/AppInfoPropertiesTest.php`: reads `appinfo/info.xml` and `LICENSE`; asserts `<licence>EUPL-1.2</licence>`, that `LICENSE` is the EUPL-1.2 text, and that `openregister` is the only dependency `src/manifest.json` marks required (the others carry `"required": false`) (REQ-PLAT-001, REQ-PLAT-002) (V1)
 - [x] 2.2 Same test: asserts no file under `lib/` contains a seat or licence-key check (`maxUsers`, `seatCount`, `licenseKey`, `licenceKey`) (REQ-PLAT-003) (V1)
-- [ ] 2.3 Same test: parses `appinfo/routes.php` and the controllers and asserts every routed method carries a Nextcloud access attribute, and that every `#[PublicPage]` method is listed in an allow-list in the test with the token or signature check it relies on (REQ-PLAT-005) (V1)
+- [x] 2.3 Same test: parses `appinfo/routes.php` and the controllers and asserts every routed method carries a Nextcloud access attribute, and that every `#[PublicPage]` method is listed in an allow-list in the test with the token or signature check it relies on (REQ-PLAT-005) (V1)
+  - Built: `AppInfoPropertiesTest::testEveryRouteDeclaresItsAccessPosture()` and `testEveryPublicRouteNamesItsCheck()` (`PUBLIC_ROUTES` with each route's check, `ADMIN_DEFAULT_ROUTES` pinned for the admin-only default); green on development.
 
 ## 3. House style
 - [x] 3.1 Add a stylelint rule (`color-no-hex` with `ignore` for CSS custom property fallbacks) to `.stylelintrc` scoped to `src/**/*.vue` and `css/**/*.css` (REQ-PLAT-006) (V1)
