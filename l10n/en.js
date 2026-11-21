@@ -10155,7 +10155,9 @@ OC.L10N.register(
         "Team member": "Team member",
         "Back to team": "Back to team",
         "My items": "My items",
-        "Cannot initiate call while on another call": "Cannot initiate call while on another call"
+        "Cannot initiate call while on another call": "Cannot initiate call while on another call",
+        "A variant for %s already exists on this product": "A variant for %s already exists on this product",
+        "Two variants of this product have the code %s": "Two variants of this product have the code %s"
     },
     "nplurals=2; plural=(n != 1);"
 )
