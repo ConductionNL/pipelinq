@@ -114,6 +114,7 @@ export default {
 		/** The selected records, merged in by the bulk action. */
 		selectedIds: { type: Array, default: () => [] },
 		/** The register slug, from the bulk action's props. */
+		// eslint-disable-next-line vue/no-unused-properties -- read by bulkPreviewJobMixin.runPreview
 		register: { type: String, default: '' },
 		/** The schema slug, from the bulk action's props. */
 		schema: { type: String, default: '' },
@@ -252,6 +253,7 @@ export default {
 		 *
 		 * @param {{register: string, schema: string}} scope The register and schema.
 		 * @return {Promise<object>} The previewed job.
+		 * @spec openspec/changes/clients-bulk-edit-and-undo/specs/client-bulk-changes/spec.md
 		 */
 		createPreviewJob(scope) {
 			return createSetPropertiesJob({

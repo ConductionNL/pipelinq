@@ -29,12 +29,10 @@
 
 			<div v-else-if="preview" class="bulk-fill-kvk__summary" data-testid="bulk-fill-kvk-summary">
 				<CnStatusBadge
-					:label="n('pipelinq', '%n record will change', '%n records will change', summary.changed)"
-					variant="primary" />
-				<CnStatusBadge
-					v-if="summary.skipped > 0"
-					:label="n('pipelinq', '%n is skipped: it already has these values or has no KvK number', '%n are skipped: they already have these values or have no KvK number', summary.skipped)"
-					variant="default" />
+					v-for="badge in summaryBadges"
+					:key="badge.variant"
+					:label="badge.label"
+					:variant="badge.variant" />
 			</div>
 		</div>
 
@@ -75,8 +73,10 @@ export default {
 		/** The selected records, merged in by the bulk action. */
 		selectedIds: { type: Array, default: () => [] },
 		/** The register slug, from the bulk action's props. */
+		// eslint-disable-next-line vue/no-unused-properties -- read by bulkPreviewJobMixin.runPreview
 		register: { type: String, default: 'pipelinq' },
 		/** The schema slug, from the bulk action's props. */
+		// eslint-disable-next-line vue/no-unused-properties -- read by bulkPreviewJobMixin.runPreview
 		schema: { type: String, default: 'client' },
 	},
 
@@ -100,6 +100,23 @@ export default {
 		 */
 		summary() {
 			return changeSummary(this.preview)
+		},
+
+		/**
+		 * The preview's counts as badges: what changes, and what is skipped when anything is.
+		 *
+		 * @return {Array<{label: string, variant: string}>}
+		 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.2
+		 */
+		summaryBadges() {
+			const badges = [{ label: this.n('pipelinq', '%n record will change', '%n records will change', this.summary.changed), variant: 'primary' }]
+			if (this.summary.skipped > 0) {
+				badges.push({
+					label: this.n('pipelinq', '%n is skipped: it already has these values or has no KvK number', '%n are skipped: they already have these values or have no KvK number', this.summary.skipped),
+					variant: 'default',
+				})
+			}
+			return badges
 		},
 
 		/**
