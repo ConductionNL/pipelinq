@@ -11602,6 +11602,7 @@
 					},
 					{
 						"id": "my-follow-ups",
+						"_note": "REQ-MW-120 (board PqMijnWerk): a follow-up planned today reads \"planned 14:00\" in its meta line (a meta case on a deadline from @today to @today+1d, the time through the template's time format) and carries \"Follow-up today\" as its due text; one still to come reads \"Tomorrow\" or \"In 3 days\", one past its deadline \"2 days overdue\" in the danger tone. The phone list groups overdue follow-ups under Overdue (dueGroup late).",
 						"type": "record-list",
 						"title": "My follow-ups",
 						"viewport": "wide",
@@ -11652,12 +11653,22 @@
 							"limit": 5,
 							"presentation": "rows",
 							"title": "{subject}",
-							"meta": "{type}",
+							"meta": {
+								"text": "{type}",
+								"cases": [
+									{
+										"when": { "all": [{ "field": "deadline", "op": "gte", "value": "@today" }, { "field": "deadline", "op": "lt", "value": "@today+1d" }] },
+										"text": "{type} · planned {deadline|time}"
+									}
+								]
+							},
 							"rowRoute": "TaskDetail",
 							"emptyText": "No follow-ups assigned to you",
 							"due": {
 								"field": "deadline",
-								"emptyText": "No due date"
+								"emptyText": "No due date",
+								"todayLabel": "Follow-up today",
+								"upcomingLabel": { "one": "Tomorrow", "other": "In {count} days" }
 							}
 						}
 					}
