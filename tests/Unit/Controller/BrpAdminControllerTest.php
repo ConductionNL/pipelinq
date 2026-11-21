@@ -127,9 +127,9 @@ final class BrpAdminControllerTest extends TestCase {
 		);
 
 		return new BrpAdminController(
-			request: $this->createMock(IRequest::class),
+			request: $this->createMock(originalClassName: IRequest::class),
 			appConfig: $appConfig,
-			secureRandom: ($random ?? $this->createMock(ISecureRandom::class)),
+			secureRandom: ($random ?? $this->createMock(originalClassName: ISecureRandom::class)),
 		);
 	}//end controllerOver()
 

@@ -56,7 +56,7 @@ class HaalCentraalClientTest extends TestCase {
 	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#requirement-brp-person-lookup-goes-through-integriq-only
 	 */
 	public function testIsConfiguredFalseWithoutIntegriq(): void {
-		self::assertFalse($this->buildClient(integriq: false)->isConfigured());
+		self::assertFalse(condition: $this->buildClient(integriq: false)->isConfigured());
 	}//end testIsConfiguredFalseWithoutIntegriq()
 
 	/**
@@ -67,7 +67,7 @@ class HaalCentraalClientTest extends TestCase {
 	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#requirement-brp-person-lookup-goes-through-integriq-only
 	 */
 	public function testIsConfiguredTrueWithIntegriq(): void {
-		self::assertTrue($this->buildClient()->isConfigured());
+		self::assertTrue(condition: $this->buildClient()->isConfigured());
 	}//end testIsConfiguredTrueWithIntegriq()
 
 	/**
@@ -87,10 +87,10 @@ class HaalCentraalClientTest extends TestCase {
 
 		try {
 			$client->lookupPersoon(self::DEMO_BSN);
-			self::fail('expected HaalCentraalException without integriq');
+			self::fail(message: 'expected HaalCentraalException without integriq');
 		} catch (HaalCentraalException $e) {
-			self::assertSame(HaalCentraalClient::NO_SOURCE_MESSAGE, $e->getMessage());
-			self::assertSame(HaalCentraalClient::NO_SOURCE_STATUS, $e->getStatusCode());
+			self::assertSame(expected: HaalCentraalClient::NO_SOURCE_MESSAGE, actual: $e->getMessage());
+			self::assertSame(expected: HaalCentraalClient::NO_SOURCE_STATUS, actual: $e->getStatusCode());
 		}
 	}//end testLookupFailsWithoutIntegriqAndCallsNothing()
 
@@ -192,7 +192,7 @@ class HaalCentraalClientTest extends TestCase {
 		$httpClient = $this->createMock(IClient::class);
 		$httpClient->method('get')->willReturn($response);
 
-		$person = $this->buildClient(httpClient: $httpClient, logger: $this->createMock(LoggerInterface::class))->lookupPersoon(self::DEMO_BSN);
+		$person = $this->buildClient(httpClient: $httpClient, logger: $this->createMock(originalClassName: LoggerInterface::class))->lookupPersoon(self::DEMO_BSN);
 
 		self::assertSame('de Vries', $person['surname']);
 	}//end testLookupReadsThePersonWhoseBsnItAskedFor()
@@ -215,7 +215,7 @@ class HaalCentraalClientTest extends TestCase {
 		$httpClient = $this->createMock(IClient::class);
 		$httpClient->method('get')->willReturn($response);
 
-		$person = $this->buildClient(httpClient: $httpClient, logger: $this->createMock(LoggerInterface::class))->lookupPersoon(self::DEMO_BSN);
+		$person = $this->buildClient(httpClient: $httpClient, logger: $this->createMock(originalClassName: LoggerInterface::class))->lookupPersoon(self::DEMO_BSN);
 
 		self::assertSame(['Sanne', 'de', 'Vries'], [$person['givenNames'], $person['namePrefix'], $person['surname']]);
 	}//end testLookupReadsTheDutchNameShape()
@@ -305,10 +305,10 @@ class HaalCentraalClientTest extends TestCase {
 
 		try {
 			$client->lookupPersoon(self::DEMO_BSN);
-			self::fail('expected HaalCentraalException when the source does not answer');
+			self::fail(message: 'expected HaalCentraalException when the source does not answer');
 		} catch (HaalCentraalException $e) {
-			self::assertSame(HaalCentraalClient::NO_SOURCE_MESSAGE, $e->getMessage());
-			self::assertSame(503, $e->getStatusCode());
+			self::assertSame(expected: HaalCentraalClient::NO_SOURCE_MESSAGE, actual: $e->getMessage());
+			self::assertSame(expected: 503, actual: $e->getStatusCode());
 		}
 	}//end testLookupFailsWhenTheSourceDoesNotAnswer()
 
@@ -320,13 +320,13 @@ class HaalCentraalClientTest extends TestCase {
 	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#requirement-brp-person-lookup-goes-through-integriq-only
 	 */
 	public function testLookupFailsOnANon200Answer(): void {
-		$response = $this->createMock(IResponse::class);
+		$response = $this->createMock(originalClassName: IResponse::class);
 		$response->method('getStatusCode')->willReturn(502);
-		$httpClient = $this->createMock(IClient::class);
+		$httpClient = $this->createMock(originalClassName: IClient::class);
 		$httpClient->method('get')->willReturn($response);
 
-		$this->expectException(HaalCentraalException::class);
-		$this->expectExceptionMessage(HaalCentraalClient::NO_SOURCE_MESSAGE);
+		$this->expectException(exception: HaalCentraalException::class);
+		$this->expectExceptionMessage(message: HaalCentraalClient::NO_SOURCE_MESSAGE);
 		$this->buildClient(httpClient: $httpClient)->lookupPersoon(self::DEMO_BSN);
 	}//end testLookupFailsOnANon200Answer()
 
@@ -404,7 +404,7 @@ class HaalCentraalClientTest extends TestCase {
 			unset($e);
 		}
 
-		self::assertNotEmpty($captured, 'expected the failure log lines');
+		self::assertNotEmpty(actual: $captured, message: 'expected the failure log lines');
 		foreach ($captured as [$message, $context]) {
 			self::assertStringNotContainsString(self::DEMO_BSN, $message, 'raw BSN leaked into log message');
 			self::assertStringNotContainsString(self::DEMO_BSN, json_encode($context), 'raw BSN leaked into log context');
@@ -464,14 +464,14 @@ class HaalCentraalClientTest extends TestCase {
 			static fn (string $path): string => 'http://localhost' . $path
 		);
 
-		$appManager = $this->createMock(IAppManager::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('isInstalled')->willReturnCallback(
 			static fn (string $app): bool => ($app === 'integriq' && $integriq === true)
 		);
 
 		return new HaalCentraalClient(
 			clientService: $clientService,
-			logger: ($logger ?? $this->createMock(LoggerInterface::class)),
+			logger: ($logger ?? $this->createMock(originalClassName: LoggerInterface::class)),
 			urlGenerator: $urlGenerator,
 			appManager: $appManager,
 		);

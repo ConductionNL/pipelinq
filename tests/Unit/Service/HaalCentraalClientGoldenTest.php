@@ -112,7 +112,7 @@ class HaalCentraalClientGoldenTest extends TestCase {
 	 * @return void
 	 */
 	public function testLeafWithoutPersonIsNotFound(): void {
-		$this->assertNull($this->client(leaf: [200, ['results' => []]])->lookupPersoon(self::BSN));
+		$this->assertNull(actual: $this->client(leaf: [200, ['results' => []]])->lookupPersoon(self::BSN));
 		$this->assertSame(['get'], array_column($this->calls->getArrayCopy(), 0));
 	}//end testLeafWithoutPersonIsNotFound()
 
@@ -129,9 +129,9 @@ class HaalCentraalClientGoldenTest extends TestCase {
 	public function testUnusableLeafFailsTheLookup(?array $leaf): void {
 		try {
 			$this->client(leaf: $leaf)->lookupPersoon(self::BSN, 'req-7');
-			$this->fail('a lookup without a working source must fail');
+			$this->fail(message: 'a lookup without a working source must fail');
 		} catch (HaalCentraalException $e) {
-			$this->assertSame(HaalCentraalClient::NO_SOURCE_MESSAGE, $e->getMessage());
+			$this->assertSame(expected: HaalCentraalClient::NO_SOURCE_MESSAGE, actual: $e->getMessage());
 			$this->assertSame(503, $e->getCode());
 		}
 
@@ -307,7 +307,7 @@ class HaalCentraalClientGoldenTest extends TestCase {
 		$clientService = $this->createMock(IClientService::class);
 		$clientService->method('newClient')->willReturn($http);
 
-		$appManager = $this->createMock(IAppManager::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('isInstalled')->willReturn(true);
 
 		$logger = $this->createMock(LoggerInterface::class);
