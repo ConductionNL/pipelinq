@@ -32,11 +32,16 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use InvalidArgumentException;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Service\WorklistService;
+use OCA\Pipelinq\Service\Worklist\WorkScope;
 use OCP\IAppConfig;
+use OCP\IGroup;
+use OCP\IGroupManager;
 use OCP\IL10N;
+use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -72,6 +77,7 @@ class WorklistServiceTest extends TestCase {
 	 * @param array<string, array<int, array<string, mixed>>> $byCollection Per-collection fixture rows.
 	 * @param bool $registerMissing Force the app-config `register` empty.
 	 * @param bool $throwFromObjectService Force the fake to throw on findAll.
+	 * @param WorkScope|null $workScope The scope resolver; default one where nobody manages a team.
 	 *
 	 * @return WorklistService
 	 */
@@ -79,6 +85,7 @@ class WorklistServiceTest extends TestCase {
 		array $byCollection = [],
 		bool $registerMissing = false,
 		bool $throwFromObjectService = false,
+		?WorkScope $workScope = null,
 	): WorklistService {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
@@ -157,6 +164,7 @@ class WorklistServiceTest extends TestCase {
 		// (unconfigured register / OR failure -> empty row set, never a throw).
 		$this->ticketCalls = [];
 		$ticketService = $this->createMock(TicketService::class);
+		$ticketService->method('getObjectService')->willReturn($this->objectService);
 		$ticketService->method('getRegisterId')->willReturn($registerMissing === true ? '' : 'register-1');
 		$ticketService->method('getSchemaId')->willReturn('ticket_schema');
 		$ticketService->method('isConfigured')->willReturn($registerMissing === false);
@@ -184,8 +192,134 @@ class WorklistServiceTest extends TestCase {
 			l10n: $l10n,
 			logger: $logger,
 			ticketService: $ticketService,
-			objectService: $this->objectService,
+			workScope: $workScope ?? $this->workScope(),
 		);
+	}
+
+	/**
+	 * A scope resolver over one team manager group `leads` holding the given
+	 * members, with `admin` as the only Nextcloud administrator.
+	 *
+	 * @param array<int, string> $members The UIDs in the `leads` group.
+	 *
+	 * @return WorkScope
+	 */
+	private function workScope(array $members = []): WorkScope {
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
+		$setting = '';
+		if ($members !== []) {
+			$setting = 'leads';
+		}
+
+		$appConfig->method('getValueString')->willReturn($setting);
+
+		$users = array_map(
+			function (string $uid): IUser {
+				$user = $this->createMock(originalClassName: IUser::class);
+				$user->method('getUID')->willReturn($uid);
+				return $user;
+			},
+			$members
+		);
+		$group = $this->createMock(originalClassName: IGroup::class);
+		$group->method('getUsers')->willReturn($users);
+
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturnCallback(static fn (string $uid): bool => $uid === 'admin');
+		$groupManager->method('isInGroup')->willReturnCallback(
+			static fn (string $uid, string $gid): bool => $gid === 'leads' && in_array($uid, $members, true)
+		);
+		$groupManager->method('get')->willReturn($group);
+
+		return new WorkScope(appConfig: $appConfig, groupManager: $groupManager);
+	}
+
+	/**
+	 * The assignee filters of the lead queries the last built service ran.
+	 *
+	 * @return array<int, string|null> One assignee per lead query; null for a query without one.
+	 */
+	private function leadQueryAssignees(): array {
+		$assignees = [];
+		foreach ($this->objectService->calls as $config) {
+			if (($config['filters']['schema'] ?? '') === 'lead_schema') {
+				$assignees[] = $config['filters']['assignee'] ?? null;
+			}
+		}
+
+		return $assignees;
+	}
+
+	/**
+	 * The team scope reads the work of every member of the manager's team,
+	 * and each member's tickets with that member as assignee (REQ-MW-180).
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testTeamScopeListsTheWorkOfEveryMember(): void {
+		$service = $this->buildService(
+			byCollection: ['lead_schema' => [['id' => 'lead-1', 'title' => 'Deal', 'stage' => 'New']]],
+			workScope: $this->workScope(members: ['manager', 'bob', 'carol']),
+		);
+
+		$result = $service->getMine(userId: 'manager', scope: WorkScope::TEAM);
+
+		$this->assertSame(expected: ['bob', 'carol', 'manager'], actual: $this->leadQueryAssignees());
+		$ticketAssignees = array_values(array_unique(array_map(static fn (array $call): string => $call['filters']['assignee'], $this->ticketCalls)));
+		$this->assertSame(expected: ['bob', 'carol', 'manager'], actual: $ticketAssignees);
+		// The fake answers every query with the same lead, once per member.
+		$this->assertSame(expected: 3, actual: $result['leadCount']);
+	}
+
+	/**
+	 * A manager narrows the team to one member; a user outside the team is refused.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testTeamScopeNarrowsToOneMember(): void {
+		$service = $this->buildService(workScope: $this->workScope(members: ['manager', 'bob']));
+
+		$service->getMine(userId: 'manager', scope: WorkScope::TEAM, member: 'bob');
+		$this->assertSame(expected: ['bob'], actual: $this->leadQueryAssignees());
+
+		$this->expectException(exception: InvalidArgumentException::class);
+		$service->getMine(userId: 'manager', scope: WorkScope::TEAM, member: 'mallory');
+	}
+
+	/**
+	 * An administrator's organisation scope asks for everyone's work: no assignee filter.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testOrganisationScopeDropsTheAssigneeFilter(): void {
+		$service = $this->buildService();
+
+		$service->getMine(userId: 'admin', scope: WorkScope::ORGANISATION);
+
+		$this->assertSame(expected: [null], actual: $this->leadQueryAssignees());
+		foreach ($this->ticketCalls as $call) {
+			$this->assertArrayNotHasKey(key: 'assignee', array: $call['filters']);
+		}
+	}
+
+	/**
+	 * A user in no manager group cannot ask for the team's work.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testAnAgentCannotAskForTheTeamScope(): void {
+		$service = $this->buildService();
+
+		$this->expectException(exception: InvalidArgumentException::class);
+		$service->getMine(userId: 'alice', scope: WorkScope::TEAM);
 	}
 
 	/**

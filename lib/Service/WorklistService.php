@@ -46,13 +46,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
 use OCA\Pipelinq\Service\Worklist\WeekStats;
 use OCA\Pipelinq\Service\Worklist\WorkBuckets;
-use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Service\Worklist\WorkScope;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -75,7 +74,6 @@ use RuntimeException;
  */
 class WorklistService implements WorklistServiceInterface {
 	use PayloadToArray;
-	use InjectedObjectService;
 
 	/**
 	 * Priority sort ranks — lower sorts first (MyWorkWidget.vue:43).
@@ -190,14 +188,14 @@ class WorklistService implements WorklistServiceInterface {
 	 * @param IL10N $l10n Localisation (request status labels).
 	 * @param LoggerInterface $logger The logger.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.
-	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param WorkScope $workScope Whose work a scope lists.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 		private readonly TicketService $ticketService,
-		private readonly ObjectServiceInterface $objectService,
+		private readonly WorkScope $workScope,
 	) {
 	}//end __construct()
 
@@ -212,8 +210,15 @@ class WorklistService implements WorklistServiceInterface {
 	 *   - leadCount:    leads in the full union
 	 *   - requestCount: requests in the full union
 	 *
-	 * @param string $userId The Nextcloud UID whose work to list (assignee scoping).
-	 * @param int|null $limit Optional cap on returned rows (widget uses 5); null = all.
+	 * The scope widens whose work is listed (REQ-MW-180, {@see WorkScope}):
+	 * `mine` (default) the user's own, `team` every member of the teams the
+	 * user manages (or one `member` of them), `organisation` everyone's. Every
+	 * scope still reads under the user's own OpenRegister permissions.
+	 *
+	 * @param string   $userId The Nextcloud UID asking (assignee scoping).
+	 * @param int|null $limit  Optional cap on returned rows (widget uses 5); null = all.
+	 * @param string   $scope  `mine`, `team` or `organisation`.
+	 * @param string   $member With `team`: one member of the team; '' for the whole team.
 	 *
 	 * @return array{
 	 *   items: array<int, array<string, mixed>>,
@@ -223,16 +228,23 @@ class WorklistService implements WorklistServiceInterface {
 	 * }
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable.
+	 * @throws InvalidArgumentException For a scope the user may not choose, or a member outside their team.
 	 *
 	 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 	 * @spec openspec/specs/my-work/spec.md
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
-	public function getMine(string $userId, ?int $limit = null): array {
-		$leads = $this->findObjects(
-			schemaKey: 'lead_schema',
-			query: ['filters' => ['assignee' => $userId], 'limit' => self::LEAD_FETCH_LIMIT]
-		);
-		$requests = $this->assignedTickets(userId: $userId);
+	public function getMine(string $userId, ?int $limit=null, string $scope=WorkScope::MINE, string $member=''): array {
+		$leads    = [];
+		$requests = [];
+		foreach ($this->workScope->assigneeFilters(userId: $userId, scope: $scope, member: $member) as $filter) {
+			$leads    = array_merge(
+				$leads,
+				$this->findObjects(schemaKey: 'lead_schema', query: ['filters' => $filter, 'limit' => self::LEAD_FETCH_LIMIT])
+			);
+			$requests = array_merge($requests, $this->assignedTickets(filters: $filter));
+		}
+
 		$pipelines = $this->findObjects(
 			schemaKey: 'pipeline_schema',
 			query: ['filters' => [], 'limit' => self::PIPELINE_FETCH_LIMIT]
@@ -252,21 +264,21 @@ class WorklistService implements WorklistServiceInterface {
 	}//end getMine()
 
 	/**
-	 * Every ticket assigned to the user, of every work ticket type.
+	 * Every ticket matching an assignee filter, of every work ticket type.
 	 *
 	 * Every ticket type assigned to the user, not only requests: an
 	 * assigned complaint or contact moment is work too (pipelinq review G1).
 	 *
-	 * @param string $userId The Nextcloud UID.
+	 * @param array<string, string> $filters The assignee filter; empty for every assignee.
 	 *
 	 * @return array<int, array<string, mixed>> The tickets.
 	 */
-	private function assignedTickets(string $userId): array {
+	private function assignedTickets(array $filters): array {
 		$requests = [];
 		foreach (self::WORK_TICKET_TYPES as $ticketType) {
 			$requests = array_merge(
 				$requests,
-				$this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId])
+				$this->findTickets(ticketType: $ticketType, filters: $filters)
 			);
 		}
 
@@ -693,7 +705,7 @@ class WorklistService implements WorklistServiceInterface {
 	 */
 	private function clientName(string $clientId): string {
 		try {
-			$client = $this->toArray(value: $this->getObjectService()->find($clientId));
+			$client = $this->toArray(value: $this->ticketService->getObjectService()->find($clientId));
 		} catch (\Throwable $e) {
 			return '';
 		}
@@ -972,7 +984,7 @@ class WorklistService implements WorklistServiceInterface {
 	 */
 	private function runFindAll(array $config, string $schemaKey): array {
 		try {
-			$objectService = $this->getObjectService();
+			$objectService = $this->ticketService->getObjectService();
 			$results = $objectService->findAll(config: $config);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

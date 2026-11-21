@@ -26,6 +26,20 @@
 			}
 		]
 	},
+	"myWork": {
+		"name": "My work",
+		"description": "Who sees the work of a whole team on My work.",
+		"saveLabel": "Save My work settings",
+		"valuesPath": "config",
+		"fields": [
+			{
+				"key": "my_work_manager_groups",
+				"label": "Team manager groups",
+				"placeholder": "team-leads",
+				"hint": "Group IDs, separated by commas. A member of one of these groups can switch My work to Team and see the open work of everyone in that group. Leave empty to show everyone only their own work."
+			}
+		]
+	},
 	"callReview": {
 		"name": "Call transcription",
 		"description": "Transcribe a recorded call and summarise it on its contact moment. The audio is sent to the app that provides speech to text and is not kept.",

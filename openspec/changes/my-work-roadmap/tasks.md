@@ -52,8 +52,10 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 10. Scope (REQ-MW-180)
 
-- [ ] 10.1 Admin setting for the team manager groups in Pipelinq settings.
-- [ ] 10.2 `WorklistService::getMine()` gains a scope (`mine`, `team`, `organisation`); team members resolved from the manager's group through `IGroupManager`; OpenRegister RBAC unchanged.
+- [x] 10.1 Admin setting for the team manager groups in Pipelinq settings.
+  - Built: app setting `my_work_manager_groups` (group ids, comma separated, empty by default) in the declared `myWork` section of `src/views/settings/adminSections.json`, mounted for administrators on the admin page. Vitest `tests/vitest/myWorkManagerGroups.spec.js` and `adminSections.spec.js`.
+- [x] 10.2 `WorklistService::getMine()` gains a scope (`mine`, `team`, `organisation`); team members resolved from the manager's group through `IGroupManager`; OpenRegister RBAC unchanged.
+  - Built: `lib/Service/Worklist/WorkScope.php` says which scopes a user has (`team` for a member of a configured manager group, its team being every member of those groups; `organisation` for a Nextcloud administrator) and whose work each lists. `getMine(userId, limit, scope, member)` asks OpenRegister once per listed user (no assignee filter for the organisation), so every read stays under the user's own permissions. `GET /api/worklist/mine?scope=&member=` answers 400 for a scope or member the user may not ask for. PHPUnit `tests/Unit/Service/Worklist/WorkScopeTest.php`, `WorklistServiceTest` (team, one member, organisation, refused), `WorklistControllerTest`. The page's `/api/worklist/items` and the week tiles keep the user's own work until the scope switch (10.3) lands.
 - [ ] 10.3 Scope switch, member list with open counts, "Back to team".
 
 ## 11. Refresh (REQ-MW-190)

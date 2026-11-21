@@ -18179,6 +18179,29 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "required": false,
+                        "description": "Whose work: mine (default), team (a member of a team manager group) or organisation (an administrator).",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "mine",
+                                "team",
+                                "organisation"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "member",
+                        "in": "query",
+                        "required": false,
+                        "description": "With scope team: one member of the team.",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {

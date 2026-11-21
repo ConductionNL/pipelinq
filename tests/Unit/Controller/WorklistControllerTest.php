@@ -230,6 +230,73 @@ class WorklistControllerTest extends TestCase {
 	}
 
 	/**
+	 * `?scope=` and `?member=` reach the service; without them the scope is `mine`.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testMineForwardsScopeAndMember(): void {
+		$this->authenticateAs(uid: 'manager');
+		$this->request->method('getParam')->willReturnMap(
+			[
+				['limit', '', ''],
+				['scope', '', 'team'],
+				['member', '', 'bob'],
+			]
+		);
+
+		$this->service->expects($this->once())
+			->method('getMine')
+			->with('manager', null, 'team', 'bob')
+			->willReturn(['items' => [], 'total' => 0, 'leadCount' => 0, 'requestCount' => 0]);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $this->buildController()->mine()->getStatus());
+	}
+
+	/**
+	 * No scope in the request reads as the user's own work.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testMineDefaultsToOwnWork(): void {
+		$this->authenticateAs(uid: 'alice');
+		$this->request->method('getParam')->willReturn('');
+
+		$this->service->expects($this->once())
+			->method('getMine')
+			->with('alice', null, 'mine', '')
+			->willReturn(['items' => [], 'total' => 0, 'leadCount' => 0, 'requestCount' => 0]);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $this->buildController()->mine()->getStatus());
+	}
+
+	/**
+	 * A scope the user may not choose answers 400 with a static message.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testMineRefusesAScopeTheUserMayNotChoose(): void {
+		$this->authenticateAs(uid: 'alice');
+		$this->request->method('getParam')->willReturnMap(
+			[
+				['limit', '', ''],
+				['scope', '', 'organisation'],
+				['member', '', ''],
+			]
+		);
+		$this->service->method('getMine')->willThrowException(new \InvalidArgumentException('Unknown scope'));
+
+		$response = $this->buildController()->mine();
+		$this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
+		$this->assertSame(expected: 'Invalid scope', actual: $response->getData()['message']);
+	}
+
+	/**
 	 * The items endpoint hands the list and lens to the service, refuses an
 	 * unknown list, and downloads as CSV.
 	 *

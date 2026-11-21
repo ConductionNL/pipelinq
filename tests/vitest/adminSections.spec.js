@@ -91,6 +91,7 @@ describe('the declared admin sections', () => {
 		const guards = {
 			callReview: 'isAdmin',
 			leadManagement: 'isAdmin',
+			myWork: 'isAdmin',
 			provisionData: 'isAdmin',
 			exportConfiguration: 'isAdmin',
 			shillinq: 'isAdmin && shillinqInstalled',
