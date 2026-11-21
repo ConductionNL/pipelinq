@@ -17,6 +17,12 @@ import { generateUrl } from '@nextcloud/router'
 /** The set-properties action id (OpenRegister `SetPropertiesAction::ID`). */
 export const SET_PROPERTIES_ACTION = 'openregister:set-properties'
 
+/**
+ * pipelinq's Fill in from KvK action (clients-registry-numbers-and-enrichment,
+ * FillFromKvkAction), registered with OpenRegister.
+ */
+export const FILL_FROM_KVK_ACTION = 'pipelinq:fill-from-kvk'
+
 const JOBS_BASE = '/apps/openregister/api/bulk-jobs'
 const OBJECTS_BASE = '/apps/openregister/api/objects'
 
@@ -206,4 +212,28 @@ export async function listJobs() {
 	if (data && Array.isArray(data.results)) return data.results
 	if (data && Array.isArray(data.jobs)) return data.jobs
 	return []
+}
+
+/**
+ * Ask OpenRegister for a previewed job of any registered action. Nothing is
+ * written until the job is committed.
+ *
+ * @param {object} job The job.
+ * @param {string} job.action The action id.
+ * @param {number} job.register The register id.
+ * @param {number} job.schema The schema id.
+ * @param {Array<string>} job.ids The selected object ids.
+ * @param {object} [job.parameters] The action's parameters.
+ * @return {Promise<object>} The previewed job.
+ * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-4.2
+ */
+export async function createActionJob({ action, register, schema, ids, parameters = {} }) {
+	const { data } = await axios.post(generateUrl(JOBS_BASE), {
+		action,
+		parameters,
+		selection: { ids },
+		register,
+		schema,
+	})
+	return data
 }

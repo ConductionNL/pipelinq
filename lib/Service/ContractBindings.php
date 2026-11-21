@@ -49,6 +49,7 @@ use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\CashShiftSummaryServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\ClientIdentifierServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientCaseReaderInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientHistorySummaryServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientManagementIntegrationInterface;
@@ -416,11 +417,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(CashShiftServiceInterface::class, CashShiftService::class);
 		$context->registerServiceAlias(CashShiftSummaryServiceInterface::class, CashShiftSummaryService::class);
 		$context->registerServiceAlias(ChannelProviderRepositoryInterface::class, ChannelProviderRepository::class);
-		$context->registerServiceAlias(ClientBusinessReaderInterface::class, ClientBusinessReader::class);
-		$context->registerServiceAlias(ClientCaseReaderInterface::class, ClientCaseReader::class);
-		$context->registerServiceAlias(ClientHistorySummaryServiceInterface::class, ClientHistorySummaryService::class);
-		$context->registerServiceAlias(ClientManagementIntegrationInterface::class, ClientManagementIntegration::class);
-		$context->registerServiceAlias(ClientRiskServiceInterface::class, ClientRiskService::class);
+		$this->registerClientContracts(context: $context);
 		$context->registerServiceAlias(CoachingPointAgreementInterface::class, CoachingPointAgreement::class);
 		$context->registerServiceAlias(CompetitorWatchServiceInterface::class, CompetitorWatchService::class);
 		$context->registerServiceAlias(ComplianceServiceInterface::class, ComplianceService::class);
@@ -637,4 +634,22 @@ final class ContractBindings {
 		$context->registerServiceAlias(ZrcClientInterface::class, ZrcClient::class);
 		$context->registerServiceAlias(ZtcClientInterface::class, ZtcClient::class);
 	}//end register()
+
+	/**
+	 * Alias the client contracts to their implementations.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Composition root wiring, no functional requirement.
+	 */
+	private function registerClientContracts(IRegistrationContext $context): void {
+		$context->registerServiceAlias(ClientBusinessReaderInterface::class, ClientBusinessReader::class);
+		$context->registerServiceAlias(ClientIdentifierServiceInterface::class, ClientIdentifierService::class);
+		$context->registerServiceAlias(ClientCaseReaderInterface::class, ClientCaseReader::class);
+		$context->registerServiceAlias(ClientHistorySummaryServiceInterface::class, ClientHistorySummaryService::class);
+		$context->registerServiceAlias(ClientManagementIntegrationInterface::class, ClientManagementIntegration::class);
+		$context->registerServiceAlias(ClientRiskServiceInterface::class, ClientRiskService::class);
+	}//end registerClientContracts()
 }//end class
