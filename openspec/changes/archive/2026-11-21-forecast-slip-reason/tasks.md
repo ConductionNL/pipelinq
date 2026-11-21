@@ -23,4 +23,4 @@
   - done: `tests/vitest/forecastSlipReason.spec.js` (period bounds, row filter and order, the OpenRegister query, a failed read, the rendered list and its empty state).
 
 ## 5. Capability row
-- [ ] 5.1 When 1 to 4 are done, add the slip evidence to `forecast-category` in `openspec/parity/capabilities.json` and archive this change.
+- [x] 5.1 When 1 to 4 are done, add the slip evidence to `forecast-category` in `openspec/parity/capabilities.json` and archive this change.

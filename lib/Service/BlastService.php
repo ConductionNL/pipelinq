@@ -1147,6 +1147,28 @@ class BlastService implements BlastServiceInterface {
 	}//end resolveAudience()
 
 	/**
+	 * The recipients a send to this audience would queue now.
+	 *
+	 * Runs `resolveAudience()`, the gate the send runs, and keeps only its
+	 * members: nothing is queued or written.
+	 *
+	 * @param string $segmentId Segment UUID or slug, empty when a list is named.
+	 * @param string $listId    MailingList UUID or slug, empty when a segment is named.
+	 * @param string $channel   Channel ("email" / "sms").
+	 *
+	 * @return array<int, array<string, mixed>> The recipient rows.
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 */
+	public function audienceRecipients(string $segmentId, string $listId, string $channel): array {
+		if ($segmentId === '' && $listId === '') {
+			return [];
+		}
+
+		return $this->resolveAudience(segmentId: $segmentId, listId: $listId, channel: $channel)['members'];
+	}//end audienceRecipients()
+
+	/**
 	 * Resolve a mailing list's audience through SubscriptionQueryService.
 	 *
 	 * Fails closed when that service cannot be resolved: an empty

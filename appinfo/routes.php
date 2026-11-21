@@ -710,6 +710,8 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'template#articles', 'url' => '/api/templates/articles', 'verb' => 'GET'],
         ['name' => 'template#preview', 'url' => '/api/templates/{id}/preview', 'verb' => 'GET'],
         ['name' => 'template#validate', 'url' => '/api/templates/{id}/validate', 'verb' => 'POST'],
+        // How many recipients of an audience a template's variables leave empty (marketing-mail-templates).
+        ['name' => 'templateVariable#emptyVariables', 'url' => '/api/templates/{id}/empty-variables', 'verb' => 'GET'],
         ['name' => 'template#show',    'url' => '/api/templates/{id}',     'verb' => 'GET'],
         ['name' => 'template#update',  'url' => '/api/templates/{id}',     'verb' => 'PATCH'],
 

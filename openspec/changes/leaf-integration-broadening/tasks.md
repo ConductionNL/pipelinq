@@ -57,6 +57,7 @@
   - **acceptance_criteria**:
     - Playwright asserts the "Board", "Deal room", "Intake forms" widgets render on LeadDetail and "Client room" on ClientDetail (widget presence + unavailable-state fallback when the NC app is absent on the CI instance)
     - Existing LeadDetail/ClientDetail e2e specs still pass (layout rows are appended, nothing moved)
+  - Written, not yet run (needs a seeded instance): `tests/e2e/collaboration-leaves.spec.ts` seeds a client and a lead, opens the Deal room, Board and Intake forms tabs on LeadDetail and the Client room on ClientDetail, and expects each to render its widget or the unavailable state without a hard error.
 
 - [ ] 4.2 Gates + live verification
   - **spec_ref**: all

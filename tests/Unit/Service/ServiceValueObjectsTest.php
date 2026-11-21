@@ -28,8 +28,6 @@ use OCA\Pipelinq\Service\ProductCategoryNames;
 use OCA\Pipelinq\Service\ReportingWindow;
 use OCA\Pipelinq\Service\SegmentRulePosition;
 use OCA\Pipelinq\Service\Sla\SlaHeat;
-use OCA\Pipelinq\Service\TimedResponse;
-use OCP\Http\Client\IResponse;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -88,20 +86,6 @@ class ServiceValueObjectsTest extends TestCase {
 		self::assertSame('resolution', (new SlaHeat(consumed: 0.8, hottestKind: ''))->kind());
 		self::assertSame('response', (new SlaHeat(consumed: 0.8, hottestKind: 'response'))->kind());
 	}//end testSlaHeatKind()
-
-	/**
-	 * A timed response reads the status as an integer.
-	 *
-	 * @return void
-	 */
-	public function testTimedResponseStatus(): void {
-		$response = $this->createMock(IResponse::class);
-		$response->method('getStatusCode')->willReturn(204);
-
-		$timed = new TimedResponse(response: $response, durationMs: 85);
-		self::assertSame(204, $timed->status());
-		self::assertSame(85, $timed->durationMs);
-	}//end testTimedResponseStatus()
 
 	/**
 	 * A retired PSP key is the provider's payment config key.

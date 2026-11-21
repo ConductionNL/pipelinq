@@ -33,7 +33,7 @@ vi.mock('@nextcloud/vue', () => ({
 }))
 vi.mock('@nextcloud/dialogs', () => ({ showInfo: (m) => infos.push(m) }))
 vi.mock('../../src/modals/MissingConsentModal.vue', () => ({ default: stub('MissingConsentModal') }))
-vi.mock('../../src/services/templatePreviewApi.js', () => ({ previewTemplate: vi.fn() }))
+vi.mock('../../src/services/templatePreviewApi.js', () => ({ previewTemplate: vi.fn(), emptyVariables: vi.fn(async () => []) }))
 
 const articles = await import('../../src/services/templatePreviewApi.js')
 const { default: BlastWizardDialog } = await import('../../src/dialogs/BlastWizardDialog.vue')
@@ -340,5 +340,35 @@ describe('submit', () => {
 		axios.post.mockRejectedValueOnce({})
 		await w.vm.submit()
 		expect([w.vm.submitError, w.vm.submitting]).toEqual(['Failed to create blast.', false])
+	})
+})
+
+describe('recipients without a value', () => {
+	/**
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 */
+	it('counts the gaps for the chosen template and segment, and again when the content step opens', async () => {
+		articles.emptyVariables.mockResolvedValue([{ variable: 'city', count: 12 }])
+		const { w } = await openWizard()
+		await fillSteps(w)
+		expect(articles.emptyVariables).toHaveBeenCalledWith('tpl1', { segmentId: 'seg1', listId: '' })
+		expect(w.vm.emptyVariableGaps).toEqual([{ variable: 'city', count: 12 }])
+
+		articles.emptyVariables.mockClear()
+		w.vm.goTo(2)
+		await flushPromises()
+		expect(w.vm.step).toBe('content')
+		expect(articles.emptyVariables).toHaveBeenCalledTimes(1)
+	})
+
+	it('shows nothing without a template or when the count fails', async () => {
+		const { w } = await openWizard()
+		await w.vm.loadEmptyVariables()
+		expect(articles.emptyVariables).not.toHaveBeenCalled()
+		expect(w.vm.emptyVariableGaps).toEqual([])
+
+		articles.emptyVariables.mockRejectedValue(new Error('down'))
+		await fillSteps(w)
+		expect(w.vm.emptyVariableGaps).toEqual([])
 	})
 })

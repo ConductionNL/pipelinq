@@ -2151,29 +2151,28 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": "PqLead"
 			},
-			"note": "Decision 411 (13 Nov 2026): the commit reason for deals above the threshold (default EUR 50K) is built; the reason asked when a deal slips out of its forecast period is a separate row, forecast-slip-reason, not built."
+			"note": "Decision 411 (13 Nov 2026): the commit reason for deals above the threshold (default EUR 50K) is built; the reason asked when a deal slips out of its forecast period is the separate row forecast-slip-reason, built by forecast-slip-reason (lib/Service/ForecastDealService.php:257, REQ-FRC-012 in openspec/specs/forecast-roll-up-and-categories)."
 		},
 		{
 			"id": "forecast-slip-reason",
 			"area": "pipeline",
 			"name": "Say why when a committed or best-case deal slips out of its forecast period",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "no",
 			"pipedrive": "unknown",
 			"espocrm": "no",
 			"odoo-crm": "no",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "looked in lib/Service/ForecastDealService.php validateTransition(): it checks closed-deal locks and the commit justification, nothing on a moved close date; grep -i slip over lib and src finds nothing",
+			"providerHow": "read in lib/Service/ForecastDealService.php:257 (validateTransition() returns forecast.error.slip_reason_required through ForecastSlipRule), the reason dialog src/modals/SlipReasonModal.vue opened by src/dialogs/LeadEditDialog.vue, and the slipped-deals card in ForecastTrend.vue",
 			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "Not built: moving a deal's expectedCloseDate past its forecast period asks for nothing and stores no reason (ForecastDealService::validateTransition() has no close-date rule; grep -i slip over lib and src: no hits). Planned in openspec/changes/forecast-slip-reason (decision 411, 13 Nov 2026).",
+				"state": "built",
+				"evidence": "lib/Service/ForecastDealService.php:257",
 				"owner": "ConductionNL/pipelinq",
-				"change": "forecast-slip-reason",
-				"plan": "openspec/changes/forecast-slip-reason",
-				"requirement": "openspec/changes/forecast-slip-reason/specs/forecast-roll-up-and-categories :: A deal that slips out of its forecast period needs a slip reason (REQ-FRC-012)"
+				"spec": "openspec/specs/forecast-roll-up-and-categories",
+				"requirement": "openspec/specs/forecast-roll-up-and-categories :: A deal that slips out of its forecast period needs a slip reason (REQ-FRC-012)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/set-up-the-forecast-tool categories \"Pipeline\", \"Best case\" and \"Commit: deals that have a high likelihood of closing\", set per deal; https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite shows \"Forecast Moved Backward\" and \"Close Date Pushed\". Sales Hub Professional, Enterprise. No slip reason field is documented; a custom property would carry the why.",
@@ -2186,7 +2185,7 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": "PqLead"
 			},
-			"note": "Split from forecast-category by decision 411 (13 Nov 2026): the slip reason is specified, not built."
+			"note": "Split from forecast-category by decision 411 (13 Nov 2026). Built by forecast-slip-reason (archived 2026-11-21): a commit or best-case deal whose close date moves past its quarter needs a reason of at least ten characters, slipped_from and slipped_at are recorded, and the forecast trend lists the slipped deals with their reasons."
 		},
 		{
 			"id": "forecast-trend",
@@ -5882,9 +5881,9 @@
 					"openspec/specs/appointment-booking :: REQ-APT-001 Service Entity Schema",
 					"openspec/specs/appointment-booking :: REQ-APT-003 Availability Computation",
 					"openspec/specs/appointment-booking :: REQ-APT-009 Cancellation with Policy Enforcement",
-					"openspec/specs/appointment-booking :: REQ-APT-015 Admin Booking Management"
-				],
-				"change": "openspec/changes/booking-and-service-pages"
+					"openspec/specs/appointment-booking :: REQ-APT-015 Admin Booking Management",
+					"openspec/specs/appointment-booking :: A service's composition is edited in place and can name products (REQ-BSP-001)"
+				]
 			},
 			"note": "Decision 99 (8 Oct): boards PqServices and PqService draw it and no row had it. Built; the board details still missing (buffer and Booked on columns, matching resources, bookings figure) are in services-and-resources-at-a-glance under portal-booking-capacity.",
 			"source": "spec-round-2026-10-08",
@@ -6737,12 +6736,11 @@
 			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "Not built: PosRefundManagerGuard requires a manager for every refund, with no limit below which a till user may refund (decision 390). Was: lib/Lifecycle/PosRefundManagerGuard.php",
+				"state": "built",
+				"evidence": "lib/Lifecycle/PosRefundManagerGuard.php:127",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/pos-lifecycle-guard-adoption",
-				"requirement": "openspec/changes/pos-refund-limit/specs/pos-lifecycle-guard-adoption :: A refund up to the configured limit SHALL need no manager (REQ-PLG-007)",
-				"plan": "openspec/changes/pos-refund-limit"
+				"requirement": "openspec/specs/pos-lifecycle-guard-adoption :: A refund up to the configured limit SHALL need no manager (REQ-PLG-007)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: https://knowledge.hubspot.com/payments/issue-payment-receipts-and-refunds-for-your-buyers names permissions for branding but no refund limit or manager approval above an amount (read 2026-09-26). Note: Was no without a source.",

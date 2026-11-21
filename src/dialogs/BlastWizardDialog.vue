@@ -139,6 +139,16 @@
 						{{ templateValidationError }}
 					</NcNoteCard>
 
+					<NcNoteCard
+						v-if="emptyVariableGaps.length"
+						type="warning"
+						class="blast-wizard__note"
+						data-testid="blast-empty-variables">
+						<p v-for="gap in emptyVariableGaps" :key="gap.variable">
+							{{ n('pipelinq', '%n recipient has no value for {variable}', '%n recipients have no value for {variable}', gap.count, { variable: gap.variable }) }}
+						</p>
+					</NcNoteCard>
+
 					<NcLoadingIcon v-if="previewLoading" :size="24" />
 					<div v-else-if="preview" class="blast-wizard__preview">
 						<p
@@ -429,7 +439,7 @@ import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import Send from 'vue-material-design-icons/Send.vue'
 import MissingConsentModal from '../modals/MissingConsentModal.vue'
 import { mailPreviewDocument } from '../services/mailPreview.js'
-import { previewTemplate } from '../services/templatePreviewApi.js'
+import { emptyVariables, previewTemplate } from '../services/templatePreviewApi.js'
 
 const STEPS = [
 	{ key: 'basics', label: 'Basics' },
@@ -535,6 +545,8 @@ export default {
 			templateValidationError: '',
 			preview: null,
 			previewLoading: false,
+			/** Per used variable, how many recipients of the audience get no value for it. */
+			emptyVariableGaps: [],
 			showConsentModal: false,
 			missingConsentContacts: [],
 			consentDecision: null,
@@ -728,6 +740,9 @@ export default {
 			if (value === 'review') {
 				this.loadReviewConsent()
 			}
+			if (value === 'content') {
+				this.loadEmptyVariables()
+			}
 		},
 
 		show: {
@@ -790,6 +805,7 @@ export default {
 			this.model.templateId = option?.id || ''
 			this.validateTemplate()
 			this.loadPreview()
+			this.loadEmptyVariables()
 		},
 
 		/**
@@ -1249,6 +1265,29 @@ export default {
 				this.preview = null
 			} finally {
 				this.previewLoading = false
+			}
+		},
+
+		/**
+		 * Count, for the chosen template and audience, the recipients that a
+		 * used variable leaves empty, so the marketer reads it before sending.
+		 * A failed count shows nothing rather than a wrong number.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+		 */
+		async loadEmptyVariables() {
+			this.emptyVariableGaps = []
+			if (!this.selectedTemplate) {
+				return
+			}
+			try {
+				this.emptyVariableGaps = await emptyVariables(this.selectedTemplate.id, {
+					segmentId: this.model.segmentId,
+					listId: this.model.listId,
+				})
+			} catch {
+				this.emptyVariableGaps = []
 			}
 		},
 
