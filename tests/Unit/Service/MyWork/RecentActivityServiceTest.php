@@ -24,7 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\MyWork;
 use DateTime;
 use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
+use OCA\Pipelinq\Service\WorklistService;
 use OCA\Pipelinq\Service\MyWork\RecentActivityService;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -50,11 +50,16 @@ class RecentActivityServiceTest extends TestCase {
 	 * @return array<string, mixed> The item.
 	 */
 	private static function item(string $uuid, string $kind, string $title, string $updated): array {
+		$routeName = 'TicketDetail';
+		if ($kind === 'lead') {
+			$routeName = 'LeadDetail';
+		}
+
 		return [
 			'kind'      => $kind,
 			'id'        => $uuid,
 			'title'     => $title,
-			'routeName' => $kind === 'lead' ? 'LeadDetail' : 'TicketDetail',
+			'routeName' => $routeName,
 			'record'    => ['id' => $uuid, '@self' => ['id' => $uuid, 'updated' => $updated]],
 		];
 	}//end item()
@@ -69,7 +74,7 @@ class RecentActivityServiceTest extends TestCase {
 	 * @return RecentActivityService The service.
 	 */
 	private function service(array $items, array $trails, array &$read=[]): RecentActivityService {
-		$worklist = $this->createMock(originalClassName: WorklistServiceInterface::class);
+		$worklist = $this->createMock(originalClassName: WorklistService::class);
 		$worklist->expects($this->once())->method('items')->with('daan')->willReturn(['items' => $items, 'total' => count($items)]);
 
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);

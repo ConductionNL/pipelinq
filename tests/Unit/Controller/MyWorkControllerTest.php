@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\Controller\MyWorkController;
+use OCA\Pipelinq\Service\MyWork\RecentActivityService;
 use OCA\Pipelinq\Service\WorklistService;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
@@ -38,7 +39,10 @@ use RuntimeException;
 
 /**
  * GET /api/my-work/week-stats: always the session user, the scope passed on,
- * and static error envelopes.
+ * and static error envelopes. GET /api/my-work/recent-activity: the session
+ * user's recent activity, an empty list on a failed read.
+ *
+ * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
  *
  * @covers \OCA\Pipelinq\Controller\MyWorkController
  */
@@ -73,6 +77,13 @@ class MyWorkControllerTest extends TestCase {
 	private LoggerInterface $logger;
 
 	/**
+	 * Mock recent activity.
+	 *
+	 * @var RecentActivityService&MockObject
+	 */
+	private RecentActivityService $activity;
+
+	/**
 	 * Set up the doubles.
 	 *
 	 * @return void
@@ -82,6 +93,7 @@ class MyWorkControllerTest extends TestCase {
 		$this->service     = $this->createMock(WorklistService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 		$this->logger      = $this->createMock(LoggerInterface::class);
+		$this->activity    = $this->createMock(RecentActivityService::class);
 	}//end setUp()
 
 	/**
@@ -104,7 +116,7 @@ class MyWorkControllerTest extends TestCase {
 			static fn (string $key, mixed $default = null): mixed => $key === 'scope' ? $scope : $default
 		);
 
-		return new MyWorkController($this->request, $this->service, $this->userSession, $this->logger);
+		return new MyWorkController($this->request, $this->service, $this->userSession, $this->logger, $this->activity);
 	}//end controller()
 
 	/**
@@ -167,4 +179,44 @@ class MyWorkControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
 		$this->assertSame(['message' => 'Week figures unavailable'], $response->getData());
 	}//end testAFailureIsAStaticServerError()
+
+	/**
+	 * The session user's recent activity comes back under `items`.
+	 *
+	 * @return void
+	 */
+	public function testRecentActivityOfTheSessionUser(): void {
+		$entries = [['id' => 'a1', 'title' => 'Parking permit', 'action' => 'update']];
+		$this->activity->expects($this->once())->method('forUser')->with('pieter')->willReturn(value: $entries);
+
+		$response = $this->controller(uid: 'pieter')->recentActivity();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['items' => $entries], actual: $response->getData());
+	}//end testRecentActivityOfTheSessionUser()
+
+	/**
+	 * A failed read answers an empty list, so the section shows its empty text.
+	 *
+	 * @return void
+	 */
+	public function testRecentActivityFailedReadIsAnEmptyList(): void {
+		$this->activity->method('forUser')->willThrowException(new RuntimeException('register down'));
+
+		$response = $this->controller(uid: 'pieter')->recentActivity();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['items' => []], actual: $response->getData());
+	}//end testRecentActivityFailedReadIsAnEmptyList()
+
+	/**
+	 * Without a signed-in user the route answers 401 and reads nothing.
+	 *
+	 * @return void
+	 */
+	public function testRecentActivityRefusesWithoutAUser(): void {
+		$this->activity->expects($this->never())->method('forUser');
+
+		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $this->controller(uid: null)->recentActivity()->getStatus());
+	}//end testRecentActivityRefusesWithoutAUser()
 }//end class

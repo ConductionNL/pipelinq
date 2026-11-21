@@ -28,7 +28,7 @@ namespace OCA\Pipelinq\Service\MyWork;
 use DateTimeInterface;
 use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
+use OCA\Pipelinq\Service\WorklistService;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -61,12 +61,12 @@ class RecentActivityService {
 	/**
 	 * Constructor.
 	 *
-	 * @param WorklistServiceInterface $worklist     The user's work items.
+	 * @param WorklistService        $worklist      The user's work items.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service, for the audit trail.
 	 * @param LoggerInterface        $logger        The logger.
 	 */
 	public function __construct(
-		private readonly WorklistServiceInterface $worklist,
+		private readonly WorklistService $worklist,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly LoggerInterface $logger,
 	) {
@@ -110,7 +110,10 @@ class RecentActivityService {
 	 */
 	private function recentlyChanged(array $items): array {
 		$items = array_values(array_filter($items, fn (array $item): bool => $this->uuidOf(item: $item) !== ''));
-		usort($items, fn (array $a, array $b): int => $this->timestamp(moment: $this->updatedOf(item: $b)) <=> $this->timestamp(moment: $this->updatedOf(item: $a)));
+		usort(
+			$items,
+			fn (array $a, array $b): int => $this->timestamp(moment: $this->updatedOf(item: $b)) <=> $this->timestamp(moment: $this->updatedOf(item: $a))
+		);
 
 		return array_slice($items, 0, self::ITEMS_READ);
 	}//end recentlyChanged()
@@ -196,8 +199,11 @@ class RecentActivityService {
 	 */
 	private function timestamp(string $moment): int {
 		$time = strtotime($moment);
+		if ($time === false) {
+			return 0;
+		}
 
-		return $time === false ? 0 : $time;
+		return $time;
 	}//end timestamp()
 
 	/**
@@ -214,7 +220,11 @@ class RecentActivityService {
 			$row = $row->jsonSerialize();
 		}
 
-		return is_array($row) === true ? $row : [];
+		if (is_array($row) === false) {
+			return [];
+		}
+
+		return $row;
 	}//end rowValues()
 
 	/**
@@ -231,7 +241,11 @@ class RecentActivityService {
 			return $value->format(DateTimeInterface::ATOM);
 		}
 
-		return is_string($value) === true ? $value : '';
+		if (is_string($value) === false) {
+			return '';
+		}
+
+		return $value;
 	}//end moment()
 
 	/**
@@ -244,7 +258,8 @@ class RecentActivityService {
 	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	private function uuidOf(array $item): string {
-		$record = is_array($item['record'] ?? null) === true ? $item['record'] : [];
+		$record = $this->recordOf(item: $item);
+
 		return (string)($record['@self']['id'] ?? ($record['id'] ?? ($item['id'] ?? '')));
 	}//end uuidOf()
 
@@ -258,8 +273,26 @@ class RecentActivityService {
 	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	private function updatedOf(array $item): string {
-		$record = is_array($item['record'] ?? null) === true ? $item['record'] : [];
+		$record = $this->recordOf(item: $item);
 
 		return $this->moment(value: ($record['@self']['updated'] ?? null));
 	}//end updatedOf()
+
+	/**
+	 * The object an item carries as stored; empty when it carries none.
+	 *
+	 * @param array<string, mixed> $item The work item.
+	 *
+	 * @return array<string, mixed> The record.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 */
+	private function recordOf(array $item): array {
+		$record = ($item['record'] ?? null);
+		if (is_array($record) === false) {
+			return [];
+		}
+
+		return $record;
+	}//end recordOf()
 }//end class
