@@ -420,6 +420,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(CashShiftSummaryServiceInterface::class, CashShiftSummaryService::class);
 		$context->registerServiceAlias(ChannelProviderRepositoryInterface::class, ChannelProviderRepository::class);
 		$this->registerClientContracts(context: $context);
+		$this->registerMyWorkContracts(context: $context);
 		$context->registerServiceAlias(CoachingPointAgreementInterface::class, CoachingPointAgreement::class);
 		$context->registerServiceAlias(CompetitorWatchServiceInterface::class, CompetitorWatchService::class);
 		$context->registerServiceAlias(ComplianceServiceInterface::class, ComplianceService::class);
@@ -564,7 +565,6 @@ final class ContractBindings {
 		$context->registerServiceAlias(QuoteNumberSequenceInterface::class, QuoteNumberSequence::class);
 		$context->registerServiceAlias(RapportageServiceInterface::class, RapportageService::class);
 		$context->registerServiceAlias(ReceiptDeliveryServiceInterface::class, ReceiptDeliveryService::class);
-		$context->registerServiceAlias(RecentActivityServiceInterface::class, RecentActivityService::class);
 		$context->registerServiceAlias(RecurringRevenueServiceInterface::class, RecurringRevenueService::class);
 		$context->registerServiceAlias(RedemptionServiceInterface::class, RedemptionService::class);
 		$context->registerServiceAlias(RegisterAccessSyncInterface::class, RegisterAccessSync::class);
@@ -630,7 +630,6 @@ final class ContractBindings {
 		$context->registerServiceAlias(WhatsAppAdapterInterface::class, WhatsAppAdapter::class);
 		$context->registerServiceAlias(WipSyncNotifierInterface::class, WipSyncNotifier::class);
 		$context->registerServiceAlias(WooRequestConversionServiceInterface::class, WooRequestConversionService::class);
-		$context->registerServiceAlias(WorklistServiceInterface::class, WorklistService::class);
 		$context->registerServiceAlias(XWikiServiceInterface::class, XWikiService::class);
 		$context->registerServiceAlias(ZgwApiClientInterface::class, ZgwApiClient::class);
 		$context->registerServiceAlias(ZgwRegisterAccessInterface::class, ZgwRegisterAccess::class);
@@ -655,4 +654,18 @@ final class ContractBindings {
 		$context->registerServiceAlias(ClientManagementIntegrationInterface::class, ClientManagementIntegration::class);
 		$context->registerServiceAlias(ClientRiskServiceInterface::class, ClientRiskService::class);
 	}//end registerClientContracts()
+
+	/**
+	 * Alias the My work contracts to their implementations.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Composition root wiring, no functional requirement.
+	 */
+	private function registerMyWorkContracts(IRegistrationContext $context): void {
+		$context->registerServiceAlias(RecentActivityServiceInterface::class, RecentActivityService::class);
+		$context->registerServiceAlias(WorklistServiceInterface::class, WorklistService::class);
+	}//end registerMyWorkContracts()
 }//end class
