@@ -8,7 +8,8 @@
   - best-case deal's close date out of its forecast period, SlipReasonModal
   - asks why first, and the save goes through only with the reason
   - (`slip_reason`). Cancelling the reason leaves the form open with the
-  - edit unsaved.
+  - edit unsaved. A save refused because the stage it moves into is full
+  - shows the refusal under the stage field and keeps the form open.
   -
   - @spec openspec/changes/forecast-slip-reason/specs/forecast-roll-up-and-categories/spec.md#requirement-a-deal-that-slips-out-of-its-forecast-period-needs-a-slip-reason-req-frc-012
   -->
@@ -36,6 +37,7 @@
 import { CnFormDialog } from '@conduction/nextcloud-vue'
 import SlipReasonModal from '../modals/SlipReasonModal.vue'
 import { closeDay, needsSlipReason } from '../services/forecastSlipCheck.js'
+import { stageRefusal } from '../services/stageRefusal.js'
 
 /**
  * A close date as `YYYY-MM-DD`, for the reason dialog's sentence.
@@ -160,11 +162,14 @@ export default {
 		},
 
 		/**
-		 * Save through the page and hand the outcome to the form.
+		 * Save through the page and hand the outcome to the form. A refusal
+		 * because the stage the edit moves into is full is shown under the
+		 * stage field, with the form still open on the values typed.
 		 *
 		 * @param {object} data The values to save.
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/forecast-slip-reason/specs/forecast-roll-up-and-categories/spec.md#requirement-a-deal-that-slips-out-of-its-forecast-period-needs-a-slip-reason-req-frc-012
+		 * @spec openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits/spec.md#requirement-no-write-puts-an-item-into-a-full-stage-req-psl-002
 		 */
 		async save(data) {
 			if (typeof this.confirm !== 'function') {
@@ -183,6 +188,11 @@ export default {
 						|| e?.message
 						|| t('pipelinq', 'The lead could not be saved.'),
 				}
+			}
+			const full = stageRefusal(this.item, data, result?.error)
+			if (full !== null && typeof this.$refs.formDialog?.setValidationErrors === 'function') {
+				this.$refs.formDialog.setValidationErrors({ stage: full }, full)
+				return
 			}
 			this.$refs.formDialog?.setResult?.(result || { success: true })
 		},
