@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\MyWork;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\RecentActivityServiceInterface;
 use OCA\Pipelinq\Service\WorklistService;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -38,7 +39,7 @@ use Throwable;
  *
  * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
  */
-class RecentActivityService {
+class RecentActivityService implements RecentActivityServiceInterface {
 
 	/**
 	 * Constructor.

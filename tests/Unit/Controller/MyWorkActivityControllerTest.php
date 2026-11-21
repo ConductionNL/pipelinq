@@ -22,7 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\MyWorkActivityController;
-use OCA\Pipelinq\Service\MyWork\RecentActivityService;
+use OCA\Pipelinq\Kernel\Contracts\RecentActivityServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
 use OCP\IUser;
@@ -47,7 +47,7 @@ class MyWorkActivityControllerTest extends TestCase {
 	 * @return MyWorkActivityController The controller.
 	 */
 	private function controller(?string $uid, array $entries): MyWorkActivityController {
-		$service = $this->createMock(originalClassName: RecentActivityService::class);
+		$service = $this->createMock(originalClassName: RecentActivityServiceInterface::class);
 		$service->expects($this->atMost(allowedInvocations: 1))->method('forUser')->with('daan')->willReturn(value: $entries);
 
 		$session = $this->createMock(originalClassName: IUserSession::class);

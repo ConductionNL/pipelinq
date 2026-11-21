@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\MyWork\RecentActivityService;
+use OCA\Pipelinq\Kernel\Contracts\RecentActivityServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -44,13 +44,13 @@ class MyWorkActivityController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest              $request  The HTTP request.
-	 * @param RecentActivityService $activity The recent activity.
-	 * @param IUserSession          $session  The signed-in user.
+	 * @param IRequest                       $request  The HTTP request.
+	 * @param RecentActivityServiceInterface $activity The recent activity.
+	 * @param IUserSession                   $session  The signed-in user.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly RecentActivityService $activity,
+		private readonly RecentActivityServiceInterface $activity,
 		private readonly IUserSession $session,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
