@@ -59,15 +59,15 @@ class MyWorkTeamController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                 $request         The request.
+	 * @param IUserSession             $userSession     The signed-in user.
 	 * @param WorkScope                $workScope       Which scopes the user has and who is in their team.
 	 * @param WorklistServiceInterface $worklistService The team's open work.
-	 * @param IUserSession             $userSession     The signed-in user.
 	 */
 	public function __construct(
 		IRequest $request,
+		private readonly IUserSession $userSession,
 		private readonly WorkScope $workScope,
 		private readonly WorklistServiceInterface $worklistService,
-		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
