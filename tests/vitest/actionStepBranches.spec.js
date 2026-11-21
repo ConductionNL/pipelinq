@@ -93,7 +93,10 @@ describe('CtiClickToDialButton.dial', () => {
 	 * @return {object} A button context.
 	 */
 	function ctx(state) {
-		return { ...dialButton.methods, targetNumber: '+3110', extension: '201', dialing: false, $emit: vi.fn(), ...state }
+		const c = { ...dialButton.methods, targetNumber: '+3110', extension: '201', dialing: false, busy: false, $emit: vi.fn(), ...state }
+		// The computed extension the call goes out from: the given one here.
+		c.fromExtension = c.extension
+		return c
 	}
 
 	it('dials and says the extension will ring', async () => {
