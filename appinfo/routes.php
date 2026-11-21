@@ -235,7 +235,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'cti#screenPop',        'url' => '/api/cti/screen-pop',                 'verb' => 'POST'],
         ['name' => 'incomingCall#show',    'url' => '/api/cti/incoming-call',              'verb' => 'GET'],
         ['name' => 'cti#clickToDial',      'url' => '/api/cti/click-to-dial',              'verb' => 'POST'],
-        ['name' => 'dialLine#show',        'url' => '/api/cti/dial-line',                  'verb' => 'GET'],
+        ['name' => 'incomingCall#dialLine', 'url' => '/api/cti/dial-line',                  'verb' => 'GET'],
         ['name' => 'cti#disposition',      'url' => '/api/cti/contactmoment/{id}/disposition', 'verb' => 'POST'],
         ['name' => 'ctiEscalationQueue#index', 'url' => '/api/cti/escalation-queues',      'verb' => 'GET'],
         ['name' => 'cti#attachRecording',  'url' => '/api/cti/contactmoment/{id}/recording',   'verb' => 'POST'],

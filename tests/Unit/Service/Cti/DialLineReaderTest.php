@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Cti;
 
+use OCA\Pipelinq\Service\Cti\AgentPresenceReader;
 use OCA\Pipelinq\Service\Cti\DialLineReader;
 use OCA\Pipelinq\Service\CtiService;
 use OCA\Pipelinq\Tests\Unit\Service\Calls\FakeObjectStore;
@@ -27,6 +28,7 @@ use Psr\Log\NullLogger;
  * on with the agent's own extension, busy during a call.
  *
  * @covers \OCA\Pipelinq\Service\Cti\DialLineReader
+ * @covers \OCA\Pipelinq\Service\Cti\AgentPresenceReader
  * @uses   \OCA\Pipelinq\Service\BackgroundServiceAccount
  * @uses   \OCA\Pipelinq\Service\ServiceAccount
  * @uses   \OCA\Pipelinq\Service\ServiceAccountUnavailableException
@@ -68,7 +70,7 @@ class DialLineReaderTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->world = (new FakeBackgroundAccount($this))->usable();
+		$this->world = (new FakeBackgroundAccount(test: $this))->usable();
 		$this->store = new FakeObjectStore();
 		$this->store->acting = fn (): ?string => $this->world->actingUid();
 		$this->store->onlyFor = FakeBackgroundAccount::UID;
@@ -80,17 +82,20 @@ class DialLineReaderTest extends TestCase {
 	 * @return DialLineReader The reader.
 	 */
 	private function reader(): DialLineReader {
-		$cti = $this->createMock(CtiService::class);
+		$cti = $this->createMock(originalClassName: CtiService::class);
 		$cti->method('loadConfig')->willReturnCallback(fn (): array => $this->cti);
 
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => ($this->appValues[$key] ?? $default)
 		);
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($this->store);
 
-		return new DialLineReader($cti, $appConfig, $container, $this->world->account, new NullLogger());
+		return new DialLineReader(
+			ctiService: $cti,
+			presence: new AgentPresenceReader(appConfig: $appConfig, container: $container, account: $this->world->account, logger: new NullLogger()),
+		);
 	}//end reader()
 
 	/**
@@ -122,12 +127,12 @@ class DialLineReaderTest extends TestCase {
 	public function testAnAvailableAgentGetsTheirExtension(): void {
 		$this->presence(userId: 'noor', extension: '101');
 
-		$this->assertSame(['enabled' => true, 'extension' => '101', 'busy' => false], $this->reader()->forAgent(userId: 'noor'));
+		$this->assertSame(expected: ['enabled' => true, 'extension' => '101', 'busy' => false], actual: $this->reader()->forAgent(userId: 'noor'));
 		$this->assertSame(
-			[['op' => 'findAll', 'schema' => 'sch-presence', 'rbac' => true, 'multitenancy' => false, 'as' => FakeBackgroundAccount::UID]],
-			$this->store->calls
+			expected: [['op' => 'findAll', 'schema' => 'sch-presence', 'rbac' => true, 'multitenancy' => false, 'as' => FakeBackgroundAccount::UID]],
+			actual: $this->store->calls
 		);
-		$this->assertNull($this->world->actingUid(), 'The session is back to nobody after the read.');
+		$this->assertNull(actual: $this->world->actingUid(), message: 'The session is back to nobody after the read.');
 	}//end testAnAvailableAgentGetsTheirExtension()
 
 	/**
@@ -137,13 +142,13 @@ class DialLineReaderTest extends TestCase {
 	 */
 	public function testOnACallOrInWrapUpTheLineIsBusy(): void {
 		$this->presence(userId: 'noor', extension: '101', state: 'on-call');
-		$this->assertSame(['enabled' => true, 'extension' => '101', 'busy' => true], $this->reader()->forAgent(userId: 'noor'));
+		$this->assertSame(expected: ['enabled' => true, 'extension' => '101', 'busy' => true], actual: $this->reader()->forAgent(userId: 'noor'));
 
 		$this->presence(userId: 'noor', extension: '101', state: 'wrap-up');
-		$this->assertTrue($this->reader()->forAgent(userId: 'noor')['busy']);
+		$this->assertTrue(condition: $this->reader()->forAgent(userId: 'noor')['busy']);
 
 		$this->presence(userId: 'noor', extension: '101', state: 'away');
-		$this->assertFalse($this->reader()->forAgent(userId: 'noor')['busy']);
+		$this->assertFalse(condition: $this->reader()->forAgent(userId: 'noor')['busy']);
 	}//end testOnACallOrInWrapUpTheLineIsBusy()
 
 	/**
@@ -155,8 +160,8 @@ class DialLineReaderTest extends TestCase {
 		$this->presence(userId: 'noor', extension: '101');
 		$this->cti = [];
 
-		$this->assertSame(['enabled' => false, 'extension' => '', 'busy' => false], $this->reader()->forAgent(userId: 'noor'));
-		$this->assertSame([], $this->store->calls);
+		$this->assertSame(expected: ['enabled' => false, 'extension' => '', 'busy' => false], actual: $this->reader()->forAgent(userId: 'noor'));
+		$this->assertSame(expected: [], actual: $this->store->calls);
 	}//end testWithoutAPlatformTheLineIsOff()
 
 	/**
@@ -168,8 +173,8 @@ class DialLineReaderTest extends TestCase {
 		$this->presence(userId: 'noor', extension: '101');
 		$this->cti['click_to_dial_enabled'] = false;
 
-		$this->assertFalse($this->reader()->forAgent(userId: 'noor')['enabled']);
-		$this->assertSame([], $this->store->calls);
+		$this->assertFalse(condition: $this->reader()->forAgent(userId: 'noor')['enabled']);
+		$this->assertSame(expected: [], actual: $this->store->calls);
 	}//end testClickToDialSwitchedOffTurnsTheLineOff()
 
 	/**
@@ -178,10 +183,10 @@ class DialLineReaderTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnAgentWithoutAnExtensionHasNoLine(): void {
-		$this->assertFalse($this->reader()->forAgent(userId: 'noor')['enabled']);
+		$this->assertFalse(condition: $this->reader()->forAgent(userId: 'noor')['enabled']);
 
 		$this->presence(userId: 'noor', extension: '  ');
-		$this->assertFalse($this->reader()->forAgent(userId: 'noor')['enabled']);
+		$this->assertFalse(condition: $this->reader()->forAgent(userId: 'noor')['enabled']);
 	}//end testAnAgentWithoutAnExtensionHasNoLine()
 
 	/**
@@ -193,7 +198,7 @@ class DialLineReaderTest extends TestCase {
 		$this->presence(userId: 'sem', extension: '202');
 		$this->store->ignoresFilters = true;
 
-		$this->assertSame(['enabled' => false, 'extension' => '', 'busy' => false], $this->reader()->forAgent(userId: 'noor'));
+		$this->assertSame(expected: ['enabled' => false, 'extension' => '', 'busy' => false], actual: $this->reader()->forAgent(userId: 'noor'));
 	}//end testAColleaguesExtensionIsNeverHandedOn()
 
 	/**
@@ -205,16 +210,16 @@ class DialLineReaderTest extends TestCase {
 	public function testAPresenceThatCannotBeReadLeavesTheLineOff(): void {
 		$this->presence(userId: 'noor', extension: '101');
 
-		$this->assertFalse($this->reader()->forAgent(userId: '')['enabled']);
+		$this->assertFalse(condition: $this->reader()->forAgent(userId: '')['enabled']);
 
 		$this->appValues['ctiAgentPresence_schema'] = '';
-		$this->assertFalse($this->reader()->forAgent(userId: 'noor')['enabled']);
+		$this->assertFalse(condition: $this->reader()->forAgent(userId: 'noor')['enabled']);
 		$this->appValues['ctiAgentPresence_schema'] = 'sch-presence';
 
 		$this->store->acting = static fn (): ?string => 'someone-else';
-		$this->assertFalse($this->reader()->forAgent(userId: 'noor')['enabled'], 'A refused read is logged, not thrown.');
+		$this->assertFalse(condition: $this->reader()->forAgent(userId: 'noor')['enabled'], message: 'A refused read is logged, not thrown.');
 
 		$this->world->members = [];
-		$this->assertFalse($this->reader()->forAgent(userId: 'noor')['enabled']);
+		$this->assertFalse(condition: $this->reader()->forAgent(userId: 'noor')['enabled']);
 	}//end testAPresenceThatCannotBeReadLeavesTheLineOff()
 }//end class

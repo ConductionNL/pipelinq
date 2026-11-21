@@ -82,6 +82,7 @@ use OCA\Pipelinq\Kernel\Contracts\Customer360SummaryServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\DeliverabilityCheckServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\DemoRegisterImporterInterface;
 use OCA\Pipelinq\Kernel\Contracts\DemoSeedServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\DialLineReaderInterface;
 use OCA\Pipelinq\Kernel\Contracts\DocumentSigningServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\DossierQuestionServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\EligibilityServiceInterface;
@@ -111,7 +112,6 @@ use OCA\Pipelinq\Kernel\Contracts\GiftCardServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\HaalCentraalClientInterface;
 use OCA\Pipelinq\Kernel\Contracts\HeldObjectDrainInterface;
 use OCA\Pipelinq\Kernel\Contracts\IcpConfigServiceInterface;
-use OCA\Pipelinq\Kernel\Contracts\DialLineReaderInterface;
 use OCA\Pipelinq\Kernel\Contracts\IncomingCallFinderInterface;
 use OCA\Pipelinq\Kernel\Contracts\IntegrationDetectorInterface;
 use OCA\Pipelinq\Kernel\Contracts\JourneyServiceInterface;
@@ -423,6 +423,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(ChannelProviderRepositoryInterface::class, ChannelProviderRepository::class);
 		$this->registerClientContracts(context: $context);
 		$this->registerMyWorkContracts(context: $context);
+		$this->registerTelephonyContracts(context: $context);
 		$context->registerServiceAlias(CoachingPointAgreementInterface::class, CoachingPointAgreement::class);
 		$context->registerServiceAlias(CompetitorWatchServiceInterface::class, CompetitorWatchService::class);
 		$context->registerServiceAlias(ComplianceServiceInterface::class, ComplianceService::class);
@@ -479,8 +480,6 @@ final class ContractBindings {
 		$context->registerServiceAlias(HaalCentraalClientInterface::class, HaalCentraalClient::class);
 		$context->registerServiceAlias(HeldObjectDrainInterface::class, HeldObjectDrain::class);
 		$context->registerServiceAlias(IcpConfigServiceInterface::class, IcpConfigService::class);
-		$context->registerServiceAlias(IncomingCallFinderInterface::class, IncomingCallFinder::class);
-		$context->registerServiceAlias(DialLineReaderInterface::class, DialLineReader::class);
 		$context->registerServiceAlias(IntegrationDetectorInterface::class, IntegrationDetector::class);
 		$context->registerServiceAlias(JourneyServiceInterface::class, JourneyService::class);
 		$context->registerServiceAlias(JourneyStepRunnerInterface::class, JourneyStepRunner::class);
@@ -671,4 +670,18 @@ final class ContractBindings {
 		$context->registerServiceAlias(RecentActivityServiceInterface::class, RecentActivityService::class);
 		$context->registerServiceAlias(WorklistServiceInterface::class, WorklistService::class);
 	}//end registerMyWorkContracts()
+
+	/**
+	 * Alias the contracts of the agent's own telephone line to their implementations.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Composition root wiring, no functional requirement.
+	 */
+	private function registerTelephonyContracts(IRegistrationContext $context): void {
+		$context->registerServiceAlias(DialLineReaderInterface::class, DialLineReader::class);
+		$context->registerServiceAlias(IncomingCallFinderInterface::class, IncomingCallFinder::class);
+	}//end registerTelephonyContracts()
 }//end class

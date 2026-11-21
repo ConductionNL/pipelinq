@@ -33,8 +33,8 @@
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import MapMarkerOutline from 'vue-material-design-icons/MapMarkerOutline.vue'
 import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
-import { mailtoHref, mapHref, telHref } from '../services/contactLinks.js'
 import CtiClickToDialButton from './CtiClickToDialButton.vue'
+import { mailtoHref, mapHref, telHref } from '../services/contactLinks.js'
 
 /**
  * Call, mail and directions links for a client or contact, shown at the

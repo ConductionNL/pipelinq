@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Contract tests for DialLineController.
+ * Contract tests for IncomingCallController::dialLine().
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -11,8 +11,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
-use OCA\Pipelinq\Controller\DialLineController;
+use OCA\Pipelinq\Controller\IncomingCallController;
 use OCA\Pipelinq\Kernel\Contracts\DialLineReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\IncomingCallFinderInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCP\AppFramework\Http;
@@ -24,37 +25,43 @@ use PHPUnit\Framework\TestCase;
 /**
  * `GET /api/cti/dial-line`: whose line is read, and who is refused.
  *
- * @covers \OCA\Pipelinq\Controller\DialLineController
+ * @covers \OCA\Pipelinq\Controller\IncomingCallController
  *
  * @spec openspec/changes/specify-capability-rows/tasks.md#task-36.1
  * @uses \OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck
  * @uses   \OCA\Pipelinq\Middleware\Support\ApiPathAliases
  * @uses   \OCA\Pipelinq\Middleware\Support\StandardProtocolPaths
  */
-class DialLineControllerTest extends TestCase {
+class IncomingCallControllerDialLineTest extends TestCase {
 	/**
 	 * Build the controller.
 	 *
-	 * @param DialLineReaderInterface $reader The reader.
+	 * @param DialLineReaderInterface $reader The dial line reader.
 	 * @param string|null $uid The signed-in uid, or null for anonymous.
 	 * @param bool $privileged Whether that user is in a privileged group.
 	 *
-	 * @return DialLineController The controller.
+	 * @return IncomingCallController The controller.
 	 */
-	private function controller(DialLineReaderInterface $reader, ?string $uid, bool $privileged = true): DialLineController {
-		$request = $this->createMock(IRequest::class);
+	private function controller(DialLineReaderInterface $reader, ?string $uid, bool $privileged = true): IncomingCallController {
+		$request = $this->createMock(originalClassName: IRequest::class);
 		// A uid in the request must not be read: the line asked about is the session's.
 		$request->method('getParam')->willReturn('agent-2');
 
 		$user = null;
 		if ($uid !== null) {
-			$user = $this->createConfiguredMock(IUser::class, ['getUID' => $uid]);
+			$user = $this->createConfiguredMock(originalClassName: IUser::class, configuration: ['getUID' => $uid]);
 		}
 
-		return new DialLineController(
-			$request,
-			new CrmPrivilegeCheck($this->createConfiguredMock(IUserSession::class, ['getUser' => $user]), $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged])),
-			$reader,
+		$privilege = new CrmPrivilegeCheck(
+			userSession: $this->createConfiguredMock(originalClassName: IUserSession::class, configuration: ['getUser' => $user]),
+			policy: $this->createConfiguredMock(originalClassName: ObjectOwnerAccessPolicy::class, configuration: ['isPrivileged' => $privileged]),
+		);
+
+		return new IncomingCallController(
+			request: $request,
+			privilege: $privilege,
+			incomingCalls: $this->createMock(originalClassName: IncomingCallFinderInterface::class),
+			dialLines: $reader,
 		);
 	}//end controller()
 
@@ -67,10 +74,10 @@ class DialLineControllerTest extends TestCase {
 		$routes = (require dirname(__DIR__, 3) . '/appinfo/routes.php')['routes'];
 		$found = array_values(array_filter($routes, static fn (array $route): bool => $route['url'] === '/api/cti/dial-line'));
 
-		$this->assertCount(1, $found);
-		$this->assertSame('dialLine#show', $found[0]['name']);
-		$this->assertSame('GET', $found[0]['verb']);
-		$this->assertTrue(method_exists(DialLineController::class, 'show'));
+		$this->assertCount(expectedCount: 1, haystack: $found);
+		$this->assertSame(expected: 'incomingCall#dialLine', actual: $found[0]['name']);
+		$this->assertSame(expected: 'GET', actual: $found[0]['verb']);
+		$this->assertTrue(condition: method_exists(IncomingCallController::class, 'dialLine'));
 	}//end testTheRouteNamesThisMethod()
 
 	/**
@@ -80,13 +87,13 @@ class DialLineControllerTest extends TestCase {
 	 */
 	public function testTheSignedInAgentsLineIsRead(): void {
 		$answer = ['enabled' => true, 'extension' => '101', 'busy' => false];
-		$reader = $this->createMock(DialLineReaderInterface::class);
+		$reader = $this->createMock(originalClassName: DialLineReaderInterface::class);
 		$reader->expects($this->once())->method('forAgent')->with('agent-1')->willReturn($answer);
 
-		$response = $this->controller(reader: $reader, uid: 'agent-1')->show();
+		$response = $this->controller(reader: $reader, uid: 'agent-1')->dialLine();
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame($answer, $response->getData());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: $answer, actual: $response->getData());
 	}//end testTheSignedInAgentsLineIsRead()
 
 	/**
@@ -95,10 +102,12 @@ class DialLineControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnAnonymousCallerIsRefused(): void {
-		$reader = $this->createMock(DialLineReaderInterface::class);
+		$reader = $this->createMock(originalClassName: DialLineReaderInterface::class);
 		$reader->expects($this->never())->method('forAgent');
 
-		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->controller(reader: $reader, uid: null)->show()->getStatus());
+		$response = $this->controller(reader: $reader, uid: null)->dialLine();
+
+		$this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $response->getStatus());
 	}//end testAnAnonymousCallerIsRefused()
 
 	/**
@@ -107,9 +116,11 @@ class DialLineControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnprivilegedUserIsRefused(): void {
-		$reader = $this->createMock(DialLineReaderInterface::class);
+		$reader = $this->createMock(originalClassName: DialLineReaderInterface::class);
 		$reader->expects($this->never())->method('forAgent');
 
-		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller(reader: $reader, uid: 'visitor', privileged: false)->show()->getStatus());
+		$response = $this->controller(reader: $reader, uid: 'visitor', privileged: false)->dialLine();
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
 	}//end testAnUnprivilegedUserIsRefused()
 }//end class

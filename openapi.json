@@ -200,10 +200,6 @@
             "description": "The full export endpoints."
         },
         {
-            "name": "dial-line",
-            "description": "The signed-in agent's own dial line for click-to-dial."
-        },
-        {
             "name": "incoming-call",
             "description": "The open inbound call on the signed-in agent's own line."
         },
@@ -4719,11 +4715,11 @@
         },
         "/cti/dial-line": {
             "get": {
-                "operationId": "dial-line-show",
+                "operationId": "incoming-call-dial-line",
                 "summary": "The signed-in agent's dial line",
                 "description": "Whether the signed-in agent can place a call through the telephony platform, from which extension, and whether that extension is busy. The uid comes from the session, never from the request, so an agent only ever learns their own extension. Needs a signed-in Nextcloud user.",
                 "tags": [
-                    "dial-line"
+                    "incoming-call"
                 ],
                 "responses": {
                     "200": {

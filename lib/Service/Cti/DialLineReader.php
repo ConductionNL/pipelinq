@@ -24,30 +24,18 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Cti;
 
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\DialLineReaderInterface;
-use OCA\Pipelinq\Service\BackgroundServiceAccount;
 use OCA\Pipelinq\Service\CtiService;
-use OCA\Pipelinq\Util\SerialisedToArray;
-use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * The agent's own dial line: on or off, the extension, and whether it is busy.
  *
  * The extension is the one the telephony platform last reported for the
- * agent in `ctiAgentPresence`. Those rows are written by the presence
- * webhook, not by a user, so the read runs as the background service account
- * and the row's `user_id` is compared again here: an agent only ever learns
- * their own extension.
+ * agent in `ctiAgentPresence`, as AgentPresenceReader reads it.
  *
  * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-click-to-dial-outbound-req-cti-003
  */
 class DialLineReader implements DialLineReaderInterface {
-	use SerialisedToArray;
-
 	/**
 	 * The presence states during which no new call may be placed.
 	 */
@@ -57,17 +45,11 @@ class DialLineReader implements DialLineReaderInterface {
 	 * Constructor.
 	 *
 	 * @param CtiService $ctiService Reads the telephony configuration.
-	 * @param IAppConfig $appConfig Reads which register and schema hold the presence rows.
-	 * @param ContainerInterface $container Finds OpenRegister's object service at run time.
-	 * @param BackgroundServiceAccount $account The account the presence read runs as.
-	 * @param LoggerInterface $logger Logger.
+	 * @param AgentPresenceReader $presence Reads the agent's presence row.
 	 */
 	public function __construct(
 		private CtiService $ctiService,
-		private IAppConfig $appConfig,
-		private ContainerInterface $container,
-		private BackgroundServiceAccount $account,
-		private LoggerInterface $logger,
+		private AgentPresenceReader $presence,
 	) {
 	}//end __construct()
 
@@ -91,7 +73,7 @@ class DialLineReader implements DialLineReaderInterface {
 			return $off;
 		}
 
-		$presence = $this->presenceOf(userId: $userId);
+		$presence = $this->presence->presenceOf(userId: $userId);
 		$extension = trim((string)($presence['extension'] ?? ''));
 		if ($extension === '') {
 			return $off;
@@ -103,47 +85,4 @@ class DialLineReader implements DialLineReaderInterface {
 			'busy' => in_array((string)($presence['presence_state'] ?? ''), self::BUSY_STATES, true),
 		];
 	}//end forAgent()
-
-	/**
-	 * The agent's presence row, or an empty array when there is none or it cannot be read.
-	 *
-	 * @param string $userId The agent's Nextcloud uid.
-	 *
-	 * @return array<string, mixed>
-	 *
-	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-click-to-dial-outbound-req-cti-003
-	 */
-	private function presenceOf(string $userId): array {
-		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'ctiAgentPresence_schema', '');
-		if ($register === '' || $schema === '' || $this->account->status()['usable'] !== true) {
-			return [];
-		}
-
-		try {
-			$rows = $this->account->runAs(
-				operation: fn (): array => (array)$this->container->get('OCA\\OpenRegister\\Service\\ObjectService')->findAll(
-					config: [
-						'filters' => ['register' => $register, 'schema' => $schema, 'user_id' => $userId],
-						'limit' => 1,
-					],
-					_rbac: true,
-					_multitenancy: false,
-				)
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning('DialLineReader: the agent presence could not be read', ['exception' => $e->getMessage()]);
-			return [];
-		}
-
-		foreach ($rows as $row) {
-			$data = $this->toArray(value: $row);
-			// Compared again: a store that ignored the filter must not hand an agent a colleague's extension.
-			if (($data['user_id'] ?? null) === $userId) {
-				return $data;
-			}
-		}
-
-		return [];
-	}//end presenceOf()
 }//end class
