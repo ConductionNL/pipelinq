@@ -27,6 +27,22 @@ import { clickHeaderAction, gotoAppRoute } from './helpers/pipelinq.ts'
 
 const CONTENT_ROOT = '#content-vue'
 const RUN = Date.now().toString(36)
+
+/**
+ * Wait until the content root shows no loading state, so the check sees the
+ * rendered page. Nextcloud keeps polling, so the network never goes idle.
+ *
+ * @param page The page.
+ */
+async function settle(page: Page): Promise<void> {
+	await expect(
+		page.locator(
+			`${CONTENT_ROOT} .icon-loading, ${CONTENT_ROOT} [aria-busy="true"]`,
+		),
+	)
+		.toHaveCount(0, { timeout: 20_000 })
+		.catch(() => {})
+}
 /** A page with more stops than this is reported rather than walked forever. */
 const MAX_TABS = 400
 
@@ -198,9 +214,7 @@ test.describe('back office keyboard walk', () => {
 			expect(target.name).toBe(name)
 
 			await gotoAppRoute(page, target.route)
-			await page
-				.waitForLoadState('networkidle', { timeout: 20_000 })
-				.catch(() => {})
+			await settle(page)
 			const expected = await reachableControls(page)
 
 			await page.locator('body').focus()

@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+
 import { expect, test } from '@playwright/test'
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
@@ -37,6 +39,22 @@ const KNOWN = JSON.parse(
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
 const CONTENT_ROOT = '#content-vue'
 const RUN = Date.now().toString(36)
+
+/**
+ * Wait until the content root shows no loading state, so the check sees the
+ * rendered page. Nextcloud keeps polling, so the network never goes idle.
+ *
+ * @param page The page.
+ */
+async function settle(page: Page): Promise<void> {
+	await expect(
+		page.locator(
+			`${CONTENT_ROOT} .icon-loading, ${CONTENT_ROOT} [aria-busy="true"]`,
+		),
+	)
+		.toHaveCount(0, { timeout: 20_000 })
+		.catch(() => {})
+}
 
 /** The axe result fields the comparison reads. */
 interface AxeViolation {
@@ -88,9 +106,7 @@ test.describe('back office WCAG 2.1 AA sweep', () => {
 
 			await gotoAppRoute(page, target.route)
 			// Let the page's own fetches settle so the sweep sees the rendered page.
-			await page
-				.waitForLoadState('networkidle', { timeout: 20_000 })
-				.catch(() => {})
+			await settle(page)
 
 			await page.addScriptTag({ path: AXE_PATH })
 			const violations = (await page.evaluate(
