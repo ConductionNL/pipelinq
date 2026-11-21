@@ -100,6 +100,10 @@
             "description": "The client's business for the side card."
         },
         {
+            "name": "client-identifier",
+            "description": "Checks of a client's official numbers."
+        },
+        {
             "name": "client-history-summary",
             "description": "The written history summary of a client, generated on request."
         },
@@ -2979,6 +2983,74 @@
                         }
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/clients/{id}/identifiers/check": {
+            "post": {
+                "operationId": "client-identifier-check",
+                "summary": "POST /api/clients/{id}/identifiers/check: check one of the client's official numbers against its register",
+                "description": "POST /api/clients/{id}/identifiers/check: check one of the client's official numbers against its register. Body: `scheme` (`kvk` or `vat`) and `value`, the number as it is on the client. A KvK number is checked through OpenRegister's KvK leaf, a VAT number through shillinq's VIES service when shillinq is installed. The outcome (`checkStatus`, `checkedAt`, `checkSource`) is stored on the identifier and returned. The client is read and written with the caller's rights, so a client the caller may not read or change answers 403; an unknown client or number answers 404; another scheme answers 400. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "client-identifier"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The client id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "scheme": {
+                                        "type": "string",
+                                        "enum": [
+                                            "kvk",
+                                            "vat"
+                                        ],
+                                        "description": "The scheme of the number to check."
+                                    },
+                                    "value": {
+                                        "type": "string",
+                                        "description": "The number to check."
+                                    }
+                                },
+                                "required": [
+                                    "scheme",
+                                    "value"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "The request succeeded.",
@@ -9296,6 +9368,36 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/my-work/meetings": {
+            "get": {
+                "operationId": "my-work-meetings",
+                "summary": "The signed-in user's meetings of the next seven days that link a client, contact or lead",
+                "description": "The signed-in user's calendar events of the next seven days whose description or location links a pipelinq client, contact or lead page, soonest first, as `{ items: [...] }` with id, title, startsAt, endsAt, recordKind, recordId, recordName and routeName. Only the user's own calendars are read. A calendar that cannot be read answers an empty list. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "my-work"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
                     }
                 }
             }

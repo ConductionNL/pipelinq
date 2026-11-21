@@ -72,47 +72,20 @@
 		</div>
 
 		<template #actions>
-			<NcButton :disabled="committing" @click="$emit('close')">
-				{{ t('pipelinq', 'Cancel') }}
-			</NcButton>
-			<NcButton
-				v-if="!preview || refusal"
-				variant="primary"
-				:disabled="!canPreview || previewing"
-				data-testid="bulk-change-preview"
-				@click="runPreview">
-				<template #icon>
-					<NcLoadingIcon v-if="previewing" :size="18" />
-				</template>
-				{{ t('pipelinq', 'Preview') }}
-			</NcButton>
-			<NcButton
-				v-else
-				variant="primary"
-				:disabled="committing || summary.changed === 0"
-				data-testid="bulk-change-confirm"
-				@click="confirm">
-				<template #icon>
-					<Check :size="18" />
-				</template>
-				{{ t('pipelinq', 'Confirm') }}
-			</NcButton>
+			<BulkPreviewActions v-bind="previewActions" v-on="previewListeners" />
 		</template>
 	</CnDialog>
 </template>
 
 <script>
 import { CnDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { emit } from '@nextcloud/event-bus'
-import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
-import Check from 'vue-material-design-icons/Check.vue'
+import { showError } from '@nextcloud/dialogs'
+import { NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
+import BulkPreviewActions from '../components/BulkPreviewActions.vue'
+import bulkPreviewJobMixin from '../mixins/bulkPreviewJobMixin.js'
 import {
 	changeSummary,
-	commitJob,
 	createSetPropertiesJob,
-	refusalReason,
-	resolveScope,
 	writablePropertiesOf,
 } from '../services/bulkJobs.js'
 import { getSchemaProperties } from '../services/viewService.js'
@@ -120,10 +93,9 @@ import { getSchemaProperties } from '../services/viewService.js'
 export default {
 	name: 'BulkChangeFieldModal',
 	components: {
-		Check,
+		BulkPreviewActions,
 		CnDialog,
 		CnStatusBadge,
-		NcButton,
 		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -131,10 +103,14 @@ export default {
 		NcTextField,
 	},
 
+	mixins: [bulkPreviewJobMixin],
+	previewTestidPrefix: 'bulk-change',
+
 	props: {
 		/** The selected records, merged in by the bulk action. */
 		selectedIds: { type: Array, default: () => [] },
 		/** The register slug, from the bulk action's props. */
+		// eslint-disable-next-line vue/no-unused-properties -- read by bulkPreviewJobMixin.runPreview
 		register: { type: String, default: '' },
 		/** The schema slug, from the bulk action's props. */
 		schema: { type: String, default: '' },
@@ -269,49 +245,19 @@ export default {
 		},
 
 		/**
-		 * Ask OpenRegister for a previewed job. Nothing is written. A refusal
-		 * shows its reason in the dialog.
+		 * Ask OpenRegister for a previewed job on the resolved scope. Nothing is written.
 		 *
-		 * @return {Promise<void>}
+		 * @param {{register: string, schema: string}} scope The register and schema.
+		 * @return {Promise<object>} The previewed job.
+		 * @spec openspec/changes/clients-bulk-edit-and-undo/specs/client-bulk-changes/spec.md
 		 */
-		async runPreview() {
-			this.previewing = true
-			this.refusal = ''
-			this.preview = null
-			try {
-				const scope = await resolveScope(this.register, this.schema, this.selectedIds[0])
-				this.preview = await createSetPropertiesJob({
-					register: scope.register,
-					schema: scope.schema,
-					ids: this.selectedIds,
-					properties: { [this.property]: this.typedValue() },
-				})
-			} catch (error) {
-				this.refusal = refusalReason(error, this.t('pipelinq', 'OpenRegister refused this change.'))
-			} finally {
-				this.previewing = false
-			}
-		},
-
-		/**
-		 * Commit the previewed job, then let the list read the new values.
-		 *
-		 * @return {Promise<void>}
-		 */
-		async confirm() {
-			if (!this.preview || this.preview.id === undefined) return
-			this.committing = true
-			try {
-				await commitJob(this.preview.id)
-				showSuccess(this.n('pipelinq', '%n record changed.', '%n records changed.', this.summary.changed))
-				emit('cn:page:refresh', {})
-				this.$emit('close')
-			} catch (error) {
-				this.refusal = refusalReason(error, this.t('pipelinq', 'The change could not be saved.'))
-				this.preview = null
-			} finally {
-				this.committing = false
-			}
+		createPreviewJob(scope) {
+			return createSetPropertiesJob({
+				register: scope.register,
+				schema: scope.schema,
+				ids: this.selectedIds,
+				properties: { [this.property]: this.typedValue() },
+			})
 		},
 	},
 }
