@@ -101,4 +101,52 @@ class VariantCombinationsTest extends TestCase {
 		$this->assertNull(actual: $check->duplicateSku(variants: [['sku' => 'WS-S'], ['sku' => 'WS-M'], ['sku' => ''], []]));
 		$this->assertSame(expected: 'WS-S', actual: $check->duplicateSku(variants: [['sku' => 'WS-S'], ['sku' => 'ws-s ']]));
 	}//end testTheSameCodeTwiceIsNamed()
+
+	/**
+	 * Against a shirt that declares Maat (S, M): a variant without a size, a size
+	 * L, and a colour the shirt does not declare are each named; S and M fit.
+	 *
+	 * @return void
+	 */
+	public function testAVariantNamesOneAllowedValuePerAttribute(): void {
+		$check = new VariantCombinations();
+		$declared = [['name' => 'Maat', 'values' => ['S', 'M']]];
+
+		$this->assertNull(
+			actual: $check->attributeMismatch(
+				declared: $declared,
+				variants: [['sku' => 'WS-S', 'attributes' => ['maat' => 's']], ['sku' => 'WS-M', 'attributes' => ['Maat' => 'M']]]
+			)
+		);
+		$this->assertSame(
+			expected: ['missing', ['WS-X', 'Maat']],
+			actual: $check->attributeMismatch(declared: $declared, variants: [['sku' => 'WS-X', 'attributes' => []]])
+		);
+		$this->assertSame(
+			expected: ['missing', ['#2', 'Maat']],
+			actual: $check->attributeMismatch(declared: $declared, variants: [['attributes' => ['Maat' => 'S']], []])
+		);
+		$this->assertSame(
+			expected: ['value', ['L', 'Maat']],
+			actual: $check->attributeMismatch(declared: $declared, variants: [['sku' => 'WS-L', 'attributes' => ['Maat' => 'L']]])
+		);
+		$this->assertSame(
+			expected: ['attribute', ['Kleur']],
+			actual: $check->attributeMismatch(declared: $declared, variants: [['sku' => 'WS-S', 'attributes' => ['Maat' => 'S', 'Kleur' => 'Wit']]])
+		);
+	}//end testAVariantNamesOneAllowedValuePerAttribute()
+
+	/**
+	 * A product that declares no attributes, or only nameless ones, checks no variant.
+	 *
+	 * @return void
+	 */
+	public function testWithoutDeclaredAttributesNothingIsChecked(): void {
+		$check = new VariantCombinations();
+		$variants = [['sku' => 'A', 'attributes' => ['Maat' => 'XXL']]];
+
+		$this->assertNull(actual: $check->attributeMismatch(declared: [], variants: $variants));
+		$this->assertNull(actual: $check->attributeMismatch(declared: 'Maat', variants: $variants));
+		$this->assertNull(actual: $check->attributeMismatch(declared: [['values' => ['S']], 'Maat'], variants: $variants));
+	}//end testWithoutDeclaredAttributesNothingIsChecked()
 }//end class

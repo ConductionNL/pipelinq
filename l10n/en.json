@@ -10267,6 +10267,14 @@
         "My items": "My items",
         "Cannot initiate call while on another call": "Cannot initiate call while on another call",
         "A variant for %s already exists on this product": "A variant for %s already exists on this product",
-        "Two variants of this product have the code %s": "Two variants of this product have the code %s"
+        "Two variants of this product have the code %s": "Two variants of this product have the code %s",
+        "Variant attributes": "Variant attributes",
+        "What the variants of this product differ in, such as size or colour, each with the values it allows. Each variant names one value for every attribute.": "What the variants of this product differ in, such as size or colour, each with the values it allows. Each variant names one value for every attribute.",
+        "The attribute, such as Size.": "The attribute, such as Size.",
+        "Values": "Values",
+        "The values the attribute allows, such as S, M and L.": "The values the attribute allows, such as S, M and L.",
+        "Variant %1$s has no value for %2$s": "Variant %1$s has no value for %2$s",
+        "%1$s is not a value of %2$s on this product": "%1$s is not a value of %2$s on this product",
+        "%s is not an attribute of this product": "%s is not an attribute of this product"
     }
 }

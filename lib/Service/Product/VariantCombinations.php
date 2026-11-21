@@ -4,7 +4,8 @@
  * Pipelinq VariantCombinations.
  *
  * Finds the first combination of attribute values, or the first code, that
- * two variants of one product share.
+ * two variants of one product share, and the first variant that does not
+ * name one allowed value for each attribute the product declares.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Product
@@ -95,6 +96,128 @@ final class VariantCombinations {
 
 		return null;
 	}//end duplicateSku()
+
+	/**
+	 * The first variant that does not fit the product's attributes, or null.
+	 *
+	 * Only a product that declares attributes is checked. The answer is a
+	 * kind and the words the refusal names: `missing` (the variant and the
+	 * attribute it names no value for), `value` (the value and its
+	 * attribute) or `attribute` (an attribute the product does not declare).
+	 *
+	 * @param mixed             $declared The product's `variantAttributes`: name and allowed values.
+	 * @param array<int, mixed> $variants The product's variants.
+	 *
+	 * @return array{0: string, 1: array<int, string>}|null The kind and its words.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/product-catalog/spec.md#requirement-a-product-keeps-attributes-and-variants-with-their-own-code-and-price
+	 */
+	public function attributeMismatch(mixed $declared, array $variants): ?array {
+		$allowed = $this->allowed(declared: $declared);
+		if ($allowed === []) {
+			return null;
+		}
+
+		foreach ($variants as $index => $variant) {
+			$mismatch = $this->variantMismatch(allowed: $allowed, variant: $variant, position: ((int)$index + 1));
+			if ($mismatch !== null) {
+				return $mismatch;
+			}
+		}
+
+		return null;
+	}//end attributeMismatch()
+
+	/**
+	 * Where one variant does not fit the declared attributes, or null.
+	 *
+	 * @param array<string, array{0: string, 1: array<string, true>}> $allowed  Per attribute key: its name and allowed values.
+	 * @param mixed                                                    $variant  One variant.
+	 * @param int                                                      $position Its place in the list, from 1.
+	 *
+	 * @return array{0: string, 1: array<int, string>}|null The kind and its words.
+	 */
+	private function variantMismatch(array $allowed, mixed $variant, int $position): ?array {
+		$values = $this->values(variant: $variant);
+		$named = [];
+		foreach ($values as $attribute => $value) {
+			$key = mb_strtolower((string)$attribute);
+			if (isset($allowed[$key]) === false) {
+				return ['attribute', [(string)$attribute]];
+			}
+
+			if (isset($allowed[$key][1][mb_strtolower($value)]) === false) {
+				return ['value', [$value, $allowed[$key][0]]];
+			}
+
+			$named[$key] = true;
+		}
+
+		foreach ($allowed as $key => [$name]) {
+			if (isset($named[$key]) === false) {
+				return ['missing', [$this->variantLabel(variant: $variant, position: $position), $name]];
+			}
+		}
+
+		return null;
+	}//end variantMismatch()
+
+	/**
+	 * The declared attributes by lower-case name: the name as written and its allowed values.
+	 *
+	 * @param mixed $declared The product's `variantAttributes`.
+	 *
+	 * @return array<string, array{0: string, 1: array<string, true>}>
+	 */
+	private function allowed(mixed $declared): array {
+		if (is_array($declared) === false) {
+			return [];
+		}
+
+		$allowed = [];
+		foreach ($declared as $attribute) {
+			if (is_array($attribute) === false) {
+				continue;
+			}
+
+			$name = trim((string)($attribute['name'] ?? ''));
+			if ($name === '') {
+				continue;
+			}
+
+			$values = [];
+			foreach ((array)($attribute['values'] ?? []) as $value) {
+				if (is_scalar($value) === true && trim((string)$value) !== '') {
+					$values[mb_strtolower(trim((string)$value))] = true;
+				}
+			}
+
+			$allowed[mb_strtolower($name)] = [$name, $values];
+		}
+
+		return $allowed;
+	}//end allowed()
+
+	/**
+	 * How the refusal names a variant: its code, else its name, else its place.
+	 *
+	 * @param mixed $variant  One variant.
+	 * @param int   $position Its place in the list, from 1.
+	 *
+	 * @return string The label.
+	 */
+	private function variantLabel(mixed $variant, int $position): string {
+		if (is_array($variant) === true) {
+			foreach (['sku', 'name'] as $field) {
+				$text = trim((string)($variant[$field] ?? ''));
+				if ($text !== '') {
+					return $text;
+				}
+			}
+		}
+
+		return '#' . $position;
+	}//end variantLabel()
 
 	/**
 	 * The attribute values a variant names, without empty ones.
