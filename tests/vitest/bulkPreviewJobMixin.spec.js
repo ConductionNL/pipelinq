@@ -41,12 +41,17 @@ function host(state) {
 		summary: { changed: 0, skipped: 0 },
 		$options: { previewTestidPrefix: 'bulk-test' },
 		t: (app, text) => text,
+		n: (app, one, many, count) => (count === 1 ? one : many).replace('%n', String(count)),
+		emitted: [],
 		...state,
 	}
+	ctx.$emit = (event) => ctx.emitted.push(event)
 	for (const [name, method] of Object.entries(mixin.methods)) {
 		ctx[name] = method.bind(ctx)
 	}
-	Object.defineProperty(ctx, 'previewActions', { get: () => mixin.computed.previewActions.call(ctx) })
+	for (const [name, getter] of Object.entries(mixin.computed)) {
+		Object.defineProperty(ctx, name, { get: () => getter.call(ctx) })
+	}
 	return ctx
 }
 
@@ -84,5 +89,18 @@ describe('bulkPreviewJobMixin', () => {
 		expect(ctx.refusal).toBe('Not allowed')
 		expect(ctx.preview).toBeNull()
 		expect(ctx.previewing).toBe(false)
+	})
+
+	it('wires the footer to close, preview and confirm', async () => {
+		const createPreviewJob = vi.fn().mockResolvedValue({ id: 'j1' })
+		scopes.mockResolvedValue({ register: '5', schema: '7' })
+		const ctx = host({ createPreviewJob })
+
+		ctx.previewListeners.close()
+		await ctx.previewListeners.preview()
+		await ctx.previewListeners.confirm()
+
+		expect(createPreviewJob).toHaveBeenCalledTimes(1)
+		expect(ctx.emitted).toEqual(['close', 'close'])
 	})
 })

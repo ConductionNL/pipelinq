@@ -18,6 +18,10 @@
 		:noClose="committing"
 		data-testid="bulk-fill-kvk-dialog"
 		@closing="$emit('close')">
+		<template #actions>
+			<BulkPreviewActions v-bind="previewActions" v-on="previewListeners" />
+		</template>
+
 		<div class="bulk-fill-kvk">
 			<p>
 				{{ t('pipelinq', 'Each selected organisation with a KvK number is looked up in the KvK. Only empty fields are filled: place, legal form and industry. A field that holds a value is never overwritten.') }}
@@ -36,13 +40,6 @@
 			</div>
 		</div>
 
-		<template #actions>
-			<BulkPreviewActions
-				v-bind="previewActions"
-				@close="$emit('close')"
-				@preview="runPreview"
-				@confirm="confirm" />
-		</template>
 	</CnDialog>
 </template>
 

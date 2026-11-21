@@ -72,11 +72,7 @@
 		</div>
 
 		<template #actions>
-			<BulkPreviewActions
-				v-bind="previewActions"
-				@close="$emit('close')"
-				@preview="runPreview"
-				@confirm="confirm" />
+			<BulkPreviewActions v-bind="previewActions" v-on="previewListeners" />
 		</template>
 	</CnDialog>
 </template>

@@ -34,6 +34,19 @@ export default {
 				testidPrefix: this.$options.previewTestidPrefix,
 			}
 		},
+
+		/**
+		 * The listeners of the dialog's BulkPreviewActions footer.
+		 *
+		 * @return {{close: () => void, preview: () => Promise<void>, confirm: () => Promise<void>}}
+		 */
+		previewListeners() {
+			return {
+				close: () => this.$emit('close'),
+				preview: () => this.runPreview(),
+				confirm: () => this.confirm(),
+			}
+		},
 	},
 
 	methods: {
