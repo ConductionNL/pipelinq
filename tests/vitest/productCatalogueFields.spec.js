@@ -93,6 +93,7 @@ describe('product page', () => {
 			'product-data',
 			'product-tiers',
 			'product-tariffs',
+			'product-variant-attributes',
 			'product-variants',
 			'product-publication',
 			'product-catalogue',

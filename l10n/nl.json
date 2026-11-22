@@ -10323,6 +10323,7 @@
         "The values the attribute allows, such as S, M and L.": "De waarden die het kenmerk toestaat, zoals S, M en L.",
         "Variant %1$s has no value for %2$s": "Variant %1$s heeft geen waarde voor %2$s",
         "%1$s is not a value of %2$s on this product": "%1$s is geen waarde van %2$s bij dit product",
-        "%s is not an attribute of this product": "%s is geen kenmerk van dit product"
+        "%s is not an attribute of this product": "%s is geen kenmerk van dit product",
+        "No variant attributes set. A variant may name any characteristic.": "Geen variantkenmerken vastgelegd. Een variant mag elk kenmerk noemen."
     }
 }

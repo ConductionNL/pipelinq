@@ -10165,7 +10165,8 @@ OC.L10N.register(
         "The values the attribute allows, such as S, M and L.": "The values the attribute allows, such as S, M and L.",
         "Variant %1$s has no value for %2$s": "Variant %1$s has no value for %2$s",
         "%1$s is not a value of %2$s on this product": "%1$s is not a value of %2$s on this product",
-        "%s is not an attribute of this product": "%s is not an attribute of this product"
+        "%s is not an attribute of this product": "%s is not an attribute of this product",
+        "No variant attributes set. A variant may name any characteristic.": "No variant attributes set. A variant may name any characteristic."
     },
     "nplurals=2; plural=(n != 1);"
 )

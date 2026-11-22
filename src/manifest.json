@@ -7746,6 +7746,7 @@
 										"product-data",
 										"product-tiers",
 										"product-tariffs",
+										"product-variant-attributes",
 										"product-variants",
 										"product-publication",
 										"product-catalogue",
@@ -7812,6 +7813,31 @@
 								{ "label": "Label", "value": "{label}" }
 							],
 							"emptyText": "No price tiers yet. The unit price applies to every quantity."
+						}
+					},
+					{
+						"id": "product-variant-attributes",
+						"type": "record-list",
+						"title": "Variant attributes",
+						"icon": "TagOutline",
+						"_note": "specify-capability-rows task 29.1 (@spec openspec/changes/specify-capability-rows/specs/product-catalog/spec.md#requirement-a-product-keeps-attributes-and-variants-with-their-own-code-and-price): what the product's variants differ in (`variantAttributes`, product 1.3.0), each attribute with the values it allows. ProductVariantGuard refuses a variant that names a value outside them. Read only: the schema keeps the property out of the forms.",
+						"content": {
+							"presentation": "table",
+							"tableLook": "data",
+							"objectRows": {
+								"path": "variantAttributes"
+							},
+							"columns": [
+								{
+									"label": "Attribute",
+									"value": "{name}"
+								},
+								{
+									"label": "Values",
+									"value": "{values|values}"
+								}
+							],
+							"emptyText": "No variant attributes set. A variant may name any characteristic."
 						}
 					},
 					{
