@@ -26,6 +26,7 @@ use OCA\OpenRegister\Event\ObjectDeletingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
+use OCA\Pipelinq\BulkAction\FillFromKvkRegistrationListener;
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
 use OCA\Pipelinq\Kernel\Contracts\BrpMutationWebhookListenerInterface;
@@ -122,6 +123,10 @@ class ListenerRegistrar {
 		// (pipeline-stage-limit).
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: StageLimitGuard::class);
 		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: StageLimitGuard::class);
+		// Two variants of one product never share their values or their code,
+		// from any screen (specify-capability-rows 29.1).
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: ProductVariantGuard::class);
+		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: ProductVariantGuard::class);
 		// A template a scheduled mailing uses cannot be deleted, from any screen
 		// (marketing-mail-templates REQ-MMT-001).
 		$context->registerEventListener(event: ObjectDeletingEvent::class, listener: TemplateInUseGuard::class);
@@ -243,6 +248,11 @@ class ListenerRegistrar {
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: TicketPhoneE164Listener::class);
 		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: TicketPhoneE164Listener::class);
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: QuoteNumberCreatingListener::class);
+		// A client's identifiers keep their schemes' formats on every write (clients-registry-numbers-and-enrichment D2).
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: ClientIdentifierFormatGuard::class);
+		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: ClientIdentifierFormatGuard::class);
+		// The Fill in from KvK bulk action (clients-registry-numbers-and-enrichment D4); by name, so pipelinq boots without OpenRegister.
+		$context->registerEventListener(event: 'OCA\\OpenRegister\\Event\\BulkActionRegistrationEvent', listener: FillFromKvkRegistrationListener::class);
 		// A quote's totals and a lead's value follow their lines (line-totals-roll-up).
 		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class, ObjectDeletedEvent::class] as $lineEvent) {
 			$context->registerEventListener(event: $lineEvent, listener: LineTotalsListener::class);

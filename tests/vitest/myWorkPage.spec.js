@@ -182,7 +182,7 @@ describe('the My work page', () => {
 	})
 
 	it('downloads what the page shows', () => {
-		expect(page.config.headerActions[0]).toMatchObject({ label: 'Download', href: expect.stringContaining('/api/worklist/items?format=csv') })
+		expect(page.config.headerActions.find((a) => a.id === 'my-work-download')).toMatchObject({ label: 'Download', href: expect.stringContaining('/api/worklist/items?format=csv') })
 	})
 
 	it('carries the start-here banner and the saved views', () => {

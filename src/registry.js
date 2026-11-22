@@ -35,6 +35,7 @@ import BookingHeaderActions from './components/bookings/BookingHeaderActions.vue
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
 import ClientHistorySummarySection from './components/clients/ClientHistorySummarySection.vue'
+import ClientIdentifiersSection from './components/clients/ClientIdentifiersSection.vue'
 import ClientRiskSection from './components/clients/ClientRiskSection.vue'
 import CommunicationHistory from './components/CommunicationHistory.vue'
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
@@ -166,6 +167,7 @@ import ContactImportDialog from './dialogs/ContactImportDialog.vue'
 import ContactLogDialog from './dialogs/ContactLogDialog.vue'
 import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
+import LeadEditDialog from './dialogs/LeadEditDialog.vue'
 import OrganisationEnrichDialog from './dialogs/OrganisationEnrichDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
@@ -173,6 +175,7 @@ import TaxAuthorityExportDialog from './dialogs/TaxAuthorityExportDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 import BulkChangeFieldModal from './modals/BulkChangeFieldModal.vue'
+import BulkFillFromKvkModal from './modals/BulkFillFromKvkModal.vue'
 // Make a letter from a filinq template (work-letter-from-filinq-template): the
 //     header action on ClientDetail and TicketDetail opens this dialog. ---
 // Paste or scan (clients-contact-capture): the header action on the Clients and
@@ -936,6 +939,11 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'Satisfaction survey response rate for the Operational dashboard (customer-satisfaction-closed-loop): answered out of delivered, suppressed and failed counted beside the rate, one line per channel, from GET /api/satisfaction/response-rate.',
 	},
+	ClientIdentifiersSection: {
+		kind: 'section',
+		component: ClientIdentifiersSection,
+		_note: 'The organisation\'s official numbers (clients-registry-numbers-and-enrichment, D5): KvK, RSIN, VAT, DUNS and OIN with the status, date and source of the last register check, an Add form and Check on a KvK or VAT number (POST /api/clients/{id}/identifiers/check). Reads `identifiers` off the client (`@object.identifiers`) and saves the list through OpenRegister, which refuses a malformed number (ClientIdentifierFormatGuard).',
+	},
 	ClientRiskSection: {
 		kind: 'section',
 		component: ClientRiskSection,
@@ -1414,6 +1422,12 @@ const registry = {
 		propsSchema: null,
 		_note: 'Fill in missing details from the KvK (PqOrganisatiesVerrijken). Target of the bulk action on the Clients list; receives the selection as selectedIds.',
 	},
+	BulkFillFromKvkModal: {
+		kind: 'modal',
+		component: BulkFillFromKvkModal,
+		propsSchema: null,
+		_note: 'Fill in from KvK on the selected organisations (clients-registry-numbers-and-enrichment, REQ-CRN-003): a previewed OpenRegister bulk job of pipelinq:fill-from-kvk that fills empty place, legal form and industry only, undoable from Bulk changes. Target of the bulk action on the Clients list; receives the selection as selectedIds and the register and schema slugs as props.',
+	},
 	BulkChangeFieldModal: {
 		kind: 'modal',
 		component: BulkChangeFieldModal,
@@ -1446,6 +1460,12 @@ const registry = {
 		component: CampaignFormDialog,
 		propsSchema: null,
 		_note: "Campaign create/edit, mounted in the form-dialog slot of both the Campaigns index page and CampaignDetail. Custom rather than the built-in form: saving must go through POST/PATCH /api/campaigns, because only CampaignService mints the campaign value, freezes it across a rename and refuses a source or medium outside the tenant's vocabulary, and the source and medium pickers read GET /api/campaigns/vocabulary, admin-maintained app config that is not a schema enum.",
+	},
+	LeadEditDialog: {
+		kind: 'modal',
+		component: LeadEditDialog,
+		propsSchema: null,
+		_note: "Lead edit, mounted in LeadDetail's form-dialog slot (forecast-slip-reason). The library's own schema form saved through the page's own confirm, with one step between: a save that moves a commit or best-case close date out of its forecast period first opens SlipReasonModal and goes through only with the reason.",
 	},
 	JourneyFormDialog: {
 		kind: 'modal',

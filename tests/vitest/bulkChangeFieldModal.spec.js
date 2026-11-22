@@ -71,8 +71,10 @@ function vm(props = {}) {
 	for (const [name, getter] of Object.entries(modal.computed)) {
 		Object.defineProperty(ctx, name, { get: () => getter.call(ctx) })
 	}
-	for (const [name, method] of Object.entries(modal.methods)) {
-		ctx[name] = method.bind(ctx)
+	for (const source of [...(modal.mixins ?? []), modal]) {
+		for (const [name, method] of Object.entries(source.methods ?? {})) {
+			ctx[name] = method.bind(ctx)
+		}
 	}
 	return ctx
 }

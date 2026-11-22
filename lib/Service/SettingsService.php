@@ -265,6 +265,9 @@ class SettingsService implements SettingsServiceInterface {
 		// Assign new leads without an assignee in turn (pipeline-lead-rotation,
 		// LeadRotationService). Default off: a handler assigns from the suggestion.
 		'lead_rotation_enabled' => 'false',
+		// The groups whose members see their team's work on My work (my-work-roadmap
+		// REQ-MW-180, WorkScope). Group ids, comma separated. Empty: nobody has a team scope.
+		'my_work_manager_groups' => '',
 		// Transcribe a recorded call after the platform attaches it (contact-moments-call-review
 		// D1, CallTranscriptionService). Default off: the audio leaves for the speech-to-text app.
 		'call_transcription_enabled' => 'false',

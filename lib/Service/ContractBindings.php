@@ -49,6 +49,7 @@ use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\CashShiftSummaryServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\ClientIdentifierServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientCaseReaderInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientHistorySummaryServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientManagementIntegrationInterface;
@@ -81,6 +82,7 @@ use OCA\Pipelinq\Kernel\Contracts\Customer360SummaryServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\DeliverabilityCheckServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\DemoRegisterImporterInterface;
 use OCA\Pipelinq\Kernel\Contracts\DemoSeedServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\DialLineReaderInterface;
 use OCA\Pipelinq\Kernel\Contracts\DocumentSigningServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\DossierQuestionServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\EligibilityServiceInterface;
@@ -198,6 +200,7 @@ use OCA\Pipelinq\Kernel\Contracts\QuotaServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\QuoteNumberSequenceInterface;
 use OCA\Pipelinq\Kernel\Contracts\RapportageServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ReceiptDeliveryServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\RecentActivityServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\RecurringRevenueServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\RedemptionServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\RegisterAccessSyncInterface;
@@ -275,6 +278,7 @@ use OCA\Pipelinq\Service\CallReview\CoachingPointAgreement;
 use OCA\Pipelinq\Service\Calls\CallMirror;
 use OCA\Pipelinq\Service\Competitor\CompetitorWatchService;
 use OCA\Pipelinq\Service\Competitor\WatchEventStore;
+use OCA\Pipelinq\Service\Cti\DialLineReader;
 use OCA\Pipelinq\Service\Cti\IncomingCallFinder;
 use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
 use OCA\Pipelinq\Service\Egress\ConnectorEgress;
@@ -314,6 +318,7 @@ use OCA\Pipelinq\Service\Merge\MergedAwayCard;
 use OCA\Pipelinq\Service\Merge\MergedAwayStamp;
 use OCA\Pipelinq\Service\Merge\PartyReferenceMover;
 use OCA\Pipelinq\Service\Merge\PartyReferences;
+use OCA\Pipelinq\Service\MyWork\RecentActivityService;
 use OCA\Pipelinq\Service\Portal\DocumentSigningService;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCA\Pipelinq\Service\Portal\PasswordResetService;
@@ -416,11 +421,9 @@ final class ContractBindings {
 		$context->registerServiceAlias(CashShiftServiceInterface::class, CashShiftService::class);
 		$context->registerServiceAlias(CashShiftSummaryServiceInterface::class, CashShiftSummaryService::class);
 		$context->registerServiceAlias(ChannelProviderRepositoryInterface::class, ChannelProviderRepository::class);
-		$context->registerServiceAlias(ClientBusinessReaderInterface::class, ClientBusinessReader::class);
-		$context->registerServiceAlias(ClientCaseReaderInterface::class, ClientCaseReader::class);
-		$context->registerServiceAlias(ClientHistorySummaryServiceInterface::class, ClientHistorySummaryService::class);
-		$context->registerServiceAlias(ClientManagementIntegrationInterface::class, ClientManagementIntegration::class);
-		$context->registerServiceAlias(ClientRiskServiceInterface::class, ClientRiskService::class);
+		$this->registerClientContracts(context: $context);
+		$this->registerMyWorkContracts(context: $context);
+		$this->registerTelephonyContracts(context: $context);
 		$context->registerServiceAlias(CoachingPointAgreementInterface::class, CoachingPointAgreement::class);
 		$context->registerServiceAlias(CompetitorWatchServiceInterface::class, CompetitorWatchService::class);
 		$context->registerServiceAlias(ComplianceServiceInterface::class, ComplianceService::class);
@@ -477,7 +480,6 @@ final class ContractBindings {
 		$context->registerServiceAlias(HaalCentraalClientInterface::class, HaalCentraalClient::class);
 		$context->registerServiceAlias(HeldObjectDrainInterface::class, HeldObjectDrain::class);
 		$context->registerServiceAlias(IcpConfigServiceInterface::class, IcpConfigService::class);
-		$context->registerServiceAlias(IncomingCallFinderInterface::class, IncomingCallFinder::class);
 		$context->registerServiceAlias(IntegrationDetectorInterface::class, IntegrationDetector::class);
 		$context->registerServiceAlias(JourneyServiceInterface::class, JourneyService::class);
 		$context->registerServiceAlias(JourneyStepRunnerInterface::class, JourneyStepRunner::class);
@@ -630,11 +632,56 @@ final class ContractBindings {
 		$context->registerServiceAlias(WhatsAppAdapterInterface::class, WhatsAppAdapter::class);
 		$context->registerServiceAlias(WipSyncNotifierInterface::class, WipSyncNotifier::class);
 		$context->registerServiceAlias(WooRequestConversionServiceInterface::class, WooRequestConversionService::class);
-		$context->registerServiceAlias(WorklistServiceInterface::class, WorklistService::class);
 		$context->registerServiceAlias(XWikiServiceInterface::class, XWikiService::class);
 		$context->registerServiceAlias(ZgwApiClientInterface::class, ZgwApiClient::class);
 		$context->registerServiceAlias(ZgwRegisterAccessInterface::class, ZgwRegisterAccess::class);
 		$context->registerServiceAlias(ZrcClientInterface::class, ZrcClient::class);
 		$context->registerServiceAlias(ZtcClientInterface::class, ZtcClient::class);
 	}//end register()
+
+	/**
+	 * Alias the client contracts to their implementations.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Composition root wiring, no functional requirement.
+	 */
+	private function registerClientContracts(IRegistrationContext $context): void {
+		$context->registerServiceAlias(ClientBusinessReaderInterface::class, ClientBusinessReader::class);
+		$context->registerServiceAlias(ClientIdentifierServiceInterface::class, ClientIdentifierService::class);
+		$context->registerServiceAlias(ClientCaseReaderInterface::class, ClientCaseReader::class);
+		$context->registerServiceAlias(ClientHistorySummaryServiceInterface::class, ClientHistorySummaryService::class);
+		$context->registerServiceAlias(ClientManagementIntegrationInterface::class, ClientManagementIntegration::class);
+		$context->registerServiceAlias(ClientRiskServiceInterface::class, ClientRiskService::class);
+	}//end registerClientContracts()
+
+	/**
+	 * Alias the My work contracts to their implementations.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Composition root wiring, no functional requirement.
+	 */
+	private function registerMyWorkContracts(IRegistrationContext $context): void {
+		$context->registerServiceAlias(RecentActivityServiceInterface::class, RecentActivityService::class);
+		$context->registerServiceAlias(WorklistServiceInterface::class, WorklistService::class);
+	}//end registerMyWorkContracts()
+
+	/**
+	 * Alias the contracts of the agent's own telephone line to their implementations.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Composition root wiring, no functional requirement.
+	 */
+	private function registerTelephonyContracts(IRegistrationContext $context): void {
+		$context->registerServiceAlias(DialLineReaderInterface::class, DialLineReader::class);
+		$context->registerServiceAlias(IncomingCallFinderInterface::class, IncomingCallFinder::class);
+	}//end registerTelephonyContracts()
 }//end class

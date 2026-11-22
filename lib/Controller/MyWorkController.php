@@ -64,8 +64,9 @@ class MyWorkController extends Controller {
 	/**
 	 * GET /api/my-work/week-stats: the "Your week so far" figures of the
 	 * session user's own tickets. The user is always the session user; a
-	 * caller cannot ask for another user's week. `?scope=` other than `mine`
-	 * is refused with 400 until team scopes exist.
+	 * caller cannot ask for another user's week. `?scope=team|organisation`
+	 * counts the team's or everyone's tickets when the user may (REQ-MW-180);
+	 * a scope the user may not ask for is refused with 400.
 	 *
 	 * @return JSONResponse The figures, or an error envelope.
 	 *
@@ -78,7 +79,11 @@ class MyWorkController extends Controller {
 			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$scope = (string)$this->request->getParam('scope', 'mine');
+		$scope = (string)$this->request->getParam('scope', '');
+		if ($scope === '') {
+			$scope = 'mine';
+		}
+
 		try {
 			return new JSONResponse($this->worklistService->getWeekStats(userId: $user->getUID(), scope: $scope));
 		} catch (InvalidArgumentException $e) {

@@ -11,6 +11,6 @@
   - Built: header `count / max` with a full state and the refusal message on a failed drop, covered by Vitest `tests/vitest/pipelineStageLimit.spec.js` and `pipelineBoardDrop.spec.js`. Open: the Playwright run on a live instance
 - [ ] 1.5 Edit form shows the server message under the stage field
   - Verify: Playwright changes a lead's stage in its form into the full stage and sees the message
-  - Open: the server refuses the save with the message (StageLimitGuard, 422); whether the lead form shows it under the stage field needs the live pass
+  - Built: `LeadEditDialog` hands a refusal that names the stage the edit moves into (`src/services/stageRefusal.js`) to the form's `setValidationErrors({ stage })`, so it shows under the stage field and the form stays open; other errors stay form-level. Vitest `tests/vitest/leadEditStageLimit.spec.js`; the placement is now a hard assertion in `tests/e2e/pipeline-stage-limit.spec.ts`. Open: the Playwright run on a live instance
 - [x] 1.6 User doc section in `docs/Features/pipeline.md` and Dutch strings
   - Verify: `npm run test:l10n` exit 0; docs build exit 0

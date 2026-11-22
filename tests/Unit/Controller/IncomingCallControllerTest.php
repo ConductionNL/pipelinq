@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\IncomingCallController;
+use OCA\Pipelinq\Kernel\Contracts\DialLineReaderInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Cti\IncomingCallFinder;
@@ -55,6 +56,7 @@ class IncomingCallControllerTest extends TestCase {
 			$request,
 			new CrmPrivilegeCheck($this->createConfiguredMock(IUserSession::class, ['getUser' => $user]), $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged])),
 			$finder,
+			dialLines: $this->createMock(originalClassName: DialLineReaderInterface::class),
 		);
 	}//end controller()
 

@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Pipelinq",
-        "version": "0.5.23-unstable.20261120141425",
+        "version": "0.5.32-unstable.20261122015143",
         "description": "The JSON API of Pipelinq, the customer relations app for Nextcloud: contacts and organisations, contact moments, tickets and callbacks, campaigns and mailings, the point of sale, loyalty, social publishing and the settings behind them. The records themselves are stored in OpenRegister and read and written through its API; this document covers the endpoints Pipelinq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here.",
         "contact": {
             "name": "Conduction B.V.",
@@ -98,6 +98,10 @@
         {
             "name": "client-business",
             "description": "The client's business for the side card."
+        },
+        {
+            "name": "client-identifier",
+            "description": "Checks of a client's official numbers."
         },
         {
             "name": "client-history-summary",
@@ -3003,6 +3007,74 @@
                 }
             }
         },
+        "/clients/{id}/identifiers/check": {
+            "post": {
+                "operationId": "client-identifier-check",
+                "summary": "POST /api/clients/{id}/identifiers/check: check one of the client's official numbers against its register",
+                "description": "POST /api/clients/{id}/identifiers/check: check one of the client's official numbers against its register. Body: `scheme` (`kvk` or `vat`) and `value`, the number as it is on the client. A KvK number is checked through OpenRegister's KvK leaf, a VAT number through shillinq's VIES service when shillinq is installed. The outcome (`checkStatus`, `checkedAt`, `checkSource`) is stored on the identifier and returned. The client is read and written with the caller's rights, so a client the caller may not read or change answers 403; an unknown client or number answers 404; another scheme answers 400. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "client-identifier"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The client id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "scheme": {
+                                        "type": "string",
+                                        "enum": [
+                                            "kvk",
+                                            "vat"
+                                        ],
+                                        "description": "The scheme of the number to check."
+                                    },
+                                    "value": {
+                                        "type": "string",
+                                        "description": "The number to check."
+                                    }
+                                },
+                                "required": [
+                                    "scheme",
+                                    "value"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
         "/clients/{id}/history-summary": {
             "get": {
                 "operationId": "client-history-summary-show",
@@ -4641,6 +4713,34 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/cti/dial-line": {
+            "get": {
+                "operationId": "incoming-call-dial-line",
+                "summary": "The signed-in agent's dial line",
+                "description": "Whether the signed-in agent can place a call through the telephony platform, from which extension, and whether that extension is busy. The uid comes from the session, never from the request, so an agent only ever learns their own extension. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "incoming-call"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
                     }
                 }
             }
@@ -9304,11 +9404,71 @@
                 }
             }
         },
+        "/my-work/meetings": {
+            "get": {
+                "operationId": "my-work-meetings",
+                "summary": "The signed-in user's meetings of the next seven days that link a client, contact or lead",
+                "description": "The signed-in user's calendar events of the next seven days whose description or location links a pipelinq client, contact or lead page, soonest first, as `{ items: [...] }` with id, title, startsAt, endsAt, recordKind, recordId, recordName and routeName. Only the user's own calendars are read. A calendar that cannot be read answers an empty list. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "my-work"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/my-work/recent-activity": {
+            "get": {
+                "operationId": "my-work-recent-activity",
+                "summary": "The latest audit-trail entries of the work assigned to the signed-in user",
+                "description": "The 10 latest audit-trail entries of the tickets, leads and follow-ups assigned to the signed-in user, newest first, as `{ items: [...] }` with id, action, changes, user, userName, created, title, kind, routeName and recordId. The items are read as the user, so only objects the user may read are looked at. Work that cannot be read answers an empty list. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "my-work"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
         "/my-work/week-stats": {
             "get": {
                 "operationId": "my-work-week-stats",
                 "summary": "This week's figures for the signed-in user's work",
-                "description": "This week's figures for the signed-in user's work, for the My Work page. Only the `mine` scope exists; any other scope is refused. Needs a signed-in Nextcloud user.",
+                "description": "This week's figures for the signed-in user's work, for the My Work page. `team` counts the team of a manager, `organisation` everyone's work for an administrator; a scope the user may not ask for is refused. Needs a signed-in Nextcloud user.",
                 "tags": [
                     "my-work"
                 ],
@@ -9317,11 +9477,13 @@
                         "name": "scope",
                         "in": "query",
                         "required": false,
-                        "description": "The scope of the figures; only `mine`.",
+                        "description": "Whose tickets count: mine (default), team or organisation.",
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "mine"
+                                "mine",
+                                "team",
+                                "organisation"
                             ],
                             "default": "mine"
                         }
@@ -9345,6 +9507,40 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/my-work/team": {
+            "get": {
+                "operationId": "my-work-team",
+                "summary": "The scopes and the team of the signed-in user",
+                "description": "The scopes My work can switch between for the signed-in user (empty when they have only their own work) and, for a team manager, the members of their team with their open items. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "my-work"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
@@ -17276,6 +17472,63 @@
                 }
             }
         },
+        "/templates/{id}/empty-variables": {
+            "get": {
+                "operationId": "templateVariable-emptyVariables",
+                "summary": "GET /api/templates/:id/empty-variables — recipients without a value, per variable",
+                "description": "For a template and an audience (segmentId or listId), how many of the recipients the send would queue get no value for each variable the template uses. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "template"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "Template UUID or slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "segmentId",
+                        "in": "query",
+                        "required": false,
+                        "description": "Segment UUID or slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "listId",
+                        "in": "query",
+                        "required": false,
+                        "description": "Mailing list UUID or slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
         "/templates/{id}/validate": {
             "post": {
                 "operationId": "template-validate",
@@ -17943,6 +18196,29 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "required": false,
+                        "description": "Whose work: mine (default), team (a member of a team manager group) or organisation (an administrator).",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "mine",
+                                "team",
+                                "organisation"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "member",
+                        "in": "query",
+                        "required": false,
+                        "description": "With scope team: one member of the team.",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -17991,6 +18267,29 @@
                         "in": "query",
                         "required": false,
                         "description": "The limit.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "required": false,
+                        "description": "Whose work: mine (default), team (a member of a team manager group) or organisation (an administrator).",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "mine",
+                                "team",
+                                "organisation"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "member",
+                        "in": "query",
+                        "required": false,
+                        "description": "With scope team: one member of the team.",
                         "schema": {
                             "type": "string"
                         }

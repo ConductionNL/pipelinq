@@ -59,7 +59,7 @@ class OrganisationEnrichmentService implements OrganisationEnrichmentServiceInte
 	 *
 	 * @var array<string, string>
 	 */
-	private const LEGAL_FORMS = [
+	public const LEGAL_FORMS = [
 		'eenmanszaak' => 'eenmanszaak',
 		'vennootschap onder firma' => 'vof',
 		'maatschap' => 'maatschap',

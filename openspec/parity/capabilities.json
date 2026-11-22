@@ -2151,29 +2151,28 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": "PqLead"
 			},
-			"note": "Decision 411 (13 Nov 2026): the commit reason for deals above the threshold (default EUR 50K) is built; the reason asked when a deal slips out of its forecast period is a separate row, forecast-slip-reason, not built."
+			"note": "Decision 411 (13 Nov 2026): the commit reason for deals above the threshold (default EUR 50K) is built; the reason asked when a deal slips out of its forecast period is the separate row forecast-slip-reason, built by forecast-slip-reason (lib/Service/ForecastDealService.php:257, REQ-FRC-012 in openspec/specs/forecast-roll-up-and-categories)."
 		},
 		{
 			"id": "forecast-slip-reason",
 			"area": "pipeline",
 			"name": "Say why when a committed or best-case deal slips out of its forecast period",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "no",
 			"pipedrive": "unknown",
 			"espocrm": "no",
 			"odoo-crm": "no",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "looked in lib/Service/ForecastDealService.php validateTransition(): it checks closed-deal locks and the commit justification, nothing on a moved close date; grep -i slip over lib and src finds nothing",
+			"providerHow": "read in lib/Service/ForecastDealService.php:257 (validateTransition() returns forecast.error.slip_reason_required through ForecastSlipRule), the reason dialog src/modals/SlipReasonModal.vue opened by src/dialogs/LeadEditDialog.vue, and the slipped-deals card in ForecastTrend.vue",
 			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "Not built: moving a deal's expectedCloseDate past its forecast period asks for nothing and stores no reason (ForecastDealService::validateTransition() has no close-date rule; grep -i slip over lib and src: no hits). Planned in openspec/changes/forecast-slip-reason (decision 411, 13 Nov 2026).",
+				"state": "built",
+				"evidence": "lib/Service/ForecastDealService.php:257",
 				"owner": "ConductionNL/pipelinq",
-				"change": "forecast-slip-reason",
-				"plan": "openspec/changes/forecast-slip-reason",
-				"requirement": "openspec/changes/forecast-slip-reason/specs/forecast-roll-up-and-categories :: A deal that slips out of its forecast period needs a slip reason (REQ-FRC-012)"
+				"spec": "openspec/specs/forecast-roll-up-and-categories",
+				"requirement": "openspec/specs/forecast-roll-up-and-categories :: A deal that slips out of its forecast period needs a slip reason (REQ-FRC-012)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/set-up-the-forecast-tool categories \"Pipeline\", \"Best case\" and \"Commit: deals that have a high likelihood of closing\", set per deal; https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite shows \"Forecast Moved Backward\" and \"Close Date Pushed\". Sales Hub Professional, Enterprise. No slip reason field is documented; a custom property would carry the why.",
@@ -2186,7 +2185,7 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": "PqLead"
 			},
-			"note": "Split from forecast-category by decision 411 (13 Nov 2026): the slip reason is specified, not built."
+			"note": "Split from forecast-category by decision 411 (13 Nov 2026). Built by forecast-slip-reason (archived 2026-11-21): a commit or best-case deal whose close date moves past its quarter needs a reason of at least ten characters, slipped_from and slipped_at are recorded, and the forecast trend lists the slipped deals with their reasons."
 		},
 		{
 			"id": "forecast-trend",
@@ -4452,7 +4451,7 @@
 			"id": "work-my-week-stats",
 			"area": "work",
 			"name": "See how your own week is going: answered, within the deadline, answer time",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -4463,8 +4462,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/views/MyWork.vue has no tiles; REQ-MW-090",
+				"state": "built",
+				"evidence": "lib/Service/Worklist/WeekStats.php (GET /api/my-work/week-stats), the my-week stats-block on the MyWork page in src/manifest.json",
 				"owner": "ConductionNL/pipelinq",
 				"change": "my-work-roadmap",
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: KPI summary tiles on My work (REQ-MW-090)"
@@ -4479,7 +4478,7 @@
 			"id": "work-quick-create",
 			"area": "work",
 			"name": "Create a ticket or contact from your work list without leaving it; New lead is not offered there",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -4490,8 +4489,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/views/MyWork.vue has no create buttons; REQ-MW-100",
+				"state": "built",
+				"evidence": "src/manifest.json MyWork headerActions my-work-new-ticket and my-work-new-contact",
 				"owner": "ConductionNL/pipelinq",
 				"change": "my-work-roadmap",
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Quick actions on My work (REQ-MW-100)"
@@ -4509,7 +4508,7 @@
 			"id": "work-upcoming-meetings",
 			"area": "work",
 			"name": "See your meetings with clients this week next to your work",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -4520,8 +4519,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "no calendar read in src/views/MyWork.vue or lib/Service/WorklistService.php; REQ-MW-130",
+				"state": "built",
+				"evidence": "lib/Service/MyWork/MyWorkCalendarService.php (GET /api/my-work/meetings), the my-meetings record list on the MyWork page",
 				"owner": "ConductionNL/pipelinq",
 				"change": [
 					"my-work-roadmap",
@@ -4566,7 +4565,7 @@
 			"id": "work-team-view",
 			"area": "work",
 			"name": "Look at your team's open work as a manager, and at one member's",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -4577,8 +4576,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Service/WorklistService.php:209 getMine() reads one user only; REQ-MW-180",
+				"state": "built",
+				"evidence": "lib/Service/Worklist/WorkScope.php, lib/Controller/MyWorkTeamController.php (GET /api/my-work/team), the my-scope and my-team widgets on the MyWork page",
 				"owner": "ConductionNL/pipelinq",
 				"change": "my-work-roadmap",
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Role-based content (REQ-MW-180)"
@@ -5183,8 +5182,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Marketing/DeliverabilityCheckService.php:92",
 				"owner": "ConductionNL/pipelinq",
-				"change": "marketing-mail-transports",
-				"requirement": "openspec/changes/marketing-mail-transports/specs/marketing-mail-transports :: The deliverability panel shows SPF, DKIM and DMARC status per sender domain"
+				"spec": "openspec/specs/marketing-mail-transports",
+				"requirement": "openspec/specs/marketing-mail-transports :: The deliverability panel shows SPF, DKIM and DMARC status per sender domain"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/domains-and-urls/connect-your-email-sending-domain \"Manage your email authentication\" with DKIM, SPF and DMARC status per sending domain. Marketing, Sales, Service or Content Hub Starter and up.",
@@ -5882,9 +5881,9 @@
 					"openspec/specs/appointment-booking :: REQ-APT-001 Service Entity Schema",
 					"openspec/specs/appointment-booking :: REQ-APT-003 Availability Computation",
 					"openspec/specs/appointment-booking :: REQ-APT-009 Cancellation with Policy Enforcement",
-					"openspec/specs/appointment-booking :: REQ-APT-015 Admin Booking Management"
-				],
-				"change": "openspec/changes/booking-and-service-pages"
+					"openspec/specs/appointment-booking :: REQ-APT-015 Admin Booking Management",
+					"openspec/specs/appointment-booking :: A service's composition is edited in place and can name products (REQ-BSP-001)"
+				]
 			},
 			"note": "Decision 99 (8 Oct): boards PqServices and PqService draw it and no row had it. Built; the board details still missing (buffer and Booked on columns, matching resources, bookings figure) are in services-and-resources-at-a-glance under portal-booking-capacity.",
 			"source": "spec-round-2026-10-08",
@@ -6737,12 +6736,11 @@
 			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "Not built: PosRefundManagerGuard requires a manager for every refund, with no limit below which a till user may refund (decision 390). Was: lib/Lifecycle/PosRefundManagerGuard.php",
+				"state": "built",
+				"evidence": "lib/Lifecycle/PosRefundManagerGuard.php:127",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/pos-lifecycle-guard-adoption",
-				"requirement": "openspec/changes/pos-refund-limit/specs/pos-lifecycle-guard-adoption :: A refund up to the configured limit SHALL need no manager (REQ-PLG-007)",
-				"plan": "openspec/changes/pos-refund-limit"
+				"requirement": "openspec/specs/pos-lifecycle-guard-adoption :: A refund up to the configured limit SHALL need no manager (REQ-PLG-007)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: https://knowledge.hubspot.com/payments/issue-payment-receipts-and-refunds-for-your-buyers names permissions for branding but no refund limit or manager approval above an amount (read 2026-09-26). Note: Was no without a source.",
@@ -7681,7 +7679,7 @@
 				"state": "built",
 				"evidence": "lib/Service/Marketing/Transport/ConnectorSourceTransport.php",
 				"owner": "ConductionNL/integriq",
-				"change": "marketing-mail-transports",
+				"spec": "openspec/specs/marketing-blast",
 				"requirement": "openspec/specs/marketing-blast :: Send Via OpenConnector with Per-Tenant Provider"
 			},
 			"evidence": {
@@ -9389,10 +9387,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-registry-numbers-and-enrichment",
+				"spec": "openspec/specs/client-registry-numbers",
 				"requirement": [
-					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: An organisation client holds its official numbers (REQ-CRN-001)",
-					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: A number can be checked against its register (REQ-CRN-002)"
+					"openspec/specs/client-registry-numbers :: An organisation client holds its official numbers (REQ-CRN-001)",
+					"openspec/specs/client-registry-numbers :: A number can be checked against its register (REQ-CRN-002)"
 				]
 			},
 			"note": "a custom field could hold a number, but nothing checks it. Specified 2026-09-28 in openspec/changes/clients-registry-numbers-and-enrichment (OpenSpec pass).",
@@ -9587,10 +9585,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-registry-numbers-and-enrichment",
+				"spec": "openspec/specs/client-registry-numbers",
 				"requirement": [
-					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: Empty person details can be filled from a public source in bulk (REQ-CRN-004)",
-					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: Empty company details can be filled from KvK in bulk (REQ-CRN-003)"
+					"openspec/specs/client-registry-numbers :: Empty person details can be filled from a public source in bulk (REQ-CRN-004)",
+					"openspec/specs/client-registry-numbers :: Empty company details can be filled from KvK in bulk (REQ-CRN-003)"
 				]
 			},
 			"evidence": {
@@ -9739,10 +9737,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "products-price-lists",
+				"spec": "openspec/specs/product-price-lists",
 				"requirement": [
-					"openspec/changes/products-price-lists/specs/product-price-lists :: A price list holds prices for a segment, a country or one client (REQ-PPL-001)",
-					"openspec/changes/products-price-lists/specs/product-price-lists :: A quote line is priced from the matching list (REQ-PPL-002)"
+					"openspec/specs/product-price-lists :: A price list holds prices for a segment, a country or one client (REQ-PPL-001)",
+					"openspec/specs/product-price-lists :: A quote line is priced from the matching list (REQ-PPL-002)"
 				]
 			},
 			"note": "quantity tiers only; a price list per group or country is missing. Specified 2026-09-28 in openspec/changes/products-price-lists (OpenSpec pass).",
@@ -9867,8 +9865,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "portal per tenant domain; back office pages scoped by the active OpenRegister organisation",
 				"readOn": "2026-09-26",
-				"change": "requests-municipality-per-contact",
-				"requirement": "openspec/changes/requests-municipality-per-contact/specs/served-municipality :: Clients, contacts and tickets name their municipality (REQ-RMC-001)"
+				"spec": "openspec/specs/served-municipality",
+				"requirement": "openspec/specs/served-municipality :: Clients, contacts and tickets name their municipality (REQ-RMC-001)"
 			},
 			"note": "several municipalities can be kept apart, but one desk cannot see them side by side with the municipality shown on each contact. Specified 2026-09-28 in openspec/changes/requests-municipality-per-contact (OpenSpec pass).",
 			"evidence": {

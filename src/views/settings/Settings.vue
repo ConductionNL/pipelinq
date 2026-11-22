@@ -77,6 +77,13 @@
 			appId="pipelinq"
 			@saved="onSectionSaved" />
 
+		<!-- Team manager groups for My work's team scope (my-work-roadmap REQ-MW-180). -->
+		<CnSettingsFieldsSection
+			v-if="isAdmin"
+			v-bind="sections.myWork"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
+
 		<!-- Product Categories -->
 		<ProductCategoryManager v-if="isConfigured" />
 

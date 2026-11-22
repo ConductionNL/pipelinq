@@ -53,6 +53,22 @@ interface BlastServiceInterface {
 	public function cancelBlast(string $blastId): array;
 
 	/**
+	 * The recipients a send to this audience would queue now.
+	 *
+	 * The same consent and suppression gate the send runs, without queueing
+	 * anything, so a preview can describe who would receive the mail.
+	 *
+	 * @param string $segmentId Segment UUID or slug, empty when a list is named.
+	 * @param string $listId    MailingList UUID or slug, empty when a segment is named.
+	 * @param string $channel   Channel ("email" / "sms").
+	 *
+	 * @return array<int, array<string, mixed>> The recipient rows (`contactId`, `email`, optional `unsubscribeUrl`).
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 */
+	public function audienceRecipients(string $segmentId, string $listId, string $channel): array;
+
+	/**
 	 * Create a new Blast in `draft` status with server-set `createdBy`.
 	 *
 	 * Validates that the referenced Segment, CampaignTemplate and (when

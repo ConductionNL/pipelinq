@@ -96,7 +96,7 @@ class WorklistControllerItemsTest extends TestCase {
 	 */
 	public function testItemsUseTheDefaults(): void {
 		$this->worklist->expects($this->once())->method('items')
-			->with(userId: 'agent', bucket: '', lens: '', sort: 'deadline', scope: 'open')
+			->with(userId: 'agent', view: ['bucket' => '', 'lens' => '', 'sort' => 'deadline', 'done' => false, 'scope' => 'mine', 'member' => ''])
 			->willReturn(['items' => [], 'counts' => []]);
 
 		$response = $this->controller()->items();
@@ -111,10 +111,10 @@ class WorklistControllerItemsTest extends TestCase {
 	 * @return void
 	 */
 	public function testItemsPassTheFiltersAndTheDoneScope(): void {
-		$scopes = [];
+		$views = [];
 		$this->worklist->method('items')->willReturnCallback(
-			static function (string $userId, string $bucket, string $lens, string $sort, string $scope) use (&$scopes): array {
-				$scopes[] = [$bucket, $lens, $sort, $scope];
+			static function (string $userId, array $view) use (&$views): array {
+				$views[] = [$view['bucket'], $view['lens'], $view['sort'], $view['done']];
 				return ['items' => []];
 			}
 		);
@@ -125,11 +125,11 @@ class WorklistControllerItemsTest extends TestCase {
 
 		$this->assertSame(
 			[
-				['waiting-on-me', 'team', 'priority', 'all'],
-				['answer-today', '', 'deadline', 'all'],
-				['waiting-on-customer', '', 'deadline', 'open'],
+				['waiting-on-me', 'team', 'priority', true],
+				['answer-today', '', 'deadline', true],
+				['waiting-on-customer', '', 'deadline', false],
 			],
-			$scopes
+			$views
 		);
 	}//end testItemsPassTheFiltersAndTheDoneScope()
 
@@ -146,6 +146,34 @@ class WorklistControllerItemsTest extends TestCase {
 		$this->assertSame(400, $response->getStatus());
 		$this->assertSame(['message' => 'Invalid bucket'], $response->getData());
 	}//end testItemsRefuseAnUnknownBucket()
+
+	/**
+	 * `?scope=` and `?member=` reach the service; a scope the user may not ask for is a 400.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testItemsPassTheScopeAndRefuseOneTheUserMayNotChoose(): void {
+		$views = [];
+		$this->worklist->method('items')->willReturnCallback(
+			static function (string $userId, array $view) use (&$views): array {
+				$views[] = [$view['scope'], $view['member']];
+				if ($view['scope'] === 'organisation') {
+					throw new \InvalidArgumentException(message: 'Unknown scope');
+				}
+
+				return ['items' => []];
+			}
+		);
+
+		$this->controller(params: ['scope' => 'team', 'member' => 'bob'])->items();
+		$refused = $this->controller(params: ['scope' => 'organisation'])->items();
+
+		$this->assertSame(expected: [['team', 'bob'], ['organisation', '']], actual: $views);
+		$this->assertSame(expected: 400, actual: $refused->getStatus());
+		$this->assertSame(expected: ['message' => 'Invalid scope'], actual: $refused->getData());
+	}//end testItemsPassTheScopeAndRefuseOneTheUserMayNotChoose()
 
 	/**
 	 * format=csv downloads the items as a CSV file, one row each with its due date.

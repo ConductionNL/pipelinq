@@ -1,8 +1,9 @@
 <?php
 
 /**
- * Golden tests for HaalCentraalClient: the OpenRegister leaf path, the OAuth2
- * token exchange and the legacy direct lookup, pinned call by call.
+ * Golden tests for HaalCentraalClient: the lookup through integriq's source
+ * over the BRP leaf, and the failed lookup when the source cannot answer,
+ * pinned call by call.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
@@ -17,6 +18,7 @@
  *
  * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
+ * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#requirement-brp-person-lookup-goes-through-integriq-only
  */
 
 declare(strict_types=1);
@@ -30,9 +32,8 @@ use OCA\Pipelinq\Service\HaalCentraalException;
 use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
-use OCP\IAppConfig;
+use OCP\App\IAppManager;
 use OCP\IURLGenerator;
-use OCP\Security\ICrypto;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -50,20 +51,6 @@ class HaalCentraalClientGoldenTest extends TestCase {
 	 * @var string
 	 */
 	private const BSN = '123456782';
-
-	/**
-	 * The fully configured legacy path.
-	 *
-	 * @var array<string, string>
-	 */
-	private const CONFIGURED = [
-		'brp.client_id' => 'cid',
-		'brp.client_secret_encrypted' => 'enc',
-		'brp.oauth_endpoint' => 'https://oauth.test/token',
-		'brp.base_url' => 'https://brp.test/v2/',
-		'brp.cert_path' => '/certs/c.pem',
-		'brp.key_path' => '/certs/k.pem',
-	];
 
 	/**
 	 * Every HTTP call and log line, in order.
@@ -125,13 +112,13 @@ class HaalCentraalClientGoldenTest extends TestCase {
 	 * @return void
 	 */
 	public function testLeafWithoutPersonIsNotFound(): void {
-		$this->assertNull($this->client(leaf: [200, ['results' => []]], config: self::CONFIGURED)->lookupPersoon(self::BSN));
+		$this->assertNull(actual: $this->client(leaf: [200, ['results' => []]])->lookupPersoon(self::BSN));
 		$this->assertSame(['get'], array_column($this->calls->getArrayCopy(), 0));
 	}//end testLeafWithoutPersonIsNotFound()
 
 	/**
-	 * Every unusable leaf answer falls back to the legacy path, which here is
-	 * not configured and refuses.
+	 * Every unusable leaf answer fails the lookup with the message that names
+	 * integriq; nothing is posted to Haal Centraal.
 	 *
 	 * @param array{0: int, 1: mixed}|null $leaf The leaf answer, null to throw.
 	 *
@@ -139,23 +126,25 @@ class HaalCentraalClientGoldenTest extends TestCase {
 	 *
 	 * @dataProvider unusableLeafProvider
 	 */
-	public function testUnusableLeafFallsBackToLegacy(?array $leaf): void {
+	public function testUnusableLeafFailsTheLookup(?array $leaf): void {
 		try {
-			$this->client(leaf: $leaf)->lookupPersoon(self::BSN);
-			$this->fail('the unconfigured legacy path must refuse');
+			$this->client(leaf: $leaf)->lookupPersoon(self::BSN, 'req-7');
+			$this->fail(message: 'a lookup without a working source must fail');
 		} catch (HaalCentraalException $e) {
-			$this->assertSame('BRP-integratie is niet geconfigureerd (OAuth2 client_id/secret ontbreken).', $e->getMessage());
+			$this->assertSame(expected: HaalCentraalClient::NO_SOURCE_MESSAGE, actual: $e->getMessage());
 			$this->assertSame(503, $e->getCode());
 		}
 
 		$expected = [['get']];
 		if ($leaf === null) {
-			$expected[] = ['debug', 'BRP OR leaf unavailable, falling back to legacy HaalCentraal path', ['bsn' => $this->masked(), 'error' => 'leaf down']];
+			$expected[] = ['debug', 'BRP leaf unavailable', ['bsn' => $this->masked(), 'error' => 'leaf down']];
 		}
+
+		$expected[] = ['warning', 'BRP lookup failed: no working integriq source', ['bsn' => $this->masked(), 'requestId' => 'req-7']];
 
 		$calls = array_map(static fn (array $call): array => $call[0] === 'get' ? ['get'] : $call, $this->calls->getArrayCopy());
 		$this->assertSame($expected, $calls);
-	}//end testUnusableLeafFallsBackToLegacy()
+	}//end testUnusableLeafFailsTheLookup()
 
 	/**
 	 * The unusable leaf answers.
@@ -173,210 +162,6 @@ class HaalCentraalClientGoldenTest extends TestCase {
 			'first result not a person' => [[200, ['results' => ['x']]]],
 		];
 	}//end unusableLeafProvider()
-
-	/**
-	 * Each refusal of the token exchange, with its message, code and cause.
-	 *
-	 * @param array<string, string>         $config   The app config.
-	 * @param bool                          $decrypts Whether the secret decrypts.
-	 * @param array{0: int, 1: mixed}|null  $token    The token answer, null to throw.
-	 * @param string                        $message  The refusal message.
-	 * @param int                           $code     The refusal code.
-	 * @param bool                          $previous Whether the refusal carries a cause.
-	 *
-	 * @return void
-	 *
-	 * @dataProvider tokenRefusalProvider
-	 */
-	public function testTokenRefusals(array $config, bool $decrypts, ?array $token, string $message, int $code, bool $previous): void {
-		try {
-			$this->client(leaf: null, config: $config, token: $token, decrypts: $decrypts)->lookupPersoon(self::BSN);
-			$this->fail('the token exchange must refuse');
-		} catch (HaalCentraalException $e) {
-			$this->assertSame($message, $e->getMessage());
-			$this->assertSame($code, $e->getCode());
-			$this->assertSame($previous, $e->getPrevious() !== null);
-			$this->assertNull($e->getCorrelationId());
-		}
-
-		$this->assertNotContains('/personen', array_column($this->calls->getArrayCopy(), 1));
-	}//end testTokenRefusals()
-
-	/**
-	 * The token refusals.
-	 *
-	 * @return array<string, array{0: array<string, string>, 1: bool, 2: array{0: int, 1: mixed}|null, 3: string, 4: int, 5: bool}>
-	 */
-	public static function tokenRefusalProvider(): array {
-		$noSecret = self::CONFIGURED;
-		$noSecret['brp.client_secret_encrypted'] = '';
-		$noId = self::CONFIGURED;
-		$noId['brp.client_id'] = '';
-		$failed = 'BRP OAuth2-token aanvraag is mislukt.';
-		return [
-			'no client id' => [$noId, true, [200, ['access_token' => 't']], 'BRP-integratie is niet geconfigureerd (OAuth2 client_id/secret ontbreken).', 503, false],
-			'no secret' => [$noSecret, true, [200, ['access_token' => 't']], 'BRP-integratie is niet geconfigureerd (OAuth2 client_id/secret ontbreken).', 503, false],
-			'secret unreadable' => [self::CONFIGURED, false, [200, ['access_token' => 't']], 'BRP-integratie configuratie is onleesbaar — controleer admin instellingen.', 503, true],
-			'endpoint down' => [self::CONFIGURED, true, null, 'BRP OAuth2-endpoint is niet bereikbaar.', 0, true],
-			'status 401' => [self::CONFIGURED, true, [401, ['access_token' => 't']], $failed, 401, false],
-			'status 199' => [self::CONFIGURED, true, [199, ['access_token' => 't']], $failed, 199, false],
-			'status 300' => [self::CONFIGURED, true, [300, ['access_token' => 't']], $failed, 300, false],
-			'empty token' => [self::CONFIGURED, true, [200, ['access_token' => '']], $failed, 200, false],
-			'no token' => [self::CONFIGURED, true, [200, ['token_type' => 'bearer']], $failed, 200, false],
-			'not json' => [self::CONFIGURED, true, [204, 'nope'], $failed, 204, false],
-		];
-	}//end tokenRefusalProvider()
-
-	/**
-	 * The legacy lookup: one token exchange (cached for the second lookup),
-	 * the mTLS options on the lookup client only, the exact requests and the
-	 * stamped person.
-	 *
-	 * @return void
-	 */
-	public function testLegacyLookupSucceedsAndCachesTheToken(): void {
-		$client = $this->client(
-			leaf: null,
-			config: self::CONFIGURED + ['brp.ca_bundle' => '/certs/ca.pem'],
-			token: [200, ['access_token' => 'tok-1']],
-			lookup: [200, ['_embedded' => ['personen' => [$this->raw(bsn: self::BSN)]]], ['x-correlation-id' => 'corr-9']],
-		);
-
-		$person = $client->lookupPersoon(self::BSN);
-		$this->assertSame('P' . self::BSN, $person['givenNames']);
-		$this->assertSame('corr-9', $person['_correlationId']);
-		$this->assertSame(200, $person['_responseStatus']);
-		$this->assertIsInt($person['_responseDurationMs']);
-
-		$client->lookupPersoon(self::BSN);
-
-		$calls = array_values(array_filter($this->calls->getArrayCopy(), static fn (array $call): bool => in_array($call[0], ['post', 'defaults'], true)));
-		$lookupOptions = [
-			'headers' => [
-				'Authorization' => 'Bearer tok-1',
-				'Accept' => 'application/hal+json',
-				'Content-Type' => 'application/json',
-				'User-Agent' => 'Pipelinq/pipelinq (Nextcloud)',
-			],
-			'body' => '{"type":"RaadpleegMetBurgerservicenummer","burgerservicenummer":["' . self::BSN . '"],"fields":["burgerservicenummer","naam.voornamen","naam.voorletters","naam.voorvoegsel","naam.geslachtsnaam","naam.adellijkeTitelPredicaat","geboorte.datum","geboorte.plaats","geboorte.land","gender","residence","indicationSecret"]}',
-			'timeout' => 5,
-			'connect_timeout' => 2,
-		];
-		$mtls = ['defaults', ['cert' => '/certs/c.pem', 'ssl_key' => '/certs/k.pem', 'verify' => '/certs/ca.pem']];
-		$this->assertSame(
-			[
-				[
-					'post',
-					'https://oauth.test/token',
-					[
-						'headers' => ['Accept' => 'application/json', 'Content-Type' => 'application/x-www-form-urlencoded'],
-						'body' => 'grant_type=client_credentials&client_id=cid&client_secret=plain-secret&scope=haalcentraal.brp.personen',
-						'timeout' => 5,
-						'connect_timeout' => 2,
-					],
-				],
-				$mtls,
-				['post', 'https://brp.test/v2/personen', $lookupOptions],
-				$mtls,
-				['post', 'https://brp.test/v2/personen', $lookupOptions],
-			],
-			$calls
-		);
-	}//end testLegacyLookupSucceedsAndCachesTheToken()
-
-	/**
-	 * The legacy lookup's other answers: not found, no person, a refused
-	 * status (with its correlation id), a broken body and a transport failure.
-	 *
-	 * @return void
-	 */
-	public function testLegacyLookupOutcomes(): void {
-		$headers = ['X-Correlation-ID' => 'corr-1'];
-		$this->assertNull($this->legacy(lookup: [404, [], $headers])->lookupPersoon(self::BSN));
-		$this->assertSame(['info', 'HaalCentraal lookup not-found', ['bsn', 'correlationId', 'duration_ms']], $this->lastLog(keysOnly: true));
-		$this->assertSame('corr-1', $this->lastLog(keysOnly: false)[2]['correlationId']);
-
-		$this->assertNull($this->legacy(lookup: [200, ['personen' => []], $headers])->lookupPersoon(self::BSN));
-		$this->assertNull($this->legacy(lookup: [200, ['personen' => ['x']], $headers])->lookupPersoon(self::BSN));
-		$this->assertNull($this->legacy(lookup: [200, '"not a payload"', $headers])->lookupPersoon(self::BSN));
-
-		foreach ([500, 302, 199] as $status) {
-			try {
-				$this->legacy(lookup: [$status, [], $headers])->lookupPersoon(self::BSN);
-				$this->fail('a refused status must throw');
-			} catch (HaalCentraalException $e) {
-				$this->assertSame('BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.', $e->getMessage());
-				$this->assertSame($status, $e->getCode());
-				$this->assertSame('corr-1', $e->getCorrelationId());
-				$this->assertNull($e->getPrevious());
-				$this->assertSame(['warning', 'HaalCentraal lookup error', ['bsn' => $this->masked(), 'status' => $status, 'correlationId' => 'corr-1']], $this->lastLog(keysOnly: false));
-			}
-		}
-
-		foreach ([null, [200, '{broken', []]] as $lookup) {
-			try {
-				$this->legacy(lookup: $lookup)->lookupPersoon(self::BSN, 'req-7');
-				$this->fail('a transport failure must throw');
-			} catch (HaalCentraalException $e) {
-				$this->assertSame('BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.', $e->getMessage());
-				$this->assertSame(0, $e->getCode());
-				$this->assertNull($e->getCorrelationId());
-				$this->assertInstanceOf(Throwable::class, $e->getPrevious());
-				$log = $this->lastLog(keysOnly: false);
-				$this->assertSame(['error', 'HaalCentraal transport error'], [$log[0], $log[1]]);
-				$this->assertSame(['bsn', 'error', 'requestId'], array_keys($log[2]));
-				$this->assertSame($this->masked(), $log[2]['bsn']);
-				$this->assertSame('req-7', $log[2]['requestId']);
-			}
-		}
-	}//end testLegacyLookupOutcomes()
-
-	/**
-	 * Without cert and key the lookup client gets no mTLS options, and
-	 * without a CA bundle the peer is verified against the system store.
-	 *
-	 * @return void
-	 */
-	public function testMutualTlsOptions(): void {
-		$config = self::CONFIGURED;
-		$config['brp.key_path'] = '';
-		$this->legacy(lookup: [404, [], []], config: $config)->lookupPersoon(self::BSN);
-		$this->assertNotContains('defaults', array_column($this->calls->getArrayCopy(), 0));
-
-		$this->calls = new ArrayObject();
-		$this->legacy(lookup: [404, [], []])->lookupPersoon(self::BSN);
-		$defaults = array_values(array_filter($this->calls->getArrayCopy(), static fn (array $call): bool => $call[0] === 'defaults'));
-		$this->assertSame([['defaults', ['cert' => '/certs/c.pem', 'ssl_key' => '/certs/k.pem', 'verify' => true]]], $defaults);
-	}//end testMutualTlsOptions()
-
-	/**
-	 * A configured client whose leaf is down.
-	 *
-	 * @param array{0: int, 1: mixed, 2: array<string, mixed>}|null $lookup The lookup answer, null to throw.
-	 * @param array<string, string>                                  $config The app config.
-	 *
-	 * @return HaalCentraalClient
-	 */
-	private function legacy(?array $lookup, array $config = self::CONFIGURED): HaalCentraalClient {
-		return $this->client(leaf: null, config: $config, token: [200, ['access_token' => 'tok']], lookup: $lookup);
-	}//end legacy()
-
-	/**
-	 * The last log line.
-	 *
-	 * @param bool $keysOnly Whether to reduce the context to its keys.
-	 *
-	 * @return array<int, mixed>
-	 */
-	private function lastLog(bool $keysOnly): array {
-		$logs = array_values(array_filter($this->calls->getArrayCopy(), static fn (array $call): bool => in_array($call[0], ['debug', 'info', 'warning', 'error'], true)));
-		$last = end($logs);
-		if ($keysOnly === true) {
-			$last[2] = array_keys($last[2]);
-		}
-
-		return $last;
-	}//end lastLog()
 
 	/**
 	 * The masked BSN the client logs.
@@ -424,20 +209,14 @@ class HaalCentraalClientGoldenTest extends TestCase {
 	/**
 	 * Build the client over recording doubles.
 	 *
-	 * @param array{0: int, 1: mixed}|null                           $leaf     The leaf answer, null to throw.
-	 * @param array<string, string>                                  $config   The app config.
-	 * @param array{0: int, 1: mixed}|null                           $token    The token answer, null to throw.
-	 * @param array{0: int, 1: mixed, 2: array<string, mixed>}|null  $lookup   The lookup answer, null to throw.
-	 * @param bool                                                   $decrypts Whether the secret decrypts.
+	 * @param array{0: int, 1: mixed}|null $leaf The leaf answer, null to throw.
 	 *
 	 * @return HaalCentraalClient
 	 */
-	private function client(?array $leaf, array $config = [], ?array $token = null, ?array $lookup = null, bool $decrypts = true): HaalCentraalClient {
+	private function client(?array $leaf): HaalCentraalClient {
 		$calls = $this->calls;
 		$answers = [
 			'leaf' => $leaf === null ? null : $this->response(answer: $leaf),
-			'token' => $token === null ? null : $this->response(answer: $token),
-			'lookup' => $lookup === null ? null : $this->response(answer: $lookup),
 		];
 		$http = new class($calls, $answers) implements IClient {
 			public function __construct(
@@ -457,11 +236,7 @@ class HaalCentraalClientGoldenTest extends TestCase {
 
 			public function post(string $uri, array $options = []): IResponse {
 				$this->calls[] = ['post', $uri, $options];
-				if (str_ends_with($uri, '/personen') === true) {
-					return $this->answer(key: 'lookup', error: 'lookup down');
-				}
-
-				return $this->answer(key: 'token', error: 'token down');
+				throw new RuntimeException('no direct call to Haal Centraal');
 			}
 
 			private function answer(string $key, string $error): IResponse {
@@ -532,17 +307,8 @@ class HaalCentraalClientGoldenTest extends TestCase {
 		$clientService = $this->createMock(IClientService::class);
 		$clientService->method('newClient')->willReturn($http);
 
-		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturnCallback(
-			static fn (string $app, string $key, string $default = ''): string => ($config[$key] ?? $default)
-		);
-
-		$crypto = $this->createMock(ICrypto::class);
-		if ($decrypts === true) {
-			$crypto->method('decrypt')->willReturn('plain-secret');
-		} else {
-			$crypto->method('decrypt')->willThrowException(new RuntimeException('bad key'));
-		}
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
+		$appManager->method('isInstalled')->willReturn(true);
 
 		$logger = $this->createMock(LoggerInterface::class);
 		foreach (['debug', 'info', 'warning', 'error'] as $level) {
@@ -558,6 +324,6 @@ class HaalCentraalClientGoldenTest extends TestCase {
 			static fn (string $path): string => 'http://localhost' . $path
 		);
 
-		return new HaalCentraalClient($clientService, $appConfig, $crypto, $logger, $urlGenerator);
+		return new HaalCentraalClient(clientService: $clientService, logger: $logger, urlGenerator: $urlGenerator, appManager: $appManager);
 	}//end client()
 }//end class

@@ -46,13 +46,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use InvalidArgumentException;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
 use OCA\Pipelinq\Service\Worklist\WeekStats;
 use OCA\Pipelinq\Service\Worklist\WorkBuckets;
-use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Service\Worklist\WorkScope;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -75,7 +74,6 @@ use RuntimeException;
  */
 class WorklistService implements WorklistServiceInterface {
 	use PayloadToArray;
-	use InjectedObjectService;
 
 	/**
 	 * Priority sort ranks — lower sorts first (MyWorkWidget.vue:43).
@@ -190,14 +188,14 @@ class WorklistService implements WorklistServiceInterface {
 	 * @param IL10N $l10n Localisation (request status labels).
 	 * @param LoggerInterface $logger The logger.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.
-	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param WorkScope $workScope Whose work a scope lists.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 		private readonly TicketService $ticketService,
-		private readonly ObjectServiceInterface $objectService,
+		private readonly WorkScope $workScope,
 	) {
 	}//end __construct()
 
@@ -212,8 +210,15 @@ class WorklistService implements WorklistServiceInterface {
 	 *   - leadCount:    leads in the full union
 	 *   - requestCount: requests in the full union
 	 *
-	 * @param string $userId The Nextcloud UID whose work to list (assignee scoping).
-	 * @param int|null $limit Optional cap on returned rows (widget uses 5); null = all.
+	 * The scope widens whose work is listed (REQ-MW-180, {@see WorkScope}):
+	 * `mine` (default) the user's own, `team` every member of the teams the
+	 * user manages (or one `member` of them), `organisation` everyone's. Every
+	 * scope still reads under the user's own OpenRegister permissions.
+	 *
+	 * @param string   $userId The Nextcloud UID asking (assignee scoping).
+	 * @param int|null $limit  Optional cap on returned rows (widget uses 5); null = all.
+	 * @param string   $scope  `mine`, `team` or `organisation`.
+	 * @param string   $member With `team`: one member of the team; '' for the whole team.
 	 *
 	 * @return array{
 	 *   items: array<int, array<string, mixed>>,
@@ -223,16 +228,23 @@ class WorklistService implements WorklistServiceInterface {
 	 * }
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable.
+	 * @throws InvalidArgumentException For a scope the user may not choose, or a member outside their team.
 	 *
 	 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 	 * @spec openspec/specs/my-work/spec.md
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
-	public function getMine(string $userId, ?int $limit = null): array {
-		$leads = $this->findObjects(
-			schemaKey: 'lead_schema',
-			query: ['filters' => ['assignee' => $userId], 'limit' => self::LEAD_FETCH_LIMIT]
-		);
-		$requests = $this->assignedTickets(userId: $userId);
+	public function getMine(string $userId, ?int $limit=null, string $scope=WorkScope::MINE, string $member=''): array {
+		$leads    = [];
+		$requests = [];
+		foreach ($this->workScope->assigneeFilters(userId: $userId, scope: $scope, member: $member) as $filter) {
+			$leads    = array_merge(
+				$leads,
+				$this->findObjects(schemaKey: 'lead_schema', query: ['filters' => $filter, 'limit' => self::LEAD_FETCH_LIMIT])
+			);
+			$requests = array_merge($requests, $this->assignedTickets(filters: $filter));
+		}
+
 		$pipelines = $this->findObjects(
 			schemaKey: 'pipeline_schema',
 			query: ['filters' => [], 'limit' => self::PIPELINE_FETCH_LIMIT]
@@ -252,21 +264,21 @@ class WorklistService implements WorklistServiceInterface {
 	}//end getMine()
 
 	/**
-	 * Every ticket assigned to the user, of every work ticket type.
+	 * Every ticket matching an assignee filter, of every work ticket type.
 	 *
 	 * Every ticket type assigned to the user, not only requests: an
 	 * assigned complaint or contact moment is work too (pipelinq review G1).
 	 *
-	 * @param string $userId The Nextcloud UID.
+	 * @param array<string, string> $filters The assignee filter; empty for every assignee.
 	 *
 	 * @return array<int, array<string, mixed>> The tickets.
 	 */
-	private function assignedTickets(string $userId): array {
+	private function assignedTickets(array $filters): array {
 		$requests = [];
 		foreach (self::WORK_TICKET_TYPES as $ticketType) {
 			$requests = array_merge(
 				$requests,
-				$this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId])
+				$this->findTickets(ticketType: $ticketType, filters: $filters)
 			);
 		}
 
@@ -427,55 +439,50 @@ class WorklistService implements WorklistServiceInterface {
 	 * bucket, dueGroup }`; `kind` is the ticket type, `lead` or `task`, and
 	 * `record` the object as stored, for the list's templates.
 	 *
-	 * @param string $userId The Nextcloud UID whose work to list.
-	 * @param string $bucket Keep one list (`answer-today`, `waiting-on-me`, `waiting-on-customer`); '' for all.
-	 * @param string $lens   Keep one kind of work (`tickets`, `leads`, `tasks`); '' or `all` for all.
-	 * @param string $sort   `deadline` (default), `waiting` (oldest first), `newest` or `priority`.
-	 * @param string $scope  `open` (default), or `all` to list finished work too (the page's "Toon afgerond").
+	 * The view, every key optional:
+	 *   - bucket: keep one list (`answer-today`, `waiting-on-me`, `waiting-on-customer`); '' for all.
+	 *   - lens:   keep one kind of work (`tickets`, `leads`, `tasks`); '' or `all` for all.
+	 *   - sort:   `deadline` (default), `waiting` (oldest first), `newest` or `priority`.
+	 *   - done:   true to list finished work too (the page's "Toon afgerond").
+	 *   - scope:  whose work, `mine` (default), `team` or `organisation` ({@see WorkScope}, REQ-MW-180).
+	 *   - member: with `team`, one member of the team; '' for the whole team.
+	 *
+	 * @param string $userId The Nextcloud UID asking.
+	 * @param array{bucket?: string, lens?: string, sort?: string, done?: bool, scope?: string, member?: string} $view The view.
 	 *
 	 * @return array{items: array<int, array<string, mixed>>, total: int}
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable.
+	 * @throws InvalidArgumentException For a scope the user may not choose, or a member outside their team.
 	 *
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
-	public function items(string $userId, string $bucket='', string $lens='', string $sort='deadline', string $scope='open'): array {
-		$list = ['now' => new DateTimeImmutable(), 'bucket' => $bucket, 'lens' => $lens, 'sort' => $sort];
-		$items = self::listed(rows: $this->openWorkRows(userId: $userId, done: $scope === 'all'), list: $list);
+	public function items(string $userId, array $view=[]): array {
+		$list = [
+			'now'    => new DateTimeImmutable(),
+			'bucket' => (string)($view['bucket'] ?? ''),
+			'lens'   => (string)($view['lens'] ?? ''),
+			'sort'   => (string)($view['sort'] ?? 'deadline'),
+		];
+		$filters = $this->workScope->assigneeFilters(
+			userId: $userId,
+			scope: (string)($view['scope'] ?? WorkScope::MINE),
+			member: (string)($view['member'] ?? '')
+		);
+		$rows  = $this->openWorkRows(assigneeFilters: $filters, done: ($view['done'] ?? false) === true);
+		$items = (new WorkBuckets())->listed(rows: $rows, list: $list);
 
 		return ['items' => $this->withClientNames(items: $items), 'total' => count($items)];
 	}//end items()
 
 	/**
-	 * The work rows decorated with their bucket, kept to one list and lens, and sorted.
+	 * The open leads (not in a closed stage), tickets (not closed) and
+	 * follow-up tasks of every assignee filter, as work items before they are
+	 * sorted into a list.
 	 *
-	 * @param array<int, array<string, mixed>> $rows The open work rows.
-	 * @param array{now: DateTimeImmutable, bucket: string, lens: string, sort: string} $list The moment to judge on, the
-	 *   bucket ('' for all), the lens ('' or `all` for all) and the sort.
-	 *
-	 * @return array<int, array<string, mixed>> The items.
-	 */
-	private static function listed(array $rows, array $list): array {
-		$buckets = new WorkBuckets();
-		$items   = [];
-		foreach ($rows as $row) {
-			$row = $buckets->decorate(row: $row, now: $list['now']);
-			if (($list['bucket'] === '' || $row['bucket'] === $list['bucket']) && $buckets->inLens(kind: $row['kind'], lens: $list['lens']) === true) {
-				$items[] = $row;
-			}
-		}
-
-		usort($items, $buckets->comparator(sort: $list['sort']));
-
-		return $items;
-	}//end listed()
-
-	/**
-	 * The user's open leads (not in a closed stage), tickets (not closed) and
-	 * follow-up tasks, as work items before they are sorted into a list.
-	 *
-	 * @param string $userId The Nextcloud UID.
-	 * @param bool   $done   Keep finished work too.
+	 * @param array<int, array<string, string>> $assigneeFilters One `assignee` filter per user; an empty one for everyone.
+	 * @param bool                              $done            Keep finished work too.
 	 *
 	 * @return array<int, array<string, mixed>> The items.
 	 *
@@ -483,36 +490,58 @@ class WorklistService implements WorklistServiceInterface {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The flag is the page's "Toon afgerond" switch.
 	 */
-	private function openWorkRows(string $userId, bool $done): array {
+	private function openWorkRows(array $assigneeFilters, bool $done): array {
 		$closedStages = $this->getClosedStageNames(
 			pipelines: $this->findObjects(schemaKey: 'pipeline_schema', query: ['filters' => [], 'limit' => self::PIPELINE_FETCH_LIMIT])
 		);
 
 		$rows = [];
-		$leads = $this->findObjects(schemaKey: 'lead_schema', query: ['filters' => ['assignee' => $userId], 'limit' => self::LEAD_FETCH_LIMIT]);
-		foreach ($leads as $lead) {
-			if ($done === true || in_array((string)($lead['stage'] ?? ''), $closedStages, true) === false) {
-				$rows[] = $this->itemRow(record: $lead, shape: ['lead', 'LeadDetail']);
+		foreach ($assigneeFilters as $filter) {
+			$leads = $this->findObjects(schemaKey: 'lead_schema', query: ['filters' => $filter, 'limit' => self::LEAD_FETCH_LIMIT]);
+			foreach ($leads as $lead) {
+				if ($done === true || in_array((string)($lead['stage'] ?? ''), $closedStages, true) === false) {
+					$rows[] = $this->itemRow(record: $lead, shape: ['lead', 'LeadDetail']);
+				}
 			}
+
+			foreach ($this->workTickets(filters: $filter, done: $done) as $ticket) {
+				$rows[] = $this->itemRow(record: $ticket['record'], shape: [$ticket['kind'], 'TicketDetail']);
+			}
+
+			$rows = array_merge($rows, $this->taskRows(filter: $filter, done: $done));
 		}
 
+		return $rows;
+	}//end openWorkRows()
+
+	/**
+	 * The tickets of every work type matching a filter, open ones only unless $done.
+	 *
+	 * @param array<string, string> $filters The assignee filter; empty for every assignee.
+	 * @param bool                  $done    Keep closed tickets too.
+	 *
+	 * @return array<int, array{kind: string, record: array<string, mixed>}> The tickets with their kind.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The flag is the page's "Toon afgerond" switch.
+	 */
+	private function workTickets(array $filters, bool $done): array {
+		$found = [];
 		foreach ([...self::WORK_TICKET_TYPES, TicketService::TYPE_MELDING] as $ticketType) {
-			$tickets = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId]);
-			foreach ($tickets as $ticket) {
+			foreach ($this->findTickets(ticketType: $ticketType, filters: $filters) as $ticket) {
 				if ($done === true || in_array((string)($ticket['status'] ?? ''), self::TERMINAL_TICKET_STATUSES, true) === false) {
-					$rows[] = $this->itemRow(record: $ticket, shape: [(string)($ticket['ticketType'] ?? $ticketType), 'TicketDetail']);
+					$found[] = ['kind' => (string)($ticket['ticketType'] ?? $ticketType), 'record' => $ticket];
 				}
 			}
 		}
 
-		return array_merge($rows, $this->taskRows(userId: $userId, done: $done));
-	}//end openWorkRows()
+		return $found;
+	}//end workTickets()
 
 	/**
-	 * The user's follow-up tasks as work items: the open ones, or all with $done.
+	 * The follow-up tasks of an assignee filter as work items: the open ones, or all with $done.
 	 *
-	 * @param string $userId The Nextcloud UID.
-	 * @param bool   $done   Keep finished tasks too.
+	 * @param array<string, string> $filter The `assignee` filter (a task names it `assigneeUserId`); empty for everyone.
+	 * @param bool                  $done   Keep finished tasks too.
 	 *
 	 * @return array<int, array<string, mixed>> The items.
 	 *
@@ -520,10 +549,14 @@ class WorklistService implements WorklistServiceInterface {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The flag is the page's "Toon afgerond" switch.
 	 */
-	private function taskRows(string $userId, bool $done): array {
-		$filters = ['assigneeUserId' => $userId, 'status' => 'open'];
-		if ($done === true) {
-			unset($filters['status']);
+	private function taskRows(array $filter, bool $done): array {
+		$filters = [];
+		if (isset($filter['assignee']) === true) {
+			$filters['assigneeUserId'] = $filter['assignee'];
+		}
+
+		if ($done === false) {
+			$filters['status'] = 'open';
 		}
 
 		$rows = [];
@@ -535,33 +568,32 @@ class WorklistService implements WorklistServiceInterface {
 	}//end taskRows()
 
 	/**
-	 * The figures of My work's "Your week so far" tiles for the user's own
-	 * tickets over the current calendar week (Monday to now): answered (and
-	 * answered today), the share answered within the deadline, the average
-	 * answer time in days and the tickets converted to a case.
+	 * The figures of My work's "Your week so far" tiles over the current
+	 * calendar week (Monday to now): answered (and answered today), the share
+	 * answered within the deadline, the average answer time in days and the
+	 * tickets converted to a case.
 	 *
-	 * Only the `mine` scope exists: the team and organisation scopes come with
-	 * role-based content (REQ-MW-180), and until then any other scope is refused
-	 * rather than silently answered with the user's own figures.
+	 * The scope says whose tickets count ({@see WorkScope}, REQ-MW-180): the
+	 * user's own by default, the team's for a manager, everyone's for an
+	 * administrator. A scope the user may not choose is refused rather than
+	 * silently answered with the user's own figures.
 	 *
 	 * @param string $userId The Nextcloud UID.
-	 * @param string $scope  The scope; only `mine`.
+	 * @param string $scope  `mine`, `team` or `organisation`.
 	 *
 	 * @return array<string, mixed> The figures (see WeekStats::of()) and the scope.
 	 *
-	 * @throws InvalidArgumentException For a scope other than `mine`.
+	 * @throws InvalidArgumentException For a scope the user may not choose.
 	 *
 	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-kpi-summary-tiles-on-my-work-req-mw-090
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	public function getWeekStats(string $userId, string $scope='mine'): array {
-		if ($scope !== 'mine') {
-			throw new InvalidArgumentException(message: 'Unknown scope');
-		}
-
 		$tickets = [];
-		foreach ([...self::WORK_TICKET_TYPES, TicketService::TYPE_MELDING] as $ticketType) {
-			$found   = $this->findTickets(ticketType: $ticketType, filters: ['assignee' => $userId]);
-			$tickets = array_merge($tickets, $found);
+		foreach ($this->workScope->assigneeFilters(userId: $userId, scope: $scope) as $filter) {
+			foreach ([...self::WORK_TICKET_TYPES, TicketService::TYPE_MELDING] as $ticketType) {
+				$tickets = array_merge($tickets, $this->findTickets(ticketType: $ticketType, filters: $filter));
+			}
 		}
 
 		return (new WeekStats())->of(tickets: $tickets, now: new DateTimeImmutable()) + ['scope' => $scope];
@@ -693,7 +725,7 @@ class WorklistService implements WorklistServiceInterface {
 	 */
 	private function clientName(string $clientId): string {
 		try {
-			$client = $this->toArray(value: $this->getObjectService()->find($clientId));
+			$client = $this->toArray(value: $this->ticketService->getObjectService()->find($clientId));
 		} catch (\Throwable $e) {
 			return '';
 		}
@@ -972,7 +1004,7 @@ class WorklistService implements WorklistServiceInterface {
 	 */
 	private function runFindAll(array $config, string $schemaKey): array {
 		try {
-			$objectService = $this->getObjectService();
+			$objectService = $this->ticketService->getObjectService();
 			$results = $objectService->findAll(config: $config);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
