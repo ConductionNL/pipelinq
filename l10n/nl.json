@@ -10315,6 +10315,14 @@
         "My items": "Mijn items",
         "Cannot initiate call while on another call": "Bellen kan niet tijdens een ander gesprek",
         "A variant for %s already exists on this product": "Er bestaat al een variant voor %s bij dit product",
-        "Two variants of this product have the code %s": "Twee varianten van dit product hebben de code %s"
+        "Two variants of this product have the code %s": "Twee varianten van dit product hebben de code %s",
+        "Variant attributes": "Variantkenmerken",
+        "What the variants of this product differ in, such as size or colour, each with the values it allows. Each variant names one value for every attribute.": "Waarin de varianten van dit product verschillen, zoals maat of kleur, elk met de waarden die het toestaat. Elke variant noemt één waarde voor elk kenmerk.",
+        "The attribute, such as Size.": "Het kenmerk, zoals Maat.",
+        "Values": "Waarden",
+        "The values the attribute allows, such as S, M and L.": "De waarden die het kenmerk toestaat, zoals S, M en L.",
+        "Variant %1$s has no value for %2$s": "Variant %1$s heeft geen waarde voor %2$s",
+        "%1$s is not a value of %2$s on this product": "%1$s is geen waarde van %2$s bij dit product",
+        "%s is not an attribute of this product": "%s is geen kenmerk van dit product"
     }
 }

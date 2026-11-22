@@ -92,7 +92,7 @@ class ProductVariantGuard implements IEventListener {
 		}
 
 		$data = array_merge((array)$entity->getObject(), (array)$event->getModifiedData());
-		$refusal = $this->refusal(variants: ($data['variants'] ?? []));
+		$refusal = $this->refusal(variants: ($data['variants'] ?? []), declared: ($data['variantAttributes'] ?? []));
 		if ($refusal !== null) {
 			$event->setErrors(['message' => $refusal]);
 			$event->stopPropagation();
@@ -103,24 +103,50 @@ class ProductVariantGuard implements IEventListener {
 	 * Why the variants cannot be stored, or null when they can.
 	 *
 	 * @param mixed $variants The product's variants as they will be saved.
+	 * @param mixed $declared The product's attributes and their allowed values.
 	 *
 	 * @return string|null The refusal.
 	 */
-	private function refusal(mixed $variants): ?string {
+	private function refusal(mixed $variants, mixed $declared): ?string {
 		if (is_array($variants) === false) {
 			return null;
 		}
 
-		$combination = $this->combinations->duplicateCombination(variants: array_values($variants));
+		$variants = array_values($variants);
+		$combination = $this->combinations->duplicateCombination(variants: $variants);
 		if ($combination !== null) {
 			return $this->l10n->t('A variant for %s already exists on this product', [$combination]);
 		}
 
-		$sku = $this->combinations->duplicateSku(variants: array_values($variants));
+		$sku = $this->combinations->duplicateSku(variants: $variants);
 		if ($sku !== null) {
 			return $this->l10n->t('Two variants of this product have the code %s', [$sku]);
 		}
 
-		return null;
+		return $this->attributeRefusal(mismatch: $this->combinations->attributeMismatch(declared: $declared, variants: $variants));
 	}//end refusal()
+
+	/**
+	 * The refusal for a variant that does not fit the product's attributes, or null.
+	 *
+	 * @param array{0: string, 1: array<int, string>}|null $mismatch The kind and its words.
+	 *
+	 * @return string|null The refusal.
+	 */
+	private function attributeRefusal(?array $mismatch): ?string {
+		if ($mismatch === null) {
+			return null;
+		}
+
+		[$kind, $words] = $mismatch;
+		if ($kind === 'missing') {
+			return $this->l10n->t('Variant %1$s has no value for %2$s', $words);
+		}
+
+		if ($kind === 'value') {
+			return $this->l10n->t('%1$s is not a value of %2$s on this product', $words);
+		}
+
+		return $this->l10n->t('%s is not an attribute of this product', $words);
+	}//end attributeRefusal()
 }//end class
