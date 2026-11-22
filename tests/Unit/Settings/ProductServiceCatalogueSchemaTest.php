@@ -98,11 +98,28 @@ class ProductServiceCatalogueSchemaTest extends TestCase {
 	public function testTheExistingCatalogueFieldsAndTheServiceTypeStay(): void {
 		$product = $this->product();
 
-		$this->assertSame('1.2.1', $product['version']);
+		$this->assertSame(expected: '1.3.0', actual: $product['version']);
 		$this->assertContains('service', $product['properties']['type']['enum']);
 		$this->assertSame(['label', 'price', 'validFrom', 'note'], array_keys($product['properties']['tariffs']['items']['properties']));
 		$this->assertSame(['resident', 'business'], $product['properties']['audience']['items']['enum']);
 	}//end testTheExistingCatalogueFieldsAndTheServiceTypeStay()
+
+	/**
+	 * A product declares its variant attributes, each a name and its allowed values; it need not.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/product-catalog/spec.md#requirement-a-product-keeps-attributes-and-variants-with-their-own-code-and-price
+	 */
+	public function testAProductDeclaresItsVariantAttributes(): void {
+		$product = $this->product();
+		$attributes = $product['properties']['variantAttributes'];
+
+		$this->assertSame(expected: 'array', actual: $attributes['type']);
+		$this->assertSame(expected: ['name', 'values'], actual: $attributes['items']['required']);
+		$this->assertSame(expected: 'string', actual: $attributes['items']['properties']['values']['items']['type']);
+		$this->assertNotContains(needle: 'variantAttributes', haystack: ($product['required'] ?? []));
+	}//end testAProductDeclaresItsVariantAttributes()
 
 	/**
 	 * The UPL list is a lookup in the pipelinq register, and the product form picks
