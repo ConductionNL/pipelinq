@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\Pipelinq\Controller\WebChatController;
 use OCA\Pipelinq\Service\WebChat\WebChatRefusal;
 use OCA\Pipelinq\Service\WebChat\WebChatService;
+use OCA\Pipelinq\Service\WebChat\WebChatFrame;
 use OCA\Pipelinq\Service\WebChat\WebChatStore;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -91,7 +92,7 @@ class WebChatControllerTest extends TestCase {
 		return new WebChatController(
 			request: $request,
 			chat: $this->chat,
-			store: $this->store,
+			frame: new WebChatFrame(store: $this->store, logger: $this->createMock(LoggerInterface::class)),
 			urls: $urls,
 			state: $state,
 			logger: $this->createMock(LoggerInterface::class),

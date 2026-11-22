@@ -30,8 +30,12 @@ use OCA\Pipelinq\Service\MessagingServiceAccount;
 use OCA\Pipelinq\Service\RoutingService;
 use OCA\Pipelinq\Service\ServiceAccountUnavailableException;
 use OCA\Pipelinq\Service\WebChat\ChatAssistant;
+use OCA\Pipelinq\Service\WebChat\WebChatAccess;
+use OCA\Pipelinq\Service\WebChat\WebChatHandover;
+use OCA\Pipelinq\Service\WebChat\WebChatMessages;
 use OCA\Pipelinq\Service\WebChat\WebChatRefusal;
 use OCA\Pipelinq\Service\WebChat\WebChatService;
+use OCA\Pipelinq\Service\WebChat\WebChatWindow;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -167,16 +171,20 @@ class WebChatServiceTest extends TestCase {
 			static fn (array $profiles): array => array_values(array_filter($profiles, static fn (array $p): bool => ($p['isAvailable'] ?? true) !== false))
 		);
 
+		$logger    = $this->createMock(LoggerInterface::class);
+		$assistant = new ChatAssistant(container: $this->container, logger: $logger);
+		$messages  = new WebChatMessages(store: $this->store, time: $time);
+
 		return new WebChatService(
 			store: $this->store,
-			assistant: new ChatAssistant(container: $this->container, logger: $this->createMock(LoggerInterface::class)),
-			inbound: $this->inbound,
-			tickets: $this->tickets,
-			routing: $routing,
+			assistant: $assistant,
 			account: $this->account,
 			random: $random,
-			time: $time,
-			logger: $this->createMock(LoggerInterface::class),
+			access: new WebChatAccess(store: $this->store, logger: $logger),
+			messages: $messages,
+			window: new WebChatWindow(store: $this->store, messages: $messages, assistant: $assistant, routing: $routing),
+			handover: new WebChatHandover(store: $this->store, messages: $messages, inbound: $this->inbound, tickets: $this->tickets, logger: $logger),
+			logger: $logger,
 		);
 	}//end service()
 

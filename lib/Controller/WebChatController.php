@@ -25,13 +25,12 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\WebChat\WebChatRefusal;
 use OCA\Pipelinq\Service\WebChat\WebChatService;
-use OCA\Pipelinq\Service\WebChat\WebChatStore;
+use OCA\Pipelinq\Service\WebChat\WebChatFrame;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
-use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
@@ -53,7 +52,7 @@ class WebChatController extends Controller {
 	 *
 	 * @param IRequest        $request The request.
 	 * @param WebChatService  $chat    The chat.
-	 * @param WebChatStore    $store   Where the channel is read for the frame.
+	 * @param WebChatFrame    $frame   The channel the window is for, and who may frame it.
 	 * @param IURLGenerator   $urls    The routes the window calls.
 	 * @param IInitialState   $state   What the window starts from.
 	 * @param LoggerInterface $logger  Where an unexpected failure is logged.
@@ -61,7 +60,7 @@ class WebChatController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private readonly WebChatService $chat,
-		private readonly WebChatStore $store,
+		private readonly WebChatFrame $frame,
 		private readonly IURLGenerator $urls,
 		private readonly IInitialState $state,
 		private readonly LoggerInterface $logger,
@@ -82,17 +81,7 @@ class WebChatController extends Controller {
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 60, period: 60)]
 	public function window(string $channelToken): TemplateResponse {
-		$channel = null;
-		try {
-			$channel = $this->store->activeChannel(token: $channelToken);
-		} catch (Throwable $e) {
-			$this->logger->error('Pipelinq web chat: the window could not read its channel', ['exception' => $e->getMessage()]);
-		}
-
-		$origins = [];
-		if ($channel !== null) {
-			$origins = self::framingOrigins(origins: ($channel['allowedOrigins'] ?? []));
-		}
+		$channel = $this->frame->channel(token: $channelToken);
 
 		$token = '';
 		if ($channel !== null) {
@@ -110,7 +99,7 @@ class WebChatController extends Controller {
 			]
 		);
 		$response = new TemplateResponse(AppIdentity::APP_ID, 'web-chat', ['available' => $channel !== null], TemplateResponse::RENDER_AS_BASE);
-		$response->setContentSecurityPolicy(self::framePolicy(origins: $origins));
+		$response->setContentSecurityPolicy($this->frame->policy(channel: $channel));
 		if ($channel === null) {
 			$response->setStatus(Http::STATUS_NOT_FOUND);
 		}
@@ -184,54 +173,6 @@ class WebChatController extends Controller {
 			)
 		);
 	}//end poll()
-
-	/**
-	 * The origins a frame policy may name: exact http(s) origins only, so nothing else reaches the header.
-	 *
-	 * @param mixed $origins The channel's allowed origins.
-	 *
-	 * @return list<string>
-	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.2
-	 */
-	public static function framingOrigins(mixed $origins): array {
-		if (is_array($origins) === false) {
-			return [];
-		}
-
-		$kept = [];
-		foreach ($origins as $origin) {
-			if (is_string($origin) === false) {
-				continue;
-			}
-
-			$origin = rtrim(trim($origin), '/');
-			if (preg_match('#^https?://[a-z0-9.-]+(:[0-9]{1,5})?$#i', $origin) === 1) {
-				$kept[] = strtolower($origin);
-			}
-		}
-
-		return array_values(array_unique($kept));
-	}//end framingOrigins()
-
-	/**
-	 * A policy that lets exactly these origins frame the window, and nothing else, not even this site.
-	 *
-	 * @param list<string> $origins The origins.
-	 *
-	 * @return ContentSecurityPolicy
-	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.2
-	 */
-	public static function framePolicy(array $origins): ContentSecurityPolicy {
-		$csp = new ContentSecurityPolicy();
-		$csp->disallowFrameAncestorDomain('\'self\'');
-		foreach ($origins as $origin) {
-			$csp->addAllowedFrameAncestorDomain($origin);
-		}
-
-		return $csp;
-	}//end framePolicy()
 
 	/**
 	 * Run a call and answer it, or its refusal; never a stack trace to an anonymous caller.
