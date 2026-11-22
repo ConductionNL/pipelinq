@@ -9,10 +9,10 @@
  *
  * @spec openspec/changes/specify-capability-rows/specs/product-catalog/spec.md#requirement-a-product-keeps-attributes-and-variants-with-their-own-code-and-price
  */
+import { fillTemplate } from '@conduction/nextcloud-vue/dist/esm/utils/fillTemplate.js'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { fillTemplate } from '@conduction/nextcloud-vue/dist/esm/utils/fillTemplate.js'
 
 const manifest = JSON.parse(readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'))
 const page = manifest.pages.find((p) => p.id === 'ProductDetail')
