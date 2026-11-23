@@ -109,6 +109,8 @@ class AppInfoPropertiesTest extends TestCase {
 		'ListPublicController::preferences' => 'the subscriber\'s list token',
 		'ListPublicController::savePreferences' => 'the subscriber\'s list token',
 		'ListPublicController::subscribe' => 'the subscriber\'s list token',
+		'PublicBookingLinkController::slots' => 'the owner\'s booking link token (BookingLinkTokens::ownerOf, brute-force throttled)',
+		'PublicBookingLinkController::book' => 'the owner\'s booking link token (BookingLinkTokens::ownerOf, brute-force throttled)',
 		'AppointmentPaymentWebhookController::callback' => 'the payment provider\'s HMAC signature (verifySignature, hash_equals)',
 		'ZgwNotificationController::inbox' => 'the ZGW notification token (hash_equals)',
 		'MessagingWebhookController::whatsapp' => 'the SMS / WhatsApp provider\'s webhook signature',

@@ -1014,6 +1014,6 @@ class WorklistService implements WorklistServiceInterface {
 			throw new RuntimeException(message: 'Worklist query failed', code: 0, previous: $e);
 		}
 
-		return array_values(($results ?? []));
+		return array_values($results);
 	}//end runFindAll()
 }//end class
