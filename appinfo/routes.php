@@ -123,6 +123,11 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'myWork#weekStats', 'url' => '/api/my-work/week-stats', 'verb' => 'GET'],
         ['name' => 'myWorkTeam#show', 'url' => '/api/my-work/team', 'verb' => 'GET'],
         ['name' => 'myWorkMeetings#upcoming', 'url' => '/api/my-work/meetings', 'verb' => 'GET'],
+        // Personal booking link (specify-capability-rows task 34.1): the signed-in user's own link, and its public side.
+        ['name' => 'bookingLink#show', 'url' => '/api/booking-link', 'verb' => 'GET'],
+        ['name' => 'bookingLink#revoke', 'url' => '/api/booking-link', 'verb' => 'DELETE'],
+        ['name' => 'publicBookingLink#slots', 'url' => '/api/booking-links/{token}/slots', 'verb' => 'GET'],
+        ['name' => 'publicBookingLink#book', 'url' => '/api/booking-links/{token}/bookings', 'verb' => 'POST'],
         ['name' => 'myWorkActivity#index', 'url' => '/api/my-work/recent-activity', 'verb' => 'GET'],
         ['name' => 'firstTicket#show', 'url' => '/api/worklist/first', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
