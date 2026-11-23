@@ -40,8 +40,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PosPaymentService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PosPaymentServiceInterface;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -87,34 +87,13 @@ class RemoveLegacyPspKeys implements IRepairStep {
 	 */
 	public function run(IOutput $output): void {
 		$removed = 0;
-
-		foreach (PosPaymentService::PROVIDERS as $provider) {
-			foreach (PosPaymentService::RETIRED_SECRET_FIELDS as $field) {
-				$key = PosPaymentService::CONFIG_PREFIX . $provider . '.' . $field;
-
-				$stored = $this->appConfig->getValueString(Application::APP_ID, $key, '');
-				if ($stored === '') {
-					continue;
-				}
-
-				try {
-					$this->appConfig->deleteKey(Application::APP_ID, $key);
+		foreach (PosPaymentServiceInterface::PROVIDERS as $provider) {
+			foreach (PosPaymentServiceInterface::RETIRED_SECRET_FIELDS as $field) {
+				if ($this->removedKey(output: $output, retired: new RetiredPspKey(provider: $provider, field: $field)) === true) {
 					$removed++;
-				} catch (Throwable $e) {
-					// Never fatal: failing to delete leaves the row exactly as it was,
-					// which is the pre-existing state, not a regression. But it IS a
-					// secret we meant to remove, so say so at error level.
-					$output->warning('Could not remove the legacy PSP key for ' . $provider . ': ' . $e->getMessage());
-					$this->logger->error(
-						'Pipelinq: could not remove a legacy PSP key; it is still stored',
-						[
-							'provider' => $provider,
-							'field' => $field,
-						]
-					);
-				}//end try
-			}//end foreach
-		}//end foreach
+				}
+			}
+		}
 
 		if ($removed === 0) {
 			$output->info('No legacy PSP keys stored; nothing to remove.');
@@ -126,4 +105,38 @@ class RemoveLegacyPspKeys implements IRepairStep {
 			. 'payment settings to re-enable each provider.'
 		);
 	}//end run()
+
+	/**
+	 * Delete one retired key when it is stored; a failing delete is reported, never fatal.
+	 *
+	 * @param IOutput       $output  The output interface.
+	 * @param RetiredPspKey $retired The provider and field.
+	 *
+	 * @return bool Whether a stored key was deleted.
+	 */
+	private function removedKey(IOutput $output, RetiredPspKey $retired): bool {
+		$key = $retired->configKey();
+		$stored = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
+		if ($stored === '') {
+			return false;
+		}
+
+		try {
+			$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
+			return true;
+		} catch (Throwable $e) {
+			// Never fatal: failing to delete leaves the row exactly as it was,
+			// which is the pre-existing state, not a regression. But it IS a
+			// secret we meant to remove, so say so at error level.
+			$output->warning('Could not remove the legacy PSP key for ' . $retired->provider . ': ' . $e->getMessage());
+			$this->logger->error(
+				'Pipelinq: could not remove a legacy PSP key; it is still stored',
+				[
+					'provider' => $retired->provider,
+					'field' => $retired->field,
+				]
+			);
+			return false;
+		}
+	}//end removedKey()
 }//end class

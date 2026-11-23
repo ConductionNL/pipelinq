@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1 -->
+<!-- @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.1 -->
 <template>
 	<div class="werkplek-agent-status">
 		<!-- In a call the control reads "In gesprek" and opens a menu that still sets the availability (PqWerkplekKlant). -->
@@ -67,7 +67,7 @@ import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
  * surface a user-facing error dialog so the agent knows the change did
  * not stick (REQ-KWP-040).
  *
- * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.1
  * @spec openspec/specs/kcc-werkplek/spec.md
  */
 export default {
@@ -143,7 +143,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.1
 		 */
 		toggle() {
 			return this.save(!this.isAvailable)

@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -25,7 +25,10 @@ namespace OCA\Pipelinq\Service\LineTotals;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\LineRollUpInterface;
 use OCP\IAppConfig;
 
 /**
@@ -34,9 +37,9 @@ use OCP\IAppConfig;
  * A lead without lines keeps the value typed by hand, and so does a lead
  * whose value was typed over the calculated one.
  *
- * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
  */
-class LineRollUp {
+class LineRollUp implements LineRollUpInterface {
 	/**
 	 * The property each line schema points at its parent with.
 	 */
@@ -65,7 +68,7 @@ class LineRollUp {
 	 * @param ObjectServiceInterface $objects   OpenRegister's object service.
 	 * @param IAppConfig             $appConfig Holds the register and schema ids.
 	 *
-	 * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly ObjectServiceInterface $objects,
@@ -81,7 +84,7 @@ class LineRollUp {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/line-totals-roll-up/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-12-line-totals-roll-up/tasks.md#task-1
 	 */
 	public function apply(ObjectEntityInterface $line): void {
 		$parent = $this->parentOf(line: $line);
@@ -91,7 +94,7 @@ class LineRollUp {
 
 		$patch = $this->patchFor(parent: $parent);
 		if ($patch !== []) {
-			$this->objects->patchObject(objectId: $parent->parentId, data: $patch, _rbac: false, _multitenancy: false);
+			$this->objects->patchObject(new ObjectPatch(objectId: $parent->parentId, data: $patch), _rbac: false, _multitenancy: false);
 		}
 	}//end apply()
 
@@ -162,7 +165,7 @@ class LineRollUp {
 	 */
 	private function linesOf(LineParent $parent): array {
 		$filters = [
-			'register'                        => $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
+			'register'                        => $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', ''),
 			'schema'                          => $this->schemaId(slug: $parent->kind),
 			self::PARENT_FIELD[$parent->kind] => $parent->parentId,
 		];
@@ -209,7 +212,7 @@ class LineRollUp {
 	 * @return array<string, mixed> The data, empty when it is not found.
 	 */
 	private function dataOf(string $objectId): array {
-		$found = $this->objects->find(id: $objectId, _rbac: false, _multitenancy: false, _render: false, _audit: false);
+		$found = $this->objects->find(id: $objectId, options: new ObjectFindOptions(render: false, audit: false), _rbac: false, _multitenancy: false);
 		return (array)($found?->getObject() ?? []);
 	}//end dataOf()
 
@@ -221,6 +224,6 @@ class LineRollUp {
 	 * @return string The id, or '' when the register was never imported.
 	 */
 	private function schemaId(string $slug): string {
-		return $this->appConfig->getValueString(Application::APP_ID, $slug.'_schema', '');
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, $slug.'_schema', '');
 	}//end schemaId()
 }//end class

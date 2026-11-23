@@ -55,7 +55,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
@@ -126,31 +126,50 @@ class NaviConversationStore {
 	 * @spec openspec/specs/dashboard/spec.md#conversational-follow-up
 	 */
 	public function read(string $userId, ?string $conversationId): array {
-		if ($conversationId === null || $conversationId === '') {
+		if ($this->hasConversation(conversationId: $conversationId) === false) {
 			return [];
 		}
 
-		$raw = $this->config->getUserValue(
-			userId: $userId,
-			appName: Application::APP_ID,
-			key: self::PREFERENCE_KEY,
-			default: ''
-		);
-		if ($raw === '') {
-			return [];
-		}
-
-		$record = json_decode($raw, true);
-		if (is_array($record) === false) {
-			return [];
-		}
-
-		if ($this->isUsable(record: $record, userId: $userId, conversationId: $conversationId) === false) {
+		$record = $this->storedRecord(userId: $userId);
+		if ($record === null || $this->isUsable(record: $record, asked: ['owner' => $userId, 'conversationId' => $conversationId]) === false) {
 			return [];
 		}
 
 		return $this->turnsOf(record: $record);
 	}//end read()
+
+	/**
+	 * The user's stored conversation record; null when there is none or it
+	 * does not decode to a list.
+	 *
+	 * @param string $userId The user.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function storedRecord(string $userId): ?array {
+		$raw = $this->config->getUserValue(userId: $userId, appName: AppIdentity::APP_ID, key: self::PREFERENCE_KEY, default: '');
+		if ($raw === '') {
+			return null;
+		}
+
+		$record = json_decode($raw, true);
+		if (is_array($record) === false) {
+			return null;
+		}
+
+		return $record;
+	}//end storedRecord()
+
+	/**
+	 * Whether a request names a conversation at all.
+	 *
+	 * @param string|null $conversationId The conversation id, if any.
+	 *
+	 * @return bool
+	 */
+	private function hasConversation(?string $conversationId): bool {
+		return $conversationId !== null && $conversationId !== '';
+	}//end hasConversation()
 
 	/**
 	 * Append one turn to this user's conversation and store it.
@@ -168,10 +187,39 @@ class NaviConversationStore {
 	 * @spec openspec/specs/dashboard/spec.md#conversational-follow-up
 	 */
 	public function append(string $userId, ?string $conversationId, array $history, array $turn): void {
-		if ($conversationId === null || $conversationId === '') {
+		if ($this->hasConversation(conversationId: $conversationId) === false) {
 			return;
 		}
 
+		$this->store(owner: ['owner' => $userId, 'conversationId' => $conversationId], turns: ['history' => $history, 'turn' => $turn]);
+	}//end append()
+
+	/**
+	 * Store the user's single record: owner, conversation, time and the recent turns.
+	 *
+	 * @param array{owner: string, conversationId: string}                         $owner The user id and conversation identifier.
+	 * @param array{history: array<int, array<string, mixed>>, turn: array<string, mixed>} $turns The retained turns and the turn to append.
+	 *
+	 * @return void
+	 */
+	private function store(array $owner, array $turns): void {
+		$record = $owner + [
+			'updatedAt' => $this->timeFactory->getTime(),
+			'turns' => $this->recentTurns(history: $turns['history'], turn: $turns['turn']),
+		];
+
+		$this->config->setUserValue(userId: $owner['owner'], appName: AppIdentity::APP_ID, key: self::PREFERENCE_KEY, value: (string)json_encode($record));
+	}//end store()
+
+	/**
+	 * The last turns with the new one, at most the bound, compacted.
+	 *
+	 * @param array<int, array<string, mixed>> $history The turns so far.
+	 * @param array<string, mixed>             $turn    The new turn.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function recentTurns(array $history, array $turn): array {
 		$history[] = $turn;
 		if (count($history) > self::MAX_TURNS) {
 			$history = array_slice($history, -self::MAX_TURNS);
@@ -182,20 +230,8 @@ class NaviConversationStore {
 			$compacted[] = $this->compactTurn(turn: $entry);
 		}
 
-		$record = [
-			'owner' => $userId,
-			'conversationId' => $conversationId,
-			'updatedAt' => $this->timeFactory->getTime(),
-			'turns' => $compacted,
-		];
-
-		$this->config->setUserValue(
-			userId: $userId,
-			appName: Application::APP_ID,
-			key: self::PREFERENCE_KEY,
-			value: (string)json_encode($record)
-		);
-	}//end append()
+		return $compacted;
+	}//end recentTurns()
 
 	/**
 	 * Decide what a new turn carries forward from the conversation.
@@ -239,22 +275,21 @@ class NaviConversationStore {
 	/**
 	 * Whether a decoded record may answer for this user and conversation.
 	 *
-	 * @param array<string, mixed> $record Decoded record.
-	 * @param string $userId Authenticated user id.
-	 * @param string $conversationId Conversation being asked about.
+	 * @param array<string, mixed>                          $record Decoded record.
+	 * @param array{owner: string, conversationId: string} $asked  Authenticated user id and the conversation being asked about.
 	 *
 	 * @return bool
 	 */
-	private function isUsable(array $record, string $userId, string $conversationId): bool {
-		if (($record['owner'] ?? null) !== $userId) {
+	private function isUsable(array $record, array $asked): bool {
+		if (($record['owner'] ?? null) !== $asked['owner']) {
 			$this->logger->warning(
 				message: '[NaviConversationStore] record owner mismatch, ignored',
-				context: ['userId' => $userId]
+				context: ['userId' => $asked['owner']]
 			);
 			return false;
 		}
 
-		if (($record['conversationId'] ?? null) !== $conversationId) {
+		if (($record['conversationId'] ?? null) !== $asked['conversationId']) {
 			return false;
 		}
 

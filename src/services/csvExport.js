@@ -15,11 +15,23 @@
  * @spec openspec/specs/pipeline/spec.md
  */
 export function toCsv(rows, keys) {
-	const cell = (value) => {
-		const text = value === null || value === undefined ? '' : String(value)
-		return /[";\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+	return [keys.join(';'), ...rows.map((row) => keys.map((key) => csvCell(row?.[key])).join(';'))].join('\n')
+}
+
+/**
+ * One value as a CSV cell: empty for null or undefined, quoted (with its
+ * quotes doubled) when it holds a quote, a semicolon or a newline.
+ *
+ * @param {string|number|boolean|null|undefined} value The value.
+ * @return {string} The cell text.
+ * @spec openspec/specs/pipeline/spec.md
+ */
+function csvCell(value) {
+	const text = value === null || value === undefined ? '' : String(value)
+	if (!/[";\n]/.test(text)) {
+		return text
 	}
-	return [keys.join(';'), ...rows.map((row) => keys.map((key) => cell(row?.[key])).join(';'))].join('\n')
+	return '"' + text.replace(/"/g, '""') + '"'
 }
 
 /**
@@ -32,7 +44,18 @@ export function toCsv(rows, keys) {
  * @spec openspec/specs/pipeline/spec.md
  */
 export function downloadCsv(filename, rows, keys) {
-	const blob = new Blob(['﻿' + toCsv(rows, keys)], { type: 'text/csv;charset=utf-8' })
+	downloadBlob(filename, new Blob(['﻿' + toCsv(rows, keys)], { type: 'text/csv;charset=utf-8' }))
+}
+
+/**
+ * Hand a file the app already holds to the browser as a download.
+ *
+ * @param {string} filename The file name.
+ * @param {Blob} blob The file.
+ * @return {void}
+ * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
+ */
+export function downloadBlob(filename, blob) {
 	const link = document.createElement('a')
 	link.href = URL.createObjectURL(blob)
 	link.download = filename

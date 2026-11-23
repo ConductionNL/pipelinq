@@ -22,9 +22,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\OrganisationEnrichmentServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\OrganisationEnrichmentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -42,17 +42,17 @@ class OrganisationEnrichmentController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                      $request     The request.
-	 * @param OrganisationEnrichmentService $enrichment  The lookup and the write.
+	 * @param OrganisationEnrichmentServiceInterface $enrichment  The lookup and the write.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IL10N                         $l10n        Translations.
 	 */
 	public function __construct(
 		IRequest $request,
-		private OrganisationEnrichmentService $enrichment,
+		private OrganisationEnrichmentServiceInterface $enrichment,
 		private CrmPrivilegeCheck $privilege,
 		private IL10N $l10n,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

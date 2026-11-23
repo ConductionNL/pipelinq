@@ -35,6 +35,8 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for WhatsAppAdapter — template lookup + parameter
@@ -44,6 +46,13 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 class WhatsAppAdapterTest extends TestCase {
+
+	/**
+	 * The ticket intake, when a test registers one.
+	 *
+	 * @var \OCA\Pipelinq\Service\InboundTicketService|null
+	 */
+	private ?\OCA\Pipelinq\Service\InboundTicketService $intake = null;
 	private ContainerInterface $container;
 	private IAppConfig $appConfig;
 	private ChannelProviderRepository $providerRepo;
@@ -112,7 +121,10 @@ class WhatsAppAdapterTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$this->access[] = ['call' => 'saveObject', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				if ($uuid === null || $uuid === '') {
 					$uuid = (string)($object['uuid'] ?? '');
@@ -134,7 +146,9 @@ class WhatsAppAdapterTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->access[] = ['call' => 'find', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				return ($this->store[$id] ?? null);
 			}
@@ -177,6 +191,9 @@ class WhatsAppAdapterTest extends TestCase {
 				}
 				if ($id === 'OCA\\Pipelinq\\Service\\MessagingServiceAccount') {
 					return $this->messaging->account;
+				}
+				if ($id === 'OCA\\Pipelinq\\Service\\InboundTicketService' && $this->intake !== null) {
+					return $this->intake;
 				}
 				throw new \RuntimeException('not registered: ' . $id);
 			}
@@ -283,6 +300,46 @@ class WhatsAppAdapterTest extends TestCase {
 
 		$this->assertSame('templateNotApproved', $result['status']);
 	}//end testSendRefusesPendingTemplate()
+
+	/**
+	 * An unknown template is refused before any provider is tried.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownTemplateIsNotFound(): void {
+		$this->consentService->method('canSendBusinessInitiated')->willReturn(true);
+		$this->providerClient->expects($this->never())->method('sendTemplate');
+		$this->providerRepo->expects($this->never())->method('listActive');
+
+		$result = $this->adapter->send(['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'], '', 'tpl-missing', []);
+
+		$this->assertSame(['status' => 'templateNotFound'], $result);
+	}//end testAnUnknownTemplateIsNotFound()
+
+	/**
+	 * A template without a language of its own is sent in the default
+	 * language (nl when none is configured), under its external id.
+	 *
+	 * @return void
+	 */
+	public function testATemplateWithoutALanguageIsSentInTheDefaultLanguage(): void {
+		$this->objectService->saveObject(['uuid' => 'tpl-2', 'status' => 'approved', 'externalId' => 'reminder', 'body' => 'Tot morgen, {{1}}']);
+		$this->consentService->method('canSendBusinessInitiated')->willReturn(true);
+		$this->budgetService->method('canSend')->willReturn(true);
+		$this->providerRepo->method('listActive')->willReturn([['uuid' => 'prov-1', 'kind' => 'whatsapp-cloud-api', 'vendor' => 'meta']]);
+		$sent = [];
+		$this->providerClient->method('sendTemplate')->willReturnCallback(
+			static function (array $channelProvider, string $phoneNumber, string $templateName, string $language, array $parameters) use (&$sent): array {
+				$sent = [$phoneNumber, $templateName, $language, $parameters];
+				return ['externalMessageId' => 'wamid.2', 'vendor' => 'meta'];
+			}
+		);
+
+		$result = $this->adapter->send(['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'], '', 'tpl-2', ['Jan']);
+
+		$this->assertSame('sent', $result['status']);
+		$this->assertSame(['+31611111111', 'reminder', 'nl', ['Jan']], $sent);
+	}//end testATemplateWithoutALanguageIsSentInTheDefaultLanguage()
 
 	/**
 	 * Free-form send within the 24h session window succeeds.
@@ -415,6 +472,33 @@ class WhatsAppAdapterTest extends TestCase {
 
 		$this->assertSame('invalidSignature', $result['status']);
 	}//end testInboundWebhookInvalidSignature()
+
+	/**
+	 * The inbound webhook refuses an unknown provider, logs and refuses a bad
+	 * signature, and refuses a payload without a sender; nothing is written.
+	 *
+	 * @return void
+	 */
+	public function testTheInboundWebhookRefusals(): void {
+		$rows = [null, ['uuid' => 'prov-1'], ['uuid' => 'prov-1']];
+		$this->providerRepo->method('findByIdForWebhook')->willReturnCallback(static function () use (&$rows): ?array {
+			return array_shift($rows);
+		});
+		$verdicts = [false, true];
+		$this->providerClient->method('verifySignature')->willReturnCallback(static function () use (&$verdicts): bool {
+			return array_shift($verdicts);
+		});
+		$warnings = [];
+		$this->logger->method('warning')->willReturnCallback(static function (string $message, array $context = []) use (&$warnings): void {
+			$warnings[] = [$message, $context];
+		});
+
+		$this->assertSame(['status' => 'providerUnknown'], $this->adapter->handleInboundWebhook('{}', 's', 'prov-0'));
+		$this->assertSame(['status' => 'invalidSignature'], $this->adapter->handleInboundWebhook('{}', 'bad', 'prov-1'));
+		$this->assertSame(['status' => 'invalidPayload'], $this->adapter->handleInboundWebhook('{}', 'sha256=ok', 'prov-1'));
+		$this->assertSame([['WhatsAppAdapter.handleInboundWebhook: invalid signature', ['providerId' => 'prov-1']]], $warnings);
+		$this->assertSame([], $this->objectService->store);
+	}//end testTheInboundWebhookRefusals()
 
 	/**
 	 * A Meta `messages` callback from the given number with the given text.
@@ -641,6 +725,58 @@ class WhatsAppAdapterTest extends TestCase {
 	}//end testAMessageFromAKnownContactIsNotLoggedAsUnknown()
 
 	/**
+	 * An opt-in keyword from a known contact records the opt-in, with the
+	 * body as evidence and the sender as the address.
+	 *
+	 * @return void
+	 */
+	public function testAnOptInFromAKnownContactIsRecorded(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptOut');
+		$this->consentService->expects($this->once())
+			->method('recordOptIn')
+			->with(
+				'c-gert',
+				'whatsapp',
+				'chat-reply',
+				'Inbound WhatsApp body "START" matched opt-in keyword',
+				'consent',
+				'+31611119999'
+			);
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31611119999', 'START'), 'sha256=ok', 'prov-1');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertFalse($result['unknownSender']);
+		$this->assertFalse($result['optOutRecorded']);
+		$this->assertArrayNotHasKey('contactMomentId', $result);
+	}//end testAnOptInFromAKnownContactIsRecorded()
+
+	/**
+	 * An opt-in keyword from an unknown number records no opt-in: it is
+	 * logged for a person like any other message from that number.
+	 *
+	 * @return void
+	 */
+	public function testAnOptInFromAnUnknownNumberIsOnlyLogged(): void {
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptIn');
+		$this->contactmoments->expects($this->once())
+			->method('recordInboundFromUnknownNumber')
+			->willReturn('cm-7');
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31600000001', 'START'), 'sha256=ok', 'prov-1');
+
+		$this->assertTrue($result['unknownSender']);
+		$this->assertSame('cm-7', $result['contactMomentId']);
+	}//end testAnOptInFromAnUnknownNumberIsOnlyLogged()
+
+	/**
 	 * Seed the contact's inbound WhatsApp messages.
 	 *
 	 * @param array<string, array{0: string, 1: int}> $messages Message id => [body, seconds ago].
@@ -781,4 +917,84 @@ class WhatsAppAdapterTest extends TestCase {
 		$this->assertCount(1, $failed);
 		$this->assertSame(['Jan', 'vrijdag'], $failed[0]['templateParameters']);
 	}//end testAFailedTemplateSendStoresItsParameters()
+	/**
+	 * Send one inbound message from a known contact.
+	 *
+	 * @param string $body The text.
+	 *
+	 * @return array<string, mixed> The webhook outcome.
+	 */
+	private function inboundFromKnownContact(string $body): array {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->stubSignedProvider();
+
+		return $this->adapter->handleInboundWebhook($this->metaMessage('31611119999', $body), 'sha256=ok', 'prov-1');
+	}//end inboundFromKnownContact()
+
+	/**
+	 * A known contact's message goes to the ticket intake on its conversation's thread.
+	 *
+	 * @return void
+	 */
+	public function testAKnownContactsMessageReachesTheTicketIntake(): void {
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(false);
+		$sent = [];
+		$this->intake = $this->createMock(\OCA\Pipelinq\Service\InboundTicketService::class);
+		$this->intake->expects($this->once())->method('tryReceive')->willReturnCallback(
+			static function (array $message) use (&$sent): string {
+				$sent = $message;
+				return 'ticket-7';
+			}
+		);
+
+		$result = $this->inboundFromKnownContact(body: 'Is my permit ready?');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertSame('ticket-7', $result['ticket']);
+		$this->assertNotSame('', $result['conversationId']);
+		$this->assertSame(
+			[
+				'channel' => 'whatsapp',
+				'threadKey' => 'conversation:' . $result['conversationId'],
+				'contact' => 'c-gert',
+				'text' => 'Is my permit ready?',
+				'fromAddress' => '+31611119999',
+			],
+			$sent
+		);
+	}//end testAKnownContactsMessageReachesTheTicketIntake()
+
+	/**
+	 * A STOP or an opt-in keyword opens no ticket.
+	 *
+	 * @return void
+	 */
+	public function testKeywordsOpenNoTicket(): void {
+		$this->consentService->method('isOptOutKeyword')->willReturnCallback(static fn (string $body): bool => $body === 'STOP');
+		$this->consentService->method('isOptInKeyword')->willReturnCallback(static fn (string $body): bool => $body === 'START');
+		$this->consentService->method('recordOptOut')->willReturn(['store' => 'integriq']);
+		$this->intake = $this->createMock(\OCA\Pipelinq\Service\InboundTicketService::class);
+		$this->intake->expects($this->never())->method('tryReceive');
+
+		$this->assertArrayNotHasKey('ticket', $this->inboundFromKnownContact(body: 'STOP'));
+		$this->assertArrayNotHasKey('ticket', $this->inboundFromKnownContact(body: 'START'));
+	}//end testKeywordsOpenNoTicket()
+
+	/**
+	 * A failed intake still answers received, so the provider does not deliver the message again.
+	 *
+	 * @return void
+	 */
+	public function testAFailedIntakeStillAnswersReceived(): void {
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(false);
+		$this->intake = $this->createMock(\OCA\Pipelinq\Service\InboundTicketService::class);
+		$this->intake->method('tryReceive')->willReturn('');
+
+		$result = $this->inboundFromKnownContact(body: 'hallo');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertSame('', $result['ticket']);
+	}//end testAFailedIntakeStillAnswersReceived()
 }//end class

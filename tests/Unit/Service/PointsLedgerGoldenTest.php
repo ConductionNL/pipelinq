@@ -32,6 +32,7 @@ use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
 use Throwable;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Every credit, debit, expiry, adjustment and refund: what is written to the
@@ -119,6 +120,7 @@ class PointsLedgerGoldenTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$raw) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$object = $this->named(class: ObjectServiceInterface::class, method: 'saveObject', args: $args)['object'];
 				$raw['timestamp'] = $object['timestamp'];
 				$entity = $this->createMock(ObjectEntityInterface::class);
@@ -133,6 +135,7 @@ class PointsLedgerGoldenTest extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 			objectService: $objects,
 			aggregationRunner: $this->createMock(AggregationRunner::class),
+			locking: new \OCA\Pipelinq\Tests\Unit\Support\InMemoryLockingProvider(),
 		);
 		$service->creditPoints(accountId: 'acc-1', amount: 40, ruleId: 'rule-1', sourceDocument: [], processedBy: 'alice');
 
@@ -219,7 +222,7 @@ class PointsLedgerGoldenTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) use ($scenario) {
-				$named = $this->named(class: ObjectServiceInterface::class, method: 'saveObject', args: $args);
+				$named = LegacyObjectArgs::flatten(args: $this->named(class: ObjectServiceInterface::class, method: 'saveObject', args: $args));
 				$this->trace[] = ['saveObject' => $named];
 				if (($scenario['saveThrows'] ?? false) === true) {
 					throw new RuntimeException('save failed');
@@ -248,6 +251,7 @@ class PointsLedgerGoldenTest extends TestCase {
 			logger: $logger,
 			objectService: $objects,
 			aggregationRunner: $this->createMock(AggregationRunner::class),
+			locking: new \OCA\Pipelinq\Tests\Unit\Support\InMemoryLockingProvider(),
 		);
 
 		try {

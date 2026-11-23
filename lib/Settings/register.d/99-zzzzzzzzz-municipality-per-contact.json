@@ -1,0 +1,95 @@
+{
+  "_note": "requests-municipality-per-contact (D1, D2): the municipalities one desk serves, and the municipality a client, contact or ticket belongs to. A label, not a tenancy boundary: OpenRegister's organisation stays the access boundary. Client moves to 1.8.0 (1.7.0 is taken by products-price-lists), contact to 1.2.0, ticket to 1.8.0.",
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "servedMunicipality"
+        ]
+      }
+    },
+    "schemas": {
+      "servedMunicipality": {
+        "slug": "servedMunicipality",
+        "title": "Municipality",
+        "icon": "City",
+        "summary": "A municipality the desk serves",
+        "description": "A municipality one desk serves: its name, its CBS municipality code and, when it has one, its portal.",
+        "@type": "object",
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "x-notes": "requests-municipality-per-contact D2. Declarative data (ADR-031): a functional administrator keeps the list. The portal stamps the municipality whose portalTenantId is the tenant a request came in through. The slug is servedMunicipality, not municipality, because a schema slug is global per organisation and municipality is a name other apps may use.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "The municipality's name, such as Goes.",
+            "maxLength": 255
+          },
+          "code": {
+            "type": "string",
+            "title": "Municipality code",
+            "description": "The four digit CBS municipality code, such as 0664.",
+            "pattern": "^[0-9]{4}$",
+            "facetable": true
+          },
+          "portalTenantId": {
+            "type": "string",
+            "title": "Portal",
+            "description": "The portal tenant whose requests belong to this municipality; empty when it has no portal of its own."
+          },
+          "organisation": {
+            "type": "string",
+            "title": "Organisation",
+            "description": "The OpenRegister organisation of this municipality, when each municipality has its own.",
+            "format": "uuid"
+          }
+        }
+      },
+      "client": {
+        "slug": "client",
+        "version": "1.8.0",
+        "properties": {
+          "municipality": {
+            "type": "string",
+            "title": "Municipality",
+            "description": "The municipality this record belongs to, when one desk serves several.",
+            "format": "uuid",
+            "$ref": "servedMunicipality",
+            "facetable": true
+          }
+        }
+      },
+      "contact": {
+        "slug": "contact",
+        "version": "1.2.0",
+        "properties": {
+          "municipality": {
+            "type": "string",
+            "title": "Municipality",
+            "description": "The municipality this record belongs to, when one desk serves several.",
+            "format": "uuid",
+            "$ref": "servedMunicipality",
+            "facetable": true
+          }
+        }
+      },
+      "ticket": {
+        "slug": "ticket",
+        "version": "1.8.0",
+        "properties": {
+          "municipality": {
+            "type": "string",
+            "title": "Municipality",
+            "description": "The municipality this record belongs to, when one desk serves several.",
+            "format": "uuid",
+            "$ref": "servedMunicipality",
+            "facetable": true
+          }
+        }
+      }
+    }
+  }
+}

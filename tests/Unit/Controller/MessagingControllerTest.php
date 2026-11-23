@@ -38,6 +38,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * MessagingController unit coverage.
@@ -401,7 +402,9 @@ class MessagingControllerTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null The contact, or null.
 			 */
-			public function find(string $id, string $register = '', string $schema = ''): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
 				if ($id === 'c1') {
 					return ['id' => 'c1', 'name' => 'Jan Jansen', 'phone' => '+31612345678'];
 				}

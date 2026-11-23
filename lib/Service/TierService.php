@@ -28,14 +28,16 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TierServiceInterface;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Service\Support\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Tier classification and benefits service.
@@ -45,8 +47,10 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) tier evaluation walks rules, upgrade/downgrade policy, and event emission in one cohesive service
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   orchestrates DI container, config, loyalty accounts, events and logging by design
  */
-class TierService {
+class TierService implements TierServiceInterface {
 	use PayloadToArray;
+	use LoggedRegisterSchemaIds;
+	use InjectedObjectService;
 
 	/**
 	 * Constructor.
@@ -75,18 +79,32 @@ class TierService {
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	public function getTierRules(string $programmeId): array {
-		[$register, $schema] = $this->config(schemaKey: 'tierRule_schema');
-		if ($register === '' || $schema === '' || $programmeId === '') {
+		$ids = $this->config(schemaKey: 'tierRule_schema');
+		if ($ids[0] === '' || $ids[1] === '' || $programmeId === '') {
 			return [];
 		}
 
+		$rules = array_map([$this, 'toArray'], $this->tierRuleRows(ids: $ids, programmeId: $programmeId));
+
+		return self::sortedBySequence(rules: $rules);
+	}//end getTierRules()
+
+	/**
+	 * Read the programme's TierRule rows; an empty list when the read fails.
+	 *
+	 * @param array{0: string, 1: string} $ids         The [register, schema] ids.
+	 * @param string                      $programmeId The programme UUID.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function tierRuleRows(array $ids, string $programmeId): array {
 		try {
 			$rows = $this->getObjectService()->findAll(
 				config: [
 					'filters' => [
 						'programmeId' => $programmeId,
-						'register' => $register,
-						'schema' => $schema,
+						'register' => $ids[0],
+						'schema' => $ids[1],
 					],
 					'limit' => 100,
 				]
@@ -95,20 +113,28 @@ class TierService {
 			return [];
 		}
 
-		$rowList = [];
 		if (is_array($rows) === true) {
-			$rowList = array_values($rows);
+			return array_values($rows);
 		}
 
-		$rules = array_map([$this, 'toArray'], $rowList);
+		return [];
+	}//end tierRuleRows()
 
+	/**
+	 * Sort tier rules by sequence, lowest first.
+	 *
+	 * @param array<int, array<string, mixed>> $rules The rules.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function sortedBySequence(array $rules): array {
 		usort(
 			$rules,
 			static fn (array $a, array $b): int => (int)($a['sequence'] ?? 0) <=> (int)($b['sequence'] ?? 0)
 		);
 
 		return $rules;
-	}//end getTierRules()
+	}//end sortedBySequence()
 
 	/**
 	 * Pick the tier rule matching a given lifetimePoints (or rolling metric).
@@ -149,65 +175,112 @@ class TierService {
 			return ['from' => null, 'to' => null, 'changed' => false];
 		}
 
-		$programmeId = (string)($account['programmeId'] ?? '');
-		$lifetimePoints = (int)($account['lifetimePoints'] ?? 0);
-		$currentTierId = $account['currentTierId'] ?? null;
-
-		$newTier = $this->calculateTier(programmeId: $programmeId, lifetimePoints: $lifetimePoints);
+		$change = new TierChange(accountId: $accountId, account: $account);
+		$newTier = $this->calculateTier(programmeId: $change->programmeId(), lifetimePoints: $change->lifetimePoints());
 		if ($newTier === null) {
-			return ['from' => $currentTierId, 'to' => null, 'changed' => false];
+			return ['from' => $change->currentTierId(), 'to' => null, 'changed' => false];
 		}
 
+		return $this->moveToTier(change: $change, newTier: $newTier);
+	}//end updateTierIfNeeded()
+
+	/**
+	 * Move the account to the matched tier: nothing, an upgrade or a downgrade.
+	 *
+	 * @param TierChange           $change  The re-evaluation.
+	 * @param array<string, mixed> $newTier The matched tier rule.
+	 *
+	 * @return array{from: ?string, to: ?string, changed: bool} Summary.
+	 */
+	private function moveToTier(TierChange $change, array $newTier): array {
+		$currentTierId = $change->currentTierId();
 		$newTierUuid = $this->extractUuid(object: $newTier);
 		if ($newTierUuid === $currentTierId) {
 			return ['from' => $currentTierId, 'to' => $currentTierId, 'changed' => false];
 		}
 
 		// Decide upgrade vs downgrade.
-		$isUpgrade = $this->isUpgrade(
-			programmeId: $programmeId,
-			currentTierId: $currentTierId,
-			newTierId: $newTierUuid
-		);
-
+		$isUpgrade = $this->isUpgrade(change: $change, newTierId: $newTierUuid);
 		if ($isUpgrade === true) {
-			$this->handleTierUpgrade(accountId: $accountId, newTier: $newTier);
-			$this->emitTierChangedEvent(
-				accountId: $accountId,
-				fromTierId: $currentTierId,
-				toTier: $newTier
-			);
-			return ['from' => $currentTierId, 'to' => $newTierUuid, 'changed' => true];
+			$this->handleTierUpgrade(accountId: $change->accountId, newTier: $newTier);
+			return $this->announceTierChange(change: $change, newTier: $newTier);
 		}
 
-		// Downgrade path: respect end_of_period policy.
-		$currentTier = $this->findRuleByUuid(programmeId: $programmeId, tierId: (string)$currentTierId);
-		$downgradePolicy = 'none';
-		if ($currentTier !== null) {
-			$downgradePolicy = (string)($currentTier['downgradePolicy'] ?? 'none');
-		}
+		return $this->moveDown(change: $change, newTier: $newTier);
+	}//end moveToTier()
 
+	/**
+	 * Downgrade path: respect the current tier's end_of_period policy.
+	 *
+	 * @param TierChange           $change  The re-evaluation.
+	 * @param array<string, mixed> $newTier The matched (lower) tier rule.
+	 *
+	 * @return array{from: ?string, to: ?string, changed: bool} Summary.
+	 */
+	private function moveDown(TierChange $change, array $newTier): array {
+		$downgradePolicy = $this->downgradePolicyOf(change: $change);
 		if ($downgradePolicy === 'end_of_year' || $downgradePolicy === 'end_of_quarter') {
-			// Schedule via tierGeldigTot; do NOT change currentTierId now.
-			$end = $this->endOfPeriodTimestamp(policy: $downgradePolicy);
-			$this->accountService->setTier(
-				accountId: $accountId,
-				tierId: $currentTierId,
-				tierAchievedOn: null,
-				tierValidTo: $end
-			);
-			return ['from' => $currentTierId, 'to' => $currentTierId, 'changed' => false];
+			return $this->scheduleDowngrade(change: $change, policy: $downgradePolicy);
 		}
 
 		// Immediate downgrade.
-		$this->handleTierDowngrade(accountId: $accountId, newTier: $newTier);
+		$this->handleTierDowngrade(accountId: $change->accountId, newTier: $newTier);
+		return $this->announceTierChange(change: $change, newTier: $newTier);
+	}//end moveDown()
+
+	/**
+	 * The downgrade policy of the account's current tier ('none' when unknown).
+	 *
+	 * @param TierChange $change The re-evaluation.
+	 *
+	 * @return string
+	 */
+	private function downgradePolicyOf(TierChange $change): string {
+		$currentTier = $this->findRuleByUuid(programmeId: $change->programmeId(), tierId: (string)$change->currentTierId());
+		if ($currentTier === null) {
+			return 'none';
+		}
+
+		return (string)($currentTier['downgradePolicy'] ?? 'none');
+	}//end downgradePolicyOf()
+
+	/**
+	 * Schedule the downgrade via tierGeldigTot; do NOT change currentTierId now.
+	 *
+	 * @param TierChange $change The re-evaluation.
+	 * @param string     $policy "end_of_year" or "end_of_quarter".
+	 *
+	 * @return array{from: ?string, to: ?string, changed: bool} Summary.
+	 */
+	private function scheduleDowngrade(TierChange $change, string $policy): array {
+		$currentTierId = $change->currentTierId();
+		$end = $this->endOfPeriodTimestamp(policy: $policy);
+		$this->accountService->setTier(
+			accountId: $change->accountId,
+			tierId: $currentTierId,
+			tierAchievedOn: null,
+			tierValidTo: $end
+		);
+		return ['from' => $currentTierId, 'to' => $currentTierId, 'changed' => false];
+	}//end scheduleDowngrade()
+
+	/**
+	 * Emit the tier-changed event for an applied change and summarise it.
+	 *
+	 * @param TierChange           $change  The re-evaluation.
+	 * @param array<string, mixed> $newTier The tier the account moved to.
+	 *
+	 * @return array{from: ?string, to: ?string, changed: bool} Summary.
+	 */
+	private function announceTierChange(TierChange $change, array $newTier): array {
+		$currentTierId = $change->currentTierId();
 		$this->emitTierChangedEvent(
-			accountId: $accountId,
+			accountId: $change->accountId,
 			fromTierId: $currentTierId,
 			toTier: $newTier
 		);
-		return ['from' => $currentTierId, 'to' => $newTierUuid, 'changed' => true];
-	}//end updateTierIfNeeded()
+		return ['from' => $currentTierId, 'to' => $this->extractUuid(object: $newTier), 'changed' => true];
+	}//end announceTierChange()
 
 	/**
 	 * Apply an immediate upgrade.
@@ -282,13 +355,25 @@ class TierService {
 	 * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-003
 	 */
 	public function emitTierChangedEvent(string $accountId, ?string $fromTierId, array $toTier): void {
+		$this->dispatchTierChanged(from: ['accountId' => $accountId, 'fromTierId' => $fromTierId], toTier: $toTier);
+	}//end emitTierChangedEvent()
+
+	/**
+	 * Dispatch the tier-changed event, logging a failure.
+	 *
+	 * @param array{accountId: string, fromTierId: string|null} $from   The account UUID and the previous tier.
+	 * @param array<string, mixed>                              $toTier The new tier.
+	 *
+	 * @return void
+	 */
+	private function dispatchTierChanged(array $from, array $toTier): void {
 		try {
 			$event = new GenericEvent(
 				null,
 				[
 					'type' => 'loyalty.tier.changed',
-					'accountId' => $accountId,
-					'fromTierId' => $fromTierId,
+					'accountId' => $from['accountId'],
+					'fromTierId' => $from['fromTierId'],
 					'toTierId' => $this->extractUuid(object: $toTier),
 					'toTierNaam' => (string)($toTier['name'] ?? ''),
 					'benefits' => $toTier['benefits'] ?? [],
@@ -298,18 +383,18 @@ class TierService {
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: tier-changed event dispatch failed', ['exception' => $e->getMessage()]);
 		}
-	}//end emitTierChangedEvent()
+	}//end dispatchTierChanged()
 
 	/**
-	 * Whether $newTierId is higher than $currentTierId (by sequence).
+	 * Whether $newTierId is higher than the account's current tier (by sequence).
 	 *
-	 * @param string $programmeId The programme UUID.
-	 * @param ?string $currentTierId Current tier UUID (null = no tier yet).
-	 * @param ?string $newTierId New tier UUID.
+	 * @param TierChange $change    The re-evaluation (programme and current tier).
+	 * @param ?string    $newTierId New tier UUID.
 	 *
 	 * @return bool True for upgrade (or first assignment).
 	 */
-	private function isUpgrade(string $programmeId, ?string $currentTierId, ?string $newTierId): bool {
+	private function isUpgrade(TierChange $change, ?string $newTierId): bool {
+		$currentTierId = $change->currentTierId();
 		if ($currentTierId === null || $currentTierId === '') {
 			return true;
 		}
@@ -318,14 +403,26 @@ class TierService {
 			return false;
 		}
 
-		$current = $this->findRuleByUuid(programmeId: $programmeId, tierId: $currentTierId);
-		$new = $this->findRuleByUuid(programmeId: $programmeId, tierId: $newTierId);
+		return $this->ranksAboveCurrent(change: $change, newTierId: $newTierId);
+	}//end isUpgrade()
+
+	/**
+	 * Whether the new tier's sequence is above the current tier's; false when either is unknown.
+	 *
+	 * @param TierChange $change    The re-evaluation (programme and current tier).
+	 * @param string     $newTierId New tier UUID.
+	 *
+	 * @return bool
+	 */
+	private function ranksAboveCurrent(TierChange $change, string $newTierId): bool {
+		$current = $this->findRuleByUuid(programmeId: $change->programmeId(), tierId: (string)$change->currentTierId());
+		$new = $this->findRuleByUuid(programmeId: $change->programmeId(), tierId: $newTierId);
 		if ($current === null || $new === null) {
 			return false;
 		}
 
 		return (int)($new['sequence'] ?? 0) > (int)($current['sequence'] ?? 0);
-	}//end isUpgrade()
+	}//end ranksAboveCurrent()
 
 	/**
 	 * Find a tier rule by UUID in a programme.
@@ -387,43 +484,4 @@ class TierService {
 
 		return $object['tierId'] ?? $object['uuid'] ?? $object['id'] ?? null;
 	}//end extractUuid()
-
-	/**
-	 * Resolve register + a schema id by appconfig key.
-	 *
-	 * Fails closed: '' on either id means "unconfigured", and every caller
-	 * refuses the OpenRegister call on it. An empty id must never be handed to
-	 * OpenRegister — ObjectService skips setRegister()/setSchema() for an empty
-	 * value, so the query silently inherits whatever context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @param string $schemaKey The schema config key (e.g. 'tierRule_schema').
-	 *
-	 * @return array{0: string, 1: string} The [register, schema] ids, each ''
-	 *                                     when unconfigured.
-	 */
-	private function config(string $schemaKey): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-		if ($registerId === '' || $schemaId === '') {
-			$this->logger->warning(
-				'Pipelinq: register/schema not configured; OpenRegister calls are refused, not run unscoped',
-				['schemaKey' => $schemaKey]
-			);
-		}
-
-		return [$registerId, $schemaId];
-	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

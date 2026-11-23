@@ -69,6 +69,13 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 	private ?object $emailReader = null;
 
 	/**
+	 * The configured register id.
+	 *
+	 * @var string
+	 */
+	private string $registerId = 'reg-1';
+
+	/**
 	 * Build the service over fakes.
 	 *
 	 * @param array<int,array<string,mixed>> $notes The notes the notes service answers.
@@ -78,8 +85,8 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 	private function makeService(array $notes=[]): ActivityTimelineService {
 		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
-			static fn (string $app, string $key, string $default='') => match ($key) {
-				'register' => 'reg-1',
+			fn (string $app, string $key, string $default='') => match ($key) {
+				'register' => $this->registerId,
 				'task_schema' => 'task-s',
 				'contact_schema' => 'contact-s',
 				'message_schema' => 'message-s',
@@ -419,4 +426,132 @@ class ActivityTimelineServiceKindsTest extends TestCase {
 
 		$this->assertSame(expected: 0, actual: $result['total']);
 	}//end testNoReaderNoMail()
+
+	/**
+	 * Contact moments of the client, one per day of October 2026.
+	 *
+	 * @param int $count How many.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function moments(int $count): array {
+		$rows = [];
+		for ($day = 1; $day <= $count; $day++) {
+			$rows[] = [
+				'id' => 't-' . $day,
+				'ticketType' => 'interaction',
+				'client' => 'client-1',
+				'channel' => 'worklog',
+				'title' => 'Moment ' . $day,
+				'occurredAt' => sprintf('2026-10-%02dT09:00:00+00:00', $day),
+				'duration' => 'PT' . $day . 'M',
+			];
+		}
+
+		return $rows;
+	}//end moments()
+
+	/**
+	 * A types filter skips the sources of other kinds (unknown and repeated
+	 * types ignored), the date bounds are inclusive (a bare end date covers its
+	 * whole day) and drop undated items,
+	 * and each source is queried in order.
+	 *
+	 * @return void
+	 */
+	public function testTypesAndDatesFilterTheTimeline(): void {
+		$this->rows['ticket-s'] = $this->moments(count: 6);
+		$this->rows['ticket-s'][] = ['id' => 't-x', 'ticketType' => 'interaction', 'client' => 'client-1', 'title' => 'Undated'];
+		$this->rows['task-s'] = [['id' => 'k-1', 'clientId' => 'client-1', 'title' => 'Task', 'deadline' => '2026-10-03T00:00:00+00:00']];
+		$service = $this->makeService(
+			notes: [
+				['id' => 1, 'message' => 'early', 'authorId' => 'fatma', 'timestamp' => '2026-09-30T10:00:00+00:00'],
+				['id' => 2, 'message' => 'inside', 'authorId' => 'fatma', 'timestamp' => '2026-10-04T10:00:00+00:00'],
+			]
+		);
+
+		$result = $service->getTimeline(
+			entityType: 'client',
+			entityId: 'client-1',
+			params: ['types' => 'note, Interaction ,bogus,note', 'from' => '2026-10-02T09:00:00+00:00', 'to' => '2026-10-05']
+		);
+
+		$this->assertSame(['t-5', '2', 't-4', 't-3', 't-2'], array_column($result['items'], 'id'));
+		$this->assertSame(5, $result['total']);
+		$this->assertSame(['ticket-s'], array_column($this->queries, 'schema'));
+
+		$this->queries = [];
+		$result = $service->getTimeline(entityType: 'client', entityId: 'client-1', params: ['types' => ['bogus'], 'from' => '', 'to' => '']);
+		$this->assertSame(10, $result['total']);
+		$this->assertSame(['ticket-s', 'task-s', 'contact-s', 'booking-s'], array_column($this->queries, 'schema'));
+	}//end testTypesAndDatesFilterTheTimeline()
+
+	/**
+	 * Paging clamps the page size and the page number; a page past the end
+	 * is reported as the last page but slices from where it was asked.
+	 *
+	 * @return void
+	 */
+	public function testTimelinePaging(): void {
+		$this->rows['ticket-s'] = array_map(static fn (array $row): array => $row + ['parentTicket' => 'req-1'], $this->moments(count: 5));
+		$service = $this->makeService();
+		$page = static fn (array $params): array => $service->getTimeline(entityType: 'request', entityId: 'req-1', params: $params);
+
+		$third = $page(['_limit' => 2, '_page' => 3]);
+		$this->assertSame([['t-1'], 5, 3, 3], [array_column($third['items'], 'id'), $third['total'], $third['page'], $third['pages']]);
+
+		$past = $page(['_limit' => 2, '_page' => 9]);
+		$this->assertSame([[], 5, 3, 3], [array_column($past['items'], 'id'), $past['total'], $past['page'], $past['pages']]);
+
+		$first = $page(['_limit' => 0, '_page' => -4]);
+		$this->assertSame([5, 1, 1], [count($first['items']), $first['page'], $first['pages']]);
+
+		$this->assertSame(['items' => [], 'total' => 0, 'page' => 1, 'pages' => 1], $page(['_limit' => 999, 'types' => 'task']));
+	}//end testTimelinePaging()
+
+	/**
+	 * Without a register the timeline and the worklog are empty and nothing
+	 * is queried.
+	 *
+	 * @return void
+	 */
+	public function testUnconfiguredRegisterGivesEmptyResults(): void {
+		$this->registerId = '';
+		$service = $this->makeService();
+
+		$this->assertSame(['items' => [], 'total' => 0, 'page' => 4, 'pages' => 1], $service->getTimeline(entityType: 'client', entityId: 'client-1', params: ['_page' => 4]));
+		$this->assertSame(
+			['items' => [], 'total' => 0, 'page' => 2, 'pages' => 1, 'totalDuration' => 'PT0S'],
+			$service->getWorklog(entityType: 'client', entityId: 'client-1', params: ['_page' => 2])
+		);
+		$this->assertSame([], $this->queries);
+	}//end testUnconfiguredRegisterGivesEmptyResults()
+
+	/**
+	 * The worklog of a client or a request: newest first, paged from the
+	 * clamped page, with the total duration of all its entries.
+	 *
+	 * @return void
+	 */
+	public function testWorklogPagesAndTotals(): void {
+		$this->rows['ticket-s'] = $this->moments(count: 3);
+		$service = $this->makeService();
+
+		$worklog = $service->getWorklog(entityType: 'client', entityId: 'client-1', params: ['_limit' => 2, '_page' => 7]);
+		$this->assertSame(['t-1'], array_column($worklog['items'], 'id'));
+		$this->assertSame([3, 2, 2, 'PT6M'], [$worklog['total'], $worklog['page'], $worklog['pages'], $worklog['totalDuration']]);
+		$this->assertSame(
+			[['register' => 'reg-1', 'schema' => 'ticket-s', 'ticketType' => 'interaction', 'channel' => 'worklog', 'client' => 'client-1']],
+			$this->queries
+		);
+
+		$this->queries = [];
+		$worklog = $service->getWorklog(entityType: 'request', entityId: 'req-1', params: []);
+		$this->assertSame([0, 1, 1, 'PT0S'], [$worklog['total'], $worklog['page'], $worklog['pages'], $worklog['totalDuration']]);
+		$this->assertSame('req-1', $this->queries[0]['parentTicket']);
+
+		$this->queries = [];
+		$service->getWorklog(entityType: 'lead', entityId: 'l-1', params: []);
+		$this->assertSame([['register' => 'reg-1', 'schema' => 'ticket-s', 'ticketType' => 'interaction', 'channel' => 'worklog']], $this->queries);
+	}//end testWorklogPagesAndTotals()
 }//end class

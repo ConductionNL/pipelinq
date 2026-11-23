@@ -59,6 +59,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for ExportJobController.
@@ -173,6 +174,24 @@ class ExportJobControllerTest extends TestCase {
 			$this->createMock(LoggerInterface::class)
 		);
 	}//end setUp()
+
+	/**
+	 * The controller over the current mocks, logging to the given logger.
+	 *
+	 * @param LoggerInterface $logger The logger.
+	 *
+	 * @return ExportJobController The controller.
+	 */
+	private function controllerLoggingTo(LoggerInterface $logger): ExportJobController {
+		return new ExportJobController($this->request,
+			$this->jobs,
+			$this->destinations,
+			$this->policy,
+			$this->userSession,
+			$this->translator(),
+			$logger
+		);
+	}//end controllerLoggingTo()
 
 	/**
 	 * A pass-through localization mock.
@@ -872,6 +891,7 @@ class ExportJobControllerTest extends TestCase {
 			->method('saveObject')
 			->willReturnCallback(
 				static function (array $object, ...$rest) use (&$persisted): ObjectEntityInterface {
+					$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 					$persisted = $object;
 					return self::entity($object);
 				}
@@ -907,6 +927,7 @@ class ExportJobControllerTest extends TestCase {
 		$writes = [];
 		$objects->method('saveObject')->willReturnCallback(
 			static function (array $object, ...$rest) use (&$writes): ObjectEntityInterface {
+				$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 				$writes[] = $object;
 				return self::entity($object);
 			}
@@ -940,6 +961,7 @@ class ExportJobControllerTest extends TestCase {
 		$writes = [];
 		$objects->method('saveObject')->willReturnCallback(
 			static function (array $object, ...$rest) use (&$writes): ObjectEntityInterface {
+				$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 				$writes[] = $object;
 				return self::entity(array_merge($object, ['id' => 'dest-1']));
 			}
@@ -987,6 +1009,7 @@ class ExportJobControllerTest extends TestCase {
 		$writes = [];
 		$objects->method('saveObject')->willReturnCallback(
 			static function (array $object, ...$rest) use (&$writes): ObjectEntityInterface {
+				$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 				$writes[] = $object;
 				return self::entity(array_merge($object, ['id' => 'dest-1']));
 			}
@@ -1028,6 +1051,7 @@ class ExportJobControllerTest extends TestCase {
 			->method('deleteObject')
 			->willReturnCallback(
 				static function (...$args) use (&$live): bool {
+					$args = LegacyObjectArgs::positional(method: 'deleteObject', args: $args);
 					// Model the store's own behaviour: a tombstoned row is
 					// excluded from subsequent reads.
 					$live = [];
@@ -1058,4 +1082,135 @@ class ExportJobControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $listResponse->getStatus());
 		$this->assertSame([], $listResponse->getData()['jobs'], 'A deleted job must not reappear in the list.');
 	}//end testDeleteJobRemovesItFromTheList()
+
+	/**
+	 * Golden: the export-admin gate asks the policy about the session user, and an
+	 * unexpected failure is logged under the action's label and answered 500.
+	 *
+	 * @return void
+	 */
+	public function testUnexpectedFailureIsLoggedAndAnswered500(): void {
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error')
+			->with('ExportJobController::showJob failed', ['exception' => 'disk full']);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('analyst-1');
+		$this->userSession->method('getUser')->willReturn($user);
+		$this->policy->expects($this->once())->method('isExportAdmin')->with('analyst-1')->willReturn(true);
+		$this->jobs->method('getJob')->willThrowException(new \RuntimeException('disk full'));
+
+		$response = $this->controllerLoggingTo($logger)->showJob('job-1');
+
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$this->assertSame(['error' => 'An unexpected error occurred'], $response->getData());
+	}//end testUnexpectedFailureIsLoggedAndAnswered500()
+
+	/**
+	 * Golden: every refusal and every service exception maps to its exact status and body,
+	 * and a refused caller never reaches the service.
+	 *
+	 * @return void
+	 */
+	public function testGateAndErrorMappingAnswerExactly(): void {
+		$cases = [
+			'no session' => [null, true, null, [Http::STATUS_UNAUTHORIZED, ['error' => 'Authentication required']]],
+			'no export role' => ['u1', false, null, [Http::STATUS_FORBIDDEN, ['error' => 'Insufficient permissions']]],
+			'not found' => ['u1', true, new OCSNotFoundException('gone'), [Http::STATUS_NOT_FOUND, ['error' => 'gone']]],
+			'forbidden' => ['u1', true, new OCSForbiddenException('nope'), [Http::STATUS_FORBIDDEN, ['error' => 'nope']]],
+			'bad request' => ['u1', true, new OCSBadRequestException('bad'), [Http::STATUS_UNPROCESSABLE_ENTITY, ['error' => 'bad']]],
+		];
+		foreach ($cases as $name => [$uid, $isAdmin, $thrown, $expected]) {
+			$this->userSession = $this->createMock(IUserSession::class);
+			$this->policy = $this->createMock(ExportAccessPolicy::class);
+			$this->jobs = $this->createMock(ExportJobService::class);
+			$this->authenticate($uid, $isAdmin);
+			if ($thrown === null) {
+				$this->jobs->expects($this->never())->method('getJob');
+			} else {
+				$this->jobs->method('getJob')->willThrowException($thrown);
+			}
+
+			$response = $this->controllerLoggingTo($this->createMock(LoggerInterface::class))->showJob('job-1');
+
+			$this->assertSame($expected, [$response->getStatus(), $response->getData()], $name);
+		}
+	}//end testGateAndErrorMappingAnswerExactly()
+
+	/**
+	 * The schedule in words for the dialog, in the user's Dutch.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 */
+	public function testDescribeScheduleAnswersInDutchForADutchUser(): void {
+		$this->authenticate(uid: 'analyst');
+		$this->request->method('getParam')->with('expression', '')->willReturn(value: ' 0 2 * * * ');
+		$this->jobs->expects($this->once())->method('describeSchedule')
+			->with('0 2 * * *', 'nl')
+			->willReturn(value: 'Dagelijks om 02:00');
+
+		$response = $this->controllerSpeaking(language: 'nl_NL')->describeSchedule();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['expression' => '0 2 * * *', 'description' => 'Dagelijks om 02:00', 'valid' => true], actual: $response->getData());
+	}//end testDescribeScheduleAnswersInDutchForADutchUser()
+
+	/**
+	 * Any other language gets English, and an expression without words is not valid.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 */
+	public function testDescribeScheduleFallsBackToEnglishAndFlagsAnInvalidExpression(): void {
+		$this->authenticate(uid: 'analyst');
+		$this->request->method('getParam')->willReturn(value: 'not cron');
+		$this->jobs->expects($this->once())->method('describeSchedule')
+			->with('not cron', 'en')
+			->willReturn(value: '');
+
+		$response = $this->controllerSpeaking(language: 'de')->describeSchedule();
+
+		$this->assertSame(expected: ['expression' => 'not cron', 'description' => '', 'valid' => false], actual: $response->getData());
+	}//end testDescribeScheduleFallsBackToEnglishAndFlagsAnInvalidExpression()
+
+	/**
+	 * The schedule preview sits behind the same export gate as the jobs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 */
+	public function testDescribeScheduleIsRefusedWithoutTheExportRole(): void {
+		$this->authenticate(uid: 'regular-user', isAdmin: false);
+		$this->jobs->expects($this->never())->method('describeSchedule');
+
+		$response = $this->controllerSpeaking(language: 'en')->describeSchedule();
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+	}//end testDescribeScheduleIsRefusedWithoutTheExportRole()
+
+	/**
+	 * The controller over the current mocks with a translator in the given language.
+	 *
+	 * @param string $language The language code the translator reports.
+	 *
+	 * @return ExportJobController The controller.
+	 */
+	private function controllerSpeaking(string $language): ExportJobController {
+		$l10n = $this->translator();
+		$l10n->method('getLanguageCode')->willReturn(value: $language);
+
+		return new ExportJobController(
+			request: $this->request,
+			jobs: $this->jobs,
+			destinations: $this->destinations,
+			policy: $this->policy,
+			userSession: $this->userSession,
+			l10n: $l10n,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
+	}//end controllerSpeaking()
+
 }//end class

@@ -49,6 +49,7 @@ use Throwable;
  * @uses \OCA\Pipelinq\Util\OptionalPayloadToArray
  * @uses \OCA\Pipelinq\Util\PayloadToArray
  * @uses \OCA\Pipelinq\Util\SerialisedToArray
+ * @uses \OCA\Pipelinq\Service\Export\SchemaExtractRun
  *
  * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-005
  */

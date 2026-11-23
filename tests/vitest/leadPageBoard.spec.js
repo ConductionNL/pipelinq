@@ -38,14 +38,14 @@ describe('the lead page (board PqLead)', () => {
 		const deal = widget('lead-deal').content
 		// calculatedValue only shows on a lead whose value was typed over its lines.
 		const facts = deal.include.filter((key) => key !== 'calculatedValue')
-		expect(facts).toEqual(['value', 'qualificationScore', 'expectedCloseDate', 'priority', 'source', 'category', 'assignee', 'stageEnteredAt'])
+		expect(facts).toEqual(['value', 'winProbability', 'expectedCloseDate', 'priority', 'source', 'category', 'assignee', 'stageEnteredAt'])
 		expect(deal.columns).toBe(2)
 		expect(deal.fixedColumns).toBe(true)
 		expect(facts.map((key) => deal.overrides[key].order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
 	})
 
 	it('reads the win chance as a percentage', () => {
-		expect(widget('side-win-chance').content.fields[0]).toMatchObject({ as: 'title', path: 'qualificationScore', suffix: '%' })
+		expect(widget('side-win-chance').content.fields[0]).toMatchObject({ as: 'title', path: 'winProbability', suffix: '%' })
 	})
 
 	it('puts the header buttons under the title', () => {
@@ -54,7 +54,7 @@ describe('the lead page (board PqLead)', () => {
 
 	it('has the board tabs, Quotes before History', () => {
 		const tabs = widget('lead-panels').content.tabs.map((tab) => tab.label)
-		expect(tabs).toEqual(['Overview', 'Contacts', 'Contact moments', 'Tasks', 'Appointments', 'Mail', 'Notes', 'Files', 'Decisions', 'Quotes', 'History'])
+		expect(tabs).toEqual(['Overview', 'Contacts', 'Contact moments', 'Tasks', 'Appointments', 'Mail', 'Notes', 'Files', 'Decisions', 'Quotes', 'Deal room', 'Board', 'Intake forms', 'History'])
 		expect(widget('lead-quotes').content).toMatchObject({ schema: 'salesQuote', filter: { lead: '@objectId' } })
 	})
 

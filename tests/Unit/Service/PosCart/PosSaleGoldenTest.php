@@ -32,6 +32,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Golden comparison: a sale priced line by line on the server books the same figures as before.
@@ -214,7 +215,7 @@ class PosSaleGoldenTest extends TestCase {
 		$objects = $this->createMock($class);
 		$objects->method('find')->willReturnCallback(fn (string|int $id): ?object => $this->store->entity((string)$id));
 		$objects->method('findAll')->willReturnCallback(fn (array $config = []): array => $this->store->findAll(config: $config));
-		$objects->method('saveObject')->willReturnCallback(fn (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): object => PosSaleStore::makeEntity(object: $this->store->save(object: $object, schema: (string)$schema, uuid: $uuid), schema: (string)$schema));
+		$objects->method('saveObject')->willReturnCallback(fn (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): object => PosSaleStore::makeEntity(object: $this->store->save(object: $object, schema: (string)($options->target->schema), uuid: ($options->uuid)), schema: (string)($options->target->schema)));
 		return $objects;
 	}//end objectsDouble()
 

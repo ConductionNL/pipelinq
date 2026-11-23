@@ -21,14 +21,15 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+ * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\XWikiServiceInterface;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -41,19 +42,35 @@ use Throwable;
 /**
  * XWiki REST proxy service.
  *
- * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+ * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) thin proxy over the xWiki REST
  *  API with discovery, caching, XML parsing and sanitisation kept together as one
  *  cohesive read path
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
-class XWikiService {
+class XWikiService implements XWikiServiceInterface {
 	/**
 	 * Default cache TTL (seconds) when admin has not configured a value.
 	 *
 	 * @var int
 	 */
 	private const DEFAULT_CACHE_TTL = 300;
+
+	/**
+	 * The page read of an unconfigured xWiki or an empty page reference.
+	 *
+	 * @var array<string, string>
+	 */
+	private const NO_PAGE = [
+		'title' => '',
+		'content' => '',
+		'url' => '',
+		'modified' => '',
+		'space' => '',
+		'id' => '',
+	];
 
 	/**
 	 * In-memory marker for "xWiki unreachable" status checks so repeated calls
@@ -260,9 +277,30 @@ class XWikiService {
 		$params = http_build_query(['q' => $request['query'], 'limit' => $request['limit'], 'offset' => $request['offset']]);
 		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/xwiki/search?' . $params);
 
+		$response = $this->fetchOpenRegisterSearch(url: $url);
+		if ($response === null || $this->isOkSearchResponse(response: $response) === false) {
+			return null;
+		}
+
+		$results = $this->searchResults(response: $response);
+		if ($results === null) {
+			return null;
+		}
+
+		return $this->mapOpenRegisterRows(rows: $results);
+	}//end searchViaOpenRegister()
+
+	/**
+	 * Ask OpenRegister's xWiki search, or null when it cannot be reached.
+	 *
+	 * @param string $url The absolute search URL.
+	 *
+	 * @return \OCP\Http\Client\IResponse|null
+	 */
+	private function fetchOpenRegisterSearch(string $url): \OCP\Http\Client\IResponse|null {
 		try {
 			$client = $this->clientService->newClient();
-			$response = $client->get(
+			return $client->get(
 				$url,
 				[
 					'timeout' => 10,
@@ -277,20 +315,40 @@ class XWikiService {
 			$this->logger->debug('xWiki OR search unavailable, falling back to direct path', ['exception' => $e]);
 			return null;
 		}
+	}//end fetchOpenRegisterSearch()
 
+	/**
+	 * Whether the search answered 200, logging when it did not.
+	 *
+	 * @param \OCP\Http\Client\IResponse $response The search response.
+	 *
+	 * @return bool
+	 */
+	private function isOkSearchResponse(\OCP\Http\Client\IResponse $response): bool {
 		$status = $response->getStatusCode();
 		if ($status !== 200) {
 			$this->logger->debug('xWiki OR search returned non-200, falling back', ['status' => $status]);
-			return null;
+			return false;
 		}
 
+		return true;
+	}//end isOkSearchResponse()
+
+	/**
+	 * The `results` list of a search response body, or null when it has none.
+	 *
+	 * @param \OCP\Http\Client\IResponse $response The search response.
+	 *
+	 * @return array<int|string, mixed>|null
+	 */
+	private function searchResults(\OCP\Http\Client\IResponse $response): array|null {
 		$decoded = json_decode((string)$response->getBody(), true);
 		if (is_array($decoded) === false || isset($decoded['results']) === false || is_array($decoded['results']) === false) {
 			return null;
 		}
 
-		return $this->mapOpenRegisterRows(rows: $decoded['results']);
-	}//end searchViaOpenRegister()
+		return $decoded['results'];
+	}//end searchResults()
 
 	/**
 	 * Map raw OpenRegister search result rows to the widget row shape.
@@ -333,7 +391,7 @@ class XWikiService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function getPages(string $space, int $limit = 10, int $offset = 0): array {
 		$limit = max(1, min(100, $limit));
@@ -345,25 +403,39 @@ class XWikiService {
 			return $cached;
 		}
 
+		return $this->fetchedPages(space: $space, query: ['limit' => $limit, 'offset' => $offset, 'cacheKey' => $cacheKey]);
+	}//end getPages()
+
+	/**
+	 * Fetch one window of a space's pages from xWiki and cache it; an empty
+	 * result, uncached, when xWiki or the space is not set.
+	 *
+	 * @param string                                          $space The xWiki space name.
+	 * @param array{limit: int, offset: int, cacheKey: string} $query The clamped window and its cache key.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function fetchedPages(string $space, array $query): array {
 		$base = $this->getBaseUrl();
+		$payload = $this->emptyResult(limit: $query['limit'], offset: $query['offset']);
 		if ($base === '' || $space === '') {
-			return $this->emptyResult(limit: $limit, offset: $offset);
+			return $payload;
 		}
 
 		$wiki = 'xwiki';
-		$url = sprintf('%s/rest/wikis/%s/spaces/%s/pages?media=xml&number=%d&start=%d', $base, $wiki, rawurlencode($space), $limit, $offset);
-		$xml = $this->fetchXml(url: $url);
-		$results = $this->parsePageSummaries(xml: $xml, space: $space);
-
-		$payload = [
-			'results' => $results,
-			'total' => count($results),
-			'limit' => $limit,
-			'offset' => $offset,
-		];
-		$this->toCache(key: $cacheKey, value: $payload);
+		$url = sprintf(
+			'%s/rest/wikis/%s/spaces/%s/pages?media=xml&number=%d&start=%d',
+			$base,
+			$wiki,
+			rawurlencode($space),
+			$query['limit'],
+			$query['offset']
+		);
+		$payload['results'] = $this->parsePageSummaries(xml: $this->fetchXml(url: $url), space: $space);
+		$payload['total'] = count($payload['results']);
+		$this->toCache(key: $query['cacheKey'], value: $payload);
 		return $payload;
-	}//end getPages()
+	}//end fetchedPages()
 
 	/**
 	 * Fetch rendered HTML for a single page.
@@ -373,14 +445,10 @@ class XWikiService {
 	 *
 	 * @return array<string, mixed> {title, content, url, modified, space, id}
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function getPageContent(string $wiki, string $page): array {
-		$wiki = trim($wiki);
-		if ($wiki === '') {
-			$wiki = 'xwiki';
-		}
-
+		$wiki = $this->wikiIdOf(wiki: $wiki);
 		$page = trim($page);
 
 		$cacheKey = $this->makeCacheKey(bucket: 'page', parts: [$wiki, $page]);
@@ -391,45 +459,58 @@ class XWikiService {
 
 		$base = $this->getBaseUrl();
 		if ($base === '' || $page === '') {
-			return [
-				'title' => '',
-				'content' => '',
-				'url' => '',
-				'modified' => '',
-				'space' => '',
-				'id' => '',
-			];
+			return self::NO_PAGE;
 		}
 
-		$segments = array_map('rawurlencode', explode('.', $page));
-		$space = (string)($segments[0] ?? '');
-		$pageName = (string)end($segments);
-		$spacesPath = implode('/spaces/', array_slice($segments, 0, -1));
-		$url = sprintf('%s/rest/wikis/%s/spaces/%s/pages/%s?media=xml', $base, rawurlencode($wiki), $spacesPath, $pageName);
-		$xml = $this->fetchXml(url: $url);
-		$page = $this->parsePage(xml: $xml);
-
-		// Fetch rendered HTML separately via the bin/view URL and extract the
-		// body content (#xwikicontent) so the proxy can return a sanitised HTML
-		// fragment for inline viewing.
-		$viewUrl = sprintf('%s/bin/view/%s', $base, implode('/', $segments));
-		$rawHtml = $this->fetchRaw(url: $viewUrl);
-		$content = $this->extractAndSanitiseHtml(html: $rawHtml);
-
-		$page['content'] = $content;
-		$page['url'] = $viewUrl;
-		$page['space'] = $space;
-
-		$this->toCache(key: $cacheKey, value: $page);
-		return $page;
+		$result = $this->loadPage(base: $base, ref: new XWikiPageRef(wiki: $wiki, page: $page));
+		$this->toCache(key: $cacheKey, value: $result);
+		return $result;
 	}//end getPageContent()
+
+	/**
+	 * The trimmed wiki id, "xwiki" when none is given.
+	 *
+	 * @param string $wiki The requested wiki id.
+	 *
+	 * @return string The wiki id.
+	 */
+	private function wikiIdOf(string $wiki): string {
+		$wiki = trim($wiki);
+		if ($wiki === '') {
+			return 'xwiki';
+		}
+
+		return $wiki;
+	}//end wikiIdOf()
+
+	/**
+	 * Fetch a page's REST record and its rendered body.
+	 *
+	 * The rendered HTML is fetched separately via the bin/view URL and its body
+	 * content (#xwikicontent) extracted, so the proxy can return a sanitised
+	 * HTML fragment for inline viewing.
+	 *
+	 * @param string       $base The xWiki base URL.
+	 * @param XWikiPageRef $ref  The page.
+	 *
+	 * @return array<string, mixed> {title, content, url, modified, space, id}
+	 */
+	private function loadPage(string $base, XWikiPageRef $ref): array {
+		$page = $this->parsePage(xml: $this->fetchXml(url: $base . $ref->restPath()));
+
+		$viewUrl = $base . $ref->viewPath();
+		$page['content'] = $this->extractAndSanitiseHtml(html: $this->fetchRaw(url: $viewUrl));
+		$page['url'] = $viewUrl;
+		$page['space'] = $ref->space();
+		return $page;
+	}//end loadPage()
 
 	/**
 	 * Check xWiki status / availability.
 	 *
 	 * @return array<string, mixed> {available: bool, version: string, baseUrl: string, source: string}
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function getStatus(): array {
 		$base = $this->getBaseUrl();
@@ -443,14 +524,20 @@ class XWikiService {
 		}
 
 		if ($this->availabilityMemo !== null) {
-			return [
-				'available' => $this->availabilityMemo,
-				'version' => '',
-				'baseUrl' => $base,
-				'source' => $this->getInstanceSource(),
-			];
+			return $this->statusOf(base: $base, version: '');
 		}
 
+		return $this->statusOf(base: $base, version: $this->probeVersion(base: $base));
+	}//end getStatus()
+
+	/**
+	 * Probe the xWiki REST root once and remember whether it answered.
+	 *
+	 * @param string $base The xWiki base URL.
+	 *
+	 * @return string The reported version, or '' when none was read.
+	 */
+	private function probeVersion(string $base): string {
 		try {
 			$client = $this->clientService->newClient();
 			$response = $client->get($base . '/rest', ['timeout' => 5, 'connect_timeout' => 3]);
@@ -461,23 +548,30 @@ class XWikiService {
 			}
 
 			$this->availabilityMemo = true;
-			return [
-				'available' => true,
-				'version' => $version,
-				'baseUrl' => $base,
-				'source' => $this->getInstanceSource(),
-			];
+			return $version;
 		} catch (Throwable $e) {
 			$this->logger->debug('xWiki status check failed', ['exception' => $e]);
 			$this->availabilityMemo = false;
-			return [
-				'available' => false,
-				'version' => '',
-				'baseUrl' => $base,
-				'source' => $this->getInstanceSource(),
-			];
+			return '';
 		}//end try
-	}//end getStatus()
+	}//end probeVersion()
+
+	/**
+	 * The status of a configured xWiki, by the remembered availability.
+	 *
+	 * @param string $base    The xWiki base URL.
+	 * @param string $version The reported version, or ''.
+	 *
+	 * @return array<string, mixed> {available: bool, version: string, baseUrl: string, source: string}
+	 */
+	private function statusOf(string $base, string $version): array {
+		return [
+			'available' => $this->availabilityMemo,
+			'version' => $version,
+			'baseUrl' => $base,
+			'source' => $this->getInstanceSource(),
+		];
+	}//end statusOf()
 
 	/**
 	 * Resolve the xWiki base URL from the `OCA\Xwiki` app's SettingsManager.
@@ -530,7 +624,7 @@ class XWikiService {
 	 * @return int
 	 */
 	private function getCacheTtl(): int {
-		$raw = (int)$this->appConfig->getValueString(Application::APP_ID, 'xwiki_cache_ttl', (string)self::DEFAULT_CACHE_TTL);
+		$raw = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, 'xwiki_cache_ttl', (string)self::DEFAULT_CACHE_TTL);
 		if ($raw > 0) {
 			return $raw;
 		}
@@ -604,21 +698,7 @@ class XWikiService {
 	 * @return string
 	 */
 	private function fetchXml(string $url): string {
-		try {
-			$client = $this->clientService->newClient();
-			$response = $client->get(
-				$url,
-				[
-					'timeout' => 10,
-					'connect_timeout' => 3,
-					'headers' => ['Accept' => 'application/xml'],
-				]
-			);
-			return (string)$response->getBody();
-		} catch (Throwable $e) {
-			$this->logger->debug('xWiki XML fetch failed', ['url' => $url, 'exception' => $e]);
-			return '';
-		}
+		return $this->fetchBody(url: $url, kind: 'XML');
 	}//end fetchXml()
 
 	/**
@@ -629,21 +709,35 @@ class XWikiService {
 	 * @return string
 	 */
 	private function fetchRaw(string $url): string {
+		return $this->fetchBody(url: $url, kind: 'raw');
+	}//end fetchRaw()
+
+	/**
+	 * GET an xWiki resource body; '' on failure, logged at debug.
+	 *
+	 * @param string $url  Absolute URL.
+	 * @param string $kind XML (asks for application/xml) or raw.
+	 *
+	 * @return string The body.
+	 */
+	private function fetchBody(string $url, string $kind): string {
+		$options = [
+			'timeout' => 10,
+			'connect_timeout' => 3,
+		];
+		if ($kind === 'XML') {
+			$options['headers'] = ['Accept' => 'application/xml'];
+		}
+
 		try {
 			$client = $this->clientService->newClient();
-			$response = $client->get(
-				$url,
-				[
-					'timeout' => 10,
-					'connect_timeout' => 3,
-				]
-			);
+			$response = $client->get($url, $options);
 			return (string)$response->getBody();
 		} catch (Throwable $e) {
-			$this->logger->debug('xWiki raw fetch failed', ['url' => $url, 'exception' => $e]);
+			$this->logger->debug('xWiki ' . $kind . ' fetch failed', ['url' => $url, 'exception' => $e]);
 			return '';
 		}
-	}//end fetchRaw()
+	}//end fetchBody()
 
 	/**
 	 * Parse xWiki searchResult XML into array list.
@@ -652,29 +746,20 @@ class XWikiService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function parseSearchResults(string $xml): array {
-		if ($xml === '') {
+		$doc = $this->loadXml(xml: $xml);
+		if ($doc === null) {
 			return [];
 		}
 
-		$previous = libxml_use_internal_errors(true);
-		try {
-			$doc = simplexml_load_string($xml);
-			if ($doc === false) {
-				return [];
-			}
-
-			$results = [];
-			foreach ($doc->xpath('//searchResult') as $node) {
-				$results[] = $this->resultNodeToArray(node: $node);
-			}
-
-			return $results;
-		} finally {
-			libxml_use_internal_errors($previous);
+		$results = [];
+		foreach ($doc->xpath('//searchResult') as $node) {
+			$results[] = $this->resultNodeToArray(node: $node);
 		}
+
+		return $results;
 	}//end parseSearchResults()
 
 	/**
@@ -685,37 +770,28 @@ class XWikiService {
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function parsePageSummaries(string $xml, string $space): array {
-		if ($xml === '') {
+		$doc = $this->loadXml(xml: $xml);
+		if ($doc === null) {
 			return [];
 		}
 
-		$previous = libxml_use_internal_errors(true);
-		try {
-			$doc = simplexml_load_string($xml);
-			if ($doc === false) {
-				return [];
-			}
+		$results = [];
+		foreach ($doc->xpath('//pageSummary') as $node) {
+			$item = [
+				'id' => (string)($node->id ?? ''),
+				'title' => (string)($node->title ?? ''),
+				'space' => $space,
+				'modified' => (string)($node->modified ?? ''),
+				'url' => (string)($node->xwikiAbsoluteUrl ?? ''),
+				'tags' => [],
+			];
+			$results[] = $item;
+		}
 
-			$results = [];
-			foreach ($doc->xpath('//pageSummary') as $node) {
-				$item = [
-					'id' => (string)($node->id ?? ''),
-					'title' => (string)($node->title ?? ''),
-					'space' => $space,
-					'modified' => (string)($node->modified ?? ''),
-					'url' => (string)($node->xwikiAbsoluteUrl ?? ''),
-					'tags' => [],
-				];
-				$results[] = $item;
-			}
-
-			return $results;
-		} finally {
-			libxml_use_internal_errors($previous);
-		}//end try
+		return $results;
 	}//end parsePageSummaries()
 
 	/**
@@ -725,32 +801,48 @@ class XWikiService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function parsePage(string $xml): array {
-		if ($xml === '') {
+		$doc = $this->loadXml(xml: $xml);
+		if ($doc === null) {
 			return ['title' => '', 'modified' => '', 'id' => '', 'space' => '', 'content' => '', 'url' => ''];
+		}
+
+		return [
+			'id' => (string)($doc->id ?? ''),
+			'title' => (string)($doc->title ?? ''),
+			'modified' => (string)($doc->modified ?? ''),
+			'space' => (string)($doc->space ?? ''),
+			'content' => '',
+			'url' => (string)($doc->xwikiAbsoluteUrl ?? ''),
+		];
+	}//end parsePage()
+
+	/**
+	 * Parse an XML body with libxml errors kept internal.
+	 *
+	 * @param string $xml Raw XML.
+	 *
+	 * @return \SimpleXMLElement|null The document, or null for an empty or unparsable body.
+	 */
+	private function loadXml(string $xml): ?\SimpleXMLElement {
+		if ($xml === '') {
+			return null;
 		}
 
 		$previous = libxml_use_internal_errors(true);
 		try {
 			$doc = simplexml_load_string($xml);
 			if ($doc === false) {
-				return ['title' => '', 'modified' => '', 'id' => '', 'space' => '', 'content' => '', 'url' => ''];
+				return null;
 			}
 
-			return [
-				'id' => (string)($doc->id ?? ''),
-				'title' => (string)($doc->title ?? ''),
-				'modified' => (string)($doc->modified ?? ''),
-				'space' => (string)($doc->space ?? ''),
-				'content' => '',
-				'url' => (string)($doc->xwikiAbsoluteUrl ?? ''),
-			];
+			return $doc;
 		} finally {
 			libxml_use_internal_errors($previous);
 		}
-	}//end parsePage()
+	}//end loadXml()
 
 	/**
 	 * Extract xwikicontent and sanitise HTML (strip script/style/event handlers).
@@ -759,7 +851,7 @@ class XWikiService {
 	 *
 	 * @return string Sanitised HTML fragment.
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function extractAndSanitiseHtml(string $html): string {
 		if ($html === '') {
@@ -785,7 +877,7 @@ class XWikiService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+	 * @spec openspec/changes/archive/2026-06-14-xwiki-integration/tasks.md#1.1
 	 */
 	public function sanitiseHtml(string $html): string {
 		if ($html === '') {

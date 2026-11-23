@@ -35,26 +35,21 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md
+ * @spec openspec/specs/navigation-ia/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Settings;
 
+use OCA\Pipelinq\Kernel\Contracts\MenuStructureInterface;
+
 /**
  * The structure settings: their keys, their values and how a stored value reads.
  *
- * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md
+ * @spec openspec/specs/navigation-ia/spec.md
  */
-class MenuStructure {
-
-	/**
-	 * The appconfig key, and the initial-state key the frontend reads.
-	 *
-	 * @var string
-	 */
-	public const KEY = 'menu_structure';
+class MenuStructure implements MenuStructureInterface {
 
 	/**
 	 * The default structure.
@@ -69,13 +64,6 @@ class MenuStructure {
 	 * @var string
 	 */
 	public const FULL = 'full';
-
-	/**
-	 * The appconfig key that lists the modules shown in the simple menu.
-	 *
-	 * @var string
-	 */
-	public const MODULES_KEY = 'menu_modules';
 
 	/**
 	 * The modules an administrator can switch into the simple menu.
@@ -105,7 +93,7 @@ class MenuStructure {
 	 *
 	 * @return string `simple` or `full`.
 	 *
-	 * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+	 * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-101
 	 */
 	public function normalise(string $stored): string {
 		if (strtolower(trim($stored)) === self::FULL) {
@@ -126,7 +114,7 @@ class MenuStructure {
 	 *
 	 * @return string The known module keys, comma separated. Empty for none.
 	 *
-	 * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-104
+	 * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-104
 	 */
 	public function normaliseModules(string $stored): string {
 		$wanted = array_map(

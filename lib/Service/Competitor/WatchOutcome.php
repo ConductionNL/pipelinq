@@ -27,7 +27,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ namespace OCA\Pipelinq\Service\Competitor;
 /**
  * The result of one watch run.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
  */
 final class WatchOutcome {
 
@@ -56,7 +56,7 @@ final class WatchOutcome {
 	 * @param array<int, array<string, mixed>> $items What the watch saw.
 	 * @param array<string, mixed> $state What to remember for the next run.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	public function __construct(
 		public readonly string $outcome,
@@ -74,7 +74,7 @@ final class WatchOutcome {
 	 *
 	 * @return self
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	public static function seen(array $items, array $state = []): self {
 		return new self(outcome: self::OK, items: $items, state: $state);
@@ -88,7 +88,7 @@ final class WatchOutcome {
 	 *
 	 * @return self
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	public static function failed(string $outcome, string $reason): self {
 		return new self(outcome: $outcome, reason: $reason);
@@ -99,7 +99,7 @@ final class WatchOutcome {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
 	public function succeeded(): bool {
 		return ($this->outcome === self::OK);

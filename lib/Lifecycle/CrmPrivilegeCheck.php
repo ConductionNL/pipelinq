@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use OCP\IUserSession;
  * A caller without a session (no user, or one without a UID) is answered 401, a caller without the CRM
  * privilege ({@see ObjectOwnerAccessPolicy::isPrivileged()}) 403.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+ * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
  */
 class CrmPrivilegeCheck {
 	/**
@@ -57,7 +57,7 @@ class CrmPrivilegeCheck {
 	 *
 	 * @return JSONResponse|null
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function refusal(): ?JSONResponse {
 		return $this->refusalWith(unauthenticated: ['error' => 'Authentication required'], forbidden: ['error' => 'Forbidden']);
@@ -70,7 +70,7 @@ class CrmPrivilegeCheck {
 	 *
 	 * @return JSONResponse|null
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function translatedRefusal(IL10N $l10n): ?JSONResponse {
 		return $this->refusalWith(
@@ -84,7 +84,7 @@ class CrmPrivilegeCheck {
 	 *
 	 * @return JSONResponse|null
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function refusalAsMessage(): ?JSONResponse {
 		return $this->refusalWith(unauthenticated: ['message' => 'Authentication required'], forbidden: ['message' => 'Forbidden']);
@@ -98,7 +98,7 @@ class CrmPrivilegeCheck {
 	 *
 	 * @return JSONResponse|null
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function refusalWith(array $unauthenticated, array $forbidden): ?JSONResponse {
 		$uid = $this->actingUserId();
@@ -118,7 +118,7 @@ class CrmPrivilegeCheck {
 	 *
 	 * @return string The UID, or an empty string without a session.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 * @spec openspec/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
 	 */
 	public function actingUserId(): string {
 		$user = $this->userSession->getUser();

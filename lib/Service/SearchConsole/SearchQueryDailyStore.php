@@ -20,14 +20,17 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\SearchConsole;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -36,9 +39,10 @@ use Throwable;
 /**
  * SearchQueryDailyStore: idempotent upsert of imported rows.
  *
- * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+ * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
  */
 class SearchQueryDailyStore {
+	use ContainerObjectServiceLookup;
 
 	/**
 	 * The `searchQueryDaily` schema slug.
@@ -61,7 +65,7 @@ class SearchQueryDailyStore {
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -79,7 +83,7 @@ class SearchQueryDailyStore {
 	 *
 	 * @return bool True when saved.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
+	 * @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	public function upsert(string $property, array $row, string $importedAt): bool {
 		$objectService = $this->getObjectService();
@@ -87,18 +91,19 @@ class SearchQueryDailyStore {
 			return false;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', self::DEFAULT_REGISTER_SLUG);
-		$schema = $this->appConfig->getValueString(Application::APP_ID, (self::SCHEMA . '_schema'), self::SCHEMA);
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', self::DEFAULT_REGISTER_SLUG);
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, (self::SCHEMA . '_schema'), self::SCHEMA);
 		$identity = ['property' => $property, 'date' => $row['date'], 'query' => $row['query'], 'page' => $row['page']];
-		$existingId = $this->findExistingId(objectService: $objectService, register: $register, schema: $schema, identity: $identity);
+		$existingId = $this->findExistingId(objectService: $objectService, filters: (['register' => $register, 'schema' => $schema] + $identity));
 		$payload = ($identity + $row + ['source' => 'gsc', 'importedAt' => $importedAt]);
 
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schema,
-				uuid: $existingId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $existingId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -114,16 +119,14 @@ class SearchQueryDailyStore {
 	 * The id of the object already holding this identity, or null.
 	 *
 	 * @param object $objectService The OpenRegister object service.
-	 * @param string $register The register slug.
-	 * @param string $schema The schema slug.
-	 * @param array<string, mixed> $identity property, date, query, page.
+	 * @param array<string, mixed> $filters The register and schema slugs, then property, date, query, page.
 	 *
 	 * @return string|null The uuid, or null when absent or unreadable.
 	 */
-	private function findExistingId(object $objectService, string $register, string $schema, array $identity): ?string {
+	private function findExistingId(object $objectService, array $filters): ?string {
 		try {
 			$found = $objectService->findAll(
-				config: ['filters' => (['register' => $register, 'schema' => $schema] + $identity), 'limit' => 1],
+				config: ['filters' => $filters, 'limit' => 1],
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -176,11 +179,6 @@ class SearchQueryDailyStore {
 	 * @return object|null ObjectService or null when OR is unavailable.
 	 */
 	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning('SearchQueryDailyStore: OpenRegister unavailable', ['exception' => $e->getMessage()]);
-			return null;
-		}
+		return $this->objectServiceOrNull(failure: 'SearchQueryDailyStore: OpenRegister unavailable', errorKey: 'exception');
 	}//end getObjectService()
 }//end class

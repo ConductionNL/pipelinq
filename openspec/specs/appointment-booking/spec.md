@@ -767,3 +767,96 @@ column MUST show the label from the schema's `x-enum-labels` ("Active", not
 - **GIVEN** a service with `bookableOnline` false
 - **WHEN** a user opens the services list
 - **THEN** the Online column MUST read "No"
+
+### Requirement: Services and resources share one page with tabs (REQ-SRG-001)
+
+The app SHALL show services and resources on one page with the tabs Services and Resources, each carrying its count. The routes `/services` and `/resources` SHALL open that page on the matching tab. The services tab SHALL offer the views All, Bookable online, Draft and Archived with counts, and the columns Service (name with the description beneath), Duration, Buffer before / after, Price ("No price set" when empty), Online, Booked on (the required resource types) and Status, and SHALL show the footnote that a service is booked on the resources whose type and skills it asks for and that changing a duration clears the cached free slots.
+
+#### Scenario: Opening resources from the menu
+- GIVEN an administrator in the Set up the app menu
+- WHEN they click Resources
+- THEN the Services and resources page opens on the Resources tab at `/resources`
+
+#### Scenario: Views with counts
+- GIVEN seven services, five bookable online, one draft
+- WHEN the services tab loads
+- THEN the views read All 7, Bookable online 5, Draft 1, Archived 0
+
+### Requirement: Each service shows the resources that match it (REQ-SRG-002)
+
+The system SHALL compute, with the same eligibility rule the booking path uses, which active and bookable resources can do a service, and SHALL show per service in the list a line naming its required skills and resource types followed by the number of matching resources, and on the service page a list Resources that can do this with each resource's name, type and maximum concurrent bookings or skills. A service that no resource matches SHALL show "No resource matches" as a warning.
+
+#### Scenario: A passport service with four matching resources
+- GIVEN the service "Passport or ID card application" asks for skill civil affairs and a room
+- AND four active, bookable resources meet that
+- WHEN the services list loads
+- THEN its line reads "Skill civil affairs, a desk · 4 resources match"
+
+#### Scenario: Nothing matches
+- GIVEN a draft service that asks for skill registrar and no resource has it
+- WHEN the service page opens
+- THEN Resources that can do this shows "No resource matches" as a warning
+
+### Requirement: A service page shows how busy the service is (REQ-SRG-003)
+
+The service page SHALL show a Bookings figure with the number of bookings for the service that start in the current week and the number of no-shows in the current month, and a list Appointments for this service with its upcoming bookings (date and time, customer, resource, status), each linking to its booking.
+
+#### Scenario: Bookings this week
+- GIVEN 38 bookings for "Passport application" this week and 4 no-shows this month
+- WHEN the service page opens
+- THEN the figure reads 38 with "this week, 4 no-shows this month"
+
+### Requirement: A resource page shows how much of its bookable time is booked (REQ-SRG-004)
+
+The resource page SHALL show a This week figure with the number of bookings assigned to the resource in the current week and the share of its bookable time they fill, where bookable time is its working hours this week minus its vacations. A resource with no bookable time this week SHALL show the count without a share.
+
+#### Scenario: A desk clerk's week
+- GIVEN Fatma Yildiz works 33 hours this week and her 22 bookings fill 24.4 of them
+- WHEN her resource page opens
+- THEN the figure reads 22 with "bookings, 74% of the bookable time"
+
+#### Scenario: On holiday all week
+- GIVEN a resource on vacation for the whole week
+- WHEN its page opens
+- THEN the figure shows the count and no percentage
+
+### Requirement: A service's composition is edited in place and can name products (REQ-BSP-001)
+
+ServiceDetail SHALL let an administrator edit the multi-step composition in
+its own card, with Save and Cancel, without opening the general Edit dialog.
+A step SHALL be able to name a product from the catalogue, with a quantity
+and a unit (hour, day, month, year or piece). Saving SHALL expire the cached
+availability as every service save does. Service information and Policies
+SHALL sit side by side on a wide screen.
+
+#### Scenario: An administrator composes the OpenWoo app service
+
+- GIVEN products "Implementation", "Hosting" and "SLA" in the catalogue
+- WHEN the administrator chooses Edit steps on the OpenWoo app service and adds three steps: Implementation 8 hours, Hosting 1 month, SLA 1 year
+- AND saves the steps
+- THEN the composition shows the three products with "8 hours", "1 months" and "1 years"
+
+#### Scenario: Cancel leaves the composition as it was
+
+- GIVEN a service with two steps
+- WHEN the administrator edits the steps and chooses Cancel
+- THEN the service still has its two steps
+
+### Requirement: The booking page works in tabs and keeps no audit table (REQ-BSP-002)
+
+BookingDetail SHALL show its timeline, resource assignments, notes and
+documents as tabs inside the page grid. Notes SHALL use the notes leaf. The
+page SHALL NOT render its own audit table; the timeline SHALL list the
+booking's status changes.
+
+#### Scenario: A front desk employee adds a note to a booking
+
+- GIVEN a confirmed booking
+- WHEN the employee opens the Notes tab and adds a note
+- THEN the note is stored through the notes leaf, as on a lead
+
+#### Scenario: The timeline shows a status change
+
+- GIVEN a booking whose status went from pending deposit to confirmed
+- WHEN the employee opens the Timeline tab
+- THEN it lists "Status: Confirmed" at the moment of the change

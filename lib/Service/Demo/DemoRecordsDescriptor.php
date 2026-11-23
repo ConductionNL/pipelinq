@@ -19,14 +19,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+ * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Demo;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\App\IAppManager;
 use Psr\Log\LoggerInterface;
 
@@ -34,7 +34,7 @@ use Psr\Log\LoggerInterface;
  * The example records descriptor as stored, and as it is imported: with its
  * user fields pointed at existing users.
  *
- * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+ * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  */
 class DemoRecordsDescriptor {
 	/**
@@ -63,10 +63,10 @@ class DemoRecordsDescriptor {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function load(): ?array {
-		$path = $this->appManager->getAppPath(Application::APP_ID) . self::DESCRIPTOR;
+		$path = $this->appManager->getAppPath(AppIdentity::APP_ID) . self::DESCRIPTOR;
 		if (is_readable($path) === false) {
 			$this->logger->error('Pipelinq example records descriptor missing', ['path' => $path]);
 			return null;
@@ -87,7 +87,7 @@ class DemoRecordsDescriptor {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function forImport(): ?array {
 		$data = $this->load();
@@ -104,9 +104,9 @@ class DemoRecordsDescriptor {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function appVersion(): string {
-		return $this->appManager->getAppVersion(Application::APP_ID);
+		return $this->appManager->getAppVersion(AppIdentity::APP_ID);
 	}//end appVersion()
 }//end class

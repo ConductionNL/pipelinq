@@ -40,9 +40,9 @@
                 "register": "reg-1",
                 "schema": "schema-client",
                 "uuid": "c-1",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -62,9 +62,9 @@
                 "register": "reg-1",
                 "schema": "schema-client",
                 "uuid": "77",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -85,9 +85,9 @@
                 "register": "reg-1",
                 "schema": "schema-client",
                 "uuid": "c-4",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -108,9 +108,9 @@
                 "register": "reg-1",
                 "schema": "schema-client",
                 "uuid": "c-5",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -149,9 +149,9 @@
                 "register": "reg-1",
                 "schema": "schema-contact",
                 "uuid": "p-1",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -171,9 +171,9 @@
                 "register": "reg-1",
                 "schema": "schema-contact",
                 "uuid": "p-2",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -222,9 +222,9 @@
                 "register": "reg-1",
                 "schema": "schema-client",
                 "uuid": "c-1",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -253,9 +253,9 @@
                 "register": "reg-1",
                 "schema": "schema-client",
                 "uuid": "77",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -276,9 +276,9 @@
                 "register": "reg-1",
                 "schema": "schema-client",
                 "uuid": "c-4",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -299,9 +299,9 @@
                 "register": "reg-1",
                 "schema": "schema-client",
                 "uuid": "c-5",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -340,9 +340,9 @@
                 "register": "reg-1",
                 "schema": "schema-contact",
                 "uuid": "p-1",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -362,9 +362,9 @@
                 "register": "reg-1",
                 "schema": "schema-contact",
                 "uuid": "p-2",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -755,9 +755,9 @@
                 "register": "reg-1",
                 "schema": "schema-client",
                 "uuid": "c-1",
+                "currentUser": "user:zed",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:zed"
+                "_multitenancy": false
             }
         },
         {
@@ -815,9 +815,9 @@
                 "register": "reg-1",
                 "schema": "schema-contact",
                 "uuid": "p-1",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -837,9 +837,9 @@
                 "register": "reg-1",
                 "schema": "schema-contact",
                 "uuid": "p-2",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -905,9 +905,9 @@
                 "register": "reg-1",
                 "schema": "schema-contact",
                 "uuid": "p-1",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {
@@ -927,9 +927,9 @@
                 "register": "reg-1",
                 "schema": "schema-contact",
                 "uuid": "p-2",
+                "currentUser": "user:root",
                 "_rbac": false,
-                "_multitenancy": false,
-                "currentUser": "user:root"
+                "_multitenancy": false
             }
         },
         {

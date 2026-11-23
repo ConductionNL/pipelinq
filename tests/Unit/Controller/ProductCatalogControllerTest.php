@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\ProductCatalogController;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\ProductCatalogService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -79,11 +80,19 @@ class ProductCatalogControllerTest extends TestCase {
 	 */
 	private IUserSession $session;
 
+	/**
+	 * Reads the client with the caller's rights.
+	 *
+	 * @var CallerObjectReader&MockObject
+	 */
+	private CallerObjectReader $reader;
+
 	protected function setUp(): void {
 		$this->request = $this->createMock(IRequest::class);
 		$this->service = $this->createMock(ProductCatalogService::class);
 		$this->policy = $this->createMock(PosAccessPolicy::class);
 		$this->session = $this->createMock(IUserSession::class);
+		$this->reader = $this->createMock(CallerObjectReader::class);
 
 		$this->controller = new ProductCatalogController($this->request,
 			$this->service,
@@ -91,6 +100,7 @@ class ProductCatalogControllerTest extends TestCase {
 			$this->policy,
 			$this->l10n(),
 			$this->createMock(LoggerInterface::class),
+			$this->reader,
 		);
 	}//end setUp()
 
@@ -181,6 +191,7 @@ class ProductCatalogControllerTest extends TestCase {
 			$policy,
 			$this->l10n(),
 			$this->createMock(LoggerInterface::class),
+			$this->reader,
 		);
 	}//end controllerWithRealService()
 
@@ -353,6 +364,62 @@ class ProductCatalogControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame(8.0, $response->getData()['unitPrice']);
 	}//end testResolvePriceForwardsQuantityAndVariantSku()
+
+	/**
+	 * A client id is read with the caller's rights and handed to the resolver with the currency.
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceReadsTheClientAndPassesItWithTheCurrency(): void {
+		$this->loginAs();
+		$this->withParams(['product' => ['id' => 'p-1'], 'quantity' => 2, 'clientId' => ' c-9 ', 'currency' => 'eur']);
+		$client = ['id' => 'c-9', 'segment' => 'public-sector'];
+		$this->reader->expects($this->once())->method('read')->with('c-9', 'client_schema')->willReturn($client);
+
+		$this->service->expects($this->once())
+			->method('resolveEffectivePrice')
+			->with(['id' => 'p-1'], 2.0, null, $client, 'eur')
+			->willReturn(['unitPrice' => 95.0, 'source' => 'price-list', 'priceListTitle' => 'Overheid 2027']);
+
+		$response = $this->controller->resolvePrice();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('Overheid 2027', $response->getData()['priceListTitle']);
+	}//end testResolvePriceReadsTheClientAndPassesItWithTheCurrency()
+
+	/**
+	 * A client the caller cannot read is not found, and nothing is priced.
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceRefusesAClientTheCallerCannotRead(): void {
+		$this->loginAs();
+		$this->withParams(['product' => ['id' => 'p-1'], 'quantity' => 1, 'clientId' => 'c-other']);
+		$this->reader->method('read')->willReturn(null);
+		$this->service->expects($this->never())->method('resolveEffectivePrice');
+
+		$response = $this->controller->resolvePrice();
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertSame(['error' => 'Client not found'], $response->getData());
+	}//end testResolvePriceRefusesAClientTheCallerCannotRead()
+
+	/**
+	 * Without a client id no client is read and the resolver gets none.
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceWithoutAClientReadsNone(): void {
+		$this->loginAs();
+		$this->withParams(['product' => ['unitPrice' => 5.0], 'quantity' => 1, 'clientId' => '']);
+		$this->reader->expects($this->never())->method('read');
+		$this->service->expects($this->once())
+			->method('resolveEffectivePrice')
+			->with(['unitPrice' => 5.0], 1.0, null, null, null)
+			->willReturn(['unitPrice' => 5.0]);
+
+		$this->assertSame(Http::STATUS_OK, $this->controller->resolvePrice()->getStatus());
+	}//end testResolvePriceWithoutAClientReadsNone()
 
 	// ---- resolvePrice (money contract, real service) ------------------------
 

@@ -775,6 +775,32 @@ the earlier contact moments "Eerder contact". Without a call the cards SHALL kee
 - **WHEN** the agent takes a call
 - **THEN** the middle column opens with "Dit contactmoment" above "Openstaande zaken"
 
+### Requirement: The in-call columns are drawn at the board's widths
+
+In a call the contact centre page SHALL draw its three columns as board PqWerkplekKlant does: 332px, 415px and 332px wide on the 1120px content width. Outside a call the page SHALL keep its twelve equal shares.
+
+#### Scenario: A call is on
+- **GIVEN** the simple profile's contact centre page while `callActive` holds
+- **THEN** "Wie is het" is 332px wide, "Dit contactmoment" and "Openstaande zaken" 415px, the knowledge base, tasks and earlier contact 332px
+
+#### Scenario: No call
+- **GIVEN** the same page without a call
+- **THEN** its cards keep the twelve shares
+
+### Requirement: The in-call lists are rows
+
+While a call is on, the client's open matters, the tasks and callback requests and the earlier contact SHALL each be
+drawn as rows with a title, a meta line and, for matters and tasks, a pill, without a table head. A handled matter
+SHALL read "Klaar", an open one with an SLA deadline "Uiterlijk {date}". The earlier contact SHALL link to all the
+client's contact moments. While a call is on the header SHALL NOT offer "Contact vastleggen", since the page carries
+its own contact form.
+
+#### Scenario: Board PqWerkplekKlant
+
+- **WHEN** the agent takes a call from a known client with an open request due 11 October
+- **THEN** "Openstaande zaken" shows the request as a row with "Uiterlijk 11 okt"
+- **AND** the header shows "Beëindigen en afronden" but not "Contact vastleggen"
+
 ## Notes
 
 ### Current Implementation Status

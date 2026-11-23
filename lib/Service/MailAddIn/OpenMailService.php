@@ -30,6 +30,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
+use OCA\Pipelinq\Kernel\Contracts\OpenMailServiceInterface;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\ContactSyncService;
 use OCA\Pipelinq\Service\EmailMatchService;
@@ -41,7 +42,7 @@ use OutOfBoundsException;
  *
  * @spec openspec/changes/contact-moments-mail-add-in/specs/mail-add-in/spec.md
  */
-class OpenMailService {
+class OpenMailService implements OpenMailServiceInterface {
 	/**
 	 * How much of a mail's text is kept on the contact moment. A mail body
 	 * is personal data, so only the opening is stored.
@@ -98,6 +99,23 @@ class OpenMailService {
 			throw new InvalidArgumentException('email is not an email address');
 		}
 
+		$matches = $this->matchesFor(email: $email);
+		$organisation = null;
+		if ($matches === []) {
+			$organisation = $this->organisationFor(email: $email);
+		}
+
+		return ['matches' => $matches, 'organisation' => $organisation];
+	}//end lookup()
+
+	/**
+	 * The summaries of the records the address matches that the caller may read.
+	 *
+	 * @param string $email The normalised address.
+	 *
+	 * @return array<int, array<string, string>>
+	 */
+	private function matchesFor(string $email): array {
 		$matches = [];
 		foreach ($this->matcher->matchEmailToEntities(address: $email) as $match) {
 			$summary = $this->summary(entityType: (string)$match['entityType'], entityId: (string)$match['entityId']);
@@ -106,16 +124,25 @@ class OpenMailService {
 			}
 		}
 
-		$organisation = null;
-		if ($matches === []) {
-			$found = $this->matcher->matchDomainToOrganization(domain: substr($email, (strrpos($email, '@') + 1)));
-			if ($found !== null) {
-				$organisation = $this->summary(entityType: 'client', entityId: (string)$found['entityId']);
-			}
+		return $matches;
+	}//end matchesFor()
+
+	/**
+	 * The organisation the address's domain belongs to, as the caller may
+	 * read it; null when there is none.
+	 *
+	 * @param string $email The normalised address.
+	 *
+	 * @return array<string, string>|null
+	 */
+	private function organisationFor(string $email): ?array {
+		$found = $this->matcher->matchDomainToOrganization(domain: substr($email, (strrpos($email, '@') + 1)));
+		if ($found === null) {
+			return null;
 		}
 
-		return ['matches' => $matches, 'organisation' => $organisation];
-	}//end lookup()
+		return $this->summary(entityType: 'client', entityId: (string)$found['entityId']);
+	}//end organisationFor()
 
 	/**
 	 * Add a mail's sender as a contact person, the Nextcloud contact first.
@@ -134,14 +161,41 @@ class OpenMailService {
 	 * @spec openspec/changes/contact-moments-mail-add-in/specs/mail-add-in/spec.md#requirement-the-pane-shows-the-senders-record-or-adds-it-req-mai-002
 	 */
 	public function addSender(string $name, string $email, string $client = ''): array {
+		$form = self::senderForm(name: $name, email: $email);
+		return $this->contactSync->createWithContact(objectType: 'contact', form: $this->withSenderClient(form: $form, client: trim($client)));
+	}//end addSender()
+
+	/**
+	 * The trimmed name and lower-cased address of a sender.
+	 *
+	 * @param string $name  The sender's name.
+	 * @param string $email The sender's address.
+	 *
+	 * @return array{name: string, email: string} The form.
+	 *
+	 * @throws InvalidArgumentException When the name or the address is missing or malformed.
+	 */
+	private static function senderForm(string $name, string $email): array {
 		$name = trim($name);
 		$email = strtolower(trim($email));
 		if ($name === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
 			throw new InvalidArgumentException('A name and an email address are required.');
 		}
 
-		$form = ['name' => $name, 'email' => $email];
-		$client = trim($client);
+		return ['name' => $name, 'email' => $email];
+	}//end senderForm()
+
+	/**
+	 * The form with the client the sender belongs to, which the caller must be able to read.
+	 *
+	 * @param array<string, string> $form   The sender form.
+	 * @param string                $client The trimmed client id, or ''.
+	 *
+	 * @return array<string, string> The form.
+	 *
+	 * @throws OutOfBoundsException When the caller cannot read the client.
+	 */
+	private function withSenderClient(array $form, string $client): array {
 		if ($client !== '') {
 			if ($this->reader->read(id: $client, schemaKey: self::SCHEMA_KEYS['client']) === null) {
 				throw new OutOfBoundsException('client not found');
@@ -150,8 +204,8 @@ class OpenMailService {
 			$form['client'] = $client;
 		}
 
-		return $this->contactSync->createWithContact(objectType: 'contact', form: $form);
-	}//end addSender()
+		return $form;
+	}//end withSenderClient()
 
 	/**
 	 * Log a mail as an inbound contact moment on a contact or a client.
@@ -174,41 +228,99 @@ class OpenMailService {
 	 */
 	public function logMail(string $entityType, string $entityId, string $subject, string $sentAt, string $preview): array {
 		$payload = $this->contactMomentFor(entityType: $entityType, entityId: $entityId);
+		$mail = ['title' => $this->required(value: $subject, field: 'subject'), 'occurredAt' => $this->occurredAt(sentAt: $sentAt)];
 
-		$subject = trim($subject);
-		if ($subject === '') {
-			throw new InvalidArgumentException('subject is required');
+		return $this->savedMail(payload: $payload, mail: $mail + ['preview' => trim($preview)]);
+	}//end logMail()
+
+	/**
+	 * Save the mail as an inbound contact moment on the target's payload.
+	 *
+	 * @param array<string, string>                                    $payload The contact moment fields of the target.
+	 * @param array{title: string, occurredAt: string, preview: string} $mail    The trimmed subject, the sent-at instant and the trimmed preview.
+	 *
+	 * @return array<string, string> The contact moment's id and the fields written.
+	 */
+	private function savedMail(array $payload, array $mail): array {
+		$payload['title'] = mb_substr($mail['title'], 0, self::TITLE_MAX_CHARS);
+		$payload['channel'] = 'email';
+		$payload['direction'] = 'inbound';
+		$payload['occurredAt'] = $mail['occurredAt'];
+		$payload = self::withPreview(payload: $payload, preview: $mail['preview']);
+
+		$saved = $this->tickets->save(ticketType: TicketService::TYPE_CONTACTMOMENT, payload: $payload);
+		return (['id' => $this->uuidOf(saved: $saved)] + $payload);
+	}//end savedMail()
+
+	/**
+	 * The payload with the opening of the mail as its description, when there is one.
+	 *
+	 * @param array<string, string> $payload The contact moment fields.
+	 * @param string                $preview The trimmed opening of the mail's text.
+	 *
+	 * @return array<string, string> The payload.
+	 */
+	private static function withPreview(array $payload, string $preview): array {
+		if ($preview !== '') {
+			$payload['description'] = mb_substr($preview, 0, self::PREVIEW_MAX_CHARS);
 		}
 
-		$sentAt = trim($sentAt);
-		if ($sentAt === '') {
-			throw new InvalidArgumentException('sentAt is required');
+		return $payload;
+	}//end withPreview()
+
+	/**
+	 * A required value, trimmed.
+	 *
+	 * @param string $value The value.
+	 * @param string $field Its name, for the refusal.
+	 *
+	 * @return string
+	 *
+	 * @throws InvalidArgumentException When it is empty once trimmed.
+	 */
+	private function required(string $value, string $field): string {
+		$value = trim($value);
+		if ($value === '') {
+			throw new InvalidArgumentException($field . ' is required');
 		}
 
+		return $value;
+	}//end required()
+
+	/**
+	 * The moment a mail was sent, as an ATOM date and time.
+	 *
+	 * @param string $sentAt The sent-at text.
+	 *
+	 * @return string
+	 *
+	 * @throws InvalidArgumentException When it is empty or no date and time.
+	 */
+	private function occurredAt(string $sentAt): string {
+		$sentAt = $this->required(value: $sentAt, field: 'sentAt');
 		try {
 			$instant = new DateTimeImmutable($sentAt);
 		} catch (Exception $e) {
 			throw new InvalidArgumentException('sentAt is not a date and time');
 		}
 
-		$payload['title'] = mb_substr($subject, 0, self::TITLE_MAX_CHARS);
-		$payload['channel'] = 'email';
-		$payload['direction'] = 'inbound';
-		$payload['occurredAt'] = $instant->format(DateTimeInterface::ATOM);
-		$preview = trim($preview);
-		if ($preview !== '') {
-			$payload['description'] = mb_substr($preview, 0, self::PREVIEW_MAX_CHARS);
-		}
+		return $instant->format(DateTimeInterface::ATOM);
+	}//end occurredAt()
 
-		$saved = $this->tickets->save(ticketType: TicketService::TYPE_CONTACTMOMENT, payload: $payload);
-
-		$id = '';
+	/**
+	 * The saved object's uuid; '' when it has none.
+	 *
+	 * @param mixed $saved The saved object.
+	 *
+	 * @return string
+	 */
+	private function uuidOf($saved): string {
 		if (method_exists($saved, 'getUuid') === true) {
-			$id = (string)$saved->getUuid();
+			return (string)$saved->getUuid();
 		}
 
-		return (['id' => $id] + $payload);
-	}//end logMail()
+		return '';
+	}//end uuidOf()
 
 	/**
 	 * The start of a contact moment on a record the caller may read.
@@ -267,24 +379,48 @@ class OpenMailService {
 			return null;
 		}
 
-		$summary = [
-			'entityType' => $entityType,
-			'entityId' => $entityId,
-			'name' => (string)($record['name'] ?? ''),
-			'email' => (string)($record['email'] ?? ''),
-		];
+		$summary = ['entityType' => $entityType, 'entityId' => $entityId];
+		$summary += ['name' => (string)($record['name'] ?? ''), 'email' => (string)($record['email'] ?? '')];
+		return $this->withClient(summary: $summary, clientId: $this->contactsClient(summary: $summary, record: $record));
+	}//end summary()
 
-		// A contact person is shown with the client they belong to, when the
-		// caller may read that client too.
+	/**
+	 * The client a contact belongs to; '' for a client, or a contact without one.
+	 *
+	 * @param array<string, string> $summary The summary so far.
+	 * @param array<string, mixed>  $record  The record read.
+	 *
+	 * @return string
+	 */
+	private function contactsClient(array $summary, array $record): string {
 		$clientId = ($record['client'] ?? null);
-		if ($entityType === 'contact' && is_string($clientId) === true && $clientId !== '') {
-			$client = $this->reader->read(id: $clientId, schemaKey: self::SCHEMA_KEYS['client']);
-			if ($client !== null) {
-				$summary['clientId'] = $clientId;
-				$summary['clientName'] = (string)($client['name'] ?? '');
-			}
+		if ($summary['entityType'] !== 'contact' || is_string($clientId) === false) {
+			return '';
+		}
+
+		return $clientId;
+	}//end contactsClient()
+
+	/**
+	 * A contact person is shown with the client they belong to, when the
+	 * caller may read that client too.
+	 *
+	 * @param array<string, string> $summary  The summary so far.
+	 * @param string                $clientId The contact's client, '' for none.
+	 *
+	 * @return array<string, string>
+	 */
+	private function withClient(array $summary, string $clientId): array {
+		if ($clientId === '') {
+			return $summary;
+		}
+
+		$client = $this->reader->read(id: $clientId, schemaKey: self::SCHEMA_KEYS['client']);
+		if ($client !== null) {
+			$summary['clientId'] = $clientId;
+			$summary['clientName'] = (string)($client['name'] ?? '');
 		}
 
 		return $summary;
-	}//end summary()
+	}//end withClient()
 }//end class

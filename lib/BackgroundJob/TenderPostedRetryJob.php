@@ -28,14 +28,14 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\PosTenderService;
+use OCA\Pipelinq\Kernel\Contracts\PosTenderServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -44,7 +44,7 @@ use Throwable;
 /**
  * Retry job for un-posted tender CloudEvents.
  *
- * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+ * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
  */
 class TenderPostedRetryJob extends TimedJob {
 	/**
@@ -58,12 +58,12 @@ class TenderPostedRetryJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param PosTenderService $service The tender service.
+	 * @param PosTenderServiceInterface $service The tender service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private PosTenderService $service,
+		private PosTenderServiceInterface $service,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -79,46 +79,20 @@ class TenderPostedRetryJob extends TimedJob {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
 	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+	 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#REQ-PST-006
 	 */
 	protected function run(mixed $argument): void {
-		try {
-			$unposted = $this->service->listUnpostedTenders();
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq TenderPostedRetryJob: failed to list unposted tenders',
-				['exception' => $e->getMessage()]
-			);
-			return;
-		}
-
-		if ($unposted === []) {
+		$unposted = $this->unpostedTendersOrNull();
+		if (($unposted ?? []) === []) {
 			return;
 		}
 
 		$count = 0;
 		foreach ($unposted as $tender) {
-			$transactionUuid = (string)($tender['transaction'] ?? '');
-			if ($transactionUuid === '') {
-				continue;
+			if ($this->reEmitted(tender: $tender) === true) {
+				$count++;
 			}
-
-			try {
-				$eventId = $this->service->emitSingleTenderPosted(
-					transactionUuid: $transactionUuid,
-					transactionReference: '',
-					tender: $tender
-				);
-				if ($eventId !== '') {
-					$count++;
-				}
-			} catch (Throwable $e) {
-				$this->logger->info(
-					'Pipelinq TenderPostedRetryJob: per-tender re-emit failed (soft)',
-					['exception' => $e->getMessage()]
-				);
-			}
-		}//end foreach
+		}
 
 		if ($count > 0) {
 			$this->logger->info(
@@ -126,4 +100,50 @@ class TenderPostedRetryJob extends TimedJob {
 			);
 		}
 	}//end run()
+
+	/**
+	 * The unposted tenders, or null when they cannot be listed (logged).
+	 *
+	 * @return array<int, array<string, mixed>>|null The tenders.
+	 */
+	private function unpostedTendersOrNull(): ?array {
+		try {
+			return $this->service->listUnpostedTenders();
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq TenderPostedRetryJob: failed to list unposted tenders',
+				['exception' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end unpostedTendersOrNull()
+
+	/**
+	 * Re-emit one tender's CloudEvent; a tender without a transaction is skipped, a failure logged softly.
+	 *
+	 * @param array<string, mixed> $tender The tender.
+	 *
+	 * @return bool Whether an event was emitted.
+	 */
+	private function reEmitted(array $tender): bool {
+		$transactionUuid = (string)($tender['transaction'] ?? '');
+		if ($transactionUuid === '') {
+			return false;
+		}
+
+		try {
+			$eventId = $this->service->emitSingleTenderPosted(
+				transactionUuid: $transactionUuid,
+				transactionReference: '',
+				tender: $tender
+			);
+			return $eventId !== '';
+		} catch (Throwable $e) {
+			$this->logger->info(
+				'Pipelinq TenderPostedRetryJob: per-tender re-emit failed (soft)',
+				['exception' => $e->getMessage()]
+			);
+			return false;
+		}
+	}//end reEmitted()
 }//end class

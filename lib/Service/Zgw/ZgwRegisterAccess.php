@@ -40,6 +40,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\Contracts\ZgwRegisterAccessInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -49,16 +53,13 @@ use Throwable;
  *
  * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
-class ZgwRegisterAccess {
+class ZgwRegisterAccess implements ZgwRegisterAccessInterface {
 	/**
 	 * The pipelinq register slug shared by all four ZGW schemas.
 	 */
 	public const REGISTER = 'pipelinq';
 
-	public const SCHEMA_ENDPOINT = 'zgwEndpoint';
 	public const SCHEMA_CLIENT = 'zgwClient';
-	public const SCHEMA_ABONN = 'nrcAbonnement';
-	public const SCHEMA_MAPPING = 'zgwResourceMapping';
 
 	/**
 	 * Cached ObjectService instance (or null when OR is unavailable).
@@ -103,7 +104,7 @@ class ZgwRegisterAccess {
 		}
 
 		try {
-			$result = $objectService->find(id: $id, register: self::REGISTER, schema: $schema);
+			$result = $objectService->find(id: $id, options: new ObjectFindOptions(register: self::REGISTER, schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->info('ZGW: find failed', ['schema' => $schema, 'id' => $id, 'err' => $e->getMessage()]);
 			return null;
@@ -128,32 +129,50 @@ class ZgwRegisterAccess {
 			return [];
 		}
 
+		$rows = $this->findRows(objectService: $objectService, filters: array_merge($filters, ['register' => self::REGISTER, 'schema' => $schema]));
+		if ($rows === null) {
+			return [];
+		}
+
+		return $this->rowsToArrays(rows: $rows);
+	}//end findAll()
+
+	/**
+	 * Read the schema's rows merged with the caller's filters; null (logged) when the read fails.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param array<string, mixed> $filters The data-property filters with the register and schema.
+	 *
+	 * @return array{rows: mixed}|null The raw findAll result.
+	 */
+	private function findRows(object $objectService, array $filters): array|null {
 		try {
 			// OpenRegister's ObjectService::findAll() takes a single $config array;
 			// register/schema travel INSIDE $config['filters'] (see prepareFindAllConfig()).
 			// The old findAll(register:, schema:, filters:) named-argument form no longer
 			// exists and threw "Unknown named parameter $register" at runtime. The caller's
-			// data-property $filters are merged with the register/schema context here.
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => array_merge(
-						$filters,
-						[
-							'register' => self::REGISTER,
-							'schema' => $schema,
-						]
-					),
-				]
-			);
+			// data-property $filters arrive merged with the register/schema context.
+			$rows = $objectService->findAll(config: ['filters' => $filters]);
 		} catch (Throwable $e) {
-			$this->logger->info('ZGW: findAll failed', ['schema' => $schema, 'err' => $e->getMessage()]);
-			return [];
+			$this->logger->info('ZGW: findAll failed', ['schema' => $filters['schema'], 'err' => $e->getMessage()]);
+			return null;
 		}//end try
 
+		return ['rows' => $rows];
+	}//end findRows()
+
+	/**
+	 * The rows that convert to arrays.
+	 *
+	 * @param array{rows: mixed} $rows The raw findAll result.
+	 *
+	 * @return array<int, array<string, mixed>> The rows as arrays.
+	 */
+	private function rowsToArrays(array $rows): array {
 		$out = [];
 		$rowList = [];
-		if (is_array($rows) === true) {
-			$rowList = $rows;
+		if (is_array($rows['rows']) === true) {
+			$rowList = $rows['rows'];
 		}
 
 		foreach ($rowList as $row) {
@@ -164,7 +183,7 @@ class ZgwRegisterAccess {
 		}
 
 		return $out;
-	}//end findAll()
+	}//end rowsToArrays()
 
 	/**
 	 * Persist (create or update) an object.
@@ -188,13 +207,24 @@ class ZgwRegisterAccess {
 			unset($data['@self']);
 		}
 
+		return $this->saveFlat(objectService: $objectService, schema: $schema, data: $data, uuid: $uuid);
+	}//end save()
+
+	/**
+	 * Save a flat payload; null (logged) when the save fails.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param string $schema The schema slug.
+	 * @param array<string, mixed> $data The flat payload.
+	 * @param string|null $uuid The object uuid, or null to create.
+	 *
+	 * @return array<string, mixed>|null The saved object.
+	 */
+	private function saveFlat(object $objectService, string $schema, array $data, string|null $uuid): array|null {
 		try {
 			$saved = $objectService->saveObject(
 				object: $data,
-				extend: [],
-				register: self::REGISTER,
-				schema: $schema,
-				uuid: $uuid
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: $schema), uuid: $uuid)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -205,7 +235,7 @@ class ZgwRegisterAccess {
 		}
 
 		return $this->toArray(candidate: $saved);
-	}//end save()
+	}//end saveFlat()
 
 	/**
 	 * Resolve a `ZgwClient` record for a given `ZgwEndpoint` payload.

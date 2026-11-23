@@ -217,6 +217,30 @@ class ProductCatalogServiceTest extends TestCase {
 	}//end testResolveEffectivePriceUsesVariantOverride()
 
 	/**
+	 * A variant without a price of its own is sold at its product's price.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/product-catalog/spec.md#requirement-a-product-keeps-attributes-and-variants-with-their-own-code-and-price
+	 */
+	public function testAVariantWithoutAPriceTakesItsProductsPrice(): void {
+		$product = [
+			'unitPrice' => 25.0,
+			'vatClass' => 'high',
+			'variants' => [
+				['sku' => 'WS-S', 'attributes' => ['Maat' => 'S'], 'status' => 'active'],
+				['sku' => 'WS-M', 'attributes' => ['Maat' => 'M'], 'unitPrice' => 27.5, 'status' => 'active'],
+			],
+		];
+
+		$small = $this->service->resolveEffectivePrice(product: $product, quantity: 1.0, variantSku: 'WS-S');
+		$medium = $this->service->resolveEffectivePrice(product: $product, quantity: 1.0, variantSku: 'WS-M');
+
+		$this->assertSame(expected: [25.0, 'base'], actual: [$small['unitPrice'], $small['source']]);
+		$this->assertSame(expected: [27.5, 'variant'], actual: [$medium['unitPrice'], $medium['source']]);
+	}//end testAVariantWithoutAPriceTakesItsProductsPrice()
+
+	/**
 	 * resolveEffectivePrice rejects an inactive variant.
 	 *
 	 * @return void
@@ -434,4 +458,51 @@ class ProductCatalogServiceTest extends TestCase {
 
 		$this->assertNull($this->service->matchProductByBarcode($products, '0000000000000'));
 	}//end testMatchProductByBarcodeNoMatch()
+	/**
+	 * Every way a price resolves: the quantity is clamped at zero; a negative
+	 * base is zero; an empty variant SKU is neither a variant nor a tier
+	 * read; a variant price skips the tiers; a variant without its own price
+	 * keeps the base; a tier without a price or label keeps the base and an
+	 * empty label; the price is rounded to cents; an empty class reads at the
+	 * high rate.
+	 *
+	 * @return void
+	 */
+	public function testEveryWayAPriceResolves(): void {
+		$tiers = [['minQuantity' => 1, 'unitPrice' => 3.333, 'label' => 'Any']];
+
+		$this->assertSame(
+			['unitPrice' => 3.33, 'source' => 'tier', 'tierLabel' => 'Any', 'quantity' => 2.0, 'vatClass' => '', 'taxRate' => 21],
+			$this->service->resolveEffectivePrice(['unitPrice' => -4, 'priceTiers' => $tiers], 2.0)
+		);
+		$this->assertSame(
+			['unitPrice' => 0.0, 'source' => 'base', 'tierLabel' => '', 'quantity' => 0.0, 'vatClass' => '', 'taxRate' => 21],
+			$this->service->resolveEffectivePrice(['unitPrice' => -4, 'priceTiers' => $tiers], -2.0)
+		);
+		$this->assertSame(
+			['unitPrice' => 7.5, 'source' => 'base', 'tierLabel' => '', 'quantity' => 2.0, 'vatClass' => 'low', 'taxRate' => 9],
+			$this->service->resolveEffectivePrice(['unitPrice' => 7.499, 'vatClass' => 'low', 'priceTiers' => $tiers], 2.0, '')
+		);
+
+		$variants = [['sku' => 'V1', 'unitPrice' => 9.0], ['sku' => 'V2']];
+		$this->assertSame(
+			['unitPrice' => 9.0, 'source' => 'variant', 'tierLabel' => '', 'quantity' => 1.0, 'vatClass' => '', 'taxRate' => 21],
+			$this->service->resolveEffectivePrice(['unitPrice' => 5, 'variants' => $variants, 'priceTiers' => $tiers], 1.0, 'V1')
+		);
+		$this->assertSame(
+			['unitPrice' => 5.0, 'source' => 'base', 'tierLabel' => '', 'quantity' => 1.0, 'vatClass' => '', 'taxRate' => 21],
+			$this->service->resolveEffectivePrice(['unitPrice' => 5, 'variants' => $variants, 'priceTiers' => $tiers], 1.0, 'V2')
+		);
+		$this->assertSame(
+			['unitPrice' => 5.0, 'source' => 'tier', 'tierLabel' => '', 'quantity' => 1.0, 'vatClass' => '', 'taxRate' => 21],
+			$this->service->resolveEffectivePrice(['unitPrice' => 5, 'priceTiers' => [['minQuantity' => 1]]], 1.0)
+		);
+		$this->assertSame(
+			['unitPrice' => 5.0, 'source' => 'base', 'tierLabel' => '', 'quantity' => 0.5, 'vatClass' => '', 'taxRate' => 21],
+			$this->service->resolveEffectivePrice(['unitPrice' => 5, 'priceTiers' => [['minQuantity' => 1, 'unitPrice' => 1]]], 0.5)
+		);
+
+		$this->expectException(\OCP\AppFramework\OCS\OCSNotFoundException::class);
+		$this->service->resolveEffectivePrice(['unitPrice' => 5, 'variants' => $variants], 1.0, 'V9');
+	}//end testEveryWayAPriceResolves()
 }//end class

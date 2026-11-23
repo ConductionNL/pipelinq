@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/pipelinq-werkplek-declarative/tasks.md#task-3 -->
+<!-- @spec openspec/changes/archive/2026-06-22-pipelinq-werkplek-declarative/tasks.md#task-3 -->
 <template>
 	<div class="werkplek-header-actions">
 		<WerkplekAgentStatus
@@ -37,6 +37,7 @@ import TimerOutline from 'vue-material-design-icons/TimerOutline.vue'
 import WerkplekAgentStatus from '../../../components/werkplek/WerkplekAgentStatus.vue'
 import { screenPop } from '../../../services/ctiApi.js'
 import { useObjectStore } from '../../../store/modules/object.js'
+import workspaceContextMixin from './workspaceContextMixin.js'
 
 /**
  * WerkplekHeaderActions — the workspace dashboard's `actionsComponent`,
@@ -44,16 +45,54 @@ import { useObjectStore } from '../../../store/modules/object.js'
  * (`#header-actions`). Loads the initial availability from the aggregated
  * `GET /api/kcc-werkplek/state` endpoint; the toggle itself PUTs changes.
  *
- * @spec openspec/changes/pipelinq-werkplek-declarative/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-06-22-pipelinq-werkplek-declarative/tasks.md#task-3
  */
+/**
+ * The caller the address names: the client of an active call, or the
+ * client a previewed number looks up to; no client otherwise.
+ *
+ * @param {URLSearchParams} params The page address's query.
+ * @return {Promise<{clientId: string, clientName: string}>} The caller.
+ */
+async function callerFromAddress(params) {
+	if (params.get('call') === 'active') {
+		return { clientId: (params.get('client') || '').trim(), clientName: '' }
+	}
+	const preview = (params.get('inCallPreview') || '').trim()
+	if (preview === '') {
+		return { clientId: '', clientName: '' }
+	}
+	const result = await screenPop(preview).catch(() => null)
+	return callerOf(clientMatch(result))
+}
+
+/**
+ * @param {?object} result The screen pop answer.
+ * @return {(object|null)} The client it matched, or null.
+ */
+function clientMatch(result) {
+	return (result && Array.isArray(result.matches))
+		? result.matches.find((m) => m && m._matchType === 'client') || null
+		: null
+}
+
+/**
+ * @param {?object} match The matched client.
+ * @return {{clientId: string, clientName: string}} Its id and name; empty without a match.
+ */
+function callerOf(match) {
+	if (!match) {
+		return { clientId: '', clientName: '' }
+	}
+	return { clientId: String(match.id || match.uuid || ''), clientName: String(match.name || '') }
+}
+
 export default {
 	name: 'WerkplekHeaderActions',
 
 	components: { NcButton, PhoneHangup, TimerOutline, WerkplekAgentStatus },
 
-	inject: {
-		cnWorkspaceContext: { default: null },
-	},
+	mixins: [workspaceContextMixin],
 
 	data() {
 		return {
@@ -64,20 +103,6 @@ export default {
 	},
 
 	computed: {
-		/**
-		 * The page's workspace bag; the provided ref may arrive unwrapped or as `{ value }`.
-		 *
-		 * @return {object|null}
-		 * @spec openspec/specs/kcc-werkplek/spec.md
-		 */
-		workspace() {
-			const c = this.cnWorkspaceContext
-			if (!c || typeof c !== 'object') {
-				return null
-			}
-			return 'value' in c ? c.value : c
-		},
-
 		/**
 		 * Whether a call is on the line: the page shows the in-call cards and this header.
 		 *
@@ -131,22 +156,10 @@ export default {
 		 * @spec openspec/specs/kcc-werkplek/spec.md
 		 */
 		async startCallFromAddress() {
-			const params = new URLSearchParams(window.location.search)
-			let clientId = ''
-			let clientName = ''
-			if (params.get('call') === 'active') {
-				clientId = (params.get('client') || '').trim()
-			} else if ((params.get('inCallPreview') || '').trim() !== '') {
-				const result = await screenPop(params.get('inCallPreview').trim()).catch(() => null)
-				const match = (result && Array.isArray(result.matches))
-					? result.matches.find((m) => m && m._matchType === 'client')
-					: null
-				clientId = match ? String(match.id || match.uuid || '') : ''
-				clientName = match ? String(match.name || '') : ''
-			}
-			if (clientId !== '') {
-				this.writeWorkspace({ selectedClient: clientId, callActive: true, callIdentified: true, callStartedAt: new Date().toISOString() })
-				this.writeWorkspace({ selectedClientName: clientName || await this.clientNameOf(clientId) })
+			const caller = await callerFromAddress(new URLSearchParams(window.location.search))
+			if (caller.clientId !== '') {
+				this.writeWorkspace({ selectedClient: caller.clientId, callActive: true, callIdentified: true, callStartedAt: new Date().toISOString() })
+				this.writeWorkspace({ selectedClientName: caller.clientName || await this.clientNameOf(caller.clientId) })
 			}
 		},
 
@@ -198,7 +211,7 @@ export default {
 		 * whether the agent is available reads it again.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.1
 		 */
 		onSaved() {
 			emit('cn:dashboard:description-refresh', {})

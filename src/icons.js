@@ -44,6 +44,7 @@ import BellRingOutline from 'vue-material-design-icons/BellRingOutline.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import BriefcaseOutline from 'vue-material-design-icons/BriefcaseOutline.vue'
+import BulletinBoard from 'vue-material-design-icons/BulletinBoard.vue'
 import BullhornOutline from 'vue-material-design-icons/BullhornOutline.vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
 import CalendarArrowRight from 'vue-material-design-icons/CalendarArrowRight.vue'
@@ -78,6 +79,7 @@ import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import CheckDecagramOutline from 'vue-material-design-icons/CheckDecagramOutline.vue'
 import ChevronDoubleRight from 'vue-material-design-icons/ChevronDoubleRight.vue'
+import City from 'vue-material-design-icons/City.vue'
 import ClipboardAccountOutline from 'vue-material-design-icons/ClipboardAccountOutline.vue'
 import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
@@ -99,6 +101,8 @@ import DatabaseExport from 'vue-material-design-icons/DatabaseExport.vue'
 import DatabaseExportOutline from 'vue-material-design-icons/DatabaseExportOutline.vue'
 import DatabaseImportOutline from 'vue-material-design-icons/DatabaseImportOutline.vue'
 import DatabaseSearchOutline from 'vue-material-design-icons/DatabaseSearchOutline.vue'
+import DatabaseSyncOutline from 'vue-material-design-icons/DatabaseSyncOutline.vue'
+import DeleteClockOutline from 'vue-material-design-icons/DeleteClockOutline.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Earth from 'vue-material-design-icons/Earth.vue'
@@ -121,6 +125,7 @@ import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FileOutline from 'vue-material-design-icons/FileOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
+import FileSendOutline from 'vue-material-design-icons/FileSendOutline.vue'
 import FileSign from 'vue-material-design-icons/FileSign.vue'
 import FilterVariant from 'vue-material-design-icons/FilterVariant.vue'
 import FolderAccountOutline from 'vue-material-design-icons/FolderAccountOutline.vue'
@@ -130,7 +135,9 @@ import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue
 import FormatListBulletedSquare from 'vue-material-design-icons/FormatListBulletedSquare.vue'
 import FormatListChecks from 'vue-material-design-icons/FormatListChecks.vue'
 import FormatListNumbered from 'vue-material-design-icons/FormatListNumbered.vue'
+import FormSelect from 'vue-material-design-icons/FormSelect.vue'
 import FormTextboxPassword from 'vue-material-design-icons/FormTextboxPassword.vue'
+import Forum from 'vue-material-design-icons/Forum.vue'
 import ForumOutline from 'vue-material-design-icons/ForumOutline.vue'
 import Gauge from 'vue-material-design-icons/Gauge.vue'
 import Gavel from 'vue-material-design-icons/Gavel.vue'
@@ -145,6 +152,8 @@ import Key from 'vue-material-design-icons/Key.vue'
 import KeyVariant from 'vue-material-design-icons/KeyVariant.vue'
 import Link from 'vue-material-design-icons/Link.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
+import LockOpenVariantOutline from 'vue-material-design-icons/LockOpenVariantOutline.vue'
+import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
 import MapMarkerCheck from 'vue-material-design-icons/MapMarkerCheck.vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
@@ -258,6 +267,7 @@ export default {
 	BookOpenPageVariant,
 	BookOpenVariantOutline,
 	BriefcaseOutline,
+	BulletinBoard,
 	BullhornOutline,
 	Calendar,
 	CalendarArrowRight,
@@ -287,6 +297,7 @@ export default {
 	ChartTimelineVariantShimmer,
 	Check,
 	CheckCircle,
+	City,
 	CheckCircleOutline,
 	CheckboxMarkedCircleOutline,
 	CheckboxMarkedOutline,
@@ -312,6 +323,8 @@ export default {
 	DatabaseExportOutline,
 	DatabaseImportOutline,
 	DatabaseSearchOutline,
+	DatabaseSyncOutline,
+	DeleteClockOutline,
 	Domain,
 	Download,
 	Earth,
@@ -334,16 +347,19 @@ export default {
 	FileDocumentOutline,
 	FileOutline,
 	FilePdfBox,
+	FileSendOutline,
 	FileSign,
 	FilterVariant,
 	FolderAccountOutline,
 	FolderOpen,
 	FolderOutline,
+	FormSelect,
 	FormTextboxPassword,
 	FormatListBulleted,
 	FormatListBulletedSquare,
 	FormatListChecks,
 	FormatListNumbered,
+	Forum,
 	ForumOutline,
 	Gauge,
 	Gavel,
@@ -372,6 +388,8 @@ export default {
 	KeyVariant,
 	Link,
 	LinkVariant,
+	LockOpenVariantOutline,
+	LockOutline,
 	Magnify,
 	MapMarkerCheck,
 	MapMarkerPath,

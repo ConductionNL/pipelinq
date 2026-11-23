@@ -27,6 +27,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * The name a mail greets its recipient by.
@@ -53,7 +54,9 @@ class RecipientNameReaderTest extends TestCase {
 			public function __construct(private array $rows) {
 			}//end __construct()
 
-			public function find(string $id, $register = null, $schema = null): mixed {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($register !== 'pipelinq') {
 					throw new RuntimeException('wrong register: ' . $register);
 				}

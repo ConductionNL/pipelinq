@@ -1,0 +1,2390 @@
+{
+  "app": "pipelinq",
+  "productOwner": "Remco Damhuis",
+  "rows": {
+    "clients-person": {
+      "tier": "poc",
+      "reason": "Registering a person is the first step of the core job; every competitor keeps a client record.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-organisation": {
+      "tier": "poc",
+      "reason": "Registering an organisation is part of the core job demo; four competitors rate it yes.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-contact-person": {
+      "tier": "poc",
+      "reason": "Linking a person to their organisation is what makes the two records a CRM instead of two lists.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-360": {
+      "tier": "poc",
+      "reason": "Seeing the logged contact moments and leads on the client page is how the core job is shown.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-duplicate-warning": {
+      "tier": "mvp",
+      "reason": "Daily use creates duplicates quickly; the spec rates it MVP and most competitors warn.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-merge": {
+      "tier": "mvp",
+      "reason": "Four competitors merge duplicates; one organisation needs it as soon as duplicates appear. Spec tier MVP.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-search": {
+      "tier": "mvp",
+      "reason": "Finding a client from anywhere is basic daily work; most competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-carddav": {
+      "tier": "production",
+      "reason": "A sync with phone address books is an integration, and only Pipedrive offers it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-vcard-import": {
+      "tier": "later",
+      "reason": "No competitor imports vCard directly; the spreadsheet import covers migration.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-csv-import": {
+      "tier": "production",
+      "reason": "Migration from an old system; four competitors import spreadsheets and a tender will ask for it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-export": {
+      "tier": "production",
+      "reason": "Export is a migration and exit requirement in tenders; four competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-notes": {
+      "tier": "mvp",
+      "reason": "Notes with an author and date are daily work; every competitor has them.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-tags": {
+      "tier": "mvp",
+      "reason": "Tagging and filtering is how one team keeps its list workable; spec tier MVP.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-kvk": {
+      "tier": "production",
+      "reason": "A KvK lookup is an integration Dutch buyers ask for; KISS has it, others only partly.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-opencorporates": {
+      "tier": "later",
+      "reason": "International registers matter little to Dutch government and SMB buyers; one competitor has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-org-tree": {
+      "tier": "later",
+      "reason": "No competitor fully shows a company tree; useful for large accounts only.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-custom-fields": {
+      "tier": "mvp",
+      "reason": "Every organisation needs a field of its own; four competitors allow it without code.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-owner": {
+      "tier": "mvp",
+      "reason": "Knowing who owns a client is basic team work; four competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-history": {
+      "tier": "mvp",
+      "reason": "Seeing who changed a record is table stakes and the spec rates it MVP.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-party-kind": {
+      "tier": "mvp",
+      "reason": "Government desks must tell a citizen from a business on day one; KISS has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pipeline-kanban": {
+      "tier": "poc",
+      "reason": "Moving a lead across a board is the core job demo; four competitors have it. Spec says V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pipeline-multiple": {
+      "tier": "mvp",
+      "reason": "Four competitors run several pipelines; an organisation with sales and service needs more than one.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pipeline-stage-odds": {
+      "tier": "mvp",
+      "reason": "Each organisation names its own stages; most competitors allow it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "lead-value-date": {
+      "tier": "poc",
+      "reason": "A lead without a value and a close date does not show a pipeline at all.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "lead-from-client": {
+      "tier": "poc",
+      "reason": "Starting a lead from a registered client ties the demo together.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "lead-source": {
+      "tier": "mvp",
+      "reason": "Recording where leads come from is table stakes; three competitors rate it yes.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "lead-scoring": {
+      "tier": "production",
+      "reason": "Scoring helps larger sales teams prioritise; three competitors have it, a small team manages without.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "forecast-rollup": {
+      "tier": "production",
+      "reason": "A rollup per manager is reporting for teams at scale; the spec says MVP, overridden.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "forecast-commit": {
+      "tier": "later",
+      "reason": "Only HubSpot has manager commits fully; little demand among government and SMB buyers.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "forecast-category": {
+      "tier": "later",
+      "reason": "No competitor has it fully; a refinement for mature sales teams.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "forecast-slip-reason": {
+      "tier": "later",
+      "reason": "No competitor has it and no demand source names it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "forecast-trend": {
+      "tier": "later",
+      "reason": "Only HubSpot has it; a refinement once forecasting itself is used.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "win-loss": {
+      "tier": "production",
+      "reason": "Win and loss reporting is what managers ask for at scale; three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "lead-aging": {
+      "tier": "production",
+      "reason": "A report on stuck leads for larger pipelines; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pipeline-funnel": {
+      "tier": "production",
+      "reason": "Funnel reporting for managers; spec tier V1 and two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "prospect-discovery": {
+      "tier": "later",
+      "reason": "Finding unknown companies is a growth tool; only HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "lead-products": {
+      "tier": "production",
+      "reason": "Product lines on a lead matter once quoting is used; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "lead-stage-notify": {
+      "tier": "mvp",
+      "reason": "Four competitors notify the owner; a team loses track of leads without it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pipeline-multi-currency": {
+      "tier": "later",
+      "reason": "Dutch government and SMB buyers deal almost only in euros; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pipeline-lead-rotation": {
+      "tier": "later",
+      "reason": "Only Odoo rotates leads fully; relevant for large sales teams only.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pipeline-stage-limit": {
+      "tier": "later",
+      "reason": "No competitor caps a stage; one feature request asks for it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pipeline-auto-label": {
+      "tier": "later",
+      "reason": "A convenience on top of tags; two competitors have it, no tender asks.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "lead-win-probability": {
+      "tier": "later",
+      "reason": "No competitor rating and no outside demand; the stage odds already give a probability.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-log": {
+      "tier": "poc",
+      "reason": "Logging a contact moment is named in the core job; every competitor and KISS have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-timeline": {
+      "tier": "poc",
+      "reason": "Showing the logged contact moments in one timeline is how the core job is demonstrated.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-channel": {
+      "tier": "mvp",
+      "reason": "A contact desk must record the channel from day one; spec tier MVP and KISS has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-screenpop": {
+      "tier": "production",
+      "reason": "Telephony integration that KCC tenders ask for; the spec says MVP, but it needs a telephony platform.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-click-to-call": {
+      "tier": "production",
+      "reason": "Telephony integration; three competitors have it, a desk can dial by hand at first.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-recording": {
+      "tier": "production",
+      "reason": "Call recordings need a telephony integration and a retention policy; HubSpot alone has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-disposition": {
+      "tier": "mvp",
+      "reason": "A result code on every contact makes the desk's reporting usable; spec MVP, KISS has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-email-filing": {
+      "tier": "production",
+      "reason": "Mail integration; three competitors file mail by themselves, a team can log by hand at first.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-email-domain": {
+      "tier": "production",
+      "reason": "Part of the mail integration; two competitors match by domain.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-whatsapp": {
+      "tier": "production",
+      "reason": "A messaging channel integration for omnichannel tenders; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-sms": {
+      "tier": "production",
+      "reason": "A messaging channel integration; only Odoo has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-outbound-logged": {
+      "tier": "mvp",
+      "reason": "Four competitors log sent messages by themselves; without it the history is incomplete. Spec MVP.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-file-on-case": {
+      "tier": "later",
+      "reason": "Only HubSpot files one moment on several cases; rare need.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-availability": {
+      "tier": "production",
+      "reason": "Presence and call distribution matter for a contact centre at scale; only HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-survey-after": {
+      "tier": "later",
+      "reason": "Satisfaction surveys are a refinement; only HubSpot has them fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-campaign-touchpoint": {
+      "tier": "later",
+      "reason": "Campaign attribution on contacts depends on the marketing area, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-intake": {
+      "tier": "poc",
+      "reason": "Capturing a request is the README's core job for the service side; KISS and two others have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-webform": {
+      "tier": "production",
+      "reason": "A website form is an integration with the organisation's site; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-to-case": {
+      "tier": "production",
+      "reason": "The handoff to a zaaksysteem is what government tenders require; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-decisions": {
+      "tier": "later",
+      "reason": "No competitor rating and no outside demand; decisions belong to the case system.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-sla-deadline": {
+      "tier": "production",
+      "reason": "Service level deadlines are a tender demand for contact centres; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-sla-holidays": {
+      "tier": "production",
+      "reason": "Part of the service level engine Dutch tenders ask for; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-sla-escalate": {
+      "tier": "production",
+      "reason": "Escalation is part of the service level engine; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-sla-pause": {
+      "tier": "production",
+      "reason": "Pausing the clock is part of the service level engine; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-routing": {
+      "tier": "later",
+      "reason": "Skill based routing is for large contact centres; spec tier Enterprise.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-complaint": {
+      "tier": "production",
+      "reason": "The Awb sets a legal answer term for complaints, so tenders demand it; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-callback": {
+      "tier": "mvp",
+      "reason": "A promised call back is daily contact desk work; spec tier MVP and every competitor partly has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-walkin": {
+      "tier": "later",
+      "reason": "No competitor has counter queueing; it is usually a separate queue system.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-knowledge": {
+      "tier": "production",
+      "reason": "KCC tenders ask for the knowledge base next to the request; KISS has it. Spec V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-sla-report": {
+      "tier": "production",
+      "reason": "Reporting on deadlines follows the service level engine; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-nps": {
+      "tier": "later",
+      "reason": "Satisfaction measurement is a refinement; only HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-queue": {
+      "tier": "mvp",
+      "reason": "One list of work waiting on you is daily work; spec tier MVP and three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-task": {
+      "tier": "mvp",
+      "reason": "Tasks with a deadline and an assignee are table stakes; every competitor has them.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-business-hours-deadline": {
+      "tier": "later",
+      "reason": "No competitor has it fully; calendar deadlines suffice for most teams. Spec says MVP.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-overdue": {
+      "tier": "mvp",
+      "reason": "Being told a task runs late is table stakes; three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-recurring-task": {
+      "tier": "production",
+      "reason": "Recurring tasks help larger teams; two competitors have them.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-nextcloud-dashboard": {
+      "tier": "later",
+      "reason": "A Nextcloud dashboard widget is a convenience; no competitor has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-notification": {
+      "tier": "mvp",
+      "reason": "Four competitors notify on assignment; a team needs it to work together.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-activity-feed": {
+      "tier": "production",
+      "reason": "A team feed helps managers at scale; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-notification-choice": {
+      "tier": "mvp",
+      "reason": "Four competitors let users tune notifications; without it people switch them all off.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-time-entry": {
+      "tier": "later",
+      "reason": "Time tracking is outside the CRM core job; only Odoo has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-time-approval": {
+      "tier": "later",
+      "reason": "Hour approval follows time tracking, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-time-to-invoice": {
+      "tier": "later",
+      "reason": "Billing hours follows time tracking, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-weekly-review": {
+      "tier": "later",
+      "reason": "A weekly digest is a convenience; only HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-letter-template": {
+      "tier": "production",
+      "reason": "Tender demand for letters to clients from a template; one competitor has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-saved-view": {
+      "tier": "mvp",
+      "reason": "Saved, shared filters are daily work; two competitors have them and a tender asks for it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-colleague-availability": {
+      "tier": "nee",
+      "reason": "Owned by Nextcloud server, which provides colleague availability.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-collaborators": {
+      "tier": "production",
+      "reason": "Working on one case with several colleagues matters for larger teams; four competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-calendar-feed": {
+      "tier": "nee",
+      "reason": "Owned by Nextcloud server, whose calendar shows outside feeds.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-time-on-phone": {
+      "tier": "later",
+      "reason": "Mobile time entry follows time tracking, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-my-week-stats": {
+      "tier": "later",
+      "reason": "Personal statistics are a refinement with no competitor rating or outside demand.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-quick-create": {
+      "tier": "later",
+      "reason": "A convenience on the work page; no competitor rating or outside demand.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-upcoming-meetings": {
+      "tier": "later",
+      "reason": "Meetings already show in the Nextcloud calendar; a convenience here.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-layout": {
+      "tier": "later",
+      "reason": "A configurable work page is a refinement; no outside demand.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-team-view": {
+      "tier": "production",
+      "reason": "Managers of larger teams need to see their team's open work.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-auto-refresh": {
+      "tier": "later",
+      "reason": "A convenience; reloading the page works in the meantime.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-filter-priority-pipeline": {
+      "tier": "later",
+      "reason": "A refinement of the work list; no competitor rating or outside demand.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "work-project-portfolio": {
+      "tier": "later",
+      "reason": "Project portfolio management is outside the CRM core job; no competitor rating.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-blast": {
+      "tier": "production",
+      "reason": "Mailing a list is common in CRMs but not the core job; three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-segment": {
+      "tier": "production",
+      "reason": "Rule based lists come with mailings; two competitors have them fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-template": {
+      "tier": "production",
+      "reason": "Reusable mail templates come with mailings; four competitors have them.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-ab-test": {
+      "tier": "later",
+      "reason": "A/B testing is marketing refinement; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-open-click": {
+      "tier": "production",
+      "reason": "Four competitors track opens and clicks once mailings are in use.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-unsubscribe": {
+      "tier": "production",
+      "reason": "The law requires a working unsubscribe the moment you send mailings.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-preference-centre": {
+      "tier": "later",
+      "reason": "Per mailing preferences refine the unsubscribe; two competitors have them.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-consent-block": {
+      "tier": "production",
+      "reason": "AVG requires consent before sending; blocking a send without it is the safeguard.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-preflight": {
+      "tier": "later",
+      "reason": "A warning before sending; only HubSpot has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-journey": {
+      "tier": "later",
+      "reason": "Marketing automation is far from the core job; only HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-landing-page": {
+      "tier": "later",
+      "reason": "Landing pages belong to the website; two competitors have them.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-attribution": {
+      "tier": "later",
+      "reason": "Campaign attribution is marketing refinement; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-social": {
+      "tier": "later",
+      "reason": "Social scheduling is far from the core job; only HubSpot has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-deliverability": {
+      "tier": "later",
+      "reason": "A sending domain check is a refinement; only HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-search-terms": {
+      "tier": "later",
+      "reason": "Search term analysis is website marketing; only HubSpot has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-competitor-watch": {
+      "tier": "later",
+      "reason": "No competitor has it fully and no outside demand.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-public-signup": {
+      "tier": "production",
+      "reason": "A newsletter signup on your own site is an integration; three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-events": {
+      "tier": "production",
+      "reason": "A tender asks for event registration; only Odoo has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-block-editor": {
+      "tier": "later",
+      "reason": "A drag and drop mail designer is a convenience; templates cover the need first.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mkt-form-campaign-tags": {
+      "tier": "later",
+      "reason": "Campaign tags on submissions refine marketing, itself not the core job.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-login": {
+      "tier": "nee",
+      "reason": "The shared portal portaliq owns the external portal per hydra ADR-046; the bespoke pipelinq portal retires.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-mfa": {
+      "tier": "nee",
+      "reason": "Portal login and its second factor belong to the shared portal portaliq per hydra ADR-046.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-file-request": {
+      "tier": "production",
+      "reason": "Digital intake from citizens is a tender demand; pipelinq supplies the requests to the shared portal.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-reply": {
+      "tier": "production",
+      "reason": "Answering in the portal is a tender demand; pipelinq supplies the conversation to the shared portal.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-documents": {
+      "tier": "production",
+      "reason": "Clients downloading their documents is a tender demand; pipelinq supplies them to the shared portal.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-sign": {
+      "tier": "later",
+      "reason": "Signing is a separate product; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-invoices": {
+      "tier": "later",
+      "reason": "Deferred: no demand, one competitor has it, and today's tab lists till sales only.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-delegation": {
+      "tier": "nee",
+      "reason": "Account delegation belongs to the shared portal portaliq per hydra ADR-046.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-export": {
+      "tier": "production",
+      "reason": "The AVG gives clients a right to their data; pipelinq must supply it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-close-account": {
+      "tier": "nee",
+      "reason": "Portal accounts belong to the shared portal portaliq per hydra ADR-046.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-multi-tenant": {
+      "tier": "nee",
+      "reason": "Branded portals belong to the shared portal portaliq per hydra ADR-046.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-booking": {
+      "tier": "production",
+      "reason": "Online appointment booking is common in municipal tenders; two competitors have it. Spec V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-booking-services": {
+      "tier": "production",
+      "reason": "Bookable services come with appointment booking; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-booking-resources": {
+      "tier": "production",
+      "reason": "Resources and working hours come with appointment booking; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-booking-capacity": {
+      "tier": "later",
+      "reason": "Capacity insight refines booking; no competitor rating or outside demand.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-audit": {
+      "tier": "nee",
+      "reason": "Portal user actions belong to the shared portal portaliq per hydra ADR-046.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "prod-catalogue": {
+      "tier": "production",
+      "reason": "A product list is needed once quotes and product lines are used; three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "prod-price-tiers": {
+      "tier": "later",
+      "reason": "Volume pricing is a refinement; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "prod-variants": {
+      "tier": "later",
+      "reason": "Variants are a retail refinement; the spec rates them Enterprise.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "prod-vat": {
+      "tier": "production",
+      "reason": "Correct Dutch VAT is required once you quote or sell; spec tier V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "prod-quote": {
+      "tier": "production",
+      "reason": "Quoting from the product list closes the sales loop; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "prod-vendor": {
+      "tier": "later",
+      "reason": "Supplier data is purchasing, outside the CRM core job.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "contract-number": {
+      "tier": "production",
+      "reason": "Contracts after a won deal matter for recurring business at scale; the spec says MVP, overridden.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "contract-status-guard": {
+      "tier": "production",
+      "reason": "A guard on contract statuses belongs with contract management.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "contract-renewal-warning": {
+      "tier": "production",
+      "reason": "Renewal warnings are the main value of contract tracking; HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "contract-renewal-lead": {
+      "tier": "production",
+      "reason": "Renewal leads tie contracts back into the pipeline; HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "contract-successor": {
+      "tier": "later",
+      "reason": "Drafting a successor in one click is a convenience on renewals.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "contract-mrr": {
+      "tier": "later",
+      "reason": "Recurring revenue reporting suits subscription businesses; only HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "contract-to-invoice": {
+      "tier": "production",
+      "reason": "A contract that is never billed is lost revenue; three competitors integrate invoicing.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-sale": {
+      "tier": "later",
+      "reason": "A till is a separate product from a CRM; only Odoo has it among competitors.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-totals": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-barcode": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-card-payment": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-receipt": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-invoice-threshold": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-refund": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-refund-guard": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-cash-drawer": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-cash-diff": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-zreport": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-bookkeeping-handoff": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-audit-signature": {
+      "tier": "later",
+      "reason": "Required by the tax office only once the till is in use, and the till is later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "pos-customer-link": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "loyalty-points": {
+      "tier": "later",
+      "reason": "Loyalty is retail, not the core job; only Odoo has it. Spec says MVP, overridden.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "loyalty-redeem": {
+      "tier": "later",
+      "reason": "Part of loyalty, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "loyalty-tiers": {
+      "tier": "later",
+      "reason": "Part of loyalty, which is itself later; no competitor has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "loyalty-giftcard": {
+      "tier": "later",
+      "reason": "Part of loyalty, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "rep-sales-dashboard": {
+      "tier": "mvp",
+      "reason": "Four competitors open on a sales dashboard; spec tier MVP.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "rep-service-dashboard": {
+      "tier": "production",
+      "reason": "A service dashboard is management reporting for contact centres; HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "rep-compare-periods": {
+      "tier": "production",
+      "reason": "Period comparison is management reporting; only HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "rep-agent": {
+      "tier": "production",
+      "reason": "Reporting per colleague is what contact centre managers ask for at scale; three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "rep-scheduled-export": {
+      "tier": "later",
+      "reason": "Scheduled reports are a convenience; only HubSpot has them fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "rep-warehouse": {
+      "tier": "later",
+      "reason": "A warehouse sink serves organisations with their own analysts; only HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "rep-export-run-visible": {
+      "tier": "later",
+      "reason": "Follows the warehouse export, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "rep-schema-evolution": {
+      "tier": "later",
+      "reason": "Follows the warehouse export, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "rep-prometheus": {
+      "tier": "production",
+      "reason": "Hosting at scale needs the app's numbers in the operator's monitoring.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "rep-forecast-export": {
+      "tier": "later",
+      "reason": "Follows forecasting, which is mostly later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "rep-website-traffic": {
+      "tier": "later",
+      "reason": "Website analytics is marketing, far from the core job.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "rep-contact-moments": {
+      "tier": "production",
+      "reason": "KCC tenders ask for contact moment reporting by channel and subject; KISS has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-rule": {
+      "tier": "production",
+      "reason": "No code automation lets larger teams scale; three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-webhook": {
+      "tier": "production",
+      "reason": "Webhooks are how other systems integrate; four competitors have them.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-api": {
+      "tier": "production",
+      "reason": "An API is a standard tender demand for integration; four competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-connection-registry": {
+      "tier": "production",
+      "reason": "One list of connections is needed to run integrations safely at scale.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-connector-send": {
+      "tier": "later",
+      "reason": "Sending mailings through a connector follows the marketing area, which is mostly later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-mcp": {
+      "tier": "later",
+      "reason": "AI assistant access is new; two competitors have it and no tender asks.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-ask-question": {
+      "tier": "later",
+      "reason": "Natural language questions are a convenience; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-overnight": {
+      "tier": "production",
+      "reason": "Running slow work in the background is hardening for scale.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-retry": {
+      "tier": "production",
+      "reason": "Retrying failed handoffs is hardening that integrations need at scale.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-cross-app": {
+      "tier": "later",
+      "reason": "Reacting to changes in other apps is a convenience; only Odoo has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-wiki-search": {
+      "tier": "production",
+      "reason": "Knowledge lives in XWiki, and KCC tenders ask for it next to the request.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-demo-data": {
+      "tier": "poc",
+      "reason": "A demo needs example data; this is how the core job is shown.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-setup-wizard": {
+      "tier": "mvp",
+      "reason": "One real organisation must get from install to working; three competitors guide setup.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-brp-lookup": {
+      "tier": "production",
+      "reason": "A BRP lookup by BSN is a standard KCC tender demand; KISS has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-bsn-audit": {
+      "tier": "production",
+      "reason": "The law requires proof that every BSN lookup was allowed.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-bsn-pseudonym": {
+      "tier": "production",
+      "reason": "AVG demands minimal exposure of the BSN; tenders ask for it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-brp-mutation": {
+      "tier": "later",
+      "reason": "Mutation alerts refine the BRP lookup; no competitor has them.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-brp-retention": {
+      "tier": "production",
+      "reason": "The AVG requires deleting register data past its term.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-bsn-validation": {
+      "tier": "production",
+      "reason": "Validating a BSN before sending it comes with the BRP lookup; KISS has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-zgw-case": {
+      "tier": "production",
+      "reason": "The ZGW APIs are the national standard government tenders require; KISS has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-zgw-notify": {
+      "tier": "production",
+      "reason": "ZGW notifications come with the national case APIs tenders require.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-klantinteracties": {
+      "tier": "production",
+      "reason": "The VNG Klantinteracties standard is what KCC tenders require; KISS has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-berichtenbox": {
+      "tier": "later",
+      "reason": "Berichtenbox delivery is a niche channel; no competitor has it and no tender row names it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-berichtenbox-fallback": {
+      "tier": "later",
+      "reason": "Follows the Berichtenbox, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-data-request": {
+      "tier": "production",
+      "reason": "The AVG gives citizens the right to see or delete their data; HubSpot has a workflow.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-identity-verify": {
+      "tier": "production",
+      "reason": "Answering an AVG request needs proof of identity first.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "gov-client-language": {
+      "tier": "later",
+      "reason": "Writing in the client's language is a refinement; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-self-host": {
+      "tier": "mvp",
+      "reason": "Self hosting is why organisations choose this app; three competitors allow it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-source-code": {
+      "tier": "production",
+      "reason": "Open source is a tender demand for government; three competitors offer it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-no-seat-fee": {
+      "tier": "mvp",
+      "reason": "No seat fee is part of the offer one organisation buys; inherent in the licence.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-in-workspace": {
+      "tier": "poc",
+      "reason": "Working inside Nextcloud is the app's core promise and shows in any demo.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-existing-login": {
+      "tier": "poc",
+      "reason": "Nextcloud login is there from the first install; every competitor has single sign on.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-rbac": {
+      "tier": "mvp",
+      "reason": "Even one organisation must say who sees which records; four competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-field-permission": {
+      "tier": "production",
+      "reason": "Field level authorisation is fine grained access tenders ask for.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-secrets": {
+      "tier": "production",
+      "reason": "Encrypted keys are security hardening that tenders and audits ask for.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-connection-audit": {
+      "tier": "later",
+      "reason": "Social follow tracking is marketing, far from the core job.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-rename-safe": {
+      "tier": "production",
+      "reason": "Keeping data intact through field renames is hardening for long running installs.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-health-check": {
+      "tier": "production",
+      "reason": "Checking every connection from one page is what operators need at scale.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-delete-person": {
+      "tier": "production",
+      "reason": "The AVG right to erasure, with the books kept intact, is a tender demand.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-spend-cap": {
+      "tier": "production",
+      "reason": "A spend cap is hardening that protects organisations running paid integrations at scale.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-house-style": {
+      "tier": "production",
+      "reason": "Government tenders ask for their own house style through NL Design System.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-languages": {
+      "tier": "mvp",
+      "reason": "Dutch organisations need the app in Dutch from day one.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-phone": {
+      "tier": "mvp",
+      "reason": "Four competitors work on a phone; staff with clients need it daily.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "chat-on-website": {
+      "tier": "later",
+      "reason": "Website chat is a separate channel; two competitors have it and no tender row.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "marketplace-integrations": {
+      "tier": "later",
+      "reason": "A marketplace matters once there are many connectors; not needed to win tenders.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "auto-failure-alerts": {
+      "tier": "nee",
+      "reason": "Automations run on the OpenRegister flow engine, which owns failure alerts.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "mail-client-plugin": {
+      "tier": "production",
+      "reason": "A mail integration four competitors have; a team can copy contacts by hand at first.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "bulk-edit": {
+      "tier": "mvp",
+      "reason": "Four competitors edit many records at once; daily list work needs it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-behaviour-flag": {
+      "tier": "production",
+      "reason": "A tender asks for a warning flag on aggressive clients; safety for desk staff.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-preferred-name": {
+      "tier": "later",
+      "reason": "One feature request; a note field covers it in the meantime.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-ai-summary": {
+      "tier": "later",
+      "reason": "AI summaries are new; one competitor has it and no tender asks.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-smart-paste": {
+      "tier": "later",
+      "reason": "A convenience with no competitor fully offering it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-identifiers": {
+      "tier": "later",
+      "reason": "No competitor fully checks several company numbers; the KvK lookup covers the main case.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-churn-risk": {
+      "tier": "later",
+      "reason": "Churn insight suits subscription businesses; only HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-unmerge": {
+      "tier": "later",
+      "reason": "No competitor undoes a merge; one feature request asks for it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-undo-bulk-change": {
+      "tier": "later",
+      "reason": "Undo refines bulk edit; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-business-card-scan": {
+      "tier": "later",
+      "reason": "Card scanning is a convenience; only Pipedrive has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-bulk-enrichment": {
+      "tier": "later",
+      "reason": "Bulk enrichment from public data is a growth tool; three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "clients-relationships": {
+      "tier": "later",
+      "reason": "Relationship mapping refines contact persons; no competitor rating or outside demand.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "stock-levels": {
+      "tier": "later",
+      "reason": "Stock is inventory management, outside the CRM core job; only Odoo has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "prod-overdue-chasing": {
+      "tier": "later",
+      "reason": "Chasing invoices belongs to the invoicing app; only HubSpot has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "prod-price-lists": {
+      "tier": "later",
+      "reason": "Price lists per group refine quoting; two competitors have them.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "prod-service-catalogue": {
+      "tier": "later",
+      "reason": "A public service catalogue is usually a separate product for municipalities.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "unified-search": {
+      "tier": "nee",
+      "reason": "Decided no: no competitor has it and no demand; reversible if demand appears.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "internal-news": {
+      "tier": "nee",
+      "reason": "Decided no: only KISS has it and no demand; reversible if demand appears.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-multi-municipality": {
+      "tier": "production",
+      "reason": "A tender asks for one desk serving several municipalities; common in shared service centres.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-mail-routing": {
+      "tier": "production",
+      "reason": "A tender asks for rules on a shared mailbox; three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-handover-log": {
+      "tier": "production",
+      "reason": "Following a passed request matters for larger desks; three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-valid-recipient": {
+      "tier": "nee",
+      "reason": "Decided no: only KISS has it and no demand; reversible if demand appears.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-phone-format": {
+      "tier": "mvp",
+      "reason": "A desk searches by phone number daily; a feature request shows the pain.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-ai-triage": {
+      "tier": "nee",
+      "reason": "Decided no: no competitor has it fully; reversible if demand appears.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-similar-answer": {
+      "tier": "nee",
+      "reason": "Decided no: no competitor has it and no demand; reversible if demand appears.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-close-reminder": {
+      "tier": "nee",
+      "reason": "Decided no: no competitor has it and no demand; reversible if demand appears.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-waiting-on-us": {
+      "tier": "nee",
+      "reason": "Decided no: no competitor has it and no demand; reversible if demand appears.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-saved-replies": {
+      "tier": "mvp",
+      "reason": "Four competitors offer saved replies; a service desk types the same answers daily.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-conversation-export": {
+      "tier": "production",
+      "reason": "Archiving conversations is a compliance demand at scale; HubSpot has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-approval-step": {
+      "tier": "nee",
+      "reason": "Decided no: no competitor has it fully; reversible if demand appears.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "req-article-review-date": {
+      "tier": "nee",
+      "reason": "Knowledge articles live in XWiki, which owns review dates.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "two-calls-at-once": {
+      "tier": "nee",
+      "reason": "Decided no: only KISS has it and no demand; reversible if demand appears.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-social-media": {
+      "tier": "production",
+      "reason": "A tender asks for social messages in the same queue; HubSpot has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-chatbot": {
+      "tier": "production",
+      "reason": "A tender asks for a chatbot with handover; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-transcribe": {
+      "tier": "production",
+      "reason": "A tender asks for call transcription; two competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-quality-review": {
+      "tier": "production",
+      "reason": "A tender asks for scoring recorded calls for coaching; HubSpot has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-keep-draft": {
+      "tier": "mvp",
+      "reason": "Losing a half typed contact moment hurts daily work; a feature request names it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-link-to-open-request": {
+      "tier": "mvp",
+      "reason": "Adding a contact to an open request avoids duplicates daily; three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-history-by-phone": {
+      "tier": "production",
+      "reason": "Contacts by unknown number help a busy desk; feature request demand.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-call-flow": {
+      "tier": "nee",
+      "reason": "Call flows are configured in the telephony platform, not in pipelinq.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "cm-failed-send": {
+      "tier": "production",
+      "reason": "Resending failed messages is hardening of outbound messaging; Pipedrive has it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "vendor-training": {
+      "tier": "nee",
+      "reason": "Courses are content for the Conduction website, not the app (Ruben, 29 Sep 2026).",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "local-partner": {
+      "tier": "nee",
+      "reason": "A partner directory is content for the Conduction website, not the app (Ruben, 29 Sep 2026).",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "take-your-data": {
+      "tier": "production",
+      "reason": "A full exit export is a tender demand against lock in.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-retention-destroy": {
+      "tier": "production",
+      "reason": "A tender asks for retention terms with approved destruction, as the Archiefwet requires.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-wcag": {
+      "tier": "mvp",
+      "reason": "WCAG 2.1 AA is a legal requirement for government; one organisation cannot use the app without it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-simple-menu": {
+      "tier": "later",
+      "reason": "A short menu is a convenience; no competitor rating or outside demand.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-field-conditions": {
+      "tier": "production",
+      "reason": "A tender asks for conditional fields without code; two competitors have them.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-knowledge-only-role": {
+      "tier": "nee",
+      "reason": "The knowledge base moved to XWiki, which owns read only access.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-central-authorisation": {
+      "tier": "nee",
+      "reason": "Owned by Nextcloud server, which provides central authorisation.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-record-lock": {
+      "tier": "later",
+      "reason": "Locking finished records is a refinement; only EspoCRM has it fully.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-restore-deleted": {
+      "tier": "production",
+      "reason": "Restoring deleted records is hardening; three competitors have it.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-work-offline": {
+      "tier": "nee",
+      "reason": "Decided no: no competitor has it and no demand; reversible if demand appears.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-copy-access": {
+      "tier": "nee",
+      "reason": "Owned by Nextcloud server, which manages groups and access.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "plat-translated-field-names": {
+      "tier": "nee",
+      "reason": "Field labels per language belong to the OpenRegister property model.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "meeting-link": {
+      "tier": "production",
+      "reason": "A booking link comes with appointment booking; two competitors have it. Spec V1.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-digid": {
+      "tier": "nee",
+      "reason": "DigiD and eHerkenning login are portaliq rows; the shared portal owns them per hydra ADR-046.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-visible-fields": {
+      "tier": "later",
+      "reason": "A preview of what the resident reads refines the portal; one feature request.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "portal-menu-choice": {
+      "tier": "nee",
+      "reason": "Menu choice per client belongs to the shared portal portaliq per hydra ADR-046.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "q-stage-reorder": {
+      "tier": "mvp",
+      "reason": "Each organisation sets up its own stages, so reordering them is part of the mvp setup.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "q-portal-pay": {
+      "tier": "later",
+      "reason": "Paying from the portal follows portal invoices, which are deferred.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "q-hardware-scanner": {
+      "tier": "later",
+      "reason": "Part of the till, which is itself later.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "q-multi-question-call": {
+      "tier": "production",
+      "reason": "Registering several questions per call is KCC reporting that tenders ask for.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "q-merge-undo": {
+      "tier": "later",
+      "reason": "Same question as undoing a merge, which no competitor offers.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "q-hubspot-free-pipeline": {
+      "tier": "nee",
+      "reason": "A research question about a competitor's pricing, not a capability of pipelinq.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "q-odoo-community-marketing": {
+      "tier": "nee",
+      "reason": "A research question about a competitor's editions, not a capability of pipelinq.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "q-espocrm-journey": {
+      "tier": "nee",
+      "reason": "A research question about a competitor's add-on, not a capability of pipelinq.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "q-competitor-nl-vat": {
+      "tier": "nee",
+      "reason": "A research question about competitors; pipelinq's own VAT is row prod-vat.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "q-nldesign-theme": {
+      "tier": "production",
+      "reason": "Government buyers ask for NL Design System theming in tenders, same as plat-house-style.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "q-competitor-carddav": {
+      "tier": "nee",
+      "reason": "A research question about competitors; pipelinq's own sync is row clients-carddav.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    },
+    "q-kiss-overlap": {
+      "tier": "nee",
+      "reason": "A positioning question for the product owner, not a capability of pipelinq.",
+      "proposedBy": "claude",
+      "proposedOn": "2026-11-17",
+      "decidedBy": null,
+      "decidedOn": null
+    }
+  }
+}

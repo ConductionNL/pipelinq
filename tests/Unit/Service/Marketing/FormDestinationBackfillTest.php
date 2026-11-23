@@ -33,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 require_once __DIR__ . '/../../Support/InMemoryListObjectStore.php';
 
@@ -105,7 +106,10 @@ class FormDestinationBackfillTest extends TestCase {
 			/**
 			 * @param array<string, mixed> $object The object.
 			 */
-			public function saveObject(array $object, string $register, string $schema, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntity {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($uuid === 'form-broken') {
 					throw new RuntimeException('refused');
 				}
@@ -248,4 +252,40 @@ class FormDestinationBackfillTest extends TestCase {
 
 		$this->assertSame(['status' => 'no-openregister', 'named' => 0, 'skipped' => 0, 'failed' => 0], $backfill->run());
 	}//end testNothingToReadIsNotAFailure()
+
+	/**
+	 * A page that is no list of rows ends the read: nothing is named, and it is not a failure.
+	 */
+	public function testAPageThatIsNoListEndsTheRead(): void {
+		$objects = new class {
+
+			/**
+			 * @var int
+			 */
+			public int $reads = 0;
+
+			/**
+			 * @param array<string, mixed> $config The query.
+			 *
+			 * @return mixed
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$this->reads++;
+
+				return null;
+			}//end findAll()
+		};
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objects);
+		$appConfig = $this->createMock(IAppConfig::class);
+		$backfill = new FormDestinationBackfill(
+			$container,
+			new CampaignService(new InMemoryListObjectStore(), $appConfig, new CampaignLinkDecorator($appConfig)),
+			new CampaignFormDestination(),
+			$this->createMock(LoggerInterface::class)
+		);
+
+		$this->assertSame(['status' => 'done', 'named' => 0, 'skipped' => 0, 'failed' => 0], $backfill->run());
+		$this->assertSame(1, $objects->reads);
+	}//end testAPageThatIsNoListEndsTheRead()
 }//end class

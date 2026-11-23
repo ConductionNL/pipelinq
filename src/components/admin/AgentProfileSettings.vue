@@ -21,6 +21,11 @@
 							variant="warning"
 							:label="t('pipelinq', 'Unavailable')"
 							class="agent-availability" />
+						<CnStatusBadge
+							v-if="profile.pauseLeadAssignment === true"
+							variant="warning"
+							:label="t('pipelinq', 'Paused for new leads')"
+							class="agent-availability" />
 						<span class="agent-meta">
 							{{
 								getSkillNames(profile).join(', ')
@@ -38,7 +43,7 @@
 						<NcButton @click="startEdit(profile)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton variant="error" @click="deleteProfile(profile)">
+						<NcButton variant="error" @click="askDelete(profile)">
 							{{ t('pipelinq', 'Delete') }}
 						</NcButton>
 					</div>
@@ -94,6 +99,27 @@
 							</label>
 						</div>
 					</div>
+					<div class="edit-row">
+						<div class="edit-field">
+							<label for="agent-edit-lead-cap">{{
+								t('pipelinq', 'Most new leads in 30 days')
+							}}</label>
+							<input
+								id="agent-edit-lead-cap"
+								v-model.number="editForm.leadCapPer30Days"
+								type="number"
+								min="1"
+								:placeholder="t('pipelinq', 'No limit')" />
+						</div>
+						<div class="edit-field">
+							<label>
+								<input
+									v-model="editForm.pauseLeadAssignment"
+									type="checkbox" />
+								{{ t('pipelinq', 'Pause lead assignment') }}
+							</label>
+						</div>
+					</div>
 					<div class="edit-actions">
 						<NcButton @click="cancelEdit">
 							{{ t('pipelinq', 'Cancel') }}
@@ -131,6 +157,8 @@ import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import { useAgentProfilesStore } from '../../store/modules/agentProfiles.js'
 import { useSkillsStore } from '../../store/modules/skills.js'
+import { profileToSave } from '../../utils/agentProfileForm.js'
+import inlineEditRowsMixin from './inlineEditRowsMixin.js'
 
 export default {
 	name: 'AgentProfileSettings',
@@ -143,46 +171,39 @@ export default {
 		NcSettingsSection,
 	},
 
-	data() {
-		return {
-			// The row the delete dialog asks about.
-			deleting: null,
-			editingId: null,
-			editForm: {},
-		}
-	},
+	mixins: [inlineEditRowsMixin],
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-9
 		 */
 		profilesStore() {
 			return useAgentProfilesStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-11
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-11
 		 */
 		skillsStore() {
 			return useSkillsStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-6
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		loading() {
 			return this.profilesStore.loading
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		profiles() {
 			return this.profilesStore.profiles
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-2
 		 */
 		allSkills() {
 			return this.skillsStore.skills
@@ -190,7 +211,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-7
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-7
 	 */
 	mounted() {
 		this.profilesStore.fetchProfiles()
@@ -200,7 +221,7 @@ export default {
 	methods: {
 		/**
 		 * @param {object} profile The agent profile whose skills to name.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		getSkillNames(profile) {
 			if (!profile.skills || !this.allSkills.length) return []
@@ -212,7 +233,7 @@ export default {
 
 		/**
 		 * @param {object} profile The agent profile to edit.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-12
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-12
 		 */
 		startEdit(profile) {
 			this.editingId = profile.id
@@ -220,17 +241,9 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-3
-		 */
-		cancelEdit() {
-			this.editingId = null
-			this.editForm = {}
-		},
-
-		/**
 		 * @param {string} skillId Identifier of the skill.
 		 * @param {boolean} checked Whether the skill is now selected.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-13
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-13
 		 */
 		toggleSkill(skillId, checked) {
 			const skills = [...(this.editForm.skills || [])]
@@ -244,15 +257,15 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-10
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-10
 		 */
 		async saveEdit() {
-			await this.profilesStore.saveProfile(this.editForm)
+			await this.profilesStore.saveProfile(profileToSave(this.editForm))
 			this.cancelEdit()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		async addProfile() {
 			const userId = prompt(t('pipelinq', 'Enter Nextcloud user ID:'))
@@ -266,19 +279,9 @@ export default {
 		},
 
 		/**
-		 * Ask before deleting a row.
-		 *
-		 * @param {object} profile The row to delete.
-		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
-		 */
-		deleteProfile(profile) {
-			this.deleting = profile
-		},
-
-		/**
 		 * Delete the row the dialog asked about, and tell the dialog how it went.
 		 *
-		 * @spec openspec/changes/pl-abstract-admin-sections/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
+		 * @spec openspec/specs/admin-settings/spec.md#requirement-a-delete-on-the-admin-page-asks-in-a-dialog
 		 */
 		async confirmDelete() {
 			const deleted = await this.profilesStore.deleteProfile(this.deleting.id)
@@ -290,7 +293,11 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped src="./inlineEditRows.css"></style>
+
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .agent-settings {
 	display: flex;
 	flex-direction: column;
@@ -319,10 +326,7 @@ export default {
 }
 
 .agent-meta {
-	display: block;
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	margin-top: 2px;
+	@include meta-line;
 }
 
 .agent-item__actions {
@@ -335,17 +339,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
-}
-
-.edit-field {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.edit-field label {
-	font-weight: 600;
-	font-size: 13px;
 }
 
 .edit-field input[type='text'],
@@ -372,12 +365,6 @@ export default {
 	gap: 4px;
 	font-size: 13px;
 	font-weight: normal !important;
-}
-
-.edit-actions {
-	display: flex;
-	gap: 4px;
-	justify-content: flex-end;
 }
 
 .agent-add {

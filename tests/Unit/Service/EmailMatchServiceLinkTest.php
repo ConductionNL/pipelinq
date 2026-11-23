@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\EmailMatchService;
+use OCA\Pipelinq\Service\MailMessageKey;
 use OCP\DB\IResult;
 use OCP\DB\QueryBuilder\IExpressionBuilder;
 use OCP\DB\QueryBuilder\IQueryBuilder;
@@ -49,7 +50,7 @@ class EmailMatchServiceLinkTest extends TestCase {
 		$calls = [];
 		$service = $this->buildService(calls: $calls, linkFails: false);
 
-		$created = $service->matchAndLinkMessage(mailAccountId: 3, mailMessageId: 44, userId: 'alice');
+		$created = $service->matchAndLinkMessage(message: new MailMessageKey(mailAccountId: 3, mailMessageId: 44), userId: 'alice');
 
 		$this->assertSame(2, $created);
 		$this->assertSame(
@@ -70,7 +71,7 @@ class EmailMatchServiceLinkTest extends TestCase {
 		$calls = [];
 		$service = $this->buildService(calls: $calls, linkFails: true);
 
-		$this->assertSame(0, $service->matchAndLinkMessage(mailAccountId: 3, mailMessageId: 44, userId: 'alice'));
+		$this->assertSame(0, $service->matchAndLinkMessage(message: new MailMessageKey(mailAccountId: 3, mailMessageId: 44), userId: 'alice'));
 		$this->assertCount(2, $calls);
 	}//end testAFailingLeafCallIsNotCounted()
 

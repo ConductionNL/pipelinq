@@ -23,16 +23,18 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DialLineReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\IncomingCallFinderInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\Cti\IncomingCallFinder;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 
 /**
- * The open inbound call on the signed-in agent's own line.
+ * The signed-in agent's own line: the inbound call on it, and whether a call
+ * can be placed from it.
  *
  * Its own controller, beside CtiController: that one carries the webhook,
  * click-to-dial and the telephony settings, and has no room for another route.
@@ -45,14 +47,16 @@ class IncomingCallController extends Controller {
 	 *
 	 * @param IRequest $request The HTTP request.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
-	 * @param IncomingCallFinder $incomingCalls Finds the open inbound call on an agent's line.
+	 * @param IncomingCallFinderInterface $incomingCalls Finds the open inbound call on an agent's line.
+	 * @param DialLineReaderInterface $dialLines Says whether a call can be placed from an agent's line.
 	 */
 	public function __construct(
 		IRequest $request,
 		private CrmPrivilegeCheck $privilege,
-		private IncomingCallFinder $incomingCalls,
+		private IncomingCallFinderInterface $incomingCalls,
+		private DialLineReaderInterface $dialLines,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -77,4 +81,25 @@ class IncomingCallController extends Controller {
 
 		return new JSONResponse($this->incomingCalls->forAgent(userId: $uid));
 	}//end show()
+
+	/**
+	 * Whether the signed-in agent can place a call from their own line, from which extension, and whether it is busy.
+	 *
+	 * Asked by the click-to-dial buttons beside phone numbers. The uid comes
+	 * from the session, so an agent only ever learns their own extension.
+	 *
+	 * @return JSONResponse `{enabled, extension, busy}`.
+	 *
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-click-to-dial-outbound-req-cti-003
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-36.1
+	 */
+	#[NoAdminRequired]
+	public function dialLine(): JSONResponse {
+		$refusal = $this->privilege->refusal();
+		if ($refusal === null) {
+			$refusal = new JSONResponse($this->dialLines->forAgent(userId: $this->privilege->actingUserId()));
+		}
+
+		return $refusal;
+	}//end dialLine()
 }//end class

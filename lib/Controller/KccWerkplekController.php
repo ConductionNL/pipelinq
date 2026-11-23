@@ -19,7 +19,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,8 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\KccWerkplekService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\KccWerkplekServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -43,28 +43,28 @@ use Psr\Log\LoggerInterface;
 /**
  * REST controller for the KCC Werkplek workspace state.
  *
- * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
  */
 class KccWerkplekController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param KccWerkplekService $werkplekService Workspace state service.
+	 * @param KccWerkplekServiceInterface $werkplekService Workspace state service.
 	 * @param IUserSession $userSession Active user session.
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N|null $l10n Words the header line in the user's language.
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	public function __construct(
 		IRequest $request,
-		private KccWerkplekService $werkplekService,
+		private KccWerkplekServiceInterface $werkplekService,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private ?IL10N $l10n = null,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -78,16 +78,13 @@ class KccWerkplekController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function stateAction(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['message' => 'Authentication required'],
-				Http::STATUS_UNAUTHORIZED
-			);
+		$user = $this->sessionUser();
+		if ($user instanceof JSONResponse) {
+			return $user;
 		}
 
 		try {
@@ -95,15 +92,8 @@ class KccWerkplekController extends Controller {
 			$payload['availabilityLine'] = $this->availabilityLine(available: (bool) ($payload['agentProfile']['isAvailable'] ?? false));
 			return new JSONResponse($payload);
 		} catch (\Throwable $e) {
-			$this->logger->error(
-				message: '[KccWerkplekController] state failed',
-				context: ['error' => $e->getMessage()]
-			);
-			return new JSONResponse(
-				['message' => 'Operation failed'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+			return $this->operationFailed(action: 'state', error: $e);
+		}
 	}//end stateAction()
 
 	/**
@@ -114,7 +104,7 @@ class KccWerkplekController extends Controller {
 	 *
 	 * @return string The line, or '' without a translator.
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	private function availabilityLine(bool $available): string {
 		if ($this->l10n === null) {
@@ -140,10 +130,34 @@ class KccWerkplekController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function setAvailabilityAction(): JSONResponse {
+		$user = $this->sessionUser();
+		if ($user instanceof JSONResponse) {
+			return $user;
+		}
+
+		$available = $this->requestedAvailability();
+		if ($available instanceof JSONResponse) {
+			return $available;
+		}
+
+		try {
+			$result = $this->werkplekService->setAvailability($user->getUID(), $available);
+			return new JSONResponse($result);
+		} catch (\Throwable $e) {
+			return $this->operationFailed(action: 'setAvailability', error: $e);
+		}
+	}//end setAvailabilityAction()
+
+	/**
+	 * The session user, or the 401 without one.
+	 *
+	 * @return \OCP\IUser|JSONResponse
+	 */
+	private function sessionUser(): \OCP\IUser|JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(
@@ -152,6 +166,34 @@ class KccWerkplekController extends Controller {
 			);
 		}
 
+		return $user;
+	}//end sessionUser()
+
+	/**
+	 * Log a failed action and answer with the generic 500.
+	 *
+	 * @param string     $action The failed action, for the log.
+	 * @param \Throwable $error  The failure.
+	 *
+	 * @return JSONResponse
+	 */
+	private function operationFailed(string $action, \Throwable $error): JSONResponse {
+		$this->logger->error(
+			message: '[KccWerkplekController] ' . $action . ' failed',
+			context: ['error' => $error->getMessage()]
+		);
+		return new JSONResponse(
+			['message' => 'Operation failed'],
+			Http::STATUS_INTERNAL_SERVER_ERROR
+		);
+	}//end operationFailed()
+
+	/**
+	 * The availability the request asks for, or the 400 that refuses it.
+	 *
+	 * @return bool|JSONResponse The requested flag, or the refusal.
+	 */
+	private function requestedAvailability(): bool|JSONResponse {
 		$param = $this->request->getParam('isAvailable', null);
 		if ($param === null) {
 			return new JSONResponse(
@@ -169,20 +211,8 @@ class KccWerkplekController extends Controller {
 			);
 		}
 
-		try {
-			$result = $this->werkplekService->setAvailability($user->getUID(), $available);
-			return new JSONResponse($result);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				message: '[KccWerkplekController] setAvailability failed',
-				context: ['error' => $e->getMessage()]
-			);
-			return new JSONResponse(
-				['message' => 'Operation failed'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
-	}//end setAvailabilityAction()
+		return $available;
+	}//end requestedAvailability()
 
 	/**
 	 * Coerce the request's isAvailable param to a strict boolean.

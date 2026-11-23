@@ -1,0 +1,81 @@
+# Tasks: specify-capability-rows
+
+- [x] 1.1 Write the requirements and record each one on its row in `openspec/parity/capabilities.json`
+  - Verify: `openspec validate specify-capability-rows --strict` passes
+
+- [ ] 2.1 Check row `rep-website-traffic` against "Website traffic shows next to the pipeline for the same period"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Matomo/MatomoReportService.php`
+- [ ] 3.1 Check row `clients-search` against "A client can be found by name, email or phone outside the client list"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Dashboard/FindClientWidget.php`
+- [ ] 4.1 Check row `auto-cross-app` against "A change made to a tracked object by another app gets the same follow-up"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Listener/ObjectEventListener.php`
+- [ ] 5.1 Check row `plat-health-check` against "One check reports the state of every configured connection"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/HealthController.php`
+- [ ] 6.1 Check row `clients-party-kind` against "A client records what kind of party it is"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/PartyKindRegistryService.php:112`
+- [ ] 7.1 Check row `clients-opencorporates` against "An organisation abroad can be looked up in an international company register"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/OpenCorporatesApiClient.php:96`
+- [ ] 8.1 Check row `req-complaint` against "A complaint is held to the legal answer term by default"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/ComplaintSlaService.php:112`
+- [ ] 9.1 Check row `auto-setup-wizard` against "The setup wizard opens by itself on the first visit"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/SetupController.php`
+- [ ] 10.1 Check row `pipeline-kanban` against "A lead dragged to another stage column moves to that stage"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `src/views/pipeline/PipelineBoard.vue`
+- [ ] 11.1 Check row `work-recurring-task` against "A task with a repeat schedule comes back on that schedule"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/ScheduledTaskJob.php`
+- [ ] 12.1 Check row `auto-overnight` against "Slow work runs as a background job, not in the user's request"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/SlaDeadlineSweepJob.php`
+- [ ] 13.1 Check row `meeting-link` against "A user can send a booking link that offers the free slots in their own calendar"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/AvailabilityService.php:174`
+- [ ] 14.1 Check row `contract-number` against "A won lead can be turned into a numbered contract"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/ContractService.php:208`
+- [ ] 15.1 Check row `gov-klantinteracties` against "Stored contact moments can be read in the VNG Klantinteracties format"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Integration/ContactMomentLeafProvider.php`
+- [ ] 16.1 Check row `req-conversation-export` against "Every service conversation can be copied to an outside archive"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `an`
+- [ ] 17.1 Check row `rep-schema-evolution` against "An export keeps working when a field is added or removed"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Export/SchemaEvolutionService.php`
+- [ ] 18.1 Check row `portal-login` against "A client logs in to the portal with an account of their own"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalAuthService.php:130`
+- [ ] 19.1 Check row `portal-mfa` against "The portal asks for a second factor when the tenant requires it"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalMfaService.php:173`
+- [ ] 20.1 Check row `portal-file-request` against "A client files a request in the portal and follows it"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalRequestService.php:216`
+- [ ] 21.1 Check row `portal-reply` against "A client answers a question on their request in the portal"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalRequestService.php:298`
+- [ ] 22.1 Check row `portal-documents` against "A client downloads their own documents through a short-lived link"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/PortalDocumentController.php`
+- [ ] 23.1 Check row `portal-invoices` against "A client sees their own invoices, contracts, orders and quotes"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalInvoiceService.php`
+- [ ] 24.1 Check row `portal-delegation` against "A business client gives another portal account access to part of their records"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalDelegationService.php:95`
+- [ ] 25.1 Check row `portal-export` against "A client downloads everything the portal holds about them"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalExportService.php:86`
+- [ ] 26.1 Check row `portal-close-account` against "A client closes their own portal account"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalAccountService.php:89`
+- [ ] 27.1 Check row `portal-sign` against "A client signs a document from a link"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/DocumentSigningService.php:88`
+- [ ] 28.1 Check row `auto-api` against "A script reads and writes the app's records through the API"
+  - Verify: the scenarios hold on a live instance; evidence on the row: `appinfo/routes.php`
+- [ ] 29.1 Add attributes and variants to the product schema and the product page, refuse a duplicate combination, and let lead, quote and invoice line pickers choose the variant (requirement "A product keeps attributes and variants with their own code and price")
+  - Verify: PHPUnit for the duplicate refusal and the price fallback; the shillinq row `inv-catalog` records this requirement
+  - Built: the duplicate refusal. `ProductVariantGuard` (on every product create and update) refuses two variants that name the same combination of values in their `attributes` ("A variant for Maat S already exists on this product"), or the same code, and stores nothing; the comparison is `VariantCombinations`. PHPUnit `ProductVariantGuardTest`, `VariantCombinationsTest`, and `ProductCatalogServiceTest::testAVariantWithoutAPriceTakesItsProductsPrice` for the price fallback (already built in `ProductCatalogService`). The product's own attributes: `variantAttributes` (name and allowed values, fragment `99-zzzzzzzzzzzzzz-product-variant-attributes.json`, product 1.3.0); when a product declares them, the guard refuses a variant that names no value for one of them, a value it does not allow, or an attribute it does not declare (`VariantCombinations::attributeMismatch`, PHPUnit in the same two tests). The product page now shows both: the `product-variant-attributes` card (each declared attribute with its allowed values, read only, Vitest `tests/vitest/productVariantAttributes.spec.js`) just before the existing `product-variants` list. Open: the variant pick on the lead line (`CnChildRecordsField` has no hook, see products-quote-from-lead task 1) and on shillinq's invoice line.
+- [x] 30.1 Add a vitest over `repliesForChannel` for "Saved replies in the party's language come first" (row `gov-client-language`; code in `src/components/SavedReplyPicker.vue`)
+  - Verify: the test passes; the behaviour already ships
+- [x] 31.1 Add a vitest over `src/components/ContactmomentQuickLog.vue` for "A contact moment is filed on an open request" (row `cm-link-to-open-request`); limit the request picker to open requests of the chosen client
+  - Verify: the test passes; a closed request is not offered
+- [x] 32.1 Notify the watch owner when a page watch finds a change: a Nextcloud notification from `lib/Service/Competitor/CompetitorWatchService.php` through `lib/Notification/Notifier.php`, opening the Competitors page (requirement "The owner of a watch is told when the watched page changes", row `mkt-competitor-watch`)
+  - Verify: PHPUnit for the notification on a changed fragment and none on an unchanged one
+- [x] 33.1 Give a walk-in ticket the next queue number of the day in `lib/Service/WalkInQueueService.php::createTicket` and show it on the queue page and on Call next (requirement "A walk-in visitor gets a queue number", row `req-walkin`)
+  - Verify: PHPUnit for the daily sequence and the reset; the queue page shows the called number
+- [ ] 34.1 Build the personal booking link: a shareable link per user whose page offers the free slots of that user's calendar (via `lib/Service/AvailabilityService.php`) and books the chosen slot into it (requirement "A user can send a booking link that offers the free slots in their own calendar", row `meeting-link`)
+  - Verify: PHPUnit for a busy hour not offered; the booking lands in the user's calendar
+  - Built: the link and its API. `BookingLinkTokens` keeps one random 32-character token per user (a pipelinq user preference), `GET /api/booking-link` reads the signed-in user's link (made on first read) and `DELETE /api/booking-link` switches it off (`BookingLinkController`). The public side (`PublicBookingLinkController`, `#[PublicPage]`, rate limited) answers `GET /api/booking-links/{token}/slots?date=` with the free 30-minute slots of a working day (Monday to Friday, 09:00 to 17:00 in the owner's time zone, none in the past, up to 60 days ahead) and `POST /api/booking-links/{token}/bookings` books one: `BookingLinkService` checks the slot again and `OwnCalendar` writes it into the owner's first own writable calendar through Nextcloud's calendar manager, titled "Meeting with <name>" with the booker's address in the description. Busy times come from the owner's own calendars only; a shared calendar, an event marked free and a cancelled event do not block a slot, and the answers name free times only. PHPUnit `tests/Unit/Service/BookingLink/BookingLinkServiceTest.php` (the scenario: Tuesday 11:00 busy is not offered, 10:00 lands in the calendar with the booker's name), `BookingLinkTokensTest.php`, `tests/Unit/Controller/BookingLinkControllerTest.php`; `openapi.json`. Open: the page a recipient opens (board PqBoekingslink) and where a user copies their link, which are UI work after the board, and the working day as a setting.
+- [ ] 35.1 List the client's real invoices in the portal: read shillinq sales invoices through the integration registry, leave out draft and parked POS carts, and offer each invoice as a PDF (`lib/Service/Portal/PortalInvoiceService.php`, `lib/Service/Portal/AbstractPortalReadFacade.php`; row `portal-invoices`, requirement "A client sees their own invoices, contracts, orders and quotes")
+  - Verify: PHPUnit: a draft cart is not listed, a shillinq invoice is, its PDF downloads
+  - Built: the list. `PortalInvoiceService` leaves out a POS cart that is `draft` or `parked` (in the list and by id), and adds the client's bookkeeping invoices through `PortalLedgerInvoices`: the client's `shillinqOrganisationRef` read from the main register, then `ShillinqInvoiceReader::invoicesFor()` (past the draft stage), own clients and clients delegated under `view-invoices` (tagged with the grantor). Each row carries `source` (`pos` or `ledger`); a bookkeeping invoice of another customer reads as not found. PHPUnit `tests/Unit/Service/Portal/PortalInvoiceSourcesTest.php`. Open: the PDF of a bookkeeping invoice, which needs shillinq's document route for an AR invoice.
+- [ ] 36.1 Put the click-to-dial button next to every phone number on the client, contact and lead pages: mount `src/components/CtiClickToDialButton.vue`, which no page mounts today, where those pages render a phone number, and hide it when no telephony platform is configured (row `cm-click-to-call`, requirement "Click-to-Dial Outbound (REQ-CTI-003)" in `openspec/specs/cti-screenpop-adapter`)
+  - Verify: vitest that the button renders beside a phone number and calls `ctiApi.clickToDial()` with that number; no button without a configured platform
+  - Built: `GET /api/cti/dial-line` (`DialLineController`, `DialLineReader`: on only with a configured platform, click-to-dial switched on and an extension in the agent's `ctiAgentPresence` row, read as the background service account; busy during `on-call` and `wrap-up`). `CtiClickToDialButton` reads that line itself (once per page, `src/services/dialLine.js`), shows nothing when it is off and is disabled while busy. Mounted beside the phone number of the client contact strip (`ContactLinks`) and on each phone row of the Channels tab of a client or contact (`ContactChannelsSection`). PHPUnit `DialLineReaderTest`, `DialLineControllerTest`; Vitest `tests/vitest/clickToDialBesidePhone.spec.js`. Open: the lead page and the contact header, whose phone numbers are nextcloud-vue `facts` / `data` fields and header actions with no slot for a component; they need a dial hook on `format: phone` in `@conduction/nextcloud-vue` (2.181.0 has none).
+- [ ] 37.1 Check row `clients-custom-fields` against "A field an administrator adds to the client schema shows on the client pages"
+  - Verify: the scenario holds on a live instance; evidence on the row: `lib/Service/RegisterResolverService.php`

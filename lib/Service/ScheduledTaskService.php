@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,6 +32,11 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\Contracts\ScheduledTaskServiceInterface;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskDeadlines;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskRights;
 use OCA\Pipelinq\Service\ScheduledTask\ScheduledTaskStore;
@@ -55,19 +60,9 @@ use Throwable;
  *  task-lifecycle service legitimately needs (config, session, groups,
  *  notifications, OR container, logger, plus DateTime/exception value types).
  *
- * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
  */
-class ScheduledTaskService {
-	/**
-	 * Valid task types.
-	 *
-	 * @var array<string>
-	 */
-	public const VALID_TYPES = [
-		'callbackRequest',
-		'followUpTask',
-		'informationRequest',
-	];
+class ScheduledTaskService implements ScheduledTaskServiceInterface {
 
 	/**
 	 * Task fields that any authenticated user may modify.
@@ -133,7 +128,7 @@ class ScheduledTaskService {
 	 *
 	 * @return array{items: array<int, mixed>, total: int, page: int, pages: int} List envelope.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function getScheduledTasks(array $params): array {
 		[$registerId, $schemaId] = $this->store->location();
@@ -149,7 +144,7 @@ class ScheduledTaskService {
 		$page = max(1, (int)($params['_page'] ?? 1));
 		$limit = min(100, max(1, (int)($params['_limit'] ?? 20)));
 
-		$filters = $this->buildTaskFilters(registerId: $registerId, schemaId: $schemaId, params: $params);
+		$filters = $this->buildTaskFilters(scope: ['register' => $registerId, 'schema' => $schemaId], params: $params);
 
 		$items = [];
 		$total = 0;
@@ -197,17 +192,13 @@ class ScheduledTaskService {
 	 * Applies the register/schema scope plus the optional status, assignee and
 	 * deadline-window filters from the request params.
 	 *
-	 * @param string $registerId The configured register ID.
-	 * @param string $schemaId The task schema ID.
-	 * @param array<string,mixed> $params The request filter params.
+	 * @param array<string,string> $scope  The configured register and task schema IDs.
+	 * @param array<string,mixed>  $params The request filter params.
 	 *
 	 * @return array<string,mixed> The assembled filter array.
 	 */
-	private function buildTaskFilters(string $registerId, string $schemaId, array $params): array {
-		$filters = [
-			'register' => $registerId,
-			'schema' => $schemaId,
-		];
+	private function buildTaskFilters(array $scope, array $params): array {
+		$filters = $scope;
 
 		foreach (['status', 'assigneeUserId', 'assigneeGroupId'] as $key) {
 			if (isset($params[$key]) === true && $params[$key] !== '') {
@@ -251,7 +242,7 @@ class ScheduledTaskService {
 	 *
 	 * @throws RuntimeException If the task is not found.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function getScheduledTask(string $id): array {
 		[$registerId, $schemaId] = $this->store->location();
@@ -262,10 +253,7 @@ class ScheduledTaskService {
 		try {
 			$object = $this->store->objects()->find(
 				$id,
-				[],
-				false,
-				$registerId,
-				$schemaId
+				new ObjectFindOptions(register: $registerId, schema: $schemaId)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(
@@ -295,7 +283,7 @@ class ScheduledTaskService {
 	 *
 	 * @throws InvalidArgumentException On validation failure.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function createScheduledTask(array $data): array {
 		$this->validateTaskInput(data: $data);
@@ -313,10 +301,7 @@ class ScheduledTaskService {
 
 		$saved = $this->store->objects()->saveObject(
 			$data,
-			[],
-			$registerId,
-			$schemaId,
-			null
+			new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId))
 		);
 
 		return $this->normalizeToArray(object: $saved);
@@ -365,7 +350,7 @@ class ScheduledTaskService {
 	 *
 	 * @return array<string, mixed> The updated task object.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function updateScheduledTask(string $id, array $data): array {
 		$existing = $this->getScheduledTask(id: $id);
@@ -395,10 +380,10 @@ class ScheduledTaskService {
 
 		$saved = $this->store->objects()->saveObject(
 			$merged,
-			[],
-			$registerId,
-			$schemaId,
-			$id
+			new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
+				uuid: $id
+			)
 		);
 
 		return $this->normalizeToArray(object: $saved);
@@ -414,7 +399,7 @@ class ScheduledTaskService {
 	 *
 	 * @throws RuntimeException When the task is not found or cannot be deleted.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function deleteScheduledTask(string $id): void {
 		$task = $this->getScheduledTask(id: $id);
@@ -424,7 +409,9 @@ class ScheduledTaskService {
 		}
 
 		[$registerId, $schemaId] = $this->store->location();
-		if ($this->store->objects()->deleteObject($uuid, $registerId, $schemaId) === false) {
+		if ($this->store->objects()->deleteObject(
+			new ObjectDeletion(uuid: $uuid, target: new ObjectFindTarget(register: $registerId, schema: $schemaId))
+		) === false) {
 			throw new RuntimeException('Task could not be deleted');
 		}
 	}//end deleteScheduledTask()
@@ -437,7 +424,7 @@ class ScheduledTaskService {
 	 *
 	 * @return array<int, array<string, mixed>> The overdue tasks.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function getOverdueTasks(): array {
 		[$registerId, $schemaId] = $this->store->location();
@@ -487,16 +474,10 @@ class ScheduledTaskService {
 	 *
 	 * @return array<int, array<string, mixed>> The matching tasks.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function getPendingTasks(int $windowMinutes = 60): array {
-		if ($windowMinutes > self::MAX_WINDOW_MINUTES) {
-			$windowMinutes = self::MAX_WINDOW_MINUTES;
-		}
-
-		if ($windowMinutes < 1) {
-			$windowMinutes = 1;
-		}
+		$windowMinutes = $this->clampWindow(windowMinutes: $windowMinutes);
 
 		[$registerId, $schemaId] = $this->store->location();
 		if ($registerId === '' || $schemaId === '') {
@@ -506,22 +487,68 @@ class ScheduledTaskService {
 		$now = new DateTimeImmutable('now');
 		$cutoff = $now->modify(sprintf('+%d minutes', $windowMinutes));
 
+		$items = $this->pendingItems(query: $this->pendingQuery(scope: ['register' => $registerId, 'schema' => $schemaId], window: [$now, $cutoff]));
+
+		return $this->normaliseAll(items: $items);
+	}//end getPendingTasks()
+
+	/**
+	 * Clamp a look-ahead window to 1 .. MAX_WINDOW_MINUTES.
+	 *
+	 * @param int $windowMinutes The requested window in minutes.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
+	 */
+	private function clampWindow(int $windowMinutes): int {
+		if ($windowMinutes > self::MAX_WINDOW_MINUTES) {
+			$windowMinutes = self::MAX_WINDOW_MINUTES;
+		}
+
+		if ($windowMinutes < 1) {
+			$windowMinutes = 1;
+		}
+
+		return $windowMinutes;
+	}//end clampWindow()
+
+	/**
+	 * The query for open tasks whose deadline falls between now and the cutoff.
+	 *
+	 * @param array<string, string>                              $scope  The register and task schema ids.
+	 * @param array{0: DateTimeImmutable, 1: DateTimeImmutable} $window The window start and end.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
+	 */
+	private function pendingQuery(array $scope, array $window): array {
+		return [
+			'filters' => $scope + [
+				'status' => 'open',
+				'deadline' => [
+					'>=' => $window[0]->format(DateTimeInterface::ATOM),
+					'<=' => $window[1]->format(DateTimeInterface::ATOM),
+				],
+			],
+			'limit' => 100,
+			'order' => ['deadline' => 'ASC'],
+		];
+	}//end pendingQuery()
+
+	/**
+	 * Run the pending-task query, logging a failure.
+	 *
+	 * @param array<string, mixed> $query The findAll query.
+	 *
+	 * @return array<mixed> The tasks found; an empty list when the query fails.
+	 *
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
+	 */
+	private function pendingItems(array $query): array {
 		try {
-			$items = $this->store->objects()->findAll(
-				[
-					'filters' => [
-						'register' => $registerId,
-						'schema' => $schemaId,
-						'status' => 'open',
-						'deadline' => [
-							'>=' => $now->format(DateTimeInterface::ATOM),
-							'<=' => $cutoff->format(DateTimeInterface::ATOM),
-						],
-					],
-					'limit' => 100,
-					'order' => ['deadline' => 'ASC'],
-				]
-			);
+			return $this->store->objects()->findAll($query);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'ScheduledTaskService: getPendingTasks failed',
@@ -529,14 +556,25 @@ class ScheduledTaskService {
 			);
 			return [];
 		}//end try
+	}//end pendingItems()
 
+	/**
+	 * Normalise every found task to an array.
+	 *
+	 * @param iterable<mixed> $items The tasks found.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
+	 */
+	private function normaliseAll(iterable $items): array {
 		$normalised = [];
 		foreach ($items as $item) {
 			$normalised[] = $this->normalizeToArray(object: $item);
 		}
 
 		return $normalised;
-	}//end getPendingTasks()
+	}//end normaliseAll()
 
 	/**
 	 * Process all due scheduled tasks.
@@ -549,7 +587,7 @@ class ScheduledTaskService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function processScheduledTasks(): void {
 		// Due-soon tasks (deadline within the next 4 hours) → notify + in_behandeling.
@@ -674,10 +712,10 @@ class ScheduledTaskService {
 		try {
 			$this->store->objects()->saveObject(
 				$task,
-				[],
-				$tick['registerId'],
-				$tick['schemaId'],
-				(string)($task['id'] ?? '')
+				new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $tick['registerId'], schema: $tick['schemaId']),
+					uuid: (string)($task['id'] ?? '')
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(
@@ -700,7 +738,7 @@ class ScheduledTaskService {
 	 *
 	 * @throws OCSForbiddenException When the user is not authorised.
 	 *
-	 * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-05-11-task-background-jobs/tasks.md#task-1
 	 */
 	public function authorizeTaskMutation(array $task, string $userId): void {
 		$this->rights->authorizeTaskMutation(task: $task, userId: $userId);
@@ -745,7 +783,7 @@ class ScheduledTaskService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
 	 */
 	public function applyAcceptLanguage(string $acceptLanguage): void {
 		$this->store->applyAcceptLanguage(acceptLanguage: $acceptLanguage);

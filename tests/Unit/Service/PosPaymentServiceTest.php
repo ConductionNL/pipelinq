@@ -40,6 +40,8 @@ use OCP\Security\ICrypto;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * In-memory fake of the OR ObjectService that models OpenRegister's
@@ -127,11 +129,14 @@ class PaymentFakeObjectService {
 	 */
 	public function find(
 		int|string $id,
-		?array $_extend = [],
-		bool $files = false,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		?ObjectFindOptions $options = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true
 	): ?array {
+		$_extend = $options?->extend ?? [];
+		$files = $options?->files ?? false;
+		$register = $options?->register;
+		$schema = $options?->schema;
 		$snapshotRegister = $this->currentRegister;
 		$snapshotSchema = $this->currentSchema;
 
@@ -207,11 +212,14 @@ class PaymentFakeObjectService {
 	 */
 	public function saveObject(
 		array $object,
-		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		bool $_rbac = true,
+		bool $_multitenancy = true
 	): array {
+		$extend = $options->extend ?? [];
+		$register = $options->target->register;
+		$schema = $options->target->schema;
+		$uuid = $options->uuid;
 		$this->currentRegister = (string)$register;
 		$this->currentSchema = (string)$schema;
 
@@ -238,6 +246,13 @@ class PaymentFakeWebhookService {
 	public array $events = [];
 
 	/**
+	 * Dispatched payloads, in call order.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	public array $payloads = [];
+
+	/**
 	 * Capture a dispatched CloudEvent.
 	 *
 	 * @param object $_event The framework event.
@@ -248,6 +263,7 @@ class PaymentFakeWebhookService {
 	 */
 	public function dispatchEvent(object $_event, string $eventName, array $payload): void {
 		$this->events[] = $eventName;
+		$this->payloads[] = $payload;
 	}//end dispatchEvent()
 }//end class
 
@@ -394,6 +410,36 @@ class PosPaymentServiceTest extends TestCase {
 			$this->assertSame('', $p['credentialId']);
 		}
 	}//end testListProvidersReturnsFourMaskedProviders()
+
+	/**
+	 * Provider settings are stored as strings: booleans as 'true'/'false'
+	 * (read back true only for 'true' or '1'), objects as JSON (unreadable
+	 * JSON reads as empty), and an unset setting reads as its default.
+	 *
+	 * @return void
+	 */
+	public function testProviderSettingsAreStoredAndReadInTheirEncodings(): void {
+		$service = $this->buildService();
+		$service->updateProvider(
+			name: 'ccv',
+			data: ['isActive' => 1, 'testMode' => 0, 'environment' => 'staging', 'config' => ['methods' => ['ideal']]]
+		);
+
+		$this->assertSame(
+			['true', 'false', '{"methods":["ideal"]}'],
+			[$this->configStore['payment_provider.ccv.isActive'], $this->configStore['payment_provider.ccv.testMode'], $this->configStore['payment_provider.ccv.config']]
+		);
+		$this->assertArrayNotHasKey('payment_provider.ccv.environment', $this->configStore);
+
+		$this->configStore['payment_provider.adyen.isActive'] = '1';
+		$this->configStore['payment_provider.adyen.testMode'] = 'yes';
+		$this->configStore['payment_provider.adyen.config'] = '{not json';
+		$config = $service->getProviderConfig(name: 'adyen');
+		$this->assertSame([true, false, [], 'sandbox', ''], [$config['isActive'], $config['testMode'], $config['config'], $config['environment'], $config['lastTestedAt']]);
+
+		$defaults = $service->getProviderConfig(name: 'stripe');
+		$this->assertSame([false, true, []], [$defaults['isActive'], $defaults['testMode'], $defaults['testResult']]);
+	}//end testProviderSettingsAreStoredAndReadInTheirEncodings()
 
 	/**
 	 * A cashier's methods list: only active providers, their configured
@@ -716,6 +762,78 @@ class PosPaymentServiceTest extends TestCase {
 		// And the downstream settled CloudEvent actually fired.
 		$this->assertSame(['pipelinq.PosPayment.settled'], $webhooks->events);
 	}//end testSettlementWebhookMatchesTheSeededTransactionAndPersistsIt()
+
+	/**
+	 * A refund settlement stamps refundedAt once and emits the refund with
+	 * the provider event id as refund id; settledAt is not stamped again.
+	 *
+	 * @return void
+	 */
+	public function testARefundSettlementStampsRefundedAtAndEmitsTheRefund(): void {
+		$store = new PaymentFakeObjectService();
+		$store->seed(
+			schema: 'posTransaction',
+			uuid: 'tx-r',
+			data: ['reference' => 'TXN-9', 'paymentSessionId' => 'tr_r', 'paymentStatus' => 'settled', 'settledAt' => '2026-01-01T00:00:00Z', 'total' => 5.5],
+		);
+		$webhooks = new PaymentFakeWebhookService();
+		$service = $this->buildService(object: $store, opts: ['webhooks' => $webhooks]);
+
+		$result = $service->handleSettlement(providerName: 'mollie', sessionId: 'tr_r', paymentStatus: 'refunded', eventId: 'evt-r1');
+
+		$this->assertSame(['status' => 'ok', 'transactionId' => 'tx-r'], $result);
+		$persisted = $store->store['posTransaction']['tx-r'];
+		$this->assertSame(['refunded', 'evt-r1', '2026-01-01T00:00:00Z'], [$persisted['paymentStatus'], $persisted['paymentWebhookEventId'], $persisted['settledAt']]);
+		$this->assertArrayHasKey('refundedAt', $persisted);
+		$this->assertSame(['pipelinq.PosPayment.refunded'], $webhooks->events);
+		$this->assertSame(['evt-r1', 'Provider-initiated refund'], [$webhooks->payloads[0]['data']['refundId'], $webhooks->payloads[0]['data']['refundReason']]);
+	}//end testARefundSettlementStampsRefundedAtAndEmitsTheRefund()
+
+	/**
+	 * A settlement repeating the status the transaction already has, under a
+	 * new event id, is stored but neither stamped nor emitted again.
+	 *
+	 * @return void
+	 */
+	public function testARepeatedStatusIsNeitherStampedNorEmittedAgain(): void {
+		$store = new PaymentFakeObjectService();
+		$store->seed(
+			schema: 'posTransaction',
+			uuid: 'tx-s',
+			data: ['paymentSessionId' => 'tr_s', 'paymentStatus' => 'settled', 'settledAt' => '2026-01-01T00:00:00Z', 'paymentWebhookEventId' => 'evt-1'],
+		);
+		$webhooks = new PaymentFakeWebhookService();
+		$service = $this->buildService(object: $store, opts: ['webhooks' => $webhooks]);
+
+		$result = $service->handleSettlement(providerName: 'mollie', sessionId: 'tr_s', paymentStatus: 'settled', eventId: 'evt-2');
+
+		$this->assertSame('ok', $result['status']);
+		$persisted = $store->store['posTransaction']['tx-s'];
+		$this->assertSame(['evt-2', '2026-01-01T00:00:00Z'], [$persisted['paymentWebhookEventId'], $persisted['settledAt']]);
+		$this->assertArrayNotHasKey('refundedAt', $persisted);
+		$this->assertSame([], $webhooks->events);
+	}//end testARepeatedStatusIsNeitherStampedNorEmittedAgain()
+
+	/**
+	 * Without an event id a settlement is never taken for a duplicate.
+	 *
+	 * @return void
+	 */
+	public function testASettlementWithoutAnEventIdIsNotADuplicate(): void {
+		$store = new PaymentFakeObjectService();
+		$store->seed(
+			schema: 'posTransaction',
+			uuid: 'tx-e',
+			data: ['paymentSessionId' => 'tr_e', 'paymentStatus' => 'pending', 'paymentWebhookEventId' => ''],
+		);
+		$webhooks = new PaymentFakeWebhookService();
+		$service = $this->buildService(object: $store, opts: ['webhooks' => $webhooks]);
+
+		$result = $service->handleSettlement(providerName: 'mollie', sessionId: 'tr_e', paymentStatus: 'settled', eventId: '');
+
+		$this->assertSame(['status' => 'ok', 'transactionId' => 'tx-e'], $result);
+		$this->assertSame(['pipelinq.PosPayment.settled'], $webhooks->events);
+	}//end testASettlementWithoutAnEventIdIsNotADuplicate()
 
 	/**
 	 * The session lookup must carry its context INSIDE `filters`.

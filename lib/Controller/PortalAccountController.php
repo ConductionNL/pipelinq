@@ -21,17 +21,17 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-007
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-007
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Service\Portal\PortalAccountService;
-use OCA\Pipelinq\Service\Portal\PortalExportService;
-use OCA\Pipelinq\Service\Portal\PortalProfileService;
-use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
+use OCA\Pipelinq\Kernel\Contracts\PortalAccountServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalExportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalProfileServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
@@ -48,25 +48,26 @@ use Psr\Log\LoggerInterface;
  *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PortalAccountController extends PortalApiController {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param PortalRequestGuardInterface $guard The portal guard.
 	 * @param LoggerInterface $logger The logger.
-	 * @param PortalProfileService $profile The profile service.
-	 * @param PortalAccountService $account The account service.
-	 * @param PortalExportService $export The export service.
+	 * @param PortalProfileServiceInterface $profile The profile service.
+	 * @param PortalAccountServiceInterface $account The account service.
+	 * @param PortalExportServiceInterface $export The export service.
 	 */
 	public function __construct(
 		IRequest $request,
-		PortalRequestGuard $guard,
+		PortalRequestGuardInterface $guard,
 		LoggerInterface $logger,
-		private PortalProfileService $profile,
-		private PortalAccountService $account,
-		private PortalExportService $export,
+		private PortalProfileServiceInterface $profile,
+		private PortalAccountServiceInterface $account,
+		private PortalExportServiceInterface $export,
 	) {
 		parent::__construct(request: $request, guard: $guard, logger: $logger);
 	}//end __construct()

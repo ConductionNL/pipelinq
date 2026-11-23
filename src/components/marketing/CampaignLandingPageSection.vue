@@ -12,7 +12,7 @@
   portal is a setting. Collapsing them into "could not create the page"
   would take away the only thing that says where to go.
 
-  @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+  @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 -->
 <template>
 	<section class="campaign-landing">
@@ -142,7 +142,7 @@ export default {
 		 * The landing page this campaign already has, or null.
 		 *
 		 * @return {object|null} The stored block.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 		 */
 		page() {
 			const block = this.campaign?.landingPage
@@ -156,7 +156,7 @@ export default {
 		 * The route the campaign would get if nobody types one.
 		 *
 		 * @return {string} The suggested route.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 		 */
 		routePlaceholder() {
 			return `/campagne/${this.campaign?.utmCampaign || ''}`
@@ -167,7 +167,7 @@ export default {
 		 * path-routed.
 		 *
 		 * @return {string} The href.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-one-campaign-report-page
 		 */
 		reportHref() {
 			return generateUrl(
@@ -184,7 +184,7 @@ export default {
 		/**
 		 * Read the campaign this section is bound to.
 		 *
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 		 */
 		async fetchCampaign() {
 			this.loading = true
@@ -208,7 +208,7 @@ export default {
 		/**
 		 * Ask portaliq for the page, and show its answer as it came.
 		 *
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 		 */
 		async create() {
 			this.creating = true
@@ -238,7 +238,7 @@ export default {
 		 *
 		 * @param {string} code The code portaliq answered with.
 		 * @return {string} The sentence the marketer reads.
-		 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
+		 * @spec openspec/specs/marketing-campaigns/spec.md#requirement-a-campaign-creates-its-landing-page-in-portaliq
 		 */
 		explain(code) {
 			const sentences = {

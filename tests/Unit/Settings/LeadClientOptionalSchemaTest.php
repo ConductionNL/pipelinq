@@ -37,6 +37,7 @@ use PHPUnit\Framework\TestCase;
  * really sends.
  *
  * @covers \OCA\Pipelinq\Service\ConfigFileLoaderService
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
  */
 class LeadClientOptionalSchemaTest extends TestCase {
 

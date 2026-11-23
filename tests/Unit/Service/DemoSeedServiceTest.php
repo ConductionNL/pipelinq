@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Lifecycle\KeepLifecycleStatesScope;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\Demo\DemoJourneySeeder;
@@ -49,6 +50,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for DemoSeedService.
@@ -81,6 +85,9 @@ class DemoSeedServiceTest extends TestCase {
 		'product_schema' => '27',
 		'task_schema' => '28',
 		'contract_schema' => '29',
+		'service_schema' => '30',
+		'resource_schema' => '31',
+		'booking_schema' => '32',
 	];
 
 	/**
@@ -102,6 +109,9 @@ class DemoSeedServiceTest extends TestCase {
 		'contactmomenten' => [self::TICKET_SCHEMA_ID, 'subject', 'title', 'interaction'],
 		'tasks' => ['28', 'subject', 'subject', null],
 		'contracts' => ['29', 'title', 'title', null],
+		'appointmentServices' => ['30', 'name', 'name', null],
+		'appointmentResources' => ['31', 'name', 'name', null],
+		'appointmentBookings' => ['32', 'subject', 'subject', null],
 	];
 
 	/**
@@ -456,7 +466,10 @@ class DemoSeedServiceTest extends TestCase {
 		$sequence = 0;
 		$this->objectService->method('saveObject')
 			->willReturnCallback(
-				function (array $data, array $extend, string $register, string $schema) use (&$savedPayloads, &$sequence): object {
+				function (array $data, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$savedPayloads, &$sequence): object {
+					$extend = $options->extend;
+					$register = $options->target->register;
+					$schema = $options->target->schema;
 					$sequence++;
 					$uuid = 'uuid-' . $schema . '-' . $sequence;
 					$savedPayloads[] = ['schema' => $schema, 'data' => $data, 'uuid' => $uuid];
@@ -493,6 +506,9 @@ class DemoSeedServiceTest extends TestCase {
 		self::assertSame(12, $result['created']['contactmomenten']);
 		self::assertSame(3, $result['created']['tasks']);
 		self::assertSame(2, $result['created']['contracts']);
+		self::assertSame(7, $result['created']['appointmentServices']);
+		self::assertSame(7, $result['created']['appointmentResources']);
+		self::assertSame(24, $result['created']['appointmentBookings']);
 		self::assertSame(0, array_sum($result['skipped']));
 
 		// Every seeded object carries the demo marker on its lookup field.
@@ -537,6 +553,27 @@ class DemoSeedServiceTest extends TestCase {
 			array_filter($savedPayloads, static fn (array $p): bool => $p['schema'] === '29')
 		);
 		self::assertCount(2, $contracts);
+
+		// Every booking points at a seeded client, service and resource, with
+		// the seed-file keys gone, and falls in the week the seed runs.
+		$uuidsOf = static fn (string $schema): array => array_column(
+			array_filter($savedPayloads, static fn (array $p): bool => $p['schema'] === $schema),
+			'uuid'
+		);
+		$monday = (new \DateTimeImmutable('monday this week'))->setTime(0, 0);
+		$bookings = array_filter($savedPayloads, static fn (array $p): bool => $p['schema'] === '32');
+		self::assertCount(24, $bookings);
+		foreach ($bookings as $booking) {
+			self::assertContains($booking['data']['customerId'], $clientUuids);
+			self::assertContains($booking['data']['serviceId'], $uuidsOf('30'));
+			$start = new \DateTimeImmutable($booking['data']['startAt']);
+			self::assertGreaterThanOrEqual($monday, $start);
+			self::assertLessThan($monday->modify('+7 days'), $start);
+			foreach ($booking['data']['resourceAssignments'] as $assignment) {
+				self::assertContains($assignment['resourceId'], $uuidsOf('31'));
+				self::assertArrayNotHasKey('resourceKey', $assignment);
+			}
+		}
 		foreach ($contracts as $contract) {
 			self::assertArrayHasKey('clientRef', $contract['data']);
 			self::assertArrayNotHasKey('client', $contract['data']);
@@ -616,8 +653,54 @@ class DemoSeedServiceTest extends TestCase {
 
 		self::assertTrue($result['success']);
 		self::assertSame(0, array_sum($result['created']));
-		self::assertSame(48, array_sum($result['skipped']));
+		// 48 CRM objects + 7 services, 7 resources and 24 bookings.
+		self::assertSame(86, array_sum($result['skipped']));
 	}//end testSeedIsIdempotentOnRerun()
+
+	/**
+	 * Every demo write runs inside OpenRegister's keep-states scope, so the
+	 * won and lost demo leads are not refused for not starting open.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedWritesInsideTheKeepLifecycleStatesScope(): void {
+		$this->provisionConfig();
+		$this->objectService->method('findAll')->willReturn([]);
+
+		$outside = [];
+		$sequence = 0;
+		$this->objectService->method('saveObject')
+			->willReturnCallback(
+				function (array $data) use (&$outside, &$sequence): object {
+					$sequence++;
+					if (KeepLifecycleStatesScope::isActive() === false) {
+						$outside[] = $data['name'] ?? ($data['title'] ?? '?');
+					}
+
+					return self::savedEntity('uuid-' . $sequence);
+				}
+			);
+		$this->ticketService->method('save')
+			->willReturnCallback(
+				function () use (&$outside, &$sequence): object {
+					$sequence++;
+					if (KeepLifecycleStatesScope::isActive() === false) {
+						$outside[] = 'ticket';
+					}
+
+					return self::savedEntity('uuid-' . $sequence);
+				}
+			);
+
+		$result = $this->service->seed();
+
+		self::assertTrue($result['success']);
+		self::assertGreaterThan(0, $sequence);
+		self::assertSame([], $outside, 'a demo write ran outside the keep-states scope');
+		self::assertFalse(KeepLifecycleStatesScope::isActive(), 'the scope stays open after the seed');
+	}//end testSeedWritesInsideTheKeepLifecycleStatesScope()
 
 	/**
 	 * A reseed re-points demo leads whose pipeline was deleted at the demo
@@ -651,6 +734,7 @@ class DemoSeedServiceTest extends TestCase {
 		$saved = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
 			static function (array $object, ...$rest) use (&$saved): ObjectEntity {
+				$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 				$saved[] = ['object' => $object, 'schema' => $rest[2] ?? null, 'uuid' => $rest[3] ?? null];
 				return self::savedEntity((string)($rest[3] ?? 'new'));
 			}
@@ -688,7 +772,8 @@ class DemoSeedServiceTest extends TestCase {
 		$deleted = [];
 		$this->objectService->method('deleteObject')
 			->willReturnCallback(
-				static function (string $uuid) use (&$deleted, &$store): bool {
+				static function (ObjectDeletion $deletion) use (&$deleted, &$store): bool {
+					$uuid = $deletion->uuid;
 					$deleted[] = $uuid;
 					// Drop the row from the store so the removal loop terminates.
 					foreach ($store as $schemaId => $rows) {
@@ -704,8 +789,8 @@ class DemoSeedServiceTest extends TestCase {
 		$result = $this->service->remove();
 
 		self::assertTrue($result['success']);
-		self::assertSame(48, array_sum($result['removed']));
-		self::assertCount(48, $deleted);
+		self::assertSame(86, array_sum($result['removed']));
+		self::assertCount(86, $deleted);
 
 		// The non-demo decoy rows are never deleted.
 		foreach ($deleted as $uuid) {
@@ -736,7 +821,10 @@ class DemoSeedServiceTest extends TestCase {
 
 		$this->objectService->method('deleteObject')
 			->willReturnCallback(
-				static function (string $uuid, string|int|null $register = null, string|int|null $schema = null) use (&$store): bool {
+				static function (ObjectDeletion $deletion) use (&$store): bool {
+					$uuid = $deletion->uuid;
+					$register = $deletion->target->register;
+					$schema = $deletion->target->schema;
 					if ((string)$schema === self::TICKET_SCHEMA_ID) {
 						throw new \Exception('SCHEMA_ARCHIVAL_IMMUTABLE: schema declares x-openregister-archival');
 					}
@@ -761,8 +849,9 @@ class DemoSeedServiceTest extends TestCase {
 		self::assertSame(3, $result['retained']['complaints']);
 		self::assertSame(0, $result['removed']['complaints']);
 		// Clients (5) + contacts (4) + pipelines (2) + products (3) + leads (6)
-		// + tasks (3) + contracts (2) are on their own schemas and still delete.
-		self::assertSame(25, array_sum($result['removed']));
+		// + tasks (3) + contracts (2) + services (7) + resources (7) + bookings (24)
+		// are on their own schemas and still delete.
+		self::assertSame(63, array_sum($result['removed']));
 	}//end testRemoveRetainsArchivalSchemaRows()
 
 	/**
@@ -832,7 +921,10 @@ class DemoSeedServiceTest extends TestCase {
 		$sequence = 0;
 		$this->objectService->method('saveObject')
 			->willReturnCallback(
-				static function (array $data, array $extend, string $register, string $schema) use (&$sequence): object {
+				static function (array $data, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$sequence): object {
+					$extend = $options->extend;
+					$register = $options->target->register;
+					$schema = $options->target->schema;
 					$sequence++;
 					return self::savedEntity('uuid-' . $schema . '-' . $sequence);
 				}

@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\ResidentViewController;
+use OCA\Pipelinq\Portal\PortalContribution;
 use OCA\Pipelinq\Portal\PortalContributionProvider;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCA\Pipelinq\Service\Portal\PortalAuditService;
@@ -90,7 +91,7 @@ class ResidentViewControllerTest extends TestCase {
 			$this->createMock(IRequest::class),
 			$tickets,
 			$requests,
-			new PortalContributionProvider(),
+			new PortalContribution(new PortalContributionProvider()),
 			$tenant,
 			$apps,
 		);
