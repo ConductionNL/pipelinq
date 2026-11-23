@@ -48,19 +48,25 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\Pipelinq\Kernel\Contracts\DemoSeedServiceInterface;
 use OCA\Pipelinq\Service\Demo\DemoMarketingSeeder;
 use OCA\Pipelinq\Service\Demo\DemoSeedContext;
 use OCA\Pipelinq\Service\Demo\DemoSeedTarget;
 use OCA\Pipelinq\Service\Demo\DemoSeedValues;
 use OCA\Pipelinq\Service\Demo\DemoSeedWriter;
+use OCA\Pipelinq\Util\JsonSerializableToArray;
 
 /**
  * Idempotent demo-data seeding + removal against OpenRegister.
  *
  * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
- * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+ * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
-class DemoSeedService {
+class DemoSeedService implements DemoSeedServiceInterface {
+	use JsonSerializableToArray;
+
 	/**
 	 * Marker prefix carried by every seeded object's lookup field.
 	 *
@@ -87,6 +93,21 @@ class DemoSeedService {
 	private const RELINK_FIELDS = ['pipeline'];
 
 	/**
+	 * OpenRegister's scope in which a create keeps the lifecycle state it carries.
+	 *
+	 * The demo set holds a won and a lost lead, and a create may otherwise only
+	 * start in the schema's initial state. The scope exempts that one check and
+	 * nothing else, so permissions still apply. Named by string because
+	 * pipelinq does not hard-depend on a given OpenRegister build.
+	 *
+	 * Held in a property rather than a constant so static analysis, which
+	 * resolves the test stub, does not read the scope as always present.
+	 *
+	 * @var string
+	 */
+	private string $keepStatesScope = 'OCA\OpenRegister\Service\Lifecycle\KeepLifecycleStatesScope';
+
+	/**
 	 * Entity sections in seed order: section => [schemaConfigKey, lookupField, ticketType].
 	 *
 	 * `ticketType` is null for sections that own their own schema, and one of
@@ -109,6 +130,11 @@ class DemoSeedService {
 	 * they exist so the seeded set is coherent (a client has contact persons, a
 	 * complaint is a first-class ticket subtype alongside requests).
 	 *
+	 * The appointment sections are seeded here, not in the example register,
+	 * because their bookings must fall in the current week: the register is
+	 * imported as written, while this seeder resolves `@week:` placeholders
+	 * and links each booking to the services, resources and clients it saved.
+	 *
 	 * @var array<string, array{0: string, 1: string, 2: string|null}>
 	 */
 	private const SECTIONS = [
@@ -122,6 +148,9 @@ class DemoSeedService {
 		'contactmomenten' => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_CONTACTMOMENT],
 		'tasks' => ['task_schema', 'subject', null],
 		'contracts' => ['contract_schema', 'title', null],
+		'appointmentServices' => ['service_schema', 'name', null],
+		'appointmentResources' => ['resource_schema', 'name', null],
+		'appointmentBookings' => ['booking_schema', 'subject', null],
 	];
 
 	/**
@@ -194,24 +223,6 @@ class DemoSeedService {
 	}//end __construct()
 
 	/**
-	 * The answer that means "seed nothing".
-	 *
-	 * 🔴 NOT THE ABSENCE OF AN ANSWER. An operator who declines has FINISHED the
-	 * step; a step that can never be marked done reopens the wizard over every
-	 * page (nextcloud-vue#806).
-	 *
-	 * @var string
-	 */
-	public const NONE_DATASET = 'none';
-
-	/**
-	 * The id of the dataset this app seeds.
-	 *
-	 * @var string
-	 */
-	public const DEMO_DATASET = 'demo';
-
-	/**
 	 * Every answer the wizard's choice step may offer, declining included.
 	 *
 	 * 🔴 THE SERVER OWNS THIS LIST, AND THAT IS THE POINT. The step declares
@@ -243,8 +254,8 @@ class DemoSeedService {
 				// drift apart without this list changing too.
 				'description' => (
 					'A worked CRM: clients and contacts, pipelines, products and leads, requests, '
-					. 'complaints and contact moments, tasks and contracts, point of sale and '
-					. 'bookings, marketing journeys that are not switched on, published social '
+					. 'complaints and contact moments, tasks and contracts, point of sale, '
+					. 'bookable services and resources with this week\'s bookings, marketing journeys that are not switched on, published social '
 					. 'posts with their numbers, and search queries for the keyword pages. '
 					. 'It shows the lists, '
 					. 'detail pages and dashboards working. Safe to run more than once, and '
@@ -275,6 +286,25 @@ class DemoSeedService {
 			];
 		}
 
+		$scope = [$this->keepStatesScope, 'run'];
+		if (is_callable($scope) === true) {
+			return call_user_func($scope, fn (): array => $this->seedWith(context: $context));
+		}
+
+		return $this->seedWith(context: $context);
+	}//end seed()
+
+	/**
+	 * Seed every section and the marketing set into the provisioned register.
+	 *
+	 * @param array{0: object, 1: string, 2: array<string, string>, 3: array<string, mixed>} $context The object service, register,
+	 *                                                                                                schema ids and seed definitions.
+	 *
+	 * @return array<string, mixed> The seed answer.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function seedWith(array $context): array {
 		[$objectService, $registerId, $schemaIds, $definitions] = $context;
 
 		// `uuids` maps section-local keys (e.g. clientKey "bakkerij") to saved uuids.
@@ -298,7 +328,7 @@ class DemoSeedService {
 			'skipped' => array_merge($run['skipped'], $marketing['skipped']),
 			'relinked' => $run['relinked'],
 		];
-	}//end seed()
+	}//end seedWith()
 
 	/**
 	 * Seed one section: one scan of its schema (value => [uuid, ...] for
@@ -341,7 +371,7 @@ class DemoSeedService {
 		$name = $section['name'];
 		$target = $section['target'];
 		$data = $this->values->resolvePlaceholders(data: $definition['data']);
-		$data = $this->linkReferences(data: $data, definition: $definition, uuids: $run['uuids'], ticketType: $target->ticketType);
+		$data = $this->linkReferences(data: $data, seed: ['definition' => $definition, 'uuids' => $run['uuids'], 'ticketType' => $target->ticketType]);
 
 		$existingUuid = $section['index'][(string)$data[$section['lookupField']]][0] ?? null;
 		if ($existingUuid !== null) {
@@ -403,7 +433,7 @@ class DemoSeedService {
 	 *
 	 * @return bool True when the object was re-pointed.
 	 *
-	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-reseed-re-links-demo-leads-to-the-new-pipeline-req-raf-010
+	 * @spec openspec/specs/lead-management/spec.md#requirement-a-reseed-re-links-demo-leads-to-the-new-pipeline-req-raf-010
 	 */
 	private function relinkExisting(DemoSeedTarget $target, array $existing, array $data, string $uuid): bool {
 		$patch = $this->relinkPatch(existing: $existing, data: $data);
@@ -466,40 +496,81 @@ class DemoSeedService {
 		$sections = array_reverse(self::SECTIONS, true);
 
 		foreach ($sections as $section => [$schemaKey, $lookupField, $ticketType]) {
-			$removed[$section] = 0;
-			$retained[$section] = 0;
-
-			// One scan per schema: value => [uuid, ...] index. Multiple uuids
-			// per value guard against duplicates from historic runs.
 			$target = new DemoSeedTarget(objectService: $objectService, registerId: $registerId, schemaId: $schemaIds[$schemaKey], ticketType: $ticketType);
-			$index = $this->buildLookupIndex(target: $target, lookupField: $lookupField)['index'];
-
-			foreach (($definitions[$section] ?? []) as $definition) {
-				$lookupValue = (string)($definition['data'][$lookupField] ?? '');
-				// Guard: only ever delete objects carrying the demo marker.
-				if (str_starts_with($lookupValue, self::DEMO_PREFIX) === false) {
-					continue;
-				}
-
-				foreach (($index[$lookupValue] ?? []) as $uuid) {
-					try {
-						$objectService->deleteObject($uuid, $registerId, $schemaIds[$schemaKey]);
-						$removed[$section]++;
-					} catch (\Throwable $e) {
-						if (str_contains($e->getMessage(), 'SCHEMA_ARCHIVAL_IMMUTABLE') === true) {
-							// Append-only schema: rows expire via retention cron.
-							$retained[$section]++;
-							break;
-						}
-
-						throw $e;
-					}
-				}
-			}//end foreach
-		}//end foreach
+			[$removed[$section], $retained[$section]] = $this->removeSection(
+				target: $target,
+				section: ['lookupField' => $lookupField, 'definitions' => ($definitions[$section] ?? [])]
+			);
+		}
 
 		return ['success' => true, 'removed' => $removed, 'retained' => $retained];
 	}//end remove()
+
+	/**
+	 * Delete one section's demo objects.
+	 *
+	 * One scan per schema: value => [uuid, ...] index. Multiple uuids per
+	 * value guard against duplicates from historic runs.
+	 *
+	 * @param DemoSeedTarget $target The section's register and schema.
+	 * @param array{lookupField: string, definitions: array<int, array<string, mixed>>} $section The field carrying the demo
+	 *                                                                                       marker and the section's demo definitions.
+	 *
+	 * @return array{0: int, 1: int} The removed and retained counts.
+	 */
+	private function removeSection(DemoSeedTarget $target, array $section): array {
+		$lookupField = $section['lookupField'];
+		$index = $this->buildLookupIndex(target: $target, lookupField: $lookupField)['index'];
+		$removed = 0;
+		$retained = 0;
+
+		foreach ($section['definitions'] as $definition) {
+			$lookupValue = (string)($definition['data'][$lookupField] ?? '');
+			// Guard: only ever delete objects carrying the demo marker.
+			if (str_starts_with($lookupValue, self::DEMO_PREFIX) === false) {
+				continue;
+			}
+
+			[$deleted, $kept] = $this->deleteDemoObjects(target: $target, uuids: ($index[$lookupValue] ?? []));
+			$removed += $deleted;
+			$retained += $kept;
+		}
+
+		return [$removed, $retained];
+	}//end removeSection()
+
+	/**
+	 * Delete the objects of one demo value; an append-only schema keeps them (counted as retained).
+	 *
+	 * @param DemoSeedTarget $target The section's register and schema.
+	 * @param array<int, string> $uuids The object uuids carrying the demo value.
+	 *
+	 * @return array{0: int, 1: int} The removed and retained counts.
+	 *
+	 * @throws \Throwable When a delete fails for another reason.
+	 */
+	private function deleteDemoObjects(DemoSeedTarget $target, array $uuids): array {
+		$removed = 0;
+		$retained = 0;
+		foreach ($uuids as $uuid) {
+			try {
+				$target->objectService->deleteObject(
+					new ObjectDeletion(uuid: $uuid, target: new ObjectFindTarget(register: $target->registerId, schema: $target->schemaId))
+				);
+				$removed++;
+			} catch (\Throwable $e) {
+				if (str_contains($e->getMessage(), 'SCHEMA_ARCHIVAL_IMMUTABLE') === true) {
+					// Append-only schema: rows expire via retention cron.
+					$retained++;
+					break;
+				}
+
+				throw $e;
+			}
+		}
+
+		return [$removed, $retained];
+	}//end deleteDemoObjects()
 
 	/**
 	 * Resolve the ObjectService, register id, schema ids and seed definitions.
@@ -572,7 +643,7 @@ class DemoSeedService {
 	 * @return array{value: string, uuid: string, data: array<string, mixed>}|null
 	 */
 	private function lookupEntry(mixed $row, array $lookup): ?array {
-		$data = $this->rowToArray(row: $row);
+		$data = $this->toArray(row: $row);
 		if ($data === null) {
 			return null;
 		}
@@ -649,28 +720,6 @@ class DemoSeedService {
 	}//end toTicketData()
 
 	/**
-	 * Normalise a findAll row (ObjectEntity or rendered array) to an array.
-	 *
-	 * @param mixed $row The row.
-	 *
-	 * @return array<string, mixed>|null The rendered data, or null when unreadable.
-	 */
-	private function rowToArray(mixed $row): ?array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if ($row instanceof \JsonSerializable === true) {
-			$data = $row->jsonSerialize();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
-
-		return null;
-	}//end rowToArray()
-
-	/**
 	 * Resolve the contact-first identity for a client/contact payload.
 	 *
 	 * Contact-first unification (register.d/15-unify-client-contact.json): BOTH
@@ -706,51 +755,52 @@ class DemoSeedService {
 	 * On a ticket the parent-request link is `parentTicket` (the legacy
 	 * contactmoment field was `request`).
 	 *
+	 * The seed carries `definition` (the full definition, which may carry
+	 * clientKey/contactKey/pipelineKey/requestKey), `uuids` (the already-seeded
+	 * uuid map, section:key => uuid) and `ticketType` (the ticket subtype, or
+	 * null for own-schema sections).
+	 *
 	 * @param array<string, mixed> $data Definition data.
-	 * @param array<string, mixed> $definition Full definition (may carry clientKey/contactKey/pipelineKey/requestKey).
-	 * @param array<string, string> $uuids Already-seeded uuid map (section:key => uuid).
-	 * @param string|null $ticketType Ticket subtype, or null for own-schema sections.
+	 * @param array<string, mixed> $seed The definition, uuid map and ticket subtype.
 	 *
 	 * @return array<string, mixed> Data with relation fields set.
 	 */
-	private function linkReferences(array $data, array $definition, array $uuids, ?string $ticketType = null): array {
-		// The FK field name is not uniform across the register: the contract
-		// schema calls it `clientRef` ("UUID reference to the existing client
-		// object. Client identity is never duplicated into the contract."),
-		// everything else calls it `client`. Writing the wrong key is silent —
-		// the object saves, the FK is simply absent — so the map is explicit
-		// rather than assumed.
-		$data = $this->values->linkReference(
-			data: $data,
-			definition: $definition,
-			uuids: $uuids,
-			keyName: 'clientKey',
-			section: 'clients',
-			field: ($definition['clientField'] ?? 'client'),
-		);
+	private function linkReferences(array $data, array $seed): array {
+		$definition = $seed['definition'];
+		$uuids = $seed['uuids'];
+		foreach ($this->referenceLinks(definition: $definition, ticketType: $seed['ticketType']) as [$keyName, $section, $field]) {
+			$data = $this->values->linkReference(
+				data: $data,
+				definition: $definition,
+				uuids: $uuids,
+				keyName: $keyName,
+				section: $section,
+				field: $field,
+			);
+		}
 
-		$data = $this->values->linkReference(
+		return $this->values->linkListReferences(
 			data: $data,
-			definition: $definition,
+			listField: 'resourceAssignments',
 			uuids: $uuids,
-			keyName: 'contactKey',
-			section: 'contacts',
-			field: 'contact',
+			link: ['resourceKey', 'appointmentResources', 'resourceId'],
 		);
+	}//end linkReferences()
 
-		// Without this a seeded lead / ticket carries a `stage` name but no
-		// `pipeline`, so it belongs to no board and every stage column counts
-		// zero — the demo data cannot demonstrate the pipeline it was written
-		// for. `pipelines` is seeded before `leads`, so the uuid is available.
-		$data = $this->values->linkReference(
-			data: $data,
-			definition: $definition,
-			uuids: $uuids,
-			keyName: 'pipelineKey',
-			section: 'pipelines',
-			field: 'pipeline',
-		);
-
+	/**
+	 * The definition keys wired onto a payload, in order: key name, seeded section and payload field.
+	 *
+	 * A demo booking links to its customer and its service, and to the
+	 * resource of each assignment, all seeded earlier in the same run.
+	 *
+	 * @param array<string, mixed> $definition Full definition (may carry clientField).
+	 * @param string|null          $ticketType Ticket subtype, or null for own-schema sections.
+	 *
+	 * @return array<int, array{0: string, 1: string, 2: mixed}>
+	 *
+	 * @spec openspec/changes/services-and-resources-at-a-glance/tasks.md#4-example-data
+	 */
+	private function referenceLinks(array $definition, ?string $ticketType): array {
 		// On a ticket the parent-request link is `parentTicket` (the legacy
 		// contactmoment field was `request`).
 		$requestField = 'request';
@@ -758,15 +808,23 @@ class DemoSeedService {
 			$requestField = 'parentTicket';
 		}
 
-		$data = $this->values->linkReference(
-			data: $data,
-			definition: $definition,
-			uuids: $uuids,
-			keyName: 'requestKey',
-			section: 'requests',
-			field: $requestField,
-		);
-
-		return $data;
-	}//end linkReferences()
+		return [
+			// The FK field name is not uniform across the register: the contract
+			// schema calls it `clientRef` ("UUID reference to the existing client
+			// object. Client identity is never duplicated into the contract."),
+			// everything else calls it `client`. Writing the wrong key is silent —
+			// the object saves, the FK is simply absent — so the map is explicit
+			// rather than assumed.
+			['clientKey', 'clients', ($definition['clientField'] ?? 'client')],
+			['contactKey', 'contacts', 'contact'],
+			// Without this a seeded lead / ticket carries a `stage` name but no
+			// `pipeline`, so it belongs to no board and every stage column counts
+			// zero — the demo data cannot demonstrate the pipeline it was written
+			// for. `pipelines` is seeded before `leads`, so the uuid is available.
+			['pipelineKey', 'pipelines', 'pipeline'],
+			['requestKey', 'requests', $requestField],
+			['customerKey', 'clients', 'customerId'],
+			['serviceKey', 'appointmentServices', 'serviceId'],
+		];
+	}//end referenceLinks()
 }//end class

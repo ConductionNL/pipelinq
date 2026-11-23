@@ -136,7 +136,7 @@
 
 				<CnDetailCard :title="t('pipelinq', 'After saving')">
 					<p class="pos-refund-form__text">
-						{{ t('pipelinq', 'The refund waits for confirmation. A manager confirms or rejects it.') }}
+						{{ approvalText }}
 					</p>
 					<div class="pos-refund-form__outcomes">
 						<span class="pos-refund-form__outcome">
@@ -181,13 +181,69 @@ import Check from 'vue-material-design-icons/Check.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import { collectionRows } from '../../services/collectionRows.js'
 import { formatDate } from '../../services/localeUtils.js'
+import { refundApprover, refundLimitFrom } from '../../services/posRefundLimit.js'
 import { computeRefundTotals, formatEur, refundLineAmounts } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { useSettingsStore } from '../../store/modules/settings.js'
 
 const TENDER_LABELS = {
 	cash: 'Cash',
 	card: 'Card',
 	onAccount: 'On account',
+}
+
+/**
+ * Why the refund cannot be saved yet, checked in order: no lines, no
+ * receipt, a quantity over the original.
+ *
+ * @param {Array<object>} selected The selected lines.
+ * @param {object} refund The refund being made.
+ * @return {(string|null)} The message, or null when it can be saved.
+ */
+function refundRefusal(selected, refund) {
+	if (selected.length === 0) {
+		return t('pipelinq', 'Select at least one item to return')
+	}
+	if (!refund.originalTransaction) {
+		return t('pipelinq', 'Original receipt is required')
+	}
+	if (selected.some((c) => c.valid === false)) {
+		return t('pipelinq', 'Returned quantity may not exceed the original quantity')
+	}
+	return null
+}
+
+/**
+ * @param {object} refund The refund being made.
+ * @return {object} The refund to save: pending, by the current cashier, unless set.
+ */
+function refundHeader(refund) {
+	return {
+		...refund,
+		status: refund.status || 'pending',
+		cashier: refund.cashier || (window.OC?.getCurrentUser?.()?.uid ?? ''),
+	}
+}
+
+/**
+ * @param {object} candidate A selected line.
+ * @param {{id: string, refundReason: (string|null)}} refund The saved refund and its reason.
+ * @return {object} The returned line to save; restocked unless said otherwise.
+ */
+function refundLinePayload(candidate, refund) {
+	const payload = {
+		refund: refund.id,
+		originalLine: candidate.originalLine,
+		returnedQuantity: Number(candidate.returnedQuantity) || 0,
+		returnReason: candidate.returnReason || refund.refundReason,
+		restock: candidate.restock ?? true,
+		taxAmount: candidate.taxAmount,
+		lineTotal: candidate.lineTotal,
+	}
+	if (candidate.id) {
+		payload.id = candidate.id
+	}
+	return payload
 }
 
 export default {
@@ -414,6 +470,26 @@ export default {
 				.map((c) => ({ ...c, ...refundLineAmounts(this.originalLineFor(c.originalLine), c.returnedQuantity) }))
 		},
 
+		/**
+		 * Who confirms this refund, said before saving: a manager, or the till
+		 * user when the refund is at or below the refund limit (pos-refund-limit).
+		 *
+		 * @return {string} The sentence.
+		 *
+		 * @spec openspec/changes/pos-refund-limit/specs/pos-lifecycle-guard-adoption/spec.md#requirement-a-refund-up-to-the-configured-limit-shall-need-no-manager-req-plg-007
+		 */
+		approvalText() {
+			const limit = refundLimitFrom(useSettingsStore().getConfig)
+			const approver = refundApprover(computeRefundTotals(this.selectedLines).total, limit)
+			if (approver === 'tillUser') {
+				return t('pipelinq', 'The refund waits for confirmation. It is at or below the refund limit of {limit}, so you can confirm it yourself.', { limit: formatEur(limit) })
+			}
+			if (approver === 'aboveLimit') {
+				return t('pipelinq', 'The refund waits for confirmation. It is above the refund limit of {limit}, so a manager confirms or rejects it.', { limit: formatEur(limit) })
+			}
+			return t('pipelinq', 'The refund waits for confirmation. A manager confirms or rejects it.')
+		},
+
 		totalItems() {
 			const totals = computeRefundTotals(this.selectedLines)
 			const rates = [...new Set(this.selectedLines.map((c) => this.originalLineFor(c.originalLine).taxRate).filter((r) => r !== undefined && r !== null && r !== ''))]
@@ -443,8 +519,18 @@ export default {
 		},
 	},
 
+	/**
+	 * Loads the settings for the refund limit sentence and the refund's data.
+	 *
+	 * @spec openspec/changes/pos-refund-limit/specs/pos-lifecycle-guard-adoption/spec.md#requirement-a-refund-up-to-the-configured-limit-shall-need-no-manager-req-plg-007
+	 */
 	async mounted() {
 		this.loading = true
+		const settings = useSettingsStore()
+		if (!settings.getConfig) {
+			// Only for the refund limit sentence; a failed read keeps the manager wording.
+			settings.fetchSettings().catch(() => {})
+		}
 		try {
 			await this.loadTransactions()
 			await this.loadReasons()
@@ -662,48 +748,21 @@ export default {
 
 		async save() {
 			const selected = this.selectedLines
-			if (selected.length === 0) {
-				showError(t('pipelinq', 'Select at least one item to return'))
-				return
-			}
-			if (!this.refund.originalTransaction) {
-				showError(t('pipelinq', 'Original receipt is required'))
-				return
-			}
-			if (selected.some((c) => c.valid === false)) {
-				showError(t('pipelinq', 'Returned quantity may not exceed the original quantity'))
+			const refusal = refundRefusal(selected, this.refund)
+			if (refusal !== null) {
+				showError(refusal)
 				return
 			}
 
 			this.saving = true
 			try {
-				const header = {
-					...this.refund,
-					status: this.refund.status || 'pending',
-					cashier: this.refund.cashier || (window.OC?.getCurrentUser?.()?.uid ?? ''),
-				}
-				const savedRefund = await this.objectStore.saveObject('posRefund', header)
+				const savedRefund = await this.objectStore.saveObject('posRefund', refundHeader(this.refund))
 				if (!savedRefund) {
 					showError(t('pipelinq', 'Failed to save refund.'))
 					return
 				}
 				const refundId = savedRefund.id || this.refundId
-
-				for (const candidate of selected) {
-					const payload = {
-						refund: refundId,
-						originalLine: candidate.originalLine,
-						returnedQuantity: Number(candidate.returnedQuantity) || 0,
-						returnReason: candidate.returnReason || this.refund.refundReason,
-						restock: candidate.restock ?? true,
-						taxAmount: candidate.taxAmount,
-						lineTotal: candidate.lineTotal,
-					}
-					if (candidate.id) {
-						payload.id = candidate.id
-					}
-					await this.objectStore.saveObject('posRefundLine', payload)
-				}
+				await this.saveRefundLines(selected, refundId)
 
 				showSuccess(t('pipelinq', 'Refund saved.'))
 				this.$router.push({ name: 'PosRefundDetail', params: { id: refundId } })
@@ -711,6 +770,22 @@ export default {
 				showError(t('pipelinq', 'Failed to save refund.'))
 			} finally {
 				this.saving = false
+			}
+		},
+
+		/**
+		 * Write each returned line of the refund, in turn.
+		 *
+		 * @param {Array<object>} selected The selected lines.
+		 * @param {string} refundId The saved refund.
+		 * @return {Promise<void>}
+		 */
+		async saveRefundLines(selected, refundId) {
+			for (const candidate of selected) {
+				await this.objectStore.saveObject('posRefundLine', refundLinePayload(candidate, {
+					id: refundId,
+					refundReason: this.refund.refundReason,
+				}))
 			}
 		},
 	},

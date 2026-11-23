@@ -323,4 +323,99 @@ class SocialBrokerGatewayTest extends TestCase {
 		$this->assertSame(SocialBrokerGateway::READY, $readiness['state']);
 		$this->assertSame('', $readiness['reason']);
 	}
+
+	/**
+	 * Every readiness answer, with its exact reason, and the warning when the
+	 * catalogue cannot be read.
+	 *
+	 * @return void
+	 */
+	public function testEveryReadinessAnswerAndItsReason(): void {
+		$logs = [];
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('warning')->willReturnCallback(
+			static function (string $message, array $context = []) use (&$logs): void {
+				$logs[] = [$message, $context];
+			}
+		);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willThrowException(new RuntimeException(message: 'catalogue down'));
+
+		$this->assertSame(
+			['state' => SocialBrokerGateway::NOT_CONFIGURED, 'reason' => 'The credential provider catalogue could not be read.'],
+			(new SocialBrokerGateway($container, $logger))->readiness(brokerProvider: 'x')
+		);
+		$this->assertSame([['SocialBrokerGateway.readiness: the provider catalogue could not be read', ['provider' => 'x', 'exception' => 'catalogue down']]], $logs);
+
+		$catalogue = $this->createMock(ProviderCatalogue::class);
+		$catalogue->method('get')->willReturnOnConsecutiveCalls(null, ['preview' => 'yes'], ['preview' => true]);
+		$gateway = $this->gateway(catalogue: $catalogue);
+		$this->assertSame(['state' => SocialBrokerGateway::NOT_CONFIGURED, 'reason' => 'No developer application is filed for this network yet, so an account cannot be connected.'], $gateway->readiness(brokerProvider: 'a'));
+		$this->assertSame(['state' => SocialBrokerGateway::READY, 'reason' => ''], $gateway->readiness(brokerProvider: 'b'));
+		$this->assertSame(['state' => SocialBrokerGateway::PREVIEW, 'reason' => 'This network is still a preview in the credential broker, so the network itself may refuse a post.'], $gateway->readiness(brokerProvider: 'c'));
+		$this->assertSame(['state' => SocialBrokerGateway::NOT_CONFIGURED, 'reason' => 'This network has no developer application yet, so an account cannot be connected.'], $gateway->readiness(brokerProvider: ''));
+	}//end testEveryReadinessAnswerAndItsReason()
+
+	/**
+	 * Every answer shape of the broker, with its code, reason, status and log line.
+	 *
+	 * @return void
+	 */
+	public function testEveryBrokerAnswerAndItsLogLine(): void {
+		$cases = [
+			['nope', SocialGatewayResult::UNAVAILABLE, 'The credential broker answered in a shape this version does not understand.', null, []],
+			[['status' => 201, 'body' => 'not json'], '', '', 201, []],
+			[['status' => 403, 'body' => ''], SocialGatewayResult::RELINK_NEEDED, 'The network refused the connection for this account. Reconnect it to restore the permissions.', 403, [403]],
+			[['status' => 404], SocialGatewayResult::REJECTED_BY_NETWORK, null, 404, [404]],
+			[['status' => 503, 'body' => '{}'], SocialGatewayResult::UNAVAILABLE, 'The network answered with an error of its own. This can be tried again.', 503, [503]],
+			[[], SocialGatewayResult::UNAVAILABLE, 'The network answered with an error of its own. This can be tried again.', 0, [0]],
+		];
+		foreach ($cases as [$answer, $code, $reason, $status, $logged]) {
+			$logs = [];
+			$logger = $this->createMock(LoggerInterface::class);
+			$logger->method('warning')->willReturnCallback(
+				static function (string $message, array $context = []) use (&$logs): void {
+					$logs[] = [$message, $context];
+				}
+			);
+			$broker = new class ($answer) {
+				/**
+				 * Constructor.
+				 *
+				 * @param mixed $answer What the broker answers.
+				 */
+				public function __construct(private mixed $answer) {
+				}
+
+				/**
+				 * Answer the call.
+				 *
+				 * @param mixed ...$args The call.
+				 *
+				 * @return mixed
+				 */
+				public function request(...$args): mixed {
+					return $this->answer;
+				}
+			};
+			$container = $this->createMock(ContainerInterface::class);
+			$container->method('get')->willReturn($broker);
+
+			$result = (new SocialBrokerGateway($container, $logger))->request(credentialRef: 'cred-1', method: 'post', path: '/p');
+
+			$this->assertSame($code, $result->failureCode);
+			if ($reason !== null) {
+				$this->assertSame($reason, $result->failureReason);
+			}
+
+			if ($status !== null) {
+				$this->assertSame($status, $result->status);
+			}
+
+			$this->assertSame(
+				array_map(static fn (int $s): array => ['SocialBrokerGateway: the network refused the call', ['method' => 'POST', 'path' => '/p', 'status' => $s]], $logged),
+				$logs
+			);
+		}//end foreach
+	}//end testEveryBrokerAnswerAndItsLogLine()
 }//end class

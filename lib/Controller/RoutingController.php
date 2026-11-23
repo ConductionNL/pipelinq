@@ -20,16 +20,16 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RoutingServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\RoutingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -42,7 +42,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/skill-routing/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-2
  */
 #[NoAdminRequired]
 class RoutingController extends Controller {
@@ -57,20 +57,20 @@ class RoutingController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param RoutingService $routingService The routing service.
+	 * @param RoutingServiceInterface $routingService The routing service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private RoutingService $routingService,
+		private RoutingServiceInterface $routingService,
 		private CrmPrivilegeCheck $privilege,
 		private LoggerInterface $logger,
 	) {
 		// @PublicPage — DI constructor (not HTTP-routable). The class-level
 		// #[NoAdminRequired] applies to the action methods; this ctor is
 		// wired by the Nextcloud app framework and never serves a request.
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -84,7 +84,7 @@ class RoutingController extends Controller {
 	 *                      On validation failure: 400 with { message }.
 	 *                      On unexpected failure: 500 with { message: 'Operation failed' }.
 	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-05-11-skill-routing/tasks.md#task-2.2
 	 */
 	#[NoAdminRequired]
 	public function getSuggestions(): JSONResponse {
@@ -97,7 +97,23 @@ class RoutingController extends Controller {
 
 		$entityType = (string)$this->request->getParam('entityType', '');
 		$entityId = (string)$this->request->getParam('entityId', '');
+		$refusal = $this->entityRefusal(entityType: $entityType, entityId: $entityId);
+		if ($refusal !== null) {
+			return $refusal;
+		}
 
+		return $this->suggestionsFor(entityType: $entityType, entityId: $entityId);
+	}//end getSuggestions()
+
+	/**
+	 * The 400 for a missing entity or an entity type routing does not know, or null.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $entityId   The entity id.
+	 *
+	 * @return JSONResponse|null The refusal.
+	 */
+	private function entityRefusal(string $entityType, string $entityId): ?JSONResponse {
 		if ($entityType === '' || $entityId === '') {
 			return new JSONResponse(
 				['message' => 'entityType and entityId are required'],
@@ -112,6 +128,18 @@ class RoutingController extends Controller {
 			);
 		}
 
+		return null;
+	}//end entityRefusal()
+
+	/**
+	 * The ranked agents for the entity, or a static 500 with the failure logged.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $entityId   The entity id.
+	 *
+	 * @return JSONResponse The suggestions, or the failure.
+	 */
+	private function suggestionsFor(string $entityType, string $entityId): JSONResponse {
 		try {
 			$result = $this->routingService->getSuggestedAgents(
 				entityType: $entityType,
@@ -134,5 +162,5 @@ class RoutingController extends Controller {
 		}
 
 		return new JSONResponse($result, Http::STATUS_OK);
-	}//end getSuggestions()
+	}//end suggestionsFor()
 }//end class

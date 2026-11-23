@@ -41,7 +41,8 @@
 		"KeywordIntelligence",
 		"CompetitorWatches",
 		"ConnectionAudit",
-		"SearchQueries"
+		"SearchQueries",
+		"CallReviews"
 	],
 	"removalsReplacedBy": {
 		"Rapportage": "Reports",
@@ -54,16 +55,20 @@
 		"Tasks": "Modules",
 		"OperationalDashboard": "Modules",
 		"SlaAttainment": "Reports",
-		"Bookings": "AppointmentsMenu"
+		"Bookings": "AppointmentsMenu",
+		"CallReviews": "Modules"
 	},
 	"settingsSection": [
 		"Pipelines",
+		"Municipalities",
 		"WebsiteSubmissions",
 		"SettingsIntegrationsCaption",
 		"ExportJobs",
+		"RetentionReview",
 		"Services",
 		"Resources",
-		"SavedReplies"
+		"SavedReplies",
+		"BulkChanges"
 	],
 	"nav": {
 		"brand": {
@@ -404,6 +409,10 @@
 				{
 					"id": "Products",
 					"order": 63
+				},
+				{
+					"id": "PriceLists",
+					"order": 64
 				}
 			]
 		},
@@ -463,7 +472,8 @@
 		"products": {
 			"label": "Products",
 			"ids": [
-				"Products"
+				"Products",
+				"PriceLists"
 			],
 			"menu": []
 		},
@@ -738,6 +748,48 @@
 							]
 						},
 						"group": "Finish"
+					},
+					{
+						"id": "lock-record",
+						"group": "Finish",
+						"type": "api-call",
+						"label": "Lock",
+						"icon": "LockOutline",
+						"method": "POST",
+						"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId/freeze",
+						"confirm": true,
+						"confirmTitle": "Lock this ticket?",
+						"confirmMessage": "Nobody can change this ticket while it is locked. Anyone who may edit it can unlock it again.",
+						"successMessage": "Ticket locked.",
+						"errorMessage": "Could not lock this ticket.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "@self.frozen",
+									"op": "empty"
+								},
+								{
+									"field": "isFinished",
+									"op": "eq",
+									"value": true
+								}
+							]
+						}
+					},
+					{
+						"id": "unlock-record",
+						"group": "Finish",
+						"type": "api-call",
+						"label": "Unlock",
+						"icon": "LockOpenVariantOutline",
+						"method": "DELETE",
+						"url": "/apps/openregister/api/objects/pipelinq/ticket/@objectId/freeze",
+						"successMessage": "Ticket unlocked.",
+						"errorMessage": "Could not unlock this ticket.",
+						"visibleWhen": {
+							"field": "@self.frozen",
+							"op": "notEmpty"
+						}
 					}
 				],
 				"primaryActionByStage": {
@@ -1383,10 +1435,20 @@
 				],
 				"layout": [
 					{
+						"id": "lock",
+						"widgetId": "ticket-locked",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 1,
+						"sizeToContent": true,
+						"showTitle": false
+					},
+					{
 						"id": "1",
 						"widgetId": "ticket-panels",
 						"gridX": 0,
-						"gridY": 0,
+						"gridY": 1,
 						"gridWidth": 12,
 						"gridHeight": 8
 					}
@@ -1619,6 +1681,17 @@
 									}
 								},
 								{
+									"widgetIds": [
+										"ticket-call-summary",
+										"ticket-call-transcript"
+									],
+									"label": "Call",
+									"visibleWhen": {
+										"field": "recording_url",
+										"op": "notEmpty"
+									}
+								},
+								{
 									"widgetId": "ticket-history",
 									"label": "History"
 								}
@@ -1821,7 +1894,74 @@
 						"id": "ticket-history",
 						"type": "audit-trail",
 						"title": "History",
-						"icon": "History"
+						"icon": "History",
+						"_note": "The same words as the full TicketDetail History tab (ticket-handover-history); tests/vitest/ticketHandoverHistory.spec.js keeps the two equal.",
+						"content": {
+							"layout": "stacked",
+							"actionLabels": {
+								"create": "Created by {actor}",
+								"update": "Updated by {actor}"
+							},
+							"changeLabels": [
+								{
+									"action": "update",
+									"field": "assignee",
+									"label": "Passed to {to} by {actor}",
+									"values": "user"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "new",
+									"label": "Set back to new by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "in_progress",
+									"label": "Taken in progress by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "awaiting_customer",
+									"label": "Waiting for the customer by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "resolved",
+									"label": "Resolved by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "completed",
+									"label": "Completed by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "rejected",
+									"label": "Rejected by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "converted",
+									"label": "Converted by {actor}"
+								},
+								{
+									"action": "update",
+									"field": "status",
+									"to": "closed",
+									"label": "Closed by {actor}"
+								}
+							],
+							"excludeActions": [
+								"read"
+							]
+						}
 					},
 					{
 						"id": "ticket-resident-view",
@@ -3340,6 +3480,13 @@
 						}
 					},
 					{
+						"key": "municipality",
+						"label": "Municipality",
+						"labelField": "name",
+						"sortable": false,
+						"hidden": true
+					},
+					{
 						"key": "assignee",
 						"label": "Handler",
 						"widget": "avatar",
@@ -4060,6 +4207,13 @@
 						"key": "client",
 						"label": "Client",
 						"labelField": "name"
+					},
+					{
+						"key": "municipality",
+						"label": "Municipality",
+						"labelField": "name",
+						"sortable": false,
+						"hidden": true
 					}
 				],
 				"searchPlaceholder": "Filter by name, email or client",

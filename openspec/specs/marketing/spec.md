@@ -121,3 +121,15 @@ The newsletter list MUST show, under each newsletter's name, the segment it goes
 - WHEN the user opens Nieuwsbrieven
 - THEN the first reads "Segment: verenigingen in Zuiddrecht · 412 contacten" under its name
 - AND the second reads "Mailinglijst: Afvalnieuws · <confirmed subscribers> abonnees"
+
+### Requirement: The search insight tables are framed and sort and filter from their heads
+
+The search queries, keyword, competitor watch and connection audit tables on the search insight page SHALL be framed in
+their card, draw the head on the board head ground, and carry a sort and a filter button in every data column head that
+sorts and filters the rows the table holds.
+
+#### Scenario: Board PqZoekinzicht
+
+- **WHEN** a marketer opens Search insight
+- **THEN** each of the four tables is framed with 18px outer insets and a 42px head row on the board head ground
+- **AND** sorting or filtering a column reorders or narrows the rows shown, without a new request

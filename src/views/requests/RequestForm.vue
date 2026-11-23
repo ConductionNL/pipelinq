@@ -171,6 +171,29 @@
 					@update:modelValue="onClientChange" />
 				<div v-if="boardLayout" class="rf-client__actions">
 					<NcButton
+						v-if="brpAllowed"
+						variant="secondary"
+						class="cn-button--tonal"
+						:disabled="lookupSaving"
+						data-testid="request-form-client-brp"
+						@click="brpDialogOpen = true">
+						<template #icon>
+							<CardAccountDetailsOutline :size="16" />
+						</template>
+						{{ t('pipelinq', 'Look up in the BRP') }}
+					</NcButton>
+					<NcButton
+						variant="secondary"
+						class="cn-button--tonal"
+						:disabled="lookupSaving"
+						data-testid="request-form-client-kvk"
+						@click="kvkDialogOpen = true">
+						<template #icon>
+							<DomainIcon :size="16" />
+						</template>
+						{{ t('pipelinq', 'Look up in the KVK') }}
+					</NcButton>
+					<NcButton
 						variant="secondary"
 						class="cn-button--tonal"
 						@click="newClient">
@@ -210,6 +233,14 @@
 			</div>
 		</div>
 
+		<ClientBrpLookupDialog
+			v-if="brpDialogOpen"
+			@found="onBrpPersonFound"
+			@close="brpDialogOpen = false" />
+		<ClientKvkLookupDialog
+			v-if="kvkDialogOpen"
+			@picked="onKvkCompanyPicked"
+			@close="kvkDialogOpen = false" />
 		<ClientCreateDialog
 			v-if="clientDialogOpen"
 			:name="pendingName"
@@ -306,12 +337,25 @@ import {
 import AccountPlusOutline from 'vue-material-design-icons/AccountPlusOutline.vue'
 import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
+import CardAccountDetailsOutline from 'vue-material-design-icons/CardAccountDetailsOutline.vue'
 import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
+import DomainIcon from 'vue-material-design-icons/Domain.vue'
 import MessageTextOutline from 'vue-material-design-icons/MessageTextOutline.vue'
 import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
+import ClientBrpLookupDialog from '../../dialogs/ClientBrpLookupDialog.vue'
 import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
+import ClientKvkLookupDialog from '../../dialogs/ClientKvkLookupDialog.vue'
 import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
+import hostedFormMixin from '../../mixins/hostedFormMixin.js'
 import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
+import pipelineStageMixin from '../../mixins/pipelineStageMixin.js'
+import {
+	clientFromBrpPerson,
+	clientFromKvkCompany,
+	matchingClient,
+	openTicketCounts,
+} from '../../services/clientLookups.js'
+import { createLookedUpClient, fetchBrpAccess, lookupFailed } from '../../services/clientLookupsApi.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import {
@@ -322,12 +366,31 @@ import {
 import { categoryOptions, fetchTicketCategories } from '../../services/ticketCategories.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
+import { fieldsOr, withoutEmptyFields } from '../../utils/formFields.js'
+
+/**
+ * An existing request as the form edits it.
+ *
+ * @param {object} request The stored request.
+ * @return {object} The form.
+ * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
+ */
+function formFromRequest(request) {
+	return {
+		id: request.id,
+		...fieldsOr(request, { title: '', description: '', status: 'new', priority: 'normal', channel: null, category: '', occurredAt: null, client: null, contact: null, pipeline: null, stage: null }),
+	}
+}
 
 export default {
 	name: 'RequestForm',
 	components: {
 		AccountPlusOutline,
+		CardAccountDetailsOutline,
+		ClientBrpLookupDialog,
 		ClientCreateDialog,
+		ClientKvkLookupDialog,
+		DomainIcon,
 		ClockOutline,
 		CnResourceSelect,
 		CnSearchSelect,
@@ -340,7 +403,7 @@ export default {
 		NcTextField,
 	},
 
-	mixins: [linkedPartyCascadeMixin],
+	mixins: [hostedFormMixin, linkedPartyCascadeMixin, pipelineStageMixin],
 
 	props: {
 		request: {
@@ -351,21 +414,6 @@ export default {
 		preLinkedClient: {
 			type: String,
 			default: null,
-		},
-
-		/**
-		 * Render the built-in Cancel / Save buttons. Set to `false` when the
-		 * host supplies its own action buttons (e.g. a parent NcDialog driving
-		 * the form via a ref + the `update:valid` event).
-		 *
-		 * Defaults ON deliberately: a host that supplies its own action bar
-		 * opts OUT. Inverting the name would make every ordinary use pass a
-		 * negative prop just to get the normal form.
-		 */
-		showActions: {
-			type: Boolean,
-			// eslint-disable-next-line vue/no-boolean-default
-			default: true,
 		},
 
 		/**
@@ -406,6 +454,12 @@ export default {
 			clientOptions: [],
 			clientSearching: false,
 			clientSearchTicket: 0,
+			/** Whether the session user may look up in the BRP (GET /api/brp/access). */
+			brpAllowed: false,
+			brpDialogOpen: false,
+			kvkDialogOpen: false,
+			/** A client from a lookup is being found or created. */
+			lookupSaving: false,
 			typeLabelId: `request-form-type-${Math.random().toString(36).slice(2, 8)}`,
 
 			priorityOptions: ['low', 'normal', 'high', 'urgent'],
@@ -427,12 +481,12 @@ export default {
 		 * unify-ticket-supertype) to NcDateTimePickerNative, which works with Date
 		 * objects. The user-facing label stays "Requested at".
 		 *
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 		 */
 		occurredAtDate: {
 			/**
 			 * @return {Date|null} The stored `occurredAt` as a Date.
-			 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+			 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 			 */
 			get() {
 				return toDateObject(this.form.occurredAt)
@@ -440,7 +494,7 @@ export default {
 
 			/**
 			 * @param {Date|null} date The picked date.
-			 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+			 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 			 */
 			set(date) {
 				this.form.occurredAt = toDateInputString(date)
@@ -448,21 +502,21 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-44
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-44
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-49
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-49
 		 */
 		requestChannelsStore() {
 			return useRequestChannelsStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-39
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-39
 		 */
 		channelOptions() {
 			return this.requestChannelsStore.channelNames
@@ -492,7 +546,7 @@ export default {
 		 * The kinds of ticket the board layout offers.
 		 *
 		 * @return {Array<{value: string, label: string}>}
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 		 */
 		typeOptions() {
 			return [
@@ -524,7 +578,7 @@ export default {
 		 * ticket waits in the queue.
 		 *
 		 * @return {Array<{value: string|null, label: string}>}
-		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 * @spec openspec/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 		 */
 		assigneeOptions() {
 			const user = getCurrentUser()
@@ -547,7 +601,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-38
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-38
 		 */
 		availableStatuses() {
 			if (!this.isEdit) return ['new']
@@ -556,21 +610,21 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-48
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-48
 		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-50
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-50
 		 */
 		requestPipelines() {
 			return this.pipelines.filter((p) => pipelineAppliesTo(p, 'request'))
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-47
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-47
 		 */
 		pipelineOptions() {
 			return this.requestPipelines.map((p) => ({
@@ -580,25 +634,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-51
-		 */
-		selectedPipeline() {
-			if (!this.form.pipeline) return null
-			return this.pipelines.find((p) => p.id === this.form.pipeline) || null
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-52
-		 */
-		stageOptions() {
-			if (!this.selectedPipeline?.stages) return []
-			return [...this.selectedPipeline.stages]
-				.sort((a, b) => a.order - b.order)
-				.map((s) => s.name)
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
 		 */
 		errors() {
 			const errors = {}
@@ -613,30 +649,15 @@ export default {
 		 * typed in the field, so a new form does not open in error.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
 		 */
 		showTitleError() {
 			return this.titleTouched && !!this.errors.title
 		},
-
-		isValid() {
-			return Object.keys(this.errors).length === 0 && this.form.title?.trim()
-		},
-	},
-
-	watch: {
-		// Surface validity so a host (e.g. a parent NcDialog) can enable or
-		// disable its own submit button.
-		isValid: {
-			immediate: true,
-			handler(val) {
-				this.$emit('update:valid', !!val)
-			},
-		},
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
 	 */
 	async created() {
 		const [, , categories] = await Promise.all([
@@ -645,33 +666,15 @@ export default {
 			fetchTicketCategories(),
 		])
 		this.ticketCategories = categories
+		if (this.boardLayout && !this.request) {
+			this.loadBrpAccess()
+		}
 
 		if (this.request) {
-			this.form = {
-				id: this.request.id,
-				title: this.request.title || '',
-				description: this.request.description || '',
-				status: this.request.status || 'new',
-				priority: this.request.priority || 'normal',
-				channel: this.request.channel || null,
-				category: this.request.category || '',
-				occurredAt: this.request.occurredAt || null,
-				client: this.request.client || null,
-				contact: this.request.contact || null,
-				pipeline: this.request.pipeline || null,
-				stage: this.request.stage || null,
-			}
-		} else {
-			if (this.preLinkedClient) {
-				this.form.client = this.preLinkedClient
-			}
-			if (this.boardLayout) {
-				this.loadPickedClient()
-				this.form.ticketType = 'request'
-				this.form.assignee = getCurrentUser()?.uid || null
-			}
-			this.autoAssignDefaultPipeline()
+			this.form = formFromRequest(this.request)
+			return
 		}
+		this.prepareNewRequest()
 	},
 
 	methods: {
@@ -679,20 +682,123 @@ export default {
 		 * A client as a row of the board's search list: initials, the name,
 		 * and what kind of client it is and where.
 		 *
+		 * Every row is a client that exists, so it is marked known; when the
+		 * open tickets were counted, the row names them too.
+		 *
 		 * @param {object} client A client object.
+		 * @param {number|null} [openTickets] Its open tickets, or null when not counted.
 		 * @return {{id: string, label: string, secondary: string, avatar: boolean}} The row.
 		 * @spec openspec/changes/request-dialog-client-lookups/specs/request-management/spec.md#requirement-the-new-request-dialog-finds-the-client-or-looks-them-up
 		 */
-		clientRow(client) {
+		clientRow(client, openTickets = null) {
 			const kind = client.type === 'organization'
 				? t('pipelinq', 'Organisation')
 				: t('pipelinq', 'Resident')
+			const tickets = Number.isInteger(openTickets) && openTickets > 0
+				? (openTickets === 1
+					? t('pipelinq', '{count} open ticket', { count: openTickets })
+					: t('pipelinq', '{count} open tickets', { count: openTickets }))
+				: ''
 			return {
 				id: client.id,
 				label: client.name || '',
-				secondary: [kind, client.address].filter(Boolean).join(' · '),
+				secondary: [kind, client.address || client.place, tickets, t('pipelinq', 'Known')].filter(Boolean).join(' · '),
 				avatar: true,
 			}
+		},
+
+		/**
+		 * The open tickets of the found clients, counted in one search.
+		 * Without an answer the rows simply name none.
+		 *
+		 * @param {Array<object>} clients The found clients.
+		 * @return {Promise<{[clientId: string]: number}>} Client id to open tickets.
+		 * @spec openspec/changes/request-dialog-client-lookups/specs/request-management/spec.md#requirement-the-new-request-dialog-finds-the-client-or-looks-them-up
+		 */
+		async openTicketsOf(clients) {
+			const ids = clients.map((c) => c.id).filter(Boolean)
+			if (ids.length === 0) {
+				return {}
+			}
+			try {
+				const tickets = await this.objectStore.fetchCollectionForOptions('ticket', { client: ids, _limit: 200 })
+				return openTicketCounts(tickets)
+			} catch {
+				return {}
+			}
+		},
+
+		/**
+		 * Whether the session user may look up in the BRP. The server checks
+		 * again on every lookup; this only decides whether the pill shows.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/request-dialog-client-lookups/specs/request-management/spec.md#requirement-the-new-request-dialog-finds-the-client-or-looks-them-up
+		 */
+		async loadBrpAccess() {
+			this.brpAllowed = await fetchBrpAccess()
+		},
+
+		/**
+		 * Put the client a lookup found on the ticket: the existing one with
+		 * that identity, else a new one from the found fields.
+		 *
+		 * @param {object} fields The client fields the lookup made.
+		 * @param {object} search The client search that finds the existing one.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/request-dialog-client-lookups/specs/request-management/spec.md#requirement-the-new-request-dialog-finds-the-client-or-looks-them-up
+		 */
+		async useLookedUpClient(fields, search) {
+			if (!fields.name) {
+				lookupFailed(t('pipelinq', 'The lookup gave no name to make a client from.'))
+				return
+			}
+			this.lookupSaving = true
+			try {
+				const candidates = await this.objectStore.fetchCollectionForOptions('client', { ...search, _limit: 20 })
+				let client = matchingClient(candidates, fields)
+				if (!client) {
+					client = await createLookedUpClient(fields)
+				}
+				if (!client || !client.id) {
+					lookupFailed(t('pipelinq', 'Failed to create client.'))
+					return
+				}
+				this.clientOptions = [this.clientRow(client), ...this.clientOptions.filter((o) => o.id !== client.id)]
+				this.onClientChange(client.id)
+			} catch {
+				lookupFailed(t('pipelinq', 'Failed to create client.'))
+			} finally {
+				this.lookupSaving = false
+			}
+		},
+
+		/**
+		 * A person the BRP found: the resident client with the same name and
+		 * address, or a new one. The BSN is not part of it.
+		 *
+		 * @param {object} person The `persoon` of the lookup.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/request-dialog-client-lookups/specs/request-management/spec.md#requirement-the-new-request-dialog-finds-the-client-or-looks-them-up
+		 */
+		async onBrpPersonFound(person) {
+			this.brpDialogOpen = false
+			const fields = clientFromBrpPerson(person)
+			await this.useLookedUpClient(fields, { _search: fields.name, type: 'person' })
+		},
+
+		/**
+		 * A company picked from the KVK: the client with its KVK number, or a
+		 * new organisation client.
+		 *
+		 * @param {object} company The KVK search row.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/request-dialog-client-lookups/specs/request-management/spec.md#requirement-the-new-request-dialog-finds-the-client-or-looks-them-up
+		 */
+		async onKvkCompanyPicked(company) {
+			this.kvkDialogOpen = false
+			const fields = clientFromKvkCompany(company)
+			await this.useLookedUpClient(fields, { kvkNumber: fields.kvkNumber })
 		},
 
 		/**
@@ -713,8 +819,13 @@ export default {
 			this.clientSearching = true
 			try {
 				const found = await this.objectStore.fetchCollectionForOptions('client', { _search: term, _limit: 20 })
+				const clients = Array.isArray(found) ? found : []
 				if (ticket === this.clientSearchTicket) {
-					this.clientOptions = (Array.isArray(found) ? found : []).map((c) => this.clientRow(c))
+					this.clientOptions = clients.map((c) => this.clientRow(c))
+				}
+				const open = await this.openTicketsOf(clients)
+				if (ticket === this.clientSearchTicket) {
+					this.clientOptions = clients.map((c) => this.clientRow(c, open[c.id] || 0))
 				}
 			} catch {
 				if (ticket === this.clientSearchTicket) {
@@ -764,47 +875,44 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-37
+		 * A new request: the client it was opened on; on the board, the
+		 * picked client, the request type and the current user as handler;
+		 * then the default pipeline.
+		 *
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
+		 */
+		prepareNewRequest() {
+			if (this.preLinkedClient) {
+				this.form.client = this.preLinkedClient
+			}
+			if (this.boardLayout) {
+				this.loadPickedClient()
+				this.form.ticketType = 'request'
+				this.form.assignee = getCurrentUser()?.uid || null
+			}
+			this.autoAssignDefaultPipeline()
+		},
+
+		/**
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-37
 		 */
 		autoAssignDefaultPipeline() {
 			const defaultPipeline = this.requestPipelines.find((p) => p.isDefault)
 			if (defaultPipeline) {
 				this.form.pipeline = defaultPipeline.id
-				const stages = [...(defaultPipeline.stages || [])].sort(
-					(a, b) => a.order - b.order,
-				)
-				const firstOpen = stages.find((s) => !s.isClosed)
-				if (firstOpen) {
-					this.form.stage = firstOpen.name
-				}
+				this.placeOnFirstOpenStage(defaultPipeline)
 			}
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-45
-		 */
-		onPipelineChange() {
-			this.form.stage = null
-			if (this.selectedPipeline) {
-				const stages = [...(this.selectedPipeline.stages || [])].sort(
-					(a, b) => a.order - b.order,
-				)
-				const firstOpen = stages.find((s) => !s.isClosed)
-				if (firstOpen) {
-					this.form.stage = firstOpen.name
-				}
-			}
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-46
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-46
 		 */
 		getPriorityLabel,
 		getStatusLabel,
 
 		/**
 		 * @param {string} value The typed subject.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
 		 */
 		onTitleInput(value) {
 			this.form.title = value
@@ -820,16 +928,7 @@ export default {
 			this.titleTouched = true
 			if (!this.isValid) return
 
-			const data = { ...this.form }
-			if (!data.channel) delete data.channel
-			if (!data.occurredAt) delete data.occurredAt
-			if (!data.client) delete data.client
-			if (!data.contact) delete data.contact
-			if (!data.pipeline) delete data.pipeline
-			if (!data.stage) delete data.stage
-			if (!data.category) delete data.category
-			if (!data.assignee) delete data.assignee
-			if (!data.ticketType) delete data.ticketType
+			const data = withoutEmptyFields({ ...this.form }, ['channel', 'occurredAt', 'client', 'contact', 'pipeline', 'stage', 'category', 'assignee', 'ticketType'])
 
 			this.$emit('save', data)
 		},
@@ -837,30 +936,11 @@ export default {
 }
 </script>
 
+<style scoped src="../formLayout.css"></style>
+
 <style scoped>
 .request-form {
 	max-width: 600px;
-}
-
-.form-group {
-	margin-bottom: 16px;
-}
-
-.form-group label {
-	display: block;
-	font-weight: bold;
-	margin-bottom: 4px;
-	color: var(--color-text-maxcontrast);
-	font-size: 13px;
-}
-
-.form-row {
-	display: flex;
-	gap: 16px;
-}
-
-.form-row .form-group {
-	flex: 1;
 }
 
 .request-form--board {
@@ -939,11 +1019,5 @@ export default {
 	margin: 4px 0 0;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
-}
-
-.form-actions {
-	display: flex;
-	gap: 8px;
-	margin-top: 20px;
 }
 </style>

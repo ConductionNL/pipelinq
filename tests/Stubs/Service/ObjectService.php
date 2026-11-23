@@ -49,11 +49,28 @@ namespace OCA\OpenRegister\Service;
 
 use LogicException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Contract\ObjectSelection;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\RegisterSchemaSlugs;
+use OCA\OpenRegister\Contract\SearchOptions;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Db\Register;
 use OCA\OpenRegister\Db\Schema;
 use OCP\IUser;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\UnlockRequest;
+use OCA\OpenRegister\Kernel\Contracts\Value\LockRequest;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
+use OCA\OpenRegister\Contract\BulkSaveOptions as PublishedBulkSaveOptions;
+use OCA\OpenRegister\Contract\LockRequest as PublishedLockRequest;
+use OCA\OpenRegister\Contract\ObjectDeletion as PublishedObjectDeletion;
+use OCA\OpenRegister\Contract\ObjectFindOptions as PublishedObjectFindOptions;
+use OCA\OpenRegister\Contract\ObjectPatch as PublishedObjectPatch;
+use OCA\OpenRegister\Contract\ObjectSaveOptions as PublishedObjectSaveOptions;
+use OCA\OpenRegister\Contract\UnlockRequest as PublishedUnlockRequest;
 
 if (class_exists(ObjectService::class) === false) {
 	/**
@@ -110,21 +127,22 @@ if (class_exists(ObjectService::class) === false) {
 		 */
 		public function saveObject(
 			array|ObjectEntity $object,
-			?array $extend = [],
-			Register|string|int|null $register = null,
-			Schema|string|int|null $schema = null,
-			?string $uuid = null,
+			ObjectSaveOptions|PublishedObjectSaveOptions $options = new ObjectSaveOptions(),
 			bool $_rbac = true,
-			bool $_multitenancy = true,
-			bool $silent = false,
-			bool $_validation = true,
-			?array $uploadedFiles = null,
-			?IUser $currentUser = null,
-			bool $failIfExists = false,
-			bool $_unowned = false,
-			bool $_dedupOverride = false,
-			?string $_owner = null,
+			bool $_multitenancy = true
 		): ObjectEntityInterface {
+			$extend = $options->extend ?? [];
+			$register = $options->target->register;
+			$schema = $options->target->schema;
+			$uuid = $options->uuid;
+			$silent = $options->policy->silent ?? false;
+			$_validation = $options->policy->validation ?? true;
+			$uploadedFiles = $options->uploadedFiles;
+			$currentUser = $options->actor->currentUser;
+			$failIfExists = $options->policy->failIfExists ?? false;
+			$_unowned = $options->actor->unowned ?? false;
+			$_dedupOverride = $options->policy->dedupOverride ?? false;
+			$_owner = $options->actor->owner;
 			throw new LogicException(self::NOT_CONFIGURED);
 		}//end saveObject()
 
@@ -156,15 +174,16 @@ if (class_exists(ObjectService::class) === false) {
 		 */
 		public function find(
 			int|string $id,
-			?array $_extend = [],
-			bool $files = false,
-			Register|string|int|null $register = null,
-			Schema|string|int|null $schema = null,
+			ObjectFindOptions|PublishedObjectFindOptions|null $options = null,
 			bool $_rbac = true,
-			bool $_multitenancy = true,
-			bool $_render = true,
-			bool $_audit = true,
+			bool $_multitenancy = true
 		): ?ObjectEntityInterface {
+			$_extend = $options?->extend ?? [];
+			$files = $options?->files ?? false;
+			$register = $options?->register;
+			$schema = $options?->schema;
+			$_render = $options?->render ?? true;
+			$_audit = $options?->audit ?? true;
 			return null;
 		}//end find()
 
@@ -202,10 +221,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @param array<string, mixed>    $query         The search query.
 		 * @param boolean                 $_rbac         Whether to enforce RBAC checks.
 		 * @param boolean                 $_multitenancy Whether to enforce tenant scoping.
-		 * @param array<int, mixed>|null  $ids           Restrict to these ids.
-		 * @param string|null             $uses          Restrict to objects using this one.
-		 * @param array<int, mixed>|null  $views         Views to apply.
-		 * @param boolean                 $_viewScopeRequired Whether a view scope is required.
+		 * @param SearchOptions           $options       Selection, views, view scope and deleted flag.
 		 *
 		 * @return array<int, mixed>|int
 		 */
@@ -213,10 +229,7 @@ if (class_exists(ObjectService::class) === false) {
 			array $query = [],
 			bool $_rbac = true,
 			bool $_multitenancy = true,
-			?array $ids = null,
-			?string $uses = null,
-			?array $views = null,
-			bool $_viewScopeRequired = false,
+			SearchOptions $options = new SearchOptions(),
 		): array|int {
 			return [];
 		}//end searchObjects()
@@ -236,15 +249,16 @@ if (class_exists(ObjectService::class) === false) {
 		 * @return boolean
 		 */
 		public function deleteObject(
-			string $uuid,
-			Register|string|int|null $register = null,
-			Schema|string|int|null $schema = null,
+			ObjectDeletion|PublishedObjectDeletion $deletion,
 			bool $_rbac = true,
 			bool $_multitenancy = true,
-			bool $_retentionSweep = false,
-			?IUser $currentUser = null,
-			bool $permanent = false,
+			bool $_retentionSweep = false
 		): bool {
+			$uuid = $deletion->uuid;
+			$register = $deletion->target->register;
+			$schema = $deletion->target->schema;
+			$currentUser = $deletion->currentUser;
+			$permanent = $deletion->permanent ?? false;
 			return true;
 		}//end deleteObject()
 
@@ -254,10 +268,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @param array<string, mixed>   $query         The search query.
 		 * @param boolean                $_rbac         Whether to enforce RBAC checks.
 		 * @param boolean                $_multitenancy Whether to enforce tenant scoping.
-		 * @param boolean                $deleted       Whether to include deleted objects.
-		 * @param array<int, mixed>|null $ids           Restrict to these ids.
-		 * @param string|null            $uses          Restrict to objects using this one.
-		 * @param array<int, mixed>|null $views         Views to apply.
+		 * @param SearchOptions          $options       Selection, views, view scope and deleted flag.
 		 *
 		 * @return array<string, mixed>
 		 */
@@ -265,10 +276,7 @@ if (class_exists(ObjectService::class) === false) {
 			array $query = [],
 			bool $_rbac = true,
 			bool $_multitenancy = true,
-			bool $deleted = false,
-			?array $ids = null,
-			?string $uses = null,
-			?array $views = null,
+			SearchOptions $options = new SearchOptions(),
 		): array {
 			return [];
 		}//end searchObjectsPaginated()
@@ -276,8 +284,7 @@ if (class_exists(ObjectService::class) === false) {
 		/**
 		 * Search objects by register and schema slug.
 		 *
-		 * @param string               $registerSlug  The register slug.
-		 * @param string               $schemaSlug    The schema slug.
+		 * @param RegisterSchemaSlugs  $target        The register slug and the schema slug.
 		 * @param array<string, mixed> $filters       Filters to apply.
 		 * @param boolean              $_rbac         Whether to enforce RBAC checks.
 		 * @param boolean              $_multitenancy Whether to enforce tenant scoping.
@@ -285,8 +292,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @return array<int, mixed>|int
 		 */
 		public function searchObjectsBySlug(
-			string $registerSlug,
-			string $schemaSlug,
+			RegisterSchemaSlugs $target,
 			array $filters = [],
 			bool $_rbac = true,
 			bool $_multitenancy = true,
@@ -339,16 +345,17 @@ if (class_exists(ObjectService::class) === false) {
 		 */
 		public function saveObjects(
 			array $objects,
-			string|int|null $register = null,
-			string|int|null $schema = null,
+			BulkSaveOptions|PublishedBulkSaveOptions $options = new BulkSaveOptions(),
 			bool $_rbac = true,
-			bool $_multitenancy = true,
-			bool $validation = false,
-			bool $events = false,
-			bool $deduplicateIds = true,
-			bool $enrich = true,
-			bool $_audit = true,
+			bool $_multitenancy = true
 		): array {
+			$register = $options->defaults->register;
+			$schema = $options->defaults->schema;
+			$validation = $options->validation ?? false;
+			$events = $options->events ?? false;
+			$deduplicateIds = true;
+			$enrich = true;
+			$_audit = $options->audit ?? true;
 			return [];
 		}//end saveObjects()
 
@@ -475,7 +482,10 @@ if (class_exists(ObjectService::class) === false) {
 		 *
 		 * @return boolean
 		 */
-		public function unlockObject(string|int $identifier, bool $advisory = false, ?string $runUuid = null): bool {
+		public function unlockObject(UnlockRequest|PublishedUnlockRequest $request): bool {
+			$identifier = $request->identifier;
+			$advisory = $request->advisory ?? false;
+			$runUuid = $request->runUuid;
 			return true;
 		}//end unlockObject()
 
@@ -492,13 +502,14 @@ if (class_exists(ObjectService::class) === false) {
 		 * @return array<string, mixed>
 		 */
 		public function lockObject(
-			string $identifier,
-			?string $process = null,
-			?int $duration = null,
-			bool $advisory = false,
-			?string $runUuid = null,
-			?string $nodeId = null,
+			LockRequest|PublishedLockRequest $request,
+			bool $advisory = false
 		): array {
+			$identifier = $request->identifier;
+			$process = $request->process;
+			$duration = $request->duration;
+			$runUuid = $request->runUuid;
+			$nodeId = $request->nodeId;
 			return [];
 		}//end lockObject()
 
@@ -583,14 +594,15 @@ if (class_exists(ObjectService::class) === false) {
 		 * @return ObjectEntityInterface
 		 */
 		public function patchObject(
-			string $objectId,
-			array $data,
-			string|int|null $register = null,
-			string|int|null $schema = null,
+			ObjectPatch|PublishedObjectPatch $patch,
 			bool $_rbac = true,
-			bool $_multitenancy = true,
-			?IUser $currentUser = null,
+			bool $_multitenancy = true
 		): ObjectEntityInterface {
+			$objectId = $patch->objectId;
+			$data = $patch->data;
+			$register = $patch->target->register;
+			$schema = $patch->target->schema;
+			$currentUser = $patch->currentUser;
 			throw new LogicException(self::NOT_CONFIGURED);
 		}//end patchObject()
 
@@ -659,13 +671,14 @@ if (class_exists(ObjectService::class) === false) {
 		 */
 		public function findSilent(
 			string $id,
-			?array $_extend = [],
-			bool $files = false,
-			Register|string|int|null $register = null,
-			Schema|string|int|null $schema = null,
+			ObjectFindOptions|PublishedObjectFindOptions|null $options = null,
 			bool $_rbac = true,
-			bool $_multitenancy = true,
+			bool $_multitenancy = true
 		): ObjectEntityInterface {
+			$_extend = $options?->extend ?? [];
+			$files = $options?->files ?? false;
+			$register = $options?->register;
+			$schema = $options?->schema;
 			throw new LogicException(self::NOT_CONFIGURED);
 		}//end findSilent()
 
@@ -675,8 +688,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * @param array<string, mixed>   $query         The search query.
 		 * @param boolean                $_rbac         Whether to enforce RBAC checks.
 		 * @param boolean                $_multitenancy Whether to enforce tenant scoping.
-		 * @param array<int, mixed>|null $ids           Restrict to these ids.
-		 * @param string|null            $uses          Restrict to objects using this one.
+		 * @param ObjectSelection        $selection     The ids and uses to restrict the count to.
 		 *
 		 * @return integer
 		 */
@@ -684,8 +696,7 @@ if (class_exists(ObjectService::class) === false) {
 			array $query = [],
 			bool $_rbac = true,
 			bool $_multitenancy = true,
-			?array $ids = null,
-			?string $uses = null,
+			ObjectSelection $selection = new ObjectSelection(),
 		): int {
 			return 0;
 		}//end countSearchObjects()
@@ -698,5 +709,20 @@ if (class_exists(ObjectService::class) === false) {
 		public function getObject(): ?ObjectEntityInterface {
 			return null;
 		}//end getObject()
+
+		/**
+		 * Validate an object without saving it. Not modelled by the stub.
+		 *
+		 * @param array<string, mixed> $object   The object.
+		 * @param string|int           $register The register.
+		 * @param string|int           $schema   The schema.
+		 * @param string|null          $id       The object id when it exists.
+		 *
+		 * @return \OCA\OpenRegister\Kernel\Contracts\Value\ObjectValidationVerdict Never.
+		 */
+		public function validateObject(array $object, string|int $register, string|int $schema, ?string $id = null): \OCA\OpenRegister\Kernel\Contracts\Value\ObjectValidationVerdict {
+			throw new \LogicException('ObjectService stub: validateObject() is not modelled');
+		}//end validateObject()
+
 	}//end class
 }//end if

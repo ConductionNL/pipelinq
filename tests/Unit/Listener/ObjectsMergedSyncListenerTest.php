@@ -249,4 +249,91 @@ final class ObjectsMergedSyncListenerTest extends TestCase {
 		$this->assertSame([], $this->dispatched);
 		$this->assertArrayNotHasKey('contact', $this->repo->store);
 	}//end testUnrelatedEventIgnored()
+
+	/**
+	 * Golden: the full payload of a dispatch, and every log line of the degraded paths.
+	 *
+	 * @return void
+	 */
+	public function testPayloadAndDegradedPathsAreExact(): void {
+		$lines = [];
+		$logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+		foreach (['warning', 'error'] as $level) {
+			$logger->method($level)->willReturnCallback(
+				static function (string $message, array $context = []) use ($level, &$lines): void {
+					$lines[] = [$level, $message, $context];
+				}
+			);
+		}
+
+		$repository = $this->createMock(\OCA\Pipelinq\Service\Mdm\MdmObjectRepository::class);
+		$repository->method('findMasterEntity')->willThrowException(new \RuntimeException('store offline'));
+		$orSync = $this->createMock(OpenRegisterSyncService::class);
+		$orSync->method('syncMasterToRegister')->willThrowException(new \RuntimeException('projection offline'));
+		$sink = [];
+		$webhook = new class($sink) extends WebhookService {
+			/**
+			 * @param array<int, array<string, mixed>> $sink Reference to the record sink.
+			 */
+			public function __construct(
+				private array &$sink,
+			) {
+			}
+
+			/**
+			 * Record the dispatch; refuse the one for procest.
+			 *
+			 * @param Event $_event The event.
+			 * @param string $eventName The event name.
+			 * @param array<string, mixed> $payload The payload.
+			 *
+			 * @return void
+			 */
+			public function dispatchEvent(Event $_event, string $eventName, array $payload): void {
+				$this->sink[] = [$eventName, $payload];
+				if ($payload['targetSystem'] === 'procest') {
+					throw new \RuntimeException('procest down');
+				}
+			}
+		};
+
+		$listener = new ObjectsMergedSyncListener($this->buildContainer(webhook: $webhook), $repository, $orSync, $logger);
+		$listener->handle(new ObjectsMergedEvent('survivor-1', ['from-1'], 'op-9', true));
+
+		$this->assertSame(
+			[
+				ObjectsMergedSyncListener::EVENT_SYNC,
+				[
+					'targetSystem' => 'shillinq',
+					'changeType' => 'reverse-merge',
+					'masterEntity' => 'survivor-1',
+					'payload' => [
+						'mergedInto' => 'survivor-1',
+						'mergedFrom' => ['from-1'],
+						'mergeOperationId' => 'op-9',
+						'isReversal' => true,
+						'goldenRecord' => [],
+					],
+				],
+			],
+			$sink[0]
+		);
+		$this->assertCount(5, $sink);
+		$this->assertSame(
+			[
+				['warning', 'Pipelinq MDM: could not read survivor golden record for merge sync', ['survivor' => 'survivor-1', 'exception' => 'store offline']],
+				['error', 'Pipelinq MDM: downstream merge sync dispatch failed', ['survivor' => 'survivor-1', 'target' => 'procest', 'exception' => 'procest down']],
+				['warning', 'Pipelinq MDM: golden-record projection failed after merge', ['survivor' => 'survivor-1', 'exception' => 'projection offline']],
+			],
+			$lines
+		);
+
+		$lines = [];
+		$absent = new ObjectsMergedSyncListener($this->buildContainer(webhook: null), $repository, $orSync, $logger);
+		$absent->handle(new ObjectsMergedEvent('survivor-2', ['from-1'], 'op-10', false));
+		$this->assertSame(
+			['warning', 'Pipelinq MDM: OpenRegister WebhookService unavailable; downstream merge sync skipped', ['survivor' => 'survivor-2', 'changeType' => 'merge']],
+			$lines[1]
+		);
+	}//end testPayloadAndDegradedPathsAreExact()
 }//end class

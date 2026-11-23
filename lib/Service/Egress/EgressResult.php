@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ namespace OCA\Pipelinq\Service\Egress;
 /**
  * The outcome of one outbound read.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
  */
 final class EgressResult {
 
@@ -86,7 +86,7 @@ final class EgressResult {
 	 * @param string|null $failure One of {@see FAILURES}, or null on success.
 	 * @param string $reason A sentence a page can render, empty on success.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function __construct(
 		public readonly bool $succeeded,
@@ -105,7 +105,7 @@ final class EgressResult {
 	 *
 	 * @return self
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public static function success(string $body, int $status = 200): self {
 		return new self(succeeded: true, status: $status, body: $body);
@@ -120,7 +120,7 @@ final class EgressResult {
 	 *
 	 * @return self
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public static function failed(string $failure, string $reason, int $status = 0): self {
 		return new self(succeeded: false, status: $status, failure: $failure, reason: $reason);
@@ -131,7 +131,7 @@ final class EgressResult {
 	 *
 	 * @return array<string|int, mixed>|null
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function json(): ?array {
 		if ($this->succeeded === false || $this->body === '') {

@@ -67,3 +67,4 @@
 - [x] 7.1 PHPUnit, PHPCS, Psalm, PHPStan green.
 - [ ] 7.2 Playwright: the POS payment settings page renders the credential picker and no
       API-key field; a saved credential round-trips.
+  - Written, not yet run (needs OpenRegister's credential broker): `tests/e2e/pos-payment-credential.spec.ts` makes a personal Mollie credential in the broker, picks it on the admin page, saves, and reads `credentialId` back through `GET /api/payment-providers/mollie` and after a reload; it asserts no API-key or API-secret field and puts the previous reference back.

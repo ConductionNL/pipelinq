@@ -36,7 +36,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
  */
 
 declare(strict_types=1);
@@ -44,8 +44,16 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use Closure;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
+use OCA\Pipelinq\Service\Support\BlastDeliveryLookup;
+use OCA\Pipelinq\Service\Support\ConfiguredBlastDeliverySchemaSlug;
+use OCA\Pipelinq\Util\ConfiguredRegisterSlug;
+use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\PayloadToArray;
+use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -68,10 +76,17 @@ use Throwable;
  * routing-matrix row (delivered/bounce/open/click/unsubscribe/complaint), each
  * independently unit-tested; splitting would scatter one cohesive webhook contract.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+ * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
-class WebhookProcessorService {
+class WebhookProcessorService implements WebhookProcessorServiceInterface {
 	use PayloadToArray;
+	use ConfiguredRegisterSlug;
+	use ConfiguredBlastDeliverySchemaSlug;
+	use ContainerObjectService;
+	use SavedPayloadId;
+	use BlastDeliveryLookup;
 
 	/**
 	 * Default register slug — matches the chain root schemas.
@@ -111,7 +126,7 @@ class WebhookProcessorService {
 	 * @param BlastService $blastService Totals re-computation sink.
 	 * @param LoggerInterface $logger Logger.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -137,7 +152,7 @@ class WebhookProcessorService {
 	 * @return bool True when the event was handled (including
 	 *              intentionally-skipped unknowns).
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processEvent(array $event, string $provider): bool {
 		$eventType = strtolower((string)($event['eventType'] ?? $event['event'] ?? ''));
@@ -210,7 +225,7 @@ class WebhookProcessorService {
 	 *
 	 * @return int Count of events handled.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processSendGridEvent(array $events): int {
 		$handled = 0;
@@ -231,7 +246,7 @@ class WebhookProcessorService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processDelivered(array $event): void {
 		$delivery = $this->locateDelivery(event: $event);
@@ -273,11 +288,38 @@ class WebhookProcessorService {
 			return;
 		}
 
+		$bounceType = $this->bounceTypeOf(event: $event);
+		$payload = $this->bouncedPayload(delivery: $delivery, event: $event, bounceType: $bounceType);
+		$this->saveDelivery(payload: $payload, id: $this->extractId(payload: $delivery));
+		$this->withdrawAfterBounce(delivery: $delivery, bounceType: $bounceType);
+	}//end processBounce()
+
+	/**
+	 * The event's bounce type, lower-cased; 'hard' when it names none.
+	 *
+	 * @param array<string, mixed> $event Normalised event.
+	 *
+	 * @return string
+	 */
+	private function bounceTypeOf(array $event): string {
 		$bounceType = strtolower((string)($event['bounceType'] ?? $event['type'] ?? ''));
 		if ($bounceType === '') {
 			$bounceType = 'hard';
 		}
 
+		return $bounceType;
+	}//end bounceTypeOf()
+
+	/**
+	 * The delivery marked bounced, with the bounce's type, time and reason.
+	 *
+	 * @param array<string, mixed> $delivery   The delivery row.
+	 * @param array<string, mixed> $event      Normalised event.
+	 * @param string               $bounceType The bounce type.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function bouncedPayload(array $delivery, array $event, string $bounceType): array {
 		$payload = $delivery;
 		$payload['status'] = 'bounced';
 		$payload['bounceType'] = $bounceType;
@@ -287,8 +329,18 @@ class WebhookProcessorService {
 			$payload['bounceReason'] = $bounceReason;
 		}
 
-		$this->saveDelivery(payload: $payload, id: $this->extractId(payload: $delivery));
+		return $payload;
+	}//end bouncedPayload()
 
+	/**
+	 * Withdraw consent after a hard bounce, or count a soft one.
+	 *
+	 * @param array<string, mixed> $delivery   The delivery row.
+	 * @param string               $bounceType The bounce type.
+	 *
+	 * @return void
+	 */
+	private function withdrawAfterBounce(array $delivery, string $bounceType): void {
 		$contactId = (string)($delivery['contactId'] ?? '');
 		$channel = (string)($delivery['channel'] ?? 'email');
 		$blastId = (string)($delivery['blastId'] ?? '');
@@ -297,29 +349,50 @@ class WebhookProcessorService {
 		}
 
 		if ($bounceType === 'hard') {
-			$this->complianceService->recordConsentWithdrawal(
-				contactId: $contactId,
-				channel: $channel,
-				reason: 'bounce-hard',
-				sourceBlastId: $this->blastIdOrNull(blastId: $blastId),
-			);
-			$this->clearSoftBounceCounter(contactId: $contactId, channel: $channel);
+			$this->withdrawBouncedConsent(contactId: $contactId, channel: $channel, reason: 'bounce-hard', blastId: $blastId);
 			return;
 		}
 
 		// Soft bounce — bump per-contact counter; withdraw when at threshold.
+		$this->countSoftBounce(contactId: $contactId, channel: $channel, blastId: $blastId);
+	}//end withdrawAfterBounce()
+
+	/**
+	 * Bump the soft-bounce counter; withdraw consent when it reaches the threshold.
+	 *
+	 * @param string $contactId The contact.
+	 * @param string $channel   The channel.
+	 * @param string $blastId   The blast the bounce came from.
+	 *
+	 * @return void
+	 */
+	private function countSoftBounce(string $contactId, string $channel, string $blastId): void {
 		$threshold = $this->resolveSoftBounceThreshold();
 		$next = $this->incrementSoftBounceCounter(contactId: $contactId, channel: $channel);
 		if ($next >= $threshold) {
-			$this->complianceService->recordConsentWithdrawal(
-				contactId: $contactId,
-				channel: $channel,
-				reason: 'bounce-soft-x' . $threshold,
-				sourceBlastId: $this->blastIdOrNull(blastId: $blastId),
-			);
-			$this->clearSoftBounceCounter(contactId: $contactId, channel: $channel);
+			$this->withdrawBouncedConsent(contactId: $contactId, channel: $channel, reason: 'bounce-soft-x' . $threshold, blastId: $blastId);
 		}
-	}//end processBounce()
+	}//end countSoftBounce()
+
+	/**
+	 * Record a consent withdrawal for a bounce and clear the soft-bounce counter.
+	 *
+	 * @param string $contactId The contact.
+	 * @param string $channel   The channel.
+	 * @param string $reason    The withdrawal reason.
+	 * @param string $blastId   The blast the bounce came from.
+	 *
+	 * @return void
+	 */
+	private function withdrawBouncedConsent(string $contactId, string $channel, string $reason, string $blastId): void {
+		$this->complianceService->recordConsentWithdrawal(
+			contactId: $contactId,
+			channel: $channel,
+			reason: $reason,
+			sourceBlastId: $this->blastIdOrNull(blastId: $blastId),
+		);
+		$this->clearSoftBounceCounter(contactId: $contactId, channel: $channel);
+	}//end withdrawBouncedConsent()
 
 	/**
 	 * Handle an `open` event — set BlastDelivery.openedAt + status.
@@ -328,7 +401,7 @@ class WebhookProcessorService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processOpen(array $event): void {
 		$delivery = $this->locateDelivery(event: $event);
@@ -429,7 +502,7 @@ class WebhookProcessorService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function processComplaint(array $event): void {
 		$delivery = $this->locateDelivery(event: $event);
@@ -468,7 +541,7 @@ class WebhookProcessorService {
 	 *
 	 * @return array<string, mixed> Normalised event.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
+	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	public function normaliseSendGrid(array $event): array {
 		$type = strtolower((string)($event['event'] ?? ''));
@@ -507,33 +580,77 @@ class WebhookProcessorService {
 	 * @return array<string, mixed>|null Delivery row or null.
 	 */
 	private function locateDelivery(array $event): ?array {
+		$row = $this->deliveryById(event: $event);
+		if ($row !== null) {
+			return $row;
+		}
+
+		$row = $this->deliveryByProviderId(event: $event);
+		if ($row !== null) {
+			return $row;
+		}
+
+		return $this->deliveryByContactAndBlast(event: $event);
+	}//end locateDelivery()
+
+	/**
+	 * The delivery the event names by `blastDeliveryId`, or null.
+	 *
+	 * @param array<string, mixed> $event Normalised event.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function deliveryById(array $event): array|null {
 		$deliveryId = (string)($event['blastDeliveryId'] ?? '');
-		if ($deliveryId !== '') {
-			$row = $this->loadDeliveryById(id: $deliveryId);
-			if ($row !== null) {
-				return $row;
-			}
+		if ($deliveryId === '') {
+			return null;
 		}
 
+		return $this->loadDeliveryById(id: $deliveryId);
+	}//end deliveryById()
+
+	/**
+	 * The first delivery carrying the event's `providerId`, or null.
+	 *
+	 * @param array<string, mixed> $event Normalised event.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function deliveryByProviderId(array $event): array|null {
 		$providerId = (string)($event['providerId'] ?? '');
-		if ($providerId !== '') {
-			$rows = $this->findDeliveries(filters: ['providerId' => $providerId]);
-			if ($rows !== []) {
-				return $rows[0];
-			}
+		if ($providerId === '') {
+			return null;
 		}
 
+		$rows = $this->findDeliveries(filters: ['providerId' => $providerId]);
+		if ($rows === []) {
+			return null;
+		}
+
+		return $rows[0];
+	}//end deliveryByProviderId()
+
+	/**
+	 * The first delivery of the event's contact in the event's blast, or null.
+	 *
+	 * @param array<string, mixed> $event Normalised event.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function deliveryByContactAndBlast(array $event): array|null {
 		$contactId = (string)($event['contactId'] ?? '');
 		$blastId = (string)($event['blastId'] ?? '');
-		if ($contactId !== '' && $blastId !== '') {
-			$rows = $this->findDeliveries(filters: ['contactId' => $contactId, 'blastId' => $blastId]);
-			if ($rows !== []) {
-				return $rows[0];
-			}
+		if ($contactId === '' || $blastId === '') {
+			return null;
 		}
 
-		return null;
-	}//end locateDelivery()
+		$rows = $this->findDeliveries(filters: ['contactId' => $contactId, 'blastId' => $blastId]);
+		if ($rows === []) {
+			return null;
+		}
+
+		return $rows[0];
+	}//end deliveryByContactAndBlast()
 
 	/**
 	 * Coerce an empty blast id to null so
@@ -623,9 +740,9 @@ class WebhookProcessorService {
 	 */
 	private function incrementSoftBounceCounter(string $contactId, string $channel): int {
 		$key = $this->softBounceKey(contactId: $contactId, channel: $channel);
-		$current = (int)$this->appConfig->getValueString(Application::APP_ID, $key, '0');
+		$current = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, $key, '0');
 		$next = ($current + 1);
-		$this->appConfig->setValueString(Application::APP_ID, $key, (string)$next);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, $key, (string)$next);
 		return $next;
 	}//end incrementSoftBounceCounter()
 
@@ -640,7 +757,7 @@ class WebhookProcessorService {
 	private function clearSoftBounceCounter(string $contactId, string $channel): void {
 		$key = $this->softBounceKey(contactId: $contactId, channel: $channel);
 		try {
-			$this->appConfig->deleteKey(Application::APP_ID, $key);
+			$this->appConfig->deleteKey(AppIdentity::APP_ID, $key);
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'WebhookProcessorService.clearSoftBounceCounter: delete failed',
@@ -668,7 +785,7 @@ class WebhookProcessorService {
 	 */
 	private function resolveSoftBounceThreshold(): int {
 		$raw = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::APP_CONFIG_SOFT_BOUNCE_THRESHOLD,
 			(string)self::DEFAULT_SOFT_BOUNCE_THRESHOLD,
 		);
@@ -692,32 +809,7 @@ class WebhookProcessorService {
 	 * @return array<string, mixed>|null Delivery row or null.
 	 */
 	private function loadDeliveryById(string $id): ?array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '') {
-			return null;
-		}
-
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schema);
-		} catch (Throwable $e) {
-			$this->logger->info(
-				'WebhookProcessorService.loadDeliveryById: not found',
-				['id' => $id, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $entity);
+		return $this->findBlastDelivery(id: $id, notFound: 'WebhookProcessorService.loadDeliveryById: not found');
 	}//end loadDeliveryById()
 
 	/**
@@ -728,17 +820,28 @@ class WebhookProcessorService {
 	 * @return array<int, array<string, mixed>> Matching rows.
 	 */
 	private function findDeliveries(array $filters): array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '') {
+		$target = $this->objectTarget(register: $this->getRegisterSlug(), schema: $this->getBlastDeliverySchemaSlug());
+		if ($target === null) {
 			return [];
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return [];
-		}
+		[$register, $schema, $objectService] = $target;
 
+		$rows = $this->findAllDeliveries(objectService: $objectService, filters: $filters, register: $register, schema: $schema);
+		return $this->deliveryArrays(rows: $rows);
+	}//end findDeliveries()
+
+	/**
+	 * Run the BlastDelivery findAll, logging a failed one.
+	 *
+	 * @param object               $objectService OpenRegister's ObjectService.
+	 * @param array<string, mixed> $filters       Filter map.
+	 * @param string               $register      Register slug.
+	 * @param string               $schema        BlastDelivery schema slug.
+	 *
+	 * @return mixed The rows, or an empty array when the read failed.
+	 */
+	private function findAllDeliveries(object $objectService, array $filters, string $register, string $schema): mixed {
 		try {
 			// OpenRegister's ObjectService::findAll() takes a single $config array;
 			// register/schema travel INSIDE $config['filters'] (prepareFindAllConfig()
@@ -746,16 +849,8 @@ class WebhookProcessorService {
 			// both as reserved params so they never leak as object-field filters).
 			// The old findAll(register:, schema:, filters:) named-argument form no
 			// longer exists and threw "Unknown named parameter $register" at runtime.
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => array_merge(
-						$filters,
-						[
-							'register' => $register,
-							'schema' => $schema,
-						]
-					),
-				]
+			return $objectService->findAll(
+				config: ['filters' => array_merge($filters, ['register' => $register, 'schema' => $schema])]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -764,14 +859,23 @@ class WebhookProcessorService {
 			);
 			return [];
 		}//end try
+	}//end findAllDeliveries()
 
+	/**
+	 * The found rows as plain arrays.
+	 *
+	 * @param mixed $rows The findAll answer.
+	 *
+	 * @return array<int, array<string, mixed>> Matching rows.
+	 */
+	private function deliveryArrays(mixed $rows): array {
 		$out = [];
 		foreach (($rows ?? []) as $row) {
 			$out[] = $this->toArray(value: $row);
 		}
 
 		return $out;
-	}//end findDeliveries()
+	}//end deliveryArrays()
 
 	/**
 	 * Persist a BlastDelivery payload via ObjectService.
@@ -782,23 +886,47 @@ class WebhookProcessorService {
 	 * @return void
 	 */
 	private function saveDelivery(array $payload, string $id): void {
+		$target = $this->deliveryWriteTarget(id: $id);
+		if ($target === null) {
+			return;
+		}
+
+		$this->writeDelivery(target: $target, payload: $payload, id: $id);
+		$this->refreshBlastTotals(payload: $payload);
+	}//end saveDelivery()
+
+	/**
+	 * The register, schema and ObjectService to save a delivery through, or null when one is missing.
+	 *
+	 * @param string $id Delivery id.
+	 *
+	 * @return array{0: string, 1: string, 2: object}|null
+	 */
+	private function deliveryWriteTarget(string $id): array|null {
 		$register = $this->getRegisterSlug();
 		$schema = $this->getBlastDeliverySchemaSlug();
-		if ($register === '' || $schema === '' || $id === '') {
-			return;
+		if ($id === '') {
+			return null;
 		}
 
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return;
-		}
+		return $this->objectTarget(register: $register, schema: $schema);
+	}//end deliveryWriteTarget()
 
+	/**
+	 * Save the delivery, logging a failed save.
+	 *
+	 * @param array{0: string, 1: string, 2: object} $target  The register, schema and ObjectService.
+	 * @param array<string, mixed>                   $payload Delivery payload.
+	 * @param string                                 $id      Delivery id.
+	 *
+	 * @return void
+	 */
+	private function writeDelivery(array $target, array $payload, string $id): void {
+		[$register, $schema, $objectService] = $target;
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: $register,
-				schema: $schema,
-				uuid: $id,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), uuid: $id)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -806,7 +934,16 @@ class WebhookProcessorService {
 				['id' => $id, 'exception' => $e->getMessage()]
 			);
 		}
+	}//end writeDelivery()
 
+	/**
+	 * Recompute the totals of the delivery's blast, logging a failure.
+	 *
+	 * @param array<string, mixed> $payload Delivery payload.
+	 *
+	 * @return void
+	 */
+	private function refreshBlastTotals(array $payload): void {
 		$blastId = (string)($payload['blastId'] ?? '');
 		if ($blastId !== '') {
 			try {
@@ -818,76 +955,5 @@ class WebhookProcessorService {
 				);
 			}
 		}
-	}//end saveDelivery()
-
-	/**
-	 * Extract the object id from a saved payload.
-	 *
-	 * @param array<string, mixed> $payload Payload.
-	 *
-	 * @return string Id (uuid / id / slug) or empty.
-	 */
-	private function extractId(array $payload): string {
-		$searchSpaces = [$payload];
-		$self = ($payload['@self'] ?? null);
-		if (is_array($self) === true) {
-			$searchSpaces[] = $self;
-		}
-
-		foreach ($searchSpaces as $space) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($space[$key] ?? null);
-				if (is_scalar($value) === true && (string)$value !== '') {
-					return (string)$value;
-				}
-			}
-		}
-
-		return '';
-	}//end extractId()
-
-	/**
-	 * Resolve the register slug from app config.
-	 *
-	 * @return string Slug.
-	 */
-	private function getRegisterSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_REGISTER_SLUG;
-	}//end getRegisterSlug()
-
-	/**
-	 * Resolve the BlastDelivery schema slug from app config.
-	 *
-	 * @return string Slug.
-	 */
-	private function getBlastDeliverySchemaSlug(): string {
-		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blastDelivery_schema', '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
-	}//end getBlastDeliverySchemaSlug()
-
-	/**
-	 * Lazy-resolve OpenRegister's ObjectService.
-	 *
-	 * @return object|null ObjectService or null when OR is unavailable.
-	 */
-	private function getObjectService(): ?object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'WebhookProcessorService.getObjectService: OpenRegister unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-	}//end getObjectService()
+	}//end refreshBlastTotals()
 }//end class

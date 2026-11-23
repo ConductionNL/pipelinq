@@ -11,7 +11,7 @@
   - Competitors: the competitor watches (CompetitorWatches, embedded);
   - Connection audit: the stored follow audit, with Check again.
 
-  @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+  @spec openspec/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
   @spec openspec/specs/marketing/spec.md
 -->
 <template>
@@ -187,6 +187,7 @@ import Refresh from 'vue-material-design-icons/Refresh.vue'
 import CompetitorWatches from './CompetitorWatches.vue'
 import KeywordIntelligence from './KeywordIntelligence.vue'
 import { auditVerdict, CONNECTION_AUDIT_PATH } from '../../services/connectionAudit.js'
+import { downloadCsv } from '../../services/csvExport.js'
 
 const DAY = 24 * 60 * 60 * 1000
 
@@ -239,7 +240,7 @@ export default {
 		 * The search query columns: every one sorts and filters from its head.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		columns() {
 			const number = (key, label) => ({
@@ -265,7 +266,7 @@ export default {
 		 * the section holds, as board PqZoekinzicht draws the heads.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		auditColumns() {
 			return [
@@ -371,7 +372,7 @@ export default {
 		 *
 		 * @param {boolean} refresh Re-run the audit before reading.
 		 * @return {Promise<boolean>} Whether the audit answered.
-		 * @spec openspec/changes/search-insight-framed-tables/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
+		 * @spec openspec/specs/marketing/spec.md#requirement-the-search-insight-tables-are-framed-and-sort-and-filter-from-their-heads
 		 */
 		async fetchAudit(refresh = false) {
 			try {
@@ -418,17 +419,7 @@ export default {
 		 */
 		download() {
 			const keys = ['query', 'clicks', 'impressions', 'ctr', 'position', 'pages']
-			const cell = (value) => {
-				const text = value === null || value === undefined ? '' : String(value)
-				return /[";\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
-			}
-			const lines = [keys.join(';'), ...this.sortedRows.map((row) => keys.map((key) => cell(row[key])).join(';'))]
-			const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' })
-			const link = document.createElement('a')
-			link.href = URL.createObjectURL(blob)
-			link.download = 'search-queries.csv'
-			link.click()
-			URL.revokeObjectURL(link.href)
+			downloadCsv('search-queries.csv', this.sortedRows, keys)
 		},
 
 		isoDay(date) {

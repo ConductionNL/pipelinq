@@ -151,19 +151,25 @@ describe('the full profile', () => {
 		})
 	})
 
-	it('still counts 51 entries: 41 main, 3 footer, 7 settings, 0 integrations', () => {
+	it('still counts 55 entries: 43 main, 3 footer, 9 settings, 0 integrations', () => {
 		const menu = build(fullFile).menu
 		const count = (name) =>
 			flat(menu.filter((entry) => (entry.section || 'main') === name)).length
-		// Website submissions sits in the settings, as PqAanvraagOmzetten draws it.
+		// Website submissions sits in the settings, as PqAanvraagOmzetten draws it,
+		// and so does Retention review (platform-client-retention).
 		// The sixth settings entry is the Integrations caption above Connections
 		// and BI export, which settingsSection moves there. nextcloud-vue before
 		// 2.84.0 dropped it in the relocation step's clean-up; 2.84.0 keeps a
 		// caption that has entries under it (nextcloud-vue #1608).
-		expect(flat(menu)).toHaveLength(51)
-		expect(count('main')).toBe(41)
+		// Bulk changes (clients-bulk-edit-and-undo) sits under the Dashboard
+		// group with Clients and Contacts. Call reviews (contact-moments-call-review)
+		// sits under the KCC workplace with My work and the queue. Municipalities
+		// (requests-municipality-per-contact) is a settings entry too. Price lists
+		// (products-price-lists) sits next to Products.
+		expect(flat(menu)).toHaveLength(55)
+		expect(count('main')).toBe(43)
 		expect(count('footer')).toBe(3)
-		expect(count('settings')).toBe(7)
+		expect(count('settings')).toBe(9)
 		expect(count('integrations')).toBe(0)
 	})
 
@@ -486,11 +492,11 @@ describe('the simple profile', () => {
 		expect(routes).toHaveLength(fullReports.config.cards.length + 1)
 	})
 
-	it('builds the same 105 pages as the full profile, so every route stays', () => {
+	it('builds the same 110 pages as the full profile, so every route stays', () => {
 		const ids = (source) => source.pages.map((page) => page.id)
 		const full = build(fullFile)
 		expect(ids(built)).toEqual(ids(full))
-		expect(built.pages).toHaveLength(105)
+		expect(built.pages).toHaveLength(110)
 		expect(built.pages.map((page) => page.route)).toEqual(
 			full.pages.map((page) => page.route),
 		)
@@ -985,6 +991,44 @@ describe('a page overlay', () => {
 			{ id: 'P', slots: { 'title-meta': null, added: 'A' } },
 		)
 		expect(out.slots).toEqual({ keep: 'K', added: 'A' })
+	})
+
+	it('replaces the title only with a non-empty string', () => {
+		const page = { id: 'P', title: 'Old' }
+		expect(applyPageOverlay(page, { id: 'P', title: 'New' })).toEqual({ id: 'P', title: 'New', config: {} })
+		expect(applyPageOverlay(page, { id: 'P', title: '' })).toEqual({ id: 'P', title: 'Old', config: {} })
+		expect(applyPageOverlay(page, { id: 'P', title: 7 })).toEqual({ id: 'P', title: 'Old', config: {} })
+	})
+
+	it('reads lists that are not arrays as empty, and keeps bare items it cannot merge into', () => {
+		const page = { id: 'P', config: { text: 'x', list: ['a', { id: 'b' }] } }
+		const out = applyPageOverlay(page, {
+			id: 'P',
+			configPatch: { text: { x: { n: 1 } }, list: { a: { n: 1 }, b: { n: 2 } }, none: null },
+			configAppend: { more: 'nope', list: null },
+			configOrder: { list: 'b', other: ['ghost'] },
+		})
+		expect(out.config).toEqual({
+			text: [],
+			list: ['a', { id: 'b', n: 2 }],
+			none: [],
+			more: [],
+			other: [],
+		})
+	})
+
+	it('orders the named items first, skipping names it does not find', () => {
+		const out = applyPageOverlay(
+			{ id: 'P', config: { list: [{ id: 'a' }, { id: 'b' }, { id: 'c' }] } },
+			{ id: 'P', configOrder: { list: ['c', 'ghost', 'a'] } },
+		)
+		expect(out.config.list).toEqual([{ id: 'c' }, { id: 'a' }, { id: 'b' }])
+	})
+
+	it('ignores slots that are not an object, and adds slots to a page without any', () => {
+		const page = { id: 'P', config: {}, slots: { keep: 'K' } }
+		expect(applyPageOverlay(page, { id: 'P', slots: 'nope' })).toEqual({ id: 'P', config: {}, slots: { keep: 'K' } })
+		expect(applyPageOverlay({ id: 'P' }, { id: 'P', slots: { s: 'S', gone: null } })).toEqual({ id: 'P', config: {}, slots: { s: 'S' } })
 	})
 
 	it('is skipped and reported when it names a page the manifest does not have', () => {

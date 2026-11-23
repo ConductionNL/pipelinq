@@ -92,6 +92,11 @@ the seconds.
 
 - **One client has the number.** The card names them. Click **Answer and open**
   to open their page. Click **Not this client** if it is someone else.
+  Under the name the card shows three facts: **Open** (their open requests,
+  complaints and meldingen), **Last contact** (the day of their last activity)
+  and **Waiting** (how many of those wait for their answer). For a contact
+  person the facts are those of their client. You only see them when you may
+  read that client.
 - **Several contacts share the number.** Click **Choose contact** and pick one.
 - **Nobody has the number.** Click **New contact**, fill in a name and save.
 

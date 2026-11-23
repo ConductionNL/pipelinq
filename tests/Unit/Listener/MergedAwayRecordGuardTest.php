@@ -88,4 +88,17 @@ class MergedAwayRecordGuardTest extends TestCase {
 		$restamp = ($plain + ['mergedAt' => 'x'] + self::STAMP);
 		$this->assertFalse(condition: $this->refused(old: ($plain + self::STAMP), new: $restamp), message: 'the stamp again');
 	}//end testTheStampTheReversalAndOrdinaryEditsPass()
+
+	/**
+	 * The list of rows the merge moved is the merge's own write: setting and clearing it passes.
+	 *
+	 * @return void
+	 */
+	public function testTheMovedRowsListOfTheMergePasses(): void {
+		$stamped = (['name' => 'Gem. Utrecht'] + self::STAMP);
+		$moved = [['schema' => 'lead', 'uuid' => 'lead-1', 'property' => 'client']];
+		$this->assertFalse(condition: $this->refused(old: $stamped, new: ($stamped + ['mergeMovedRows' => $moved])), message: 'the list');
+		$this->assertFalse(condition: $this->refused(old: ($stamped + ['mergeMovedRows' => $moved]), new: ($stamped + ['mergeMovedRows' => null])), message: 'clearing it');
+		$this->assertTrue(condition: $this->refused(old: $stamped, new: (['name' => 'Anders', 'mergeMovedRows' => $moved] + self::STAMP)), message: 'other edits still refused');
+	}//end testTheMovedRowsListOfTheMergePasses()
 }//end class

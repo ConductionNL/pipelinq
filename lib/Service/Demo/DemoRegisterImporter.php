@@ -29,7 +29,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+ * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  */
 
 declare(strict_types=1);
@@ -37,21 +37,22 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Demo;
 
 use OCA\OpenRegister\Service\ConfigurationService;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\DemoRegisterImporterInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Imports and removes the example records descriptor.
  *
- * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+ * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  */
-class DemoRegisterImporter {
+class DemoRegisterImporter implements DemoRegisterImporterInterface {
 	/**
 	 * Configuration identity for the example import, never the app id.
 	 *
 	 * @var string
 	 */
-	public const CONFIG_APP_ID = Application::APP_ID . '.demo';
+	public const CONFIG_APP_ID = AppIdentity::APP_ID . '.demo';
 
 	/**
 	 * Constructor.
@@ -77,7 +78,7 @@ class DemoRegisterImporter {
 	 *
 	 * @return array{imported: int, skipped: int} How many records arrived and how many did not.
 	 *
-	 * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function import(): array {
 		$data = $this->descriptor->forImport();
@@ -108,7 +109,7 @@ class DemoRegisterImporter {
 	 *
 	 * @return array{removed: int, retained: int}
 	 *
-	 * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function remove(): array {
 		$summary = ['removed' => $this->softDeleteImports(), 'retained' => 0];

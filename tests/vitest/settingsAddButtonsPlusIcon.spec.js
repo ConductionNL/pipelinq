@@ -29,6 +29,6 @@ describe('admin add buttons', () => {
 		expect(settings).not.toContain(`'+ Add`)
 		expect(nl['Add source']).toBe('Bron toevoegen')
 		expect(nl['Add category']).toBe('Categorie toevoegen')
-		expect(nl['Add agent profile']).toBe('Agentprofiel toevoegen')
+		expect(nl['Add agent profile']).toBe('Medewerkerprofiel toevoegen')
 	})
 })

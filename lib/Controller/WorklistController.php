@@ -29,14 +29,15 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\WorklistService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -51,17 +52,17 @@ class WorklistController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param WorklistService $worklistService Worklist union service.
+	 * @param WorklistServiceInterface $worklistService Worklist union service.
 	 * @param IUserSession $userSession Active user session.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private WorklistService $worklistService,
+		private WorklistServiceInterface $worklistService,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -73,11 +74,14 @@ class WorklistController extends Controller {
 	 * the returned rows (the dashboard widget uses 5) while `total`,
 	 * `leadCount` and `requestCount` always reflect the full union.
 	 * Invalid limit -> 400. OpenRegister outage -> 500 with a static
-	 * message.
+	 * message. `?scope=team|organisation` widens whose work is listed when
+	 * the user may (REQ-MW-180), `?member=` narrows the team to one member;
+	 * a scope or member the user may not ask for -> 400.
 	 *
 	 * @return JSONResponse The worklist payload, or an error envelope.
 	 *
 	 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	#[NoAdminRequired]
 	public function mine(): JSONResponse {
@@ -96,8 +100,12 @@ class WorklistController extends Controller {
 			$limit = (int)$limitParam;
 		}
 
+		[$scope, $member] = $this->workScopeParams();
+
 		try {
-			return new JSONResponse($this->worklistService->getMine(userId: $user->getUID(), limit: $limit));
+			return new JSONResponse($this->worklistService->getMine(userId: $user->getUID(), limit: $limit, scope: $scope, member: $member));
+		} catch (\InvalidArgumentException $e) {
+			return new JSONResponse(['message' => 'Invalid scope'], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				message: '[WorklistController] mine failed',
@@ -106,6 +114,22 @@ class WorklistController extends Controller {
 			return new JSONResponse(['message' => 'Worklist unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}//end try
 	}//end mine()
+
+	/**
+	 * Whose work `mine` asks for: `?scope=` (default `mine`) and `?member=`.
+	 *
+	 * @return array{0: string, 1: string} The scope and the member ('' for none).
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 */
+	private function workScopeParams(): array {
+		$scope = (string)$this->request->getParam('scope', '');
+		if ($scope === '') {
+			$scope = 'mine';
+		}
+
+		return [$scope, (string)$this->request->getParam('member', '')];
+	}//end workScopeParams()
 
 	/**
 	 * GET /api/worklist/items: every open item of the session user's work
@@ -131,15 +155,42 @@ class WorklistController extends Controller {
 			return new JSONResponse(['message' => 'Invalid bucket'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$lens = (string)$this->request->getParam('lens', '');
-		$sort = (string)$this->request->getParam('sort', 'deadline');
-		$scope = 'open';
-		if (in_array((string)$this->request->getParam('done', ''), ['1', 'true'], true) === true) {
-			$scope = 'all';
+		$result = $this->fetchItems(user: $user, bucket: $bucket);
+		if ($result instanceof JSONResponse) {
+			return $result;
 		}
 
+		return $this->itemsResponse(result: $result);
+	}//end items()
+
+	/**
+	 * Read the items of a bucket with the requested lens, sort, finished work
+	 * and scope (`?scope=mine|team|organisation`, `?member=`, REQ-MW-180).
+	 *
+	 * @param IUser $user The signed-in user.
+	 * @param string $bucket The validated bucket.
+	 *
+	 * @return array<string, mixed>|JSONResponse The worklist result, a 400 for a scope the user may not
+	 *   ask for, or a 500 envelope when it is unavailable.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 */
+	private function fetchItems(IUser $user, string $bucket): array|JSONResponse {
+		[$scope, $member] = $this->workScopeParams();
+		$view = [
+			'bucket' => $bucket,
+			'lens'   => (string)$this->request->getParam('lens', ''),
+			'sort'   => (string)$this->request->getParam('sort', 'deadline'),
+			'done'   => $this->doneParam(),
+			'scope'  => $scope,
+			'member' => $member,
+		];
+
 		try {
-			$result = $this->worklistService->items(userId: $user->getUID(), bucket: $bucket, lens: $lens, sort: $sort, scope: $scope);
+			return $this->worklistService->items(userId: $user->getUID(), view: $view);
+		} catch (\InvalidArgumentException $e) {
+			return new JSONResponse(['message' => 'Invalid scope'], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				message: '[WorklistController] items failed',
@@ -147,13 +198,35 @@ class WorklistController extends Controller {
 			);
 			return new JSONResponse(['message' => 'Worklist unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
+	}//end fetchItems()
 
+	/**
+	 * Whether finished work is asked for too (`?done=1` or `?done=true`).
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	private function doneParam(): bool {
+		return in_array((string)$this->request->getParam('done', ''), ['1', 'true'], true);
+	}//end doneParam()
+
+	/**
+	 * The worklist result as JSON, or as a CSV download when asked for.
+	 *
+	 * @param array<string, mixed> $result The worklist result.
+	 *
+	 * @return JSONResponse|DataDownloadResponse
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 */
+	private function itemsResponse(array $result): JSONResponse|DataDownloadResponse {
 		if ((string)$this->request->getParam('format', '') === 'csv') {
 			return new DataDownloadResponse($this->asCsv(items: $result['items']), 'my-work.csv', 'text/csv');
 		}
 
 		return new JSONResponse($result);
-	}//end items()
+	}//end itemsResponse()
 
 	/**
 	 * GET /api/worklist/summary: one sentence on the session user's open work,

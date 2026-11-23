@@ -14,10 +14,17 @@
 
 ## 3. Live check (one pass after the queue, per test mode)
 
-- [ ] 3.1 On an instance with OpenRegister including PR #3707: upgrade pipelinq, grep the log for `PARTIAL IMPORT` (none), read the `ticket` schema through `/api/schemas` and find the watchers block [V1]
-- [ ] 3.2 As user B, `PUT /apps/openregister/api/objects/{register}/{schema}/{id}/watch` on a ticket assigned to user A; as user A change the ticket's status; user B gets "Ticket changed: <title>" in the Nextcloud notifications [V1]
+- [x] 3.1 On an instance with OpenRegister including PR #3707: upgrade pipelinq, grep the log for `PARTIAL IMPORT` (none), read the `ticket` schema through `/api/schemas` and find the watchers block [V1]
+  - Live pass 17 Nov 2026 on a clean NC 34 + OpenRegister main (with openregister#10599 for the lead schema): the re-import logged no `PARTIAL IMPORT`; `/api/schemas/<ticket>` carries `{"watchers": true}` in `configuration.x-openregister-notifications.ticketUpdated.recipients`.
+- [x] 3.2 As user B, `PUT /apps/openregister/api/objects/{register}/{schema}/{id}/watch` on a ticket assigned to user A; as user A change the ticket's status; user B gets "Ticket changed: <title>" in the Nextcloud notifications [V1]
   - @e2e exclude {delivery runs through OpenRegister's queue and a background job, the same timing race OpenRegister excludes in its own spec; asserted by 2.1, 2.2 and the live check}
+  - Live pass 17 Nov 2026: u_dossiq `PUT .../ticket/<id>/watch` 200 on a ticket assigned to u_kcc; after a status change and the `AnnotationNotificationDispatchJob` run, u_dossiq has "Ticket gewijzigd: Livepass incoming call" with an Open action to the ticket. The change was made as the ticket's owner: u_kcc, the assignee in the CRM group, is refused the `start` transition (it authorizes only `sales`, and the CRM group is not added there).
 
 ## 4. Matrix
 
 - [x] 4.1 Leave `work-collaborators` at partial when this lands: users still cannot follow from the screen. Move it to built only once the nextcloud-vue Follow control is on the ticket and lead detail pages [V1]
+
+## 5. Working on it together
+
+- [ ] 5.1 Grant an added colleague read and write access to the ticket or lead for as long as they are on it, through OpenRegister's per-object authorisation (no pipelinq-side check), and take it back on removal (REQ-NFTL-005, row `work-collaborators`)
+  - Verify: PHPUnit or an API test: the added colleague reads and patches the record; after removal both answer 403

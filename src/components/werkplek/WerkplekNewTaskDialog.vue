@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/kcc-werkplek/tasks.md#task-3.3 -->
+<!-- @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.3 -->
 <template>
 	<CnFormDialog
 		:dialogTitle="t('pipelinq', 'New task')"
@@ -26,7 +26,7 @@ import { useObjectStore } from '../../store/modules/object.js'
  * state so the agent can spin off a follow-up task without re-typing.
  * Lives in its own .vue file per hydra-gate-modal-isolation.
  *
- * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.3
  */
 export default {
 	name: 'WerkplekNewTaskDialog',
@@ -60,7 +60,7 @@ export default {
 		 * CnFormDialog field definitions for the task schema.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.3
 		 */
 		fields() {
 			return [
@@ -120,7 +120,7 @@ export default {
 		 * Initial values for the dialog (pre-filled context).
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-06-14-kcc-werkplek/tasks.md#task-3.3
 		 */
 		initialValues() {
 			return {
@@ -151,7 +151,29 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async onConfirm(values) {
-			const payload = {
+			const payload = this.taskPayload(values)
+			try {
+				const result = await this.objectStore.saveObject('crmTask', payload)
+				if (!result) {
+					this.reportNotCreated()
+					return
+				}
+				this.$emit('saved', result)
+			} catch (e) {
+				this.reportNotCreated()
+				console.warn('[WerkplekNewTaskDialog] save failed', e)
+			}
+		},
+
+		/**
+		 * The task to store: the form's values, open, for this client, with
+		 * the call's summary or else the task's description.
+		 *
+		 * @param {object} values The form's values.
+		 * @return {object} The task.
+		 */
+		taskPayload(values) {
+			return {
 				...values,
 				clientId: this.clientId,
 				contactMomentSummary:
@@ -159,34 +181,21 @@ export default {
 
 				status: 'open',
 			}
+		},
+
+		/**
+		 * Say the task was not created; a notice that cannot show is ignored.
+		 */
+		reportNotCreated() {
 			try {
-				const result = await this.objectStore.saveObject('crmTask', payload)
-				if (!result) {
-					try {
-						showError(
-							this.t(
-								'pipelinq',
-								'Could not create task. Please try again.',
-							),
-						)
-					} catch {
-						/* no-op */
-					}
-					return
-				}
-				this.$emit('saved', result)
-			} catch (e) {
-				try {
-					showError(
-						this.t(
-							'pipelinq',
-							'Could not create task. Please try again.',
-						),
-					)
-				} catch {
-					/* no-op */
-				}
-				console.warn('[WerkplekNewTaskDialog] save failed', e)
+				showError(
+					this.t(
+						'pipelinq',
+						'Could not create task. Please try again.',
+					),
+				)
+			} catch {
+				/* no-op */
 			}
 		},
 	},

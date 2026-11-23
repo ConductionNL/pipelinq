@@ -8,7 +8,7 @@ public route, so a respondent needs no account: the token in the link is the
 authorisation. It asks the survey's questions, offers "Don't send me
 satisfaction surveys again", and says plainly when a survey is closed.
 
-@spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+@spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 -->
 <template>
 	<main class="public-survey">
@@ -173,7 +173,7 @@ export default {
 		 * The token from the prop or the route.
 		 *
 		 * @return {string} The token.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+		 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 		 */
 		resolvedToken() {
 			if (this.token) {
@@ -188,7 +188,7 @@ export default {
 		 * The survey's questions, in order.
 		 *
 		 * @return {Array<object>} The questions.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+		 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 		 */
 		questions() {
 			return Array.isArray(this.survey.questions) ? this.survey.questions : []
@@ -198,7 +198,7 @@ export default {
 		 * Why the survey is closed, in words.
 		 *
 		 * @return {string} The message.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+		 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 		 */
 		closedMessage() {
 			if (this.state === 'responded') {
@@ -221,7 +221,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 	 */
 	async mounted() {
 		const result = await fetchInvitation(this.resolvedToken).catch(() => ({
@@ -237,7 +237,7 @@ export default {
 		 *
 		 * @param {object} question The question.
 		 * @return {Array<number>|null} The scale.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+		 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 		 */
 		scaleOf(question) {
 			return SCALES[question.kind] || null
@@ -248,7 +248,7 @@ export default {
 		 *
 		 * @param {object} question The question.
 		 * @return {Array<string>} The options, empty for free text.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+		 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 		 */
 		optionsOf(question) {
 			if (question.kind !== 'choice' || !Array.isArray(question.options)) {
@@ -261,7 +261,7 @@ export default {
 		 * The first required question left unanswered, or null.
 		 *
 		 * @return {object|null} The question.
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+		 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 		 */
 		firstMissing() {
 			return (
@@ -281,7 +281,7 @@ export default {
 		 * Send the answers.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+		 * @spec openspec/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 		 */
 		async submit() {
 			const missing = this.firstMissing()

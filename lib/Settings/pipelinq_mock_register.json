@@ -2538,7 +2538,8 @@
             "notes": "Voorbeeld Notes 2"
           }
         ],
-        "lead": "00000000-0000-4000-8000-000000000001"
+        "lead": "00000000-0000-4000-8000-000000000001",
+        "leadId": "00000000-0000-4000-8000-000000000001"
       },
       {
         "@self": {
@@ -8138,6 +8139,176 @@
         "name": "Voorbeeld Name 3",
         "description": "Voorbeeld Description 3",
         "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mirroredCall",
+          "slug": "mirroredcall-mirroredcall-1-1"
+        },
+        "callId": "voorbeeld-gesprek-1",
+        "kind": "ringing",
+        "sourceId": "voorbeeld-telefoniebron",
+        "callerNumber": "+31612345678",
+        "callerName": "Sanne de Vries",
+        "agentId": "noor",
+        "at": "2026-03-01T09:00:00+00:00",
+        "durationSeconds": 0,
+        "openCases": [],
+        "inPipelinq": [],
+        "mirroredAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mirroredCall",
+          "slug": "mirroredcall-mirroredcall-1-2"
+        },
+        "callId": "voorbeeld-gesprek-1",
+        "kind": "answered",
+        "sourceId": "voorbeeld-telefoniebron",
+        "callerNumber": "+31612345678",
+        "callerName": "Sanne de Vries",
+        "agentId": "noor",
+        "at": "2026-03-01T09:00:08+00:00",
+        "durationSeconds": 0,
+        "openCases": [],
+        "inPipelinq": [],
+        "mirroredAt": "2026-03-01T09:00:08+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mirroredCall",
+          "slug": "mirroredcall-mirroredcall-1-3"
+        },
+        "callId": "voorbeeld-gesprek-1",
+        "kind": "ended",
+        "sourceId": "voorbeeld-telefoniebron",
+        "callerNumber": "+31612345678",
+        "callerName": "Sanne de Vries",
+        "agentId": "noor",
+        "at": "2026-03-01T09:01:43+00:00",
+        "durationSeconds": 95,
+        "openCases": [],
+        "inPipelinq": [],
+        "mirroredAt": "2026-03-01T09:01:43+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "servedMunicipality",
+          "slug": "servedmunicipality-goes"
+        },
+        "name": "Goes",
+        "code": "0664",
+        "portalTenantId": "goes",
+        "organisation": "00000000-0000-4000-8000-000000000000"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "servedMunicipality",
+          "slug": "servedmunicipality-borsele"
+        },
+        "name": "Borsele",
+        "code": "0654",
+        "portalTenantId": "borsele",
+        "organisation": "00000000-0000-4000-8000-000000000001"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "servedMunicipality",
+          "slug": "servedmunicipality-middelburg"
+        },
+        "name": "Middelburg",
+        "code": "0687",
+        "organisation": "00000000-0000-4000-8000-000000000002"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "priceList",
+          "slug": "pricelist-voorbeeld-title-1-1"
+        },
+        "title": "Voorbeeld Title 1",
+        "currency": "EUR",
+        "description": "Voorbeeld Description 1",
+        "validFrom": "2026-03-01",
+        "validUntil": "2026-03-01",
+        "segments": [
+          "Voorbeeld Segments 1"
+        ],
+        "countries": [
+          "AB"
+        ],
+        "priority": 0,
+        "isActive": true,
+        "entries": [
+          {
+            "product": "00000000-0000-4000-8000-000000000000",
+            "unitPrice": 0.0,
+            "variantSku": "Voorbeeld Variantsku 1",
+            "minQuantity": 1
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "priceList",
+          "slug": "pricelist-voorbeeld-title-2-2"
+        },
+        "title": "Voorbeeld Title 2",
+        "currency": "EUR",
+        "description": "Voorbeeld Description 2",
+        "validFrom": "2026-03-02",
+        "validUntil": "2026-03-02",
+        "segments": [
+          "Voorbeeld Segments 2"
+        ],
+        "countries": [
+          "BC"
+        ],
+        "priority": 0,
+        "isActive": true,
+        "entries": [
+          {
+            "product": "00000000-0000-4000-8000-000000000001",
+            "unitPrice": 1.0,
+            "variantSku": "Voorbeeld Variantsku 2",
+            "minQuantity": 1
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "priceList",
+          "slug": "pricelist-voorbeeld-title-3-3"
+        },
+        "title": "Voorbeeld Title 3",
+        "currency": "EUR",
+        "description": "Voorbeeld Description 3",
+        "validFrom": "2026-03-03",
+        "validUntil": "2026-03-03",
+        "segments": [
+          "Voorbeeld Segments 3"
+        ],
+        "countries": [
+          "CD"
+        ],
+        "priority": 0,
+        "isActive": true,
+        "entries": [
+          {
+            "product": "00000000-0000-4000-8000-000000000002",
+            "unitPrice": 2.0,
+            "variantSku": "Voorbeeld Variantsku 3",
+            "minQuantity": 1
+          }
+        ]
       }
     ]
   }

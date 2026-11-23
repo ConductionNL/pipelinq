@@ -131,4 +131,43 @@ class EnquiryDrainCommandTest extends TestCase {
 		$this->assertSame(0, $tester->execute([]));
 		$this->assertStringContainsString('nothing to drain', $tester->getDisplay());
 	}//end testUnconfiguredInstances()
+
+	/**
+	 * Both sources are drained in order with their own filters, a read failure counts as pending,
+	 * and the intake submissions alone are drained when no enquiry schema is configured.
+	 *
+	 * @return void
+	 */
+	public function testSourcesAndFailuresAreExact(): void {
+		$tester = $this->tester();
+		$calls  = [];
+		$this->drain->method('drain')->willReturnCallback(
+			static function (string $register, string $schema, string $key, array $filter, bool $apply) use (&$calls): array {
+				$calls[] = [$register, $schema, $key, $filter, $apply];
+				if ($schema === 'intakeSubmission') {
+					throw new \RuntimeException('schema missing');
+				}
+
+				return ['delivered' => [], 'refused' => [], 'unmapped' => [], 'pending' => 0];
+			}
+		);
+
+		$this->assertSame(1, $tester->execute(['--apply' => true, '--include-intake-submissions' => true]));
+		$this->assertSame([['20', '26', 'source', ['status' => 'new'], true], ['20', 'intakeSubmission', 'source', [], true]], $calls);
+		$display = $tester->getDisplay();
+		$this->assertStringContainsString('intakeSubmission: could not be read: schema missing', $display);
+		$this->assertStringContainsString('Pending after this run: 1.', $display);
+
+		$calls  = [];
+		$tester = $this->tester(config: ['register' => '20']);
+		$this->drain->method('drain')->willReturnCallback(
+			static function (string $register, string $schema, string $key, array $filter, bool $apply) use (&$calls): array {
+				$calls[] = [$register, $schema, $key, $filter, $apply];
+				return ['delivered' => [], 'refused' => [], 'unmapped' => [], 'pending' => 3];
+			}
+		);
+		$this->assertSame(1, $tester->execute(['--include-intake-submissions' => true]));
+		$this->assertSame([['20', 'intakeSubmission', 'source', [], false]], $calls);
+		$this->assertStringContainsString('Pending after this run: 3.', $tester->getDisplay());
+	}//end testSourcesAndFailuresAreExact()
 }//end class

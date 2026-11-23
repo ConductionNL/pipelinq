@@ -234,4 +234,52 @@ class ForecastDealServiceTest extends TestCase {
 		$created = $service->applyDefaultCategory(['title' => 'X']);
 		$this->assertSame('pipeline', $created['forecast_category']);
 	}//end testPartitionFallsBackWhenSchemaUnreadable()
+	/**
+	 * A commit or best-case deal whose close date moves past the end of its quarter
+	 * needs a reason; with one it passes (REQ-FRC-012).
+	 *
+	 * @return void
+	 */
+	public function testASlippedCommitDealNeedsAReason(): void {
+		$old = ['forecast_category' => 'commit', 'value' => 100, 'expectedCloseDate' => '2026-03-20'];
+		foreach (['commit', 'best_case'] as $category) {
+			$new = ['forecast_category' => $category, 'value' => 100, 'expectedCloseDate' => '2026-04-01'];
+			$this->assertSame('forecast.error.slip_reason_required', $this->service->validateTransition($old, $new), $category);
+			$this->assertSame('forecast.error.slip_reason_required', $this->service->validateTransition($old, $new + ['slip_reason' => ' too short ']), $category);
+			$this->assertNull($this->service->validateTransition($old, $new + ['slip_reason' => 'Budget moved to Q2 by the board.']), $category);
+		}
+	}//end testASlippedCommitDealNeedsAReason()
+
+	/**
+	 * A move within the same quarter, an earlier date, a pipeline deal, or a missing date is no slip.
+	 *
+	 * @return void
+	 */
+	public function testOtherCloseDateChangesNeedNoReason(): void {
+		$old = ['forecast_category' => 'commit', 'value' => 100, 'expectedCloseDate' => '2026-01-10'];
+
+		$this->assertNull($this->service->validateTransition($old, ['expectedCloseDate' => '2026-03-31T23:00:00+00:00'] + $old));
+		$this->assertNull($this->service->validateTransition($old, ['expectedCloseDate' => '2025-12-01'] + $old));
+		$this->assertNull($this->service->validateTransition($old, ['forecast_category' => 'pipeline', 'expectedCloseDate' => '2026-07-01'] + $old));
+		$this->assertNull($this->service->validateTransition(['forecast_category' => 'commit', 'value' => 100], ['expectedCloseDate' => '2026-07-01'] + $old));
+		$this->assertNull($this->service->validateTransition($old, ['expectedCloseDate' => 'volgend jaar'] + $old));
+	}//end testOtherCloseDateChangesNeedNoReason()
+
+	/**
+	 * A valid slip records where it slipped from and when, once.
+	 *
+	 * @return void
+	 */
+	public function testAValidSlipIsRecordedOnce(): void {
+		$old = ['forecast_category' => 'best_case', 'value' => 100, 'expectedCloseDate' => '2026-06-30T10:00:00+00:00'];
+		$new = ['forecast_category' => 'best_case', 'value' => 100, 'expectedCloseDate' => '2026-07-15', 'slip_reason' => 'Customer postponed the decision.'];
+		$now = new \DateTimeImmutable('2026-06-29T08:00:00+00:00');
+
+		$slipped = $this->service->applySlip($old, $new, $now);
+
+		$this->assertSame($new + ['slipped_from' => '2026-06-30', 'slipped_at' => '2026-06-29T08:00:00+00:00'], $slipped);
+		$this->assertNull($this->service->applySlip($old, $slipped, $now), 'already recorded');
+		$this->assertNull($this->service->applySlip($old, ['slip_reason' => ''] + $new, $now), 'refused');
+		$this->assertNull($this->service->applySlip($old, ['expectedCloseDate' => '2026-06-01'] + $new, $now), 'no slip');
+	}//end testAValidSlipIsRecordedOnce()
 }//end class

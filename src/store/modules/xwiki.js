@@ -44,6 +44,22 @@ function qs(params) {
 	return s === '' ? '' : `?${s}`
 }
 
+/**
+ * Read a list of pages; a refused request throws `xWiki <what> failed (<status>)`.
+ *
+ * @param {{path: string, query: object, what: string}} request The endpoint, its query and what it lists.
+ * @return {Promise<object>} Raw response payload.
+ */
+async function fetchPageList(request) {
+	const response = await fetch(BASE + request.path + qs(request.query), {
+		headers: headers(),
+	})
+	if (!response.ok) {
+		throw new Error(`xWiki ${request.what} failed (${response.status})`)
+	}
+	return response.json()
+}
+
 export const useXwikiStore = defineStore('xwiki', {
 	state: () => ({
 		// Last-fetched search/list results keyed by query intent.
@@ -75,27 +91,8 @@ export const useXwikiStore = defineStore('xwiki', {
 		 * @return {Promise<object>} Raw response payload.
 		 */
 		async search(params = {}) {
-			this.loading = true
-			this.error = null
 			this.searchQuery = params.q || ''
-			try {
-				const response = await fetch(BASE + '/search' + qs(params), {
-					headers: headers(),
-				})
-				if (!response.ok) {
-					throw new Error(`xWiki search failed (${response.status})`)
-				}
-				const data = await response.json()
-				this.articles = Array.isArray(data.results) ? data.results : []
-				this.collectSpaces()
-				return data
-			} catch (e) {
-				this.error = e.message
-				this.articles = []
-				return { results: [], total: 0, error: e.message }
-			} finally {
-				this.loading = false
-			}
+			return this.loadArticles({ path: '/search', query: params, what: 'search' })
 		},
 		/**
 		 * List pages in a space.
@@ -105,17 +102,20 @@ export const useXwikiStore = defineStore('xwiki', {
 		 * @return {Promise<object>} Raw response payload.
 		 */
 		async getPages(space, extra = {}) {
+			return this.loadArticles({ path: '/pages', query: { space, ...extra }, what: 'pages' })
+		},
+		/**
+		 * Load a list of pages into the articles; a refused or failed load
+		 * leaves none and answers an empty result with the error.
+		 *
+		 * @param {{path: string, query: object, what: string}} request The endpoint, its query and what it lists (for the error).
+		 * @return {Promise<object>} Raw response payload.
+		 */
+		async loadArticles(request) {
 			this.loading = true
 			this.error = null
 			try {
-				const response = await fetch(
-					BASE + '/pages' + qs({ space, ...extra }),
-					{ headers: headers() },
-				)
-				if (!response.ok) {
-					throw new Error(`xWiki pages failed (${response.status})`)
-				}
-				const data = await response.json()
+				const data = await fetchPageList(request)
 				this.articles = Array.isArray(data.results) ? data.results : []
 				this.collectSpaces()
 				return data

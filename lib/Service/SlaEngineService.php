@@ -36,13 +36,20 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use Exception;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\SlaEngineServiceInterface;
 use OCA\Pipelinq\Service\Sla\SlaBreachEvent;
 use OCA\Pipelinq\Service\Sla\SlaEscalation;
 use OCA\Pipelinq\Service\Sla\SlaHeat;
+use OCA\Pipelinq\Service\Sla\SlaInstant;
+use OCA\Pipelinq\Service\Sla\SlaPause;
 use OCA\Pipelinq\Service\Sla\SlaPolicyQuery;
 use OCA\Pipelinq\Service\Sla\SlaRecipient;
 use OCA\Pipelinq\Service\Sla\SlaTrackedObject;
+use OCA\Pipelinq\Util\ContainerObjectServiceLookup;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
 use OCP\Notification\IManager as INotificationManager;
@@ -57,7 +64,7 @@ use Throwable;
  * `ContainerInterface` to resolve OpenRegister's ObjectService lazily —
  * mirroring the existing pipelinq pattern (DealCreatedListener etc.).
  *
- * @spec openspec/changes/sla-engine-and-escalation/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-06-14-sla-engine-and-escalation/tasks.md#3.1
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -66,8 +73,9 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyMethods)           Outbound sms/whatsapp escalation legs add small single-purpose private helpers
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Policy + deadline + escalation logic, split into helpers, still one cohesive engine
  */
-class SlaEngineService {
+class SlaEngineService implements SlaEngineServiceInterface {
 	use EntityAccessorTrait;
+	use ContainerObjectServiceLookup;
 
 	public const STATUS_ON_TRACK = 'on-track';
 	public const STATUS_AT_RISK = 'at-risk';
@@ -133,8 +141,23 @@ class SlaEngineService {
 	 */
 	public function resolvePolicyForObject(string $objectType, string $objectId, array $metadata): ?array {
 		unset($objectId);
+		$policies = $this->activePoliciesOrNull();
+		if ($policies === null) {
+			return null;
+		}
+
+		$query = new SlaPolicyQuery(objectType: $objectType, metadata: $metadata, now: $this->now());
+		return $this->bestPolicy(policies: $policies, query: $query);
+	}//end resolvePolicyForObject()
+
+	/**
+	 * The active policies, or null (logged) when they cannot be loaded.
+	 *
+	 * @return array<int, array<string, mixed>>|null
+	 */
+	private function activePoliciesOrNull(): ?array {
 		try {
-			$policies = $this->loadActivePolicies();
+			return $this->loadActivePolicies();
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'SlaEngineService: failed to load active policies',
@@ -142,8 +165,17 @@ class SlaEngineService {
 			);
 			return null;
 		}
+	}//end activePoliciesOrNull()
 
-		$query = new SlaPolicyQuery(objectType: $objectType, metadata: $metadata, now: $this->now());
+	/**
+	 * The best matching policy for a query, logged; null when none matches.
+	 *
+	 * @param array<int, array<string, mixed>> $policies Active policies.
+	 * @param SlaPolicyQuery                   $query    The object.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function bestPolicy(array $policies, SlaPolicyQuery $query): ?array {
 		$candidates = $this->candidatePolicies(policies: $policies, query: $query);
 		if ($candidates === []) {
 			return null;
@@ -156,13 +188,13 @@ class SlaEngineService {
 			'SlaEngineService: policy resolved',
 			[
 				'policyId' => $chosen['id'] ?? $chosen['@self']['slug'] ?? null,
-				'objectType' => $objectType,
+				'objectType' => $query->objectType,
 				'tier' => $query->tier,
 				'candidates' => count($candidates),
 			]
 		);
 		return $chosen;
-	}//end resolvePolicyForObject()
+	}//end bestPolicy()
 
 	/**
 	 * Compute initial deadlines for every target on a policy.
@@ -187,38 +219,68 @@ class SlaEngineService {
 		$results = [];
 
 		foreach (($policy['targets'] ?? []) as $target) {
-			$duration = $this->parseDuration(duration: (string)($target['duration'] ?? 'PT0S'));
-			$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
-
-			$effectiveStart = DateTimeImmutable::createFromInterface($startTime);
-			if ($pausedState !== null && isset($pausedState['totalPausedMs']) === true) {
-				$pausedMin = (int)floor(((int)$pausedState['totalPausedMs']) / 60000);
-				if ($pausedMin > 0) {
-					$effectiveStart = $effectiveStart->modify('-' . $pausedMin . ' minutes');
-				}
-			}
-
-			$dueAt = $this->businessHours->addDuration(
-				calendarType: $calendarType,
-				startTime: $effectiveStart,
-				duration: $duration,
-				holidayCalendar: $calendar,
-			);
-
-			$results[] = [
-				'kind' => (string)($target['kind'] ?? 'resolution'),
-				'duration' => (string)($target['duration'] ?? ''),
-				'calendar' => $calendarType,
-				'dueAt' => $dueAt->format(DateTimeInterface::ATOM),
-				'startedAt' => $effectiveStart->format(DateTimeInterface::ATOM),
-				'status' => self::STATUS_ON_TRACK,
-				'consumedPercentage' => 0.0,
-				'breachEventIds' => [],
-			];
-		}//end foreach
+			$results[] = $this->deadlineFor(target: $target, startTime: $startTime, pausedState: $pausedState, calendar: $calendar);
+		}
 
 		return $results;
 	}//end computeDeadlines()
+
+	/**
+	 * The initial deadline entry for one policy target.
+	 *
+	 * @param array<string, mixed>      $target      The policy target.
+	 * @param DateTimeInterface         $startTime   Start instant.
+	 * @param array<string, mixed>|null $pausedState Optional pause state.
+	 * @param string                    $calendar    The holiday calendar.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function deadlineFor(array $target, DateTimeInterface $startTime, array|null $pausedState, string $calendar): array {
+		$duration = $this->parseDuration(duration: (string)($target['duration'] ?? 'PT0S'));
+		$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
+
+		$effectiveStart = $this->pauseAdjustedStart(startTime: $startTime, pausedState: $pausedState);
+
+		$dueAt = $this->businessHours->addDuration(
+			calendarType: $calendarType,
+			startTime: $effectiveStart,
+			duration: $duration,
+			holidayCalendar: $calendar,
+		);
+
+		return [
+			'kind' => (string)($target['kind'] ?? 'resolution'),
+			'duration' => (string)($target['duration'] ?? ''),
+			'calendar' => $calendarType,
+			'dueAt' => $dueAt->format(DateTimeInterface::ATOM),
+			'startedAt' => $effectiveStart->format(DateTimeInterface::ATOM),
+			'status' => self::STATUS_ON_TRACK,
+			'consumedPercentage' => 0.0,
+			'breachEventIds' => [],
+		];
+	}//end deadlineFor()
+
+	/**
+	 * The start instant moved back by the time already spent paused.
+	 *
+	 * @param DateTimeInterface         $startTime   Start instant.
+	 * @param array<string, mixed>|null $pausedState Optional pause state.
+	 *
+	 * @return DateTimeImmutable
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface() is a value-object factory, not a collaborator to inject
+	 */
+	private function pauseAdjustedStart(DateTimeInterface $startTime, array|null $pausedState): DateTimeImmutable {
+		$effectiveStart = DateTimeImmutable::createFromInterface($startTime);
+		if ($pausedState !== null && isset($pausedState['totalPausedMs']) === true) {
+			$pausedMin = (int)floor(((int)$pausedState['totalPausedMs']) / 60000);
+			if ($pausedMin > 0) {
+				$effectiveStart = $effectiveStart->modify('-' . $pausedMin . ' minutes');
+			}
+		}
+
+		return $effectiveStart;
+	}//end pauseAdjustedStart()
 
 	/**
 	 * Re-evaluate target statuses given a current instant and the policy.
@@ -237,44 +299,110 @@ class SlaEngineService {
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function evaluateTargets(array $currentTargets, array $policy, DateTimeInterface $now): array {
-		$calendar = (string)($policy['holidayCalendar'] ?? 'nl-feestdagen-rijksoverheid');
-
-		foreach ($currentTargets as $idx => $target) {
-			if (($target['status'] ?? '') === self::STATUS_MET) {
-				continue;
-			}
-
-			$started = $this->parseIsoOrNull(value: ($target['startedAt'] ?? null));
-			$dueAt = $this->parseIsoOrNull(value: ($target['dueAt'] ?? null));
-			if ($started === null || $dueAt === null) {
-				continue;
-			}
-
-			$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
-
-			$totalMin = $this->businessHours->elapsedBusinessMinutes($started, $dueAt, $calendar, $calendarType);
-			$elapsedMin = $this->businessHours->elapsedBusinessMinutes($started, $now, $calendar, $calendarType);
-			$consumed = 0.0;
-			if ($totalMin > 0) {
-				$consumed = ($elapsedMin / $totalMin);
-			}
-
-			$currentTargets[$idx]['consumedPercentage'] = round($consumed, 4);
-
-			$status = self::STATUS_ON_TRACK;
-			if ($consumed >= 0.8) {
-				$status = self::STATUS_AT_RISK;
-			}
-
-			if ($consumed >= 1.0) {
-				$status = self::STATUS_BREACHED;
-			}
-
-			$currentTargets[$idx]['status'] = $status;
-		}//end foreach
-
-		return $currentTargets;
+		return $this->evaluateTargetsAt(targets: $currentTargets, at: $this->slaInstant(policy: $policy, now: $now));
 	}//end evaluateTargets()
+
+	/**
+	 * Re-evaluate every target at one instant; met and unparseable targets
+	 * stay as they are.
+	 *
+	 * @param array<int|string, array<string, mixed>> $targets Targets snapshot.
+	 * @param SlaInstant                              $at      The evaluation instant and calendar.
+	 *
+	 * @return array<int|string, array<string, mixed>> Updated targets, keys kept.
+	 */
+	private function evaluateTargetsAt(array $targets, SlaInstant $at): array {
+		foreach ($targets as $idx => $target) {
+			$targets[$idx] = $this->evaluatedTarget(target: $target, at: $at);
+		}
+
+		return $targets;
+	}//end evaluateTargetsAt()
+
+	/**
+	 * One target with its consumed share and status brought up to date.
+	 *
+	 * @param array<string, mixed> $target The target.
+	 * @param SlaInstant           $at     The evaluation instant and calendar.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function evaluatedTarget(array $target, SlaInstant $at): array {
+		if (($target['status'] ?? '') === self::STATUS_MET) {
+			return $target;
+		}
+
+		$consumed = $this->consumedShare(target: $target, at: $at);
+		if ($consumed === null) {
+			return $target;
+		}
+
+		$target['consumedPercentage'] = round($consumed, 4);
+		$target['status'] = $this->statusForShare(consumed: $consumed);
+
+		return $target;
+	}//end evaluatedTarget()
+
+	/**
+	 * The share of a target's window used up at an instant, in the target's
+	 * calendar mode; null when the window does not parse.
+	 *
+	 * @param array<string, mixed> $target The target.
+	 * @param SlaInstant           $at     The evaluation instant and calendar.
+	 *
+	 * @return float|null
+	 */
+	private function consumedShare(array $target, SlaInstant $at): ?float {
+		$started = $this->parseIsoOrNull(value: ($target['startedAt'] ?? null));
+		$dueAt = $this->parseIsoOrNull(value: ($target['dueAt'] ?? null));
+		if ($started === null || $dueAt === null) {
+			return null;
+		}
+
+		$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
+		$totalMin = $this->businessHours->elapsedBusinessMinutes($started, $dueAt, $at->holidayCalendar, $calendarType);
+		$elapsedMin = $this->businessHours->elapsedBusinessMinutes($started, $at->now, $at->holidayCalendar, $calendarType);
+		if ($totalMin > 0) {
+			return ($elapsedMin / $totalMin);
+		}
+
+		return 0.0;
+	}//end consumedShare()
+
+	/**
+	 * The status a consumed share puts a target in: breached from 100%,
+	 * at risk from 80%, otherwise on track.
+	 *
+	 * @param float $consumed The consumed share.
+	 *
+	 * @return string
+	 */
+	private function statusForShare(float $consumed): string {
+		if ($consumed >= 1.0) {
+			return self::STATUS_BREACHED;
+		}
+
+		if ($consumed >= 0.8) {
+			return self::STATUS_AT_RISK;
+		}
+
+		return self::STATUS_ON_TRACK;
+	}//end statusForShare()
+
+	/**
+	 * The instant and holiday calendar an evaluation under a policy runs at.
+	 *
+	 * @param array<string, mixed> $policy The policy.
+	 * @param DateTimeInterface    $now    The instant.
+	 *
+	 * @return SlaInstant
+	 */
+	private function slaInstant(array $policy, DateTimeInterface $now): SlaInstant {
+		return new SlaInstant(
+			holidayCalendar: (string)($policy['holidayCalendar'] ?? 'nl-feestdagen-rijksoverheid'),
+			now: $now
+		);
+	}//end slaInstant()
 
 	/**
 	 * Execute escalation steps whose thresholds were just crossed.
@@ -312,9 +440,45 @@ class SlaEngineService {
 
 		$heat = $this->hottestTarget(targets: $newTargets);
 		$object = new SlaTrackedObject(type: $objectType, id: $objectId);
-		$newLevel = $alreadyFired;
-		$eventIds = [];
+		$escalations = [];
+		foreach ($this->dueSteps(chain: $chain, heat: $heat, alreadyFired: $alreadyFired) as $level => $step) {
+			$escalations[$level] = new SlaEscalation(policy: $policy, object: $object, step: $step, level: $level);
+		}
 
+		return ['level' => (array_key_last($escalations) ?? $alreadyFired), 'eventIds' => $this->fireAll(escalations: $escalations, heat: $heat)];
+	}//end executeEscalations()
+
+	/**
+	 * Fire due escalations in level order; the UUIDs of the breach events written.
+	 *
+	 * @param array<int, SlaEscalation> $escalations The due escalations, keyed by level.
+	 * @param SlaHeat                   $heat        The heat they fire at.
+	 *
+	 * @return array<int, string>
+	 */
+	private function fireAll(array $escalations, SlaHeat $heat): array {
+		$eventIds = [];
+		foreach ($escalations as $escalation) {
+			$eventId = $this->fireEscalation(escalation: $escalation, heat: $heat);
+			if ($eventId !== null) {
+				$eventIds[] = $eventId;
+			}
+		}
+
+		return $eventIds;
+	}//end fireAll()
+
+	/**
+	 * The escalation steps not yet fired whose trigger the hottest target has reached, keyed by level.
+	 *
+	 * @param array<int, array<string, mixed>> $chain        The escalation chain.
+	 * @param SlaHeat                          $heat         The hottest target.
+	 * @param int                              $alreadyFired The current escalation level.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function dueSteps(array $chain, SlaHeat $heat, int $alreadyFired): array {
+		$due = [];
 		foreach ($chain as $idx => $step) {
 			$level = ($idx + 1);
 			if ($level <= $alreadyFired) {
@@ -326,17 +490,11 @@ class SlaEngineService {
 				continue;
 			}
 
-			$escalation = new SlaEscalation(policy: $policy, object: $object, step: $step, level: $level);
-			$eventId = $this->fireEscalation(escalation: $escalation, heat: $heat);
-			if ($eventId !== null) {
-				$eventIds[] = $eventId;
-			}
+			$due[$level] = $step;
+		}
 
-			$newLevel = $level;
-		}//end foreach
-
-		return ['level' => $newLevel, 'eventIds' => $eventIds];
-	}//end executeEscalations()
+		return $due;
+	}//end dueSteps()
 
 	/**
 	 * The highest consumedPercentage across all targets, and the kind of the
@@ -395,6 +553,18 @@ class SlaEngineService {
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function resumeTimer(array $slaStatus, array $policy, DateTimeInterface $now): array {
+		return $this->resumeTimerAt(slaStatus: $slaStatus, at: $this->slaInstant(policy: $policy, now: $now));
+	}//end resumeTimer()
+
+	/**
+	 * Resume a paused timer at an instant.
+	 *
+	 * @param array<string, mixed> $slaStatus Current slaStatus.
+	 * @param SlaInstant           $at        The resume instant and calendar.
+	 *
+	 * @return array<string, mixed> Updated slaStatus.
+	 */
+	private function resumeTimerAt(array $slaStatus, SlaInstant $at): array {
 		$pausedAtRaw = $slaStatus['pausedAt'] ?? null;
 		if ($pausedAtRaw === null || $pausedAtRaw === '') {
 			return $slaStatus;
@@ -406,44 +576,94 @@ class SlaEngineService {
 			return $slaStatus;
 		}
 
-		$calendar = (string)($policy['holidayCalendar'] ?? 'nl-feestdagen-rijksoverheid');
+		$pause = new SlaPause(pausedAt: $pausedAt, resumedAt: $at->now, holidayCalendar: $at->holidayCalendar);
+		$slaStatus['targets'] = $this->extendedTargets(targets: ($slaStatus['targets'] ?? []), pause: $pause);
 
+		return $this->closePause(slaStatus: $slaStatus, pause: $pause);
+	}//end resumeTimerAt()
+
+	/**
+	 * The targets with every dueAt moved out by the paused time.
+	 *
+	 * @param mixed    $targets The slaStatus targets.
+	 * @param SlaPause $pause   The pause being closed.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function extendedTargets(mixed $targets, SlaPause $pause): array {
 		$newTargets = [];
-		foreach (($slaStatus['targets'] ?? []) as $target) {
-			$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
-			// For 24x7 we charge wall-clock minutes; for business modes,
-			// we only charge business minutes (Friday 16:00 → Monday 10:00
-			// is 2 business hours, not 66).
-			$pausedMin = $this->businessHours->elapsedBusinessMinutes(
-				$pausedAt,
-				$now,
-				$calendar,
-				$calendarType,
-			);
+		foreach ($targets as $target) {
+			$newTargets[] = $this->extendedTarget(target: $target, pause: $pause);
+		}
 
-			if ($pausedMin > 0 && isset($target['dueAt']) === true) {
-				$due = $this->parseIsoOrNull(value: $target['dueAt']);
-				if ($due !== null) {
-					// Extend dueAt by the paused business-minutes inside its calendar mode.
-					$extended = $this->businessHours->addDuration(
-						calendarType: $calendarType,
-						startTime: $due,
-						duration: new DateInterval('PT' . $pausedMin . 'M'),
-						holidayCalendar: $calendar,
-					);
-					$target['dueAt'] = $extended->format(DateTimeInterface::ATOM);
-				}
-			}
+		return $newTargets;
+	}//end extendedTargets()
 
-			$newTargets[] = $target;
-		}//end foreach
+	/**
+	 * One target with its dueAt extended by the paused minutes inside its
+	 * calendar mode.
+	 *
+	 * @param array<string, mixed> $target The target.
+	 * @param SlaPause             $pause  The pause being closed.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function extendedTarget(array $target, SlaPause $pause): array {
+		$calendarType = (string)($target['calendar'] ?? BusinessHoursCalculator::CALENDAR_BUSINESS);
+		$pausedMin = $this->pausedMinutes(calendarType: $calendarType, pause: $pause);
+		$due = $this->parseIsoOrNull(value: ($target['dueAt'] ?? null));
+		if ($pausedMin <= 0 || $due === null) {
+			return $target;
+		}
 
-		$slaStatus['targets'] = $newTargets;
-		$slaStatus['totalPausedMs'] = ((int)($slaStatus['totalPausedMs'] ?? 0)) + ($this->wallClockMs(a: $pausedAt, b: $now));
+		// Extend dueAt by the paused business-minutes inside its calendar mode.
+		$target['dueAt'] = $this->businessHours->addDuration(
+			calendarType: $calendarType,
+			startTime: $due,
+			duration: new DateInterval('PT' . $pausedMin . 'M'),
+			holidayCalendar: $pause->holidayCalendar,
+		)->format(DateTimeInterface::ATOM);
+
+		return $target;
+	}//end extendedTarget()
+
+	/**
+	 * The minutes a pause charges in a calendar mode.
+	 *
+	 * For 24x7 we charge wall-clock minutes; for business modes, we only
+	 * charge business minutes (Friday 16:00 → Monday 10:00 is 2 business
+	 * hours, not 66).
+	 *
+	 * @param string   $calendarType The target's calendar mode.
+	 * @param SlaPause $pause        The pause being closed.
+	 *
+	 * @return int
+	 */
+	private function pausedMinutes(string $calendarType, SlaPause $pause): int {
+		return $this->businessHours->elapsedBusinessMinutes(
+			$pause->pausedAt,
+			$pause->resumedAt,
+			$pause->holidayCalendar,
+			$calendarType,
+		);
+	}//end pausedMinutes()
+
+	/**
+	 * Book the paused time and clear the pause.
+	 *
+	 * @param array<string, mixed> $slaStatus The slaStatus with extended targets.
+	 * @param SlaPause             $pause     The pause being closed.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function closePause(array $slaStatus, SlaPause $pause): array {
+		$pausedMs = $this->wallClockMs(a: $pause->pausedAt, b: $pause->resumedAt);
+		$slaStatus['totalPausedMs'] = ((int)($slaStatus['totalPausedMs'] ?? 0)) + $pausedMs;
 		$slaStatus['pausedAt'] = null;
-		$slaStatus['lastEvaluatedAt'] = $now->format(DateTimeInterface::ATOM);
+		$slaStatus['lastEvaluatedAt'] = $pause->resumedAt->format(DateTimeInterface::ATOM);
+
 		return $slaStatus;
-	}//end resumeTimer()
+	}//end closePause()
 
 	/**
 	 * Initialise the slaStatus envelope when a policy resolves on object
@@ -510,39 +730,49 @@ class SlaEngineService {
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function loadActivePolicies(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'sla_register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'sla_policy_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_policy_schema', '');
 		if ($register === '' || $schema === '') {
 			return [];
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SlaEngineService: ObjectService not available',
-				['error' => $e->getMessage()]
-			);
+		$objectService = $this->policyObjectService();
+		if ($objectService === null) {
 			return [];
 		}
 
+		// Register/schema belong inside `filters`: prepareFindAllConfig()
+		// reads them from there and nowhere else, so a top-level pair
+		// resolves NO context and findAll() answers []. Found by grepping
+		// for the shape after fixing the same mistake twice in
+		// SlaAttainmentService — this third site loads the POLICIES, so an
+		// empty answer means every ticket is evaluated against no policy at
+		// all, silently.
+		$rows = $this->findPolicyRows(objectService: $objectService, filters: ['register' => $register, 'schema' => $schema]);
+
+		return $this->activePolicies(rows: (array)$rows);
+	}//end loadActivePolicies()
+
+	/**
+	 * OpenRegister's ObjectService for the policy read; null when unavailable.
+	 *
+	 * @return object|null
+	 */
+	private function policyObjectService(): ?object {
+		return $this->objectServiceOrNull(failure: 'SlaEngineService: ObjectService not available', errorKey: 'error');
+	}//end policyObjectService()
+
+	/**
+	 * Read up to 500 policy rows; none when the read fails.
+	 *
+	 * @param object               $objectService OpenRegister's ObjectService.
+	 * @param array<string, mixed> $filters       The register and schema filters.
+	 *
+	 * @return mixed The rows as findAll() answers them.
+	 */
+	private function findPolicyRows(object $objectService, array $filters): mixed {
 		try {
-			// Register/schema belong inside `filters`: prepareFindAllConfig()
-			// reads them from there and nowhere else, so a top-level pair
-			// resolves NO context and findAll() answers []. Found by grepping
-			// for the shape after fixing the same mistake twice in
-			// SlaAttainmentService — this third site loads the POLICIES, so an
-			// empty answer means every ticket is evaluated against no policy at
-			// all, silently.
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 500,
-				]
-			);
+			return $objectService->findAll(config: ['filters' => $filters, 'limit' => 500]);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: ObjectService::findAll failed',
@@ -550,9 +780,18 @@ class SlaEngineService {
 			);
 			return [];
 		}
+	}//end findPolicyRows()
 
+	/**
+	 * The policy rows that are neither archived nor switched off, normalised.
+	 *
+	 * @param array<int|string, mixed> $rows The stored policy rows.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function activePolicies(array $rows): array {
 		$policies = [];
-		foreach ((array)$rows as $row) {
+		foreach ($rows as $row) {
 			$array = $this->normaliseObject(row: $row);
 			if (($array['status'] ?? 'published') === 'archived') {
 				continue;
@@ -566,7 +805,7 @@ class SlaEngineService {
 		}
 
 		return $policies;
-	}//end loadActivePolicies()
+	}//end activePolicies()
 
 	/**
 	 * The policies that apply to the queried object, in register order.
@@ -681,7 +920,7 @@ class SlaEngineService {
 		$level = $escalation->level;
 		try {
 			$notification = $this->notifications->createNotification();
-			$notification->setApp(Application::APP_ID)
+			$notification->setApp(AppIdentity::APP_ID)
 				->setUser($actor)
 				->setDateTime(new DateTime())
 				->setObject($escalation->object->type, $escalation->object->id)
@@ -869,41 +1108,57 @@ class SlaEngineService {
 	 * @return array<string, mixed>|null The recipient row, or null.
 	 */
 	private function resolveCustomerContact(string $objectType, string $objectId): ?array {
-		$targetSchema = $this->appConfig->getValueString(Application::APP_ID, 'sla_target_schema_' . $objectType, '');
-		if ($targetSchema === '') {
-			$targetSchema = $objectType;
-		}
-
+		$targetSchema = $this->configuredSchema(key: 'sla_target_schema_' . $objectType, default: $objectType);
 		$target = $this->loadPipelinqObject(schema: $targetSchema, id: $objectId);
 		if ($target === null) {
 			return null;
 		}
 
-		$contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
-		if ($contactSchema === '') {
-			$contactSchema = 'contact';
+		$contact = $this->linkedObject(target: $target, link: 'contact');
+		if ($contact !== null) {
+			return $contact;
 		}
 
-		$contactId = (string)($target['contact'] ?? '');
-		if ($contactId !== '') {
-			$contact = $this->loadPipelinqObject(schema: $contactSchema, id: $contactId);
-			if ($contact !== null) {
-				return $contact;
-			}
-		}
-
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
-		if ($clientSchema === '') {
-			$clientSchema = 'client';
-		}
-
-		$clientId = (string)($target['client'] ?? '');
-		if ($clientId !== '') {
-			return $this->loadPipelinqObject(schema: $clientSchema, id: $clientId);
-		}
-
-		return null;
+		return $this->linkedObject(target: $target, link: 'client');
 	}//end resolveCustomerContact()
+
+	/**
+	 * The object a tracked object links to under `contact` or `client`, read
+	 * from the schema configured as `<link>_schema` (default: the link name).
+	 *
+	 * @param array<string, mixed> $target The tracked object.
+	 * @param string               $link   `contact` or `client`.
+	 *
+	 * @return array<string, mixed>|null The linked object, or null when unset or not found.
+	 */
+	private function linkedObject(array $target, string $link): ?array {
+		$linkedId = (string)($target[$link] ?? '');
+		if ($linkedId === '') {
+			return null;
+		}
+
+		return $this->loadPipelinqObject(
+			schema: $this->configuredSchema(key: $link . '_schema', default: $link),
+			id: $linkedId
+		);
+	}//end linkedObject()
+
+	/**
+	 * A schema slug from app config, or the default when it is not set.
+	 *
+	 * @param string $key     The app-config key.
+	 * @param string $default The slug to fall back on.
+	 *
+	 * @return string
+	 */
+	private function configuredSchema(string $key, string $default): string {
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
+		if ($schema === '') {
+			return $default;
+		}
+
+		return $schema;
+	}//end configuredSchema()
 
 	/**
 	 * Load a pipelinq-register object by schema slug + id (best effort).
@@ -918,7 +1173,21 @@ class SlaEngineService {
 			return null;
 		}
 
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$entity = $this->findPipelinqEntity(schema: $schema, id: $id);
+		if ($entity === null) {
+			return null;
+		}
+
+		return $this->normaliseObject(row: $entity);
+	}//end loadPipelinqObject()
+
+	/**
+	 * The pipelinq register and the ObjectService, or null when either is missing.
+	 *
+	 * @return array{service: object, register: string}|null
+	 */
+	private function pipelinqStore(): array|null {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($register === '') {
 			return null;
 		}
@@ -929,8 +1198,25 @@ class SlaEngineService {
 			return null;
 		}
 
+		return ['service' => $objectService, 'register' => $register];
+	}//end pipelinqStore()
+
+	/**
+	 * Find a pipelinq-register object; a missing store or failed lookup yields null (the failure logged).
+	 *
+	 * @param string $schema Schema slug.
+	 * @param string $id     Object UUID.
+	 *
+	 * @return mixed The entity, or null.
+	 */
+	private function findPipelinqEntity(string $schema, string $id): mixed {
+		$store = $this->pipelinqStore();
+		if ($store === null) {
+			return null;
+		}
+
 		try {
-			$entity = $objectService->find(id: $id, register: $register, schema: $schema);
+			return $store['service']->find(id: $id, options: new ObjectFindOptions(register: $store['register'], schema: $schema));
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'SlaEngineService: target object load failed',
@@ -938,13 +1224,7 @@ class SlaEngineService {
 			);
 			return null;
 		}
-
-		if ($entity === null) {
-			return null;
-		}
-
-		return $this->normaliseObject(row: $entity);
-	}//end loadPipelinqObject()
+	}//end findPipelinqEntity()
 
 	/**
 	 * Render the customer-facing breach message for an sms/whatsapp escalation.
@@ -980,12 +1260,12 @@ class SlaEngineService {
 	private function resolveActor(string $role, array $policy): ?string {
 		unset($policy);
 		$key = 'sla_actor_' . preg_replace('/[^a-z0-9_-]/i', '_', $role);
-		$value = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+		$value = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
 		if ($value !== '') {
 			return $value;
 		}
 
-		$fallback = $this->appConfig->getValueString(Application::APP_ID, 'sla_actor_fallback', '');
+		$fallback = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_actor_fallback', '');
 		if ($fallback === '') {
 			return null;
 		}
@@ -1001,31 +1281,47 @@ class SlaEngineService {
 	 * @return ?string Breach event UUID, or null on failure.
 	 */
 	private function writeBreachEvent(SlaBreachEvent $event): ?string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'sla_register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'sla_breach_event_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'sla_breach_event_schema', '');
 		if ($register === '' || $schema === '') {
 			$this->logger->debug('SlaEngineService: breach register/schema not configured; skipping audit row');
 			return null;
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SlaEngineService: ObjectService unavailable for breach event write',
-				['error' => $e->getMessage()]
-			);
+		$objectService = $this->breachObjectService();
+		if ($objectService === null) {
 			return null;
 		}
 
 		$payload = $this->breachPayload(event: $event);
 
+		return $this->saveBreachPayload(objectService: $objectService, payload: $payload, register: $register, schema: $schema);
+	}//end writeBreachEvent()
+
+	/**
+	 * The ObjectService for a breach event write, or null (logged) when unavailable.
+	 *
+	 * @return object|null
+	 */
+	private function breachObjectService(): object|null {
+		return $this->objectServiceOrNull(failure: 'SlaEngineService: ObjectService unavailable for breach event write', errorKey: 'error');
+	}//end breachObjectService()
+
+	/**
+	 * Save a breach event row and return its UUID (null, logged, on failure).
+	 *
+	 * @param object               $objectService The OpenRegister ObjectService.
+	 * @param array<string, mixed> $payload       The breach event row.
+	 * @param string               $register      The SLA register.
+	 * @param string               $schema        The breach event schema.
+	 *
+	 * @return string|null
+	 */
+	private function saveBreachPayload(object $objectService, array $payload, string $register, string $schema): string|null {
 		try {
 			$saved = $objectService->saveObject(
 				object: $payload,
-				extend: [],
-				register: $register,
-				schema: $schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 			);
 			return $this->savedUuid(saved: $saved);
 		} catch (Throwable $e) {
@@ -1035,7 +1331,7 @@ class SlaEngineService {
 			);
 			return null;
 		}
-	}//end writeBreachEvent()
+	}//end saveBreachPayload()
 
 	/**
 	 * The `slaBreachEvent` row for a fired escalation.
@@ -1164,28 +1460,56 @@ class SlaEngineService {
 			return $row;
 		}
 
-		if (is_object($row) === true) {
-			if (method_exists($row, 'getObject') === true) {
-				$object = $row->getObject();
-				if (is_array($object) === true) {
-					if (method_exists($row, 'getUuid') === true) {
-						$object['id'] = $object['id'] ?? (string)$row->getUuid();
-					}
-
-					return $object;
-				}
-			}
-
-			if (method_exists($row, 'jsonSerialize') === true) {
-				$json = $row->jsonSerialize();
-				if (is_array($json) === true) {
-					return $json;
-				}
-			}
+		if (is_object($row) === false) {
+			return [];
 		}
 
-		return [];
+		return ($this->entityObject(row: $row) ?? $this->serialisedObject(row: $row) ?? []);
 	}//end normaliseObject()
+
+	/**
+	 * An entity's object array, with its uuid as `id` when it has none.
+	 *
+	 * @param object $row The entity.
+	 *
+	 * @return array<string, mixed>|null Null when it has no object array.
+	 */
+	private function entityObject(object $row): ?array {
+		if (method_exists($row, 'getObject') === false) {
+			return null;
+		}
+
+		$object = $row->getObject();
+		if (is_array($object) === false) {
+			return null;
+		}
+
+		if (method_exists($row, 'getUuid') === true) {
+			$object['id'] = $object['id'] ?? (string)$row->getUuid();
+		}
+
+		return $object;
+	}//end entityObject()
+
+	/**
+	 * An object's jsonSerialize() array.
+	 *
+	 * @param object $row The object.
+	 *
+	 * @return array<string, mixed>|null Null when it does not serialise to an array.
+	 */
+	private function serialisedObject(object $row): ?array {
+		if (method_exists($row, 'jsonSerialize') === false) {
+			return null;
+		}
+
+		$json = $row->jsonSerialize();
+		if (is_array($json) === false) {
+			return null;
+		}
+
+		return $json;
+	}//end serialisedObject()
 
 	/**
 	 * Wall-clock milliseconds between two instants.

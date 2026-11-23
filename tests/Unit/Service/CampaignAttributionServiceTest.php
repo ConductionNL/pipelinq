@@ -295,4 +295,47 @@ class CampaignAttributionServiceTest extends TestCase {
 		$this->assertTrue($service->isWon(lead: ['stage' => 'Won']));
 		$this->assertFalse($service->isWon(lead: ['status' => 'open', 'stage' => 'qualified']));
 	}//end testBothSpellingsOfWonAreAccepted()
+
+	/**
+	 * Every close is exact: unclaimed invoices summed, claimed ones skipped, then won, then open.
+	 *
+	 * @return void
+	 */
+	public function testEveryCloseIsExact(): void {
+		$service = $this->build(
+			seed: ['client' => [['uuid' => 'client-1', 'shillinqOrganisationRef' => 'cust-1'], ['uuid' => 'client-2']]],
+			shillinq: true,
+			invoices: [
+				'cust-1' => [
+					['id' => 'inv-1', 'amount' => 100.5, 'currency' => 'EUR'],
+					['id' => 'inv-2', 'amount' => 20.0, 'currency' => 'EUR'],
+					['id' => 'inv-3', 'amount' => 5.25, 'currency' => 'EUR'],
+				],
+			]
+		);
+		$won  = ['status' => 'won', 'value' => '75', 'client' => 'client-1'];
+		$open = ['status' => 'open', 'value' => 75, 'client' => 'client-1'];
+
+		$this->assertSame(
+			['basis' => 'paid_invoice', 'value' => 125.75, 'currency' => 'EUR', 'invoiceIds' => ['inv-1', 'inv-2', 'inv-3']],
+			$service->closeFor(lead: $open, from: '2026-01-01', to: '2026-12-31')
+		);
+		$this->assertSame(
+			['basis' => 'paid_invoice', 'value' => 100.5, 'currency' => 'EUR', 'invoiceIds' => ['inv-1']],
+			$service->closeFor(lead: $won, from: '2026-01-01', to: '2026-12-31', claimed: ['inv-2' => 'lead-9', 'inv-3' => 'lead-9'])
+		);
+		$allClaimed = ['inv-1' => 'x', 'inv-2' => 'x', 'inv-3' => 'x'];
+		$this->assertSame(
+			['basis' => 'won_lead', 'value' => 75.0, 'currency' => 'EUR', 'invoiceIds' => []],
+			$service->closeFor(lead: $won, from: '2026-01-01', to: '2026-12-31', claimed: $allClaimed)
+		);
+		$this->assertSame(
+			['basis' => 'open', 'value' => 0.0, 'currency' => 'EUR', 'invoiceIds' => []],
+			$service->closeFor(lead: $open, from: '2026-01-01', to: '2026-12-31', claimed: $allClaimed)
+		);
+		$this->assertSame(
+			['basis' => 'open', 'value' => 0.0, 'currency' => 'EUR', 'invoiceIds' => []],
+			$service->closeFor(lead: ['status' => 'open', 'client' => 'client-2'], from: '', to: '')
+		);
+	}//end testEveryCloseIsExact()
 }//end class

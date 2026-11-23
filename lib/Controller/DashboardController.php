@@ -21,9 +21,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\SemanticHandoffService;
-use OCA\Pipelinq\Service\Settings\MenuStructure;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\MenuStructureInterface;
+use OCA\Pipelinq\Kernel\Contracts\SemanticHandoffServiceInterface;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -48,19 +48,19 @@ class DashboardController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param IInitialState $initialState The initial state the page hands to the frontend.
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param MenuStructure $menuStructure How the stored structure settings read.
+	 * @param MenuStructureInterface $menuStructure How the stored structure settings read.
 	 * @param IAppManager $appManager Reads the installed app version.
-	 * @param SemanticHandoffService $handoffService Finds where the installed case app keeps its cases.
+	 * @param SemanticHandoffServiceInterface $handoffService Finds where the installed case app keeps its cases.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly IInitialState $initialState,
 		private readonly IAppConfig $appConfig,
-		private readonly MenuStructure $menuStructure,
+		private readonly MenuStructureInterface $menuStructure,
 		private readonly IAppManager $appManager,
-		private readonly SemanticHandoffService $handoffService,
+		private readonly SemanticHandoffServiceInterface $handoffService,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -91,21 +91,21 @@ class DashboardController extends Controller {
 	 */
 	public function page(): TemplateResponse {
 		$this->initialState->provideInitialState(
-			MenuStructure::KEY,
+			MenuStructureInterface::KEY,
 			$this->menuStructure->normalise(
-				stored: $this->appConfig->getValueString(Application::APP_ID, MenuStructure::KEY, '')
+				stored: $this->appConfig->getValueString(AppIdentity::APP_ID, MenuStructureInterface::KEY, '')
 			)
 		);
 		$this->initialState->provideInitialState(
-			MenuStructure::MODULES_KEY,
+			MenuStructureInterface::MODULES_KEY,
 			$this->menuStructure->normaliseModules(
-				stored: $this->appConfig->getValueString(Application::APP_ID, MenuStructure::MODULES_KEY, '')
+				stored: $this->appConfig->getValueString(AppIdentity::APP_ID, MenuStructureInterface::MODULES_KEY, '')
 			)
 		);
 
 		$this->initialState->provideInitialState(
 			'version',
-			$this->appManager->getAppVersion(appId: Application::APP_ID)
+			$this->appManager->getAppVersion(appId: AppIdentity::APP_ID)
 		);
 
 		$caseTarget = [];
@@ -116,6 +116,6 @@ class DashboardController extends Controller {
 
 		$this->initialState->provideInitialState('case_target', $caseTarget);
 
-		return new TemplateResponse(Application::APP_ID, 'index');
+		return new TemplateResponse(AppIdentity::APP_ID, 'index');
 	}//end page()
 }//end class

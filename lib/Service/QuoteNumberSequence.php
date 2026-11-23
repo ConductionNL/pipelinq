@@ -27,12 +27,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\QuoteNumberSequenceInterface;
+
 /**
  * Race-safe quote number allocator.
  *
  * @spec openspec/specs/product-catalog-quoting/spec.md#requirement-quote-entity-enterprise
  */
-class QuoteNumberSequence extends InvoiceSequenceService {
+class QuoteNumberSequence extends InvoiceSequenceService implements QuoteNumberSequenceInterface {
 	/**
 	 * App-config key holding the last allocated quote counter value for the year.
 	 *

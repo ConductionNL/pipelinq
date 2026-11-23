@@ -25,10 +25,11 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
-use OCA\Pipelinq\Service\ForecastDealService;
-use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Kernel\Contracts\ForecastDealServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\SchemaMapServiceInterface;
+use OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectRead;
+use OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -69,6 +70,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
  */
 class DealUpdatedListener implements IEventListener, DeferredObjectWork {
+	use ConfiguredSchemaObjectRead;
+	use ConfiguredSchemaObjectWrite;
 
 	/**
 	 * Identifies this listener's entries in the deferral job.
@@ -78,18 +81,39 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	public const HANDLER_KEY = 'deal-updated';
 
 	/**
+	 * App-config key of the schema the handled objects live in.
+	 *
+	 * @var string
+	 */
+	private const OBJECT_SCHEMA_KEY = 'lead_schema';
+
+	/**
+	 * Log line when the deferred re-read fails.
+	 *
+	 * @var string
+	 */
+	private const FETCH_FAILURE_MESSAGE = 'Pipelinq: failed to re-read deal for deferred forecast_category correction';
+
+	/**
+	 * Log line when saving the object fails.
+	 *
+	 * @var string
+	 */
+	private const PERSIST_FAILURE_MESSAGE = 'Pipelinq: failed to persist forecast_category correction on deal update';
+
+	/**
 	 * Constructor.
 	 *
-	 * @param SchemaMapService $schemaMapService The schema map service.
-	 * @param ForecastDealService $dealService The forecast deal lifecycle service.
+	 * @param SchemaMapServiceInterface $schemaMapService The schema map service.
+	 * @param ForecastDealServiceInterface $dealService The forecast deal lifecycle service.
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private SchemaMapService $schemaMapService,
-		private ForecastDealService $dealService,
+		private SchemaMapServiceInterface $schemaMapService,
+		private ForecastDealServiceInterface $dealService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private ListenerDeferralService $deferral,
@@ -108,45 +132,85 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 *
 	 * @spec openspec/specs/forecast-roll-up-and-categories/spec.md#REQ-FRC-002-01, REQ-FRC-003-01
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
-	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
-	 *  instance in the request, which is exactly what an injected per-instance
-	 *  service cannot give. Static is the mechanism, not an accident.
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectUpdatedEvent) === false) {
 			return;
 		}
 
+		$lead = $this->correctableLead(event: $event);
+		if ($lead === null) {
+			return;
+		}
+
+		[$uuid, $oldEntity, $newEntity] = $lead;
+		$oldData = $oldEntity->getObject();
+		$newData = $newEntity->getObject();
+
+		if ($this->needsCorrection(oldData: $oldData, newData: $newData) === true) {
+			$this->deferCorrection(uuid: $uuid, oldData: $oldData);
+		}
+	}//end handle()
+
+	/**
+	 * The uuid and old and new entities of an updated lead not already being corrected, else null.
+	 *
+	 * @param ObjectUpdatedEvent $event The update event.
+	 *
+	 * @return array{0: string, 1: mixed, 2: mixed}|null The uuid, old entity and new entity.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
+	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
+	 *  instance in the request, which is exactly what an injected per-instance
+	 *  service cannot give. Static is the mechanism, not an accident.
+	 */
+	private function correctableLead(ObjectUpdatedEvent $event): array|null {
 		$newEntity = $event->getNewObject();
 		$oldEntity = $event->getOldObject();
 		if ($this->isLead(entity: $newEntity) === false || $oldEntity === null) {
-			return;
+			return null;
 		}
 
 		$uuid = (string)$newEntity->getUuid();
 		if ($uuid === '') {
-			return;
+			return null;
 		}
 
 		// Our own deferred correction re-enters this listener. Deferring again
 		// would enqueue another job whose write re-enters again — a cron loop.
 		if (DeferredWorkGuard::isRunning(key: DeferredWorkGuard::key(handler: self::HANDLER_KEY, uuid: $uuid)) === true) {
-			return;
+			return null;
 		}
 
-		$oldData = $oldEntity->getObject();
-		$newData = $newEntity->getObject();
+		return [$uuid, $oldEntity, $newEntity];
+	}//end correctableLead()
 
-		// Nothing to correct: skip the job row entirely rather than enqueue a
-		// no-op. Both decisions are re-taken against current state in the job.
-		if ($this->dealService->validateTransition(oldData: $oldData, newData: $newData) === null
+	/**
+	 * Whether the transition is invalid, a reopen needs a reset, or a slip needs recording.
+	 *
+	 * Nothing to correct: skip the job row entirely rather than enqueue a
+	 * no-op. Both decisions are re-taken against current state in the job.
+	 *
+	 * @param array<string, mixed> $oldData The lead before the update.
+	 * @param array<string, mixed> $newData The lead after the update.
+	 *
+	 * @return bool True when a correction job is needed.
+	 */
+	private function needsCorrection(array $oldData, array $newData): bool {
+		return ($this->dealService->validateTransition(oldData: $oldData, newData: $newData) === null
 			&& $this->dealService->applyReopenReset(oldData: $oldData, newData: $newData) === null
-		) {
-			return;
-		}
+			&& $this->dealService->applySlip(oldData: $oldData, newData: $newData) === null) === false;
+	}//end needsCorrection()
 
+	/**
+	 * Defer the lead correction to a background job, deduplicated per lead.
+	 *
+	 * @param string $uuid The lead uuid.
+	 * @param array<string, mixed> $oldData The lead before the update.
+	 *
+	 * @return void
+	 */
+	private function deferCorrection(string $uuid, array $oldData): void {
 		$this->deferral->defer(
 			jobClass: DeferredObjectListenerJob::class,
 			entry: [
@@ -156,7 +220,7 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 			],
 			dedupeKey: self::HANDLER_KEY . '|' . $uuid
 		);
-	}//end handle()
+	}//end deferCorrection()
 
 	/**
 	 * Re-decide and apply the forecast-category correction.
@@ -187,17 +251,44 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 				'Pipelinq: rejected forecast_category transition; reverting',
 				['uuid' => $uuid, 'reason' => $error]
 			);
-			$reverted = $current;
-			$reverted['forecast_category'] = ($oldData['forecast_category'] ?? ForecastDealService::DEFAULT_CATEGORY);
-			$this->persist(uuid: $uuid, data: $reverted);
+			$this->persist(uuid: $uuid, data: $this->reverted(error: $error, oldData: $oldData, current: $current));
 			return;
 		}
 
 		$reset = $this->dealService->applyReopenReset(oldData: $oldData, newData: $current);
 		if ($reset !== null) {
 			$this->persist(uuid: $uuid, data: $reset);
+			return;
+		}
+
+		$slipped = $this->dealService->applySlip(oldData: $oldData, newData: $current);
+		if ($slipped !== null) {
+			$this->persist(uuid: $uuid, data: $slipped);
 		}
 	}//end runDeferredWork()
+
+	/**
+	 * The deal with the refused part of the update undone.
+	 *
+	 * A slip without a reason keeps the old close date (REQ-FRC-012); any other
+	 * refusal keeps the old forecast category.
+	 *
+	 * @param string               $error   The refusal.
+	 * @param array<string, mixed> $oldData The deal before the update.
+	 * @param array<string, mixed> $current The deal as it is now.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function reverted(string $error, array $oldData, array $current): array {
+		$reverted = $current;
+		if ($error === 'forecast.error.slip_reason_required') {
+			$reverted['expectedCloseDate'] = ($oldData['expectedCloseDate'] ?? null);
+			return $reverted;
+		}
+
+		$reverted['forecast_category'] = ($oldData['forecast_category'] ?? ForecastDealServiceInterface::DEFAULT_CATEGORY);
+		return $reverted;
+	}//end reverted()
 
 	/**
 	 * Whether the entity belongs to the lead (deal) schema.
@@ -210,67 +301,4 @@ class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 		$entityType = $this->schemaMapService->resolveEntityType(schemaId: $entity->getSchema());
 		return $entityType === 'lead';
 	}//end isLead()
-
-	/**
-	 * Read the deal's current data.
-	 *
-	 * @param string $uuid The deal UUID.
-	 *
-	 * @return array<string, mixed>|null The deal data, or null when it is gone.
-	 */
-	private function fetch(string $uuid): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
-			return null;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $uuid, register: $register, schema: $schema);
-			if ($object === null) {
-				return null;
-			}
-
-			return $object->getObject();
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to re-read deal for deferred forecast_category correction',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-			return null;
-		}//end try
-	}//end fetch()
-
-	/**
-	 * Persist mutated deal data back to OpenRegister.
-	 *
-	 * @param string $uuid The deal UUID.
-	 * @param array<string, mixed> $data The deal data.
-	 *
-	 * @return void
-	 */
-	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
-			return;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to persist forecast_category correction on deal update',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-		}//end try
-	}//end persist()
 }//end class

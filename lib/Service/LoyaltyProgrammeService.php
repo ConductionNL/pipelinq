@@ -24,21 +24,31 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\LoyaltyProgrammeServiceInterface;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCA\Pipelinq\Service\Support\ConfiguredObjectFind;
+use OCA\Pipelinq\Service\Support\ConfiguredObjectSave;
+use OCA\Pipelinq\Service\Support\ConfiguredSchemaCount;
+use OCA\Pipelinq\Util\InjectedObjectService;
+use OCA\Pipelinq\Service\Support\LoggedRegisterSchemaIds;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Programme activation + validation service.
  *
  * @spec openspec/specs/loyalty-program/spec.md#REQ-LOY-001
  */
-class LoyaltyProgrammeService {
+class LoyaltyProgrammeService implements LoyaltyProgrammeServiceInterface {
 	use PayloadToArray;
+	use LoggedRegisterSchemaIds;
+	use ConfiguredSchemaCount;
+	use InjectedObjectService;
+	use ConfiguredObjectSave;
+	use ConfiguredObjectFind;
 
 	/**
 	 * Schema slug whose `x-openregister-lifecycle` declares the programme status graph.
@@ -183,22 +193,7 @@ class LoyaltyProgrammeService {
 	 *   and nothing inherited it
 	 */
 	public function getProgramme(string $programmeId): ?array {
-		[$register, $schema] = $this->config(schemaKey: 'loyaltyProgramme_schema');
-		if ($register === '' || $schema === '' || $programmeId === '') {
-			return null;
-		}
-
-		try {
-			$object = $this->getObjectService()->find(id: $programmeId, register: $register, schema: $schema);
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if ($object === null) {
-			return null;
-		}
-
-		return $this->toArray(value: $object);
+		return $this->findConfigured(ids: $this->config(schemaKey: 'loyaltyProgramme_schema'), id: $programmeId);
 	}//end getProgramme()
 
 	/**
@@ -210,31 +205,7 @@ class LoyaltyProgrammeService {
 	 * @return int
 	 */
 	private function countByProgramme(string $schemaKey, string $programmeId): int {
-		[$register, $schema] = $this->config(schemaKey: $schemaKey);
-		if ($register === '' || $schema === '') {
-			return 0;
-		}
-
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'programmeId' => $programmeId,
-						'register' => $register,
-						'schema' => $schema,
-					],
-					'limit' => 1000,
-				]
-			);
-		} catch (\Throwable $e) {
-			return 0;
-		}
-
-		if (is_array($rows) === true) {
-			return count($rows);
-		}
-
-		return 0;
+		return $this->countMatching(schemaKey: $schemaKey, filters: ['programmeId' => $programmeId]);
 	}//end countByProgramme()
 
 	/**
@@ -246,58 +217,6 @@ class LoyaltyProgrammeService {
 	 * @return array<string, mixed>
 	 */
 	private function persist(array $payload, ?string $uuid): array {
-		[$register, $schema] = $this->config(schemaKey: 'loyaltyProgramme_schema');
-		if ($register === '' || $schema === '') {
-			throw new RuntimeException('LoyaltyProgramme schema is not configured.');
-		}
-
-		$saved = $this->getObjectService()->saveObject(
-			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: $uuid
-		);
-
-		return $this->toArray(value: $saved);
+		return $this->saveConfigured(ids: $this->config(schemaKey: 'loyaltyProgramme_schema'), payload: $payload, uuid: $uuid, label: 'LoyaltyProgramme');
 	}//end persist()
-
-	/**
-	 * Resolve register + schema id.
-	 *
-	 * Fails closed: '' on either id means "unconfigured", and every caller
-	 * refuses the OpenRegister call on it. An empty id must never be handed to
-	 * OpenRegister — ObjectService skips setRegister()/setSchema() for an empty
-	 * value, so the query silently inherits whatever context an earlier call in
-	 * the same request left on the shared service instance. The empty case is
-	 * logged so an unprovisioned instance is visible rather than silent.
-	 *
-	 * @param string $schemaKey The schema config key.
-	 *
-	 * @return array{0: string, 1: string} The [register, schema] ids, each ''
-	 *                                     when unconfigured.
-	 */
-	private function config(string $schemaKey): array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-		if ($registerId === '' || $schemaId === '') {
-			$this->logger->warning(
-				'Pipelinq: register/schema not configured; OpenRegister calls are refused, not run unscoped',
-				['schemaKey' => $schemaKey]
-			);
-		}
-
-		return [$registerId, $schemaId];
-	}//end config()
-
-	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object
-	 */
-	private function getObjectService(): object {
-		// Injected (ADR-083): a property read throws nothing, so the old
-		// catch was unreachable — phpstan reports it as a dead catch.
-		return $this->objectService;
-	}//end getObjectService()
 }//end class

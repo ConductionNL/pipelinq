@@ -37,21 +37,25 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-001
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalObjectRepositoryInterface;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Util\CastingPayloadToArray;
 use OCA\Pipelinq\Util\NullableRowIdOf;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Thin, register-scoped wrapper over the OpenRegister ObjectService for the
@@ -65,7 +69,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalObjectRepository {
+class PortalObjectRepository implements PortalObjectRepositoryInterface {
 	use CastingPayloadToArray;
 	use NullableRowIdOf {
 		idOf as public;
@@ -107,9 +111,9 @@ class PortalObjectRepository {
 	 *   audit are all unspecified
 	 */
 	public function registerId(): string {
-		$register = $this->appConfig->getValueString(Application::APP_ID, self::PORTAL_REGISTER_KEY, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, self::PORTAL_REGISTER_KEY, '');
 		if ($register === '') {
-			$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+			$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		}
 
 		if ($register === '') {
@@ -136,7 +140,7 @@ class PortalObjectRepository {
 	 */
 	public function schemaId(string $schemaSlug): string {
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaSlug] ?? $schemaSlug . '_schema'),
 			''
 		);
@@ -171,8 +175,10 @@ class PortalObjectRepository {
 		try {
 			$object = $this->objectService()->find(
 				id: $id,
-				register: $this->registerId(),
-				schema: $this->schemaId(schemaSlug: $schemaSlug),
+				options: new ObjectFindOptions(
+					register: $this->registerId(),
+					schema: $this->schemaId(schemaSlug: $schemaSlug)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -270,18 +276,37 @@ class PortalObjectRepository {
 		$register = $this->registerId();
 		$schema = $this->schemaId(schemaSlug: $schemaSlug);
 
-		// Outside the try: a missing service account is a 503 PortalException,
-		// not a failed save, and nothing has been written.
-		try {
-			$saved = $this->serviceAccount->runAs(
-				fn (): mixed => $this->objectService()->saveObject(
-					object: $data,
-					extend: [],
-					register: $register,
-					schema: $schema,
+		$saved = $this->savedAsServiceAccount(
+			save: fn (): mixed => $this->objectService()->saveObject(
+				object: $data,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
 					uuid: $id
 				)
-			);
+			),
+			schemaSlug: $schemaSlug
+		);
+
+		return $this->toArray(object: $saved);
+	}//end save()
+
+	/**
+	 * Run a save as the portal service account; a failed save is logged and becomes a RuntimeException.
+	 *
+	 * Outside the try: a missing service account is a 503 PortalException,
+	 * not a failed save, and nothing has been written.
+	 *
+	 * @param callable(): mixed $save       The save.
+	 * @param string            $schemaSlug The schema slug, for the log.
+	 *
+	 * @return mixed The saved object.
+	 *
+	 * @throws PortalException When the service account is missing.
+	 * @throws RuntimeException When the save fails.
+	 */
+	private function savedAsServiceAccount(callable $save, string $schemaSlug): mixed {
+		try {
+			return $this->serviceAccount->runAs($save);
 		} catch (PortalException $e) {
 			throw $e;
 		} catch (\Throwable $e) {
@@ -291,9 +316,7 @@ class PortalObjectRepository {
 			);
 			throw new RuntimeException('Failed to persist portal object.');
 		}
-
-		return $this->toArray(object: $saved);
-	}//end save()
+	}//end savedAsServiceAccount()
 
 	/**
 	 * Refuse with 503 unless the portal can write. Called first by every flow

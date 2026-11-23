@@ -39,6 +39,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Sender lookup, add as contact and log this mail, as the signed-in colleague.
@@ -52,6 +54,7 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Pipelinq\Service\TicketService
  * @uses   \OCA\Pipelinq\Mcp\McpAnswer
  * @uses   \OCA\Pipelinq\Service\ConfigFileLoaderService
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
  *
  * @spec openspec/changes/contact-moments-mail-add-in/specs/mail-add-in/spec.md
  */
@@ -101,7 +104,9 @@ class OpenMailServiceTest extends TestCase {
 			public function __construct(private array &$rows) {
 			}//end __construct()
 
-			public function find(string $id, $register = null, $schema = null, bool $_rbac = false): ?array {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				if ($_rbac !== true) {
 					throw new \LogicException('The reader must read as the caller.');
 				}
@@ -114,7 +119,10 @@ class OpenMailServiceTest extends TestCase {
 
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema];
 				$entity = $this->createMock(ObjectEntityInterface::class);
 				$entity->method('getUuid')->willReturn('cm-1');
@@ -416,4 +424,36 @@ class OpenMailServiceTest extends TestCase {
 			}
 		}
 	}//end testAddingTheSenderRefusesWhatItCannotStandBehind()
+	/**
+	 * The edges of the summaries and the log: a client's own `client` field is
+	 * never looked up; a contact's non-string client is ignored; an
+	 * organisation suggestion the caller may not read is none; a logged mail
+	 * answers its id first and then exactly the payload it wrote.
+	 *
+	 * @return void
+	 */
+	public function testTheSummaryAndLogEdges(): void {
+		$service = $this->service();
+		$this->readable = [
+			'client/' . self::BAKKERIJ => ['name' => 'Bakkerij', 'email' => 'info@bakkerij.nl', 'client' => self::ANNA],
+			'contact/' . self::ANNA => ['name' => 'Anna', 'client' => ['nested']],
+		];
+		$this->matcher->method('matchEmailToEntities')->willReturnCallback(
+			static fn (string $address): array => ($address === 'info@bakkerij.nl' ? [['entityType' => 'client', 'entityId' => self::BAKKERIJ], ['entityType' => 'contact', 'entityId' => self::ANNA]] : [])
+		);
+		$this->matcher->method('matchDomainToOrganization')->willReturn(['entityId' => 'unreadable']);
+
+		$this->assertSame(
+			[
+				['entityType' => 'client', 'entityId' => self::BAKKERIJ, 'name' => 'Bakkerij', 'email' => 'info@bakkerij.nl'],
+				['entityType' => 'contact', 'entityId' => self::ANNA, 'name' => 'Anna', 'email' => ''],
+			],
+			$service->lookup('info@bakkerij.nl')['matches']
+		);
+		$this->assertSame(['matches' => [], 'organisation' => null], $service->lookup('iemand@elders.nl'));
+
+		$logged = $service->logMail('contact', ' ' . self::ANNA . ' ', 'Offerte', '2026-10-12T09:30:00Z', ' kort ');
+		$this->assertSame(['id', 'contact', 'title', 'channel', 'direction', 'occurredAt', 'description'], array_slice(array_keys($logged), 0, 7));
+		$this->assertSame(['cm-1', self::ANNA, 'Offerte', 'email', 'inbound', '2026-10-12T09:30:00+00:00', 'kort'], array_slice(array_values($logged), 0, 7));
+	}//end testTheSummaryAndLogEdges()
 }//end class

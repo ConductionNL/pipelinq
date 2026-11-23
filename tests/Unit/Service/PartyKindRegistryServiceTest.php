@@ -432,4 +432,33 @@ class PartyKindRegistryServiceTest extends TestCase {
 		$this->assertNull($registry->acceptanceFor(recordType: 'dossiq:zaak'));
 		$this->assertNull($registry->acceptanceFor(recordType: 'dossiq:zaak:subsidie:extra'));
 	}//end testTheTargetIsMatchedAsAnOpaqueString()
+
+	/**
+	 * The exact allowed and refused answers of a single link: an empty kind,
+	 * the slot holder re-linked, another party for a held slot, and a batch
+	 * refusing its own second holder with the single-link message.
+	 *
+	 * @return void
+	 */
+	public function testTheExactAnswersOfALink(): void {
+		$this->links = [
+			['party' => 'party-1', 'kind' => 'aanvrager', 'recordType' => 'dossiq:zaak:subsidie', 'recordId' => 'zaak-1'],
+		];
+		$registry = $this->registry();
+
+		$this->assertSame(['allowed' => false, 'reason' => 'A party kind is required.'], $registry->mayLink(recordType: 'dossiq:zaak:subsidie', recordId: 'zaak-1', kind: '  '));
+		$this->assertSame(['allowed' => true, 'reason' => ''], $registry->mayLink(recordType: 'dossiq:zaak:subsidie', recordId: 'zaak-1', kind: 'aanvrager', party: 'party-1'));
+		$this->assertSame(
+			['allowed' => false, 'reason' => 'This record already holds a aanvrager: party party-1.'],
+			$registry->mayLink(recordType: ' dossiq:zaak:subsidie ', recordId: 'zaak-1', kind: ' aanvrager ', party: 'party-2')
+		);
+		$this->links = [];
+		$this->assertSame(
+			[
+				'accepted' => [['party' => 'party-3', 'kind' => 'aanvrager']],
+				'refused' => [['party' => 'party-4', 'kind' => 'aanvrager', 'reason' => 'This record already holds a aanvrager: party party-3.']],
+			],
+			$registry->judgeBatch(recordType: 'dossiq:zaak:subsidie', recordId: 'zaak-9', rows: [['party' => ' party-3 ', 'kind' => 'aanvrager'], ['party' => 'party-4', 'kind' => 'aanvrager']])
+		);
+	}//end testTheExactAnswersOfALink()
 }//end class

@@ -40,7 +40,7 @@
 				"
 				rows="3" />
 			<NcCheckboxRadioSwitch v-model="form.vogScreening" type="checkbox">
-				{{ t('pipelinq', 'VOG-screening (extra Justis-vlag)') }}
+				{{ t('pipelinq', 'VOG screening (extra Justis flag)') }}
 			</NcCheckboxRadioSwitch>
 		</form>
 		<template #actions>
@@ -95,19 +95,19 @@ export default {
 					value: 'Behandeling AVG-inzageverzoek art. 15',
 					label: this.t(
 						'pipelinq',
-						'Behandeling AVG-inzageverzoek art. 15',
+						'Handling GDPR access request art. 15',
 					),
 				},
 				{
 					value: 'Behandeling AVG-verwijderverzoek art. 17',
 					label: this.t(
 						'pipelinq',
-						'Behandeling AVG-verwijderverzoek art. 17',
+						'Handling GDPR erasure request art. 17',
 					),
 				},
 				{
 					value: 'VOG-screening',
-					label: this.t('pipelinq', 'VOG-screening'),
+					label: this.t('pipelinq', 'VOG screening'),
 				},
 				{
 					value: 'Reguliere verzoekbehandeling',
@@ -124,18 +124,18 @@ export default {
 			return [
 				{
 					value: 'Publieke taak — Wet BRP art. 3.3',
-					label: this.t('pipelinq', 'Publieke taak — Wet BRP art. 3.3'),
+					label: this.t('pipelinq', 'Public task — Wet BRP art. 3.3'),
 				},
 				{
 					value: 'AVG art. 6 lid 1 sub e',
 					label: this.t(
 						'pipelinq',
-						'AVG art. 6 lid 1 sub e (publieke taak)',
+						'GDPR art. 6(1)(e) (public task)',
 					),
 				},
 				{
 					value: 'Rechtmatig belang',
-					label: this.t('pipelinq', 'Rechtmatig belang'),
+					label: this.t('pipelinq', 'Legitimate interest'),
 				},
 				{ value: 'Overig', label: this.t('pipelinq', 'Other') },
 			]

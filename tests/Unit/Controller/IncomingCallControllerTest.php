@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\IncomingCallController;
+use OCA\Pipelinq\Kernel\Contracts\DialLineReaderInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Cti\IncomingCallFinder;
@@ -28,6 +29,8 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
  * @uses \OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck
+ * @uses   \OCA\Pipelinq\Middleware\Support\ApiPathAliases
+ * @uses   \OCA\Pipelinq\Middleware\Support\StandardProtocolPaths
  */
 class IncomingCallControllerTest extends TestCase {
 	/**
@@ -53,6 +56,7 @@ class IncomingCallControllerTest extends TestCase {
 			$request,
 			new CrmPrivilegeCheck($this->createConfiguredMock(IUserSession::class, ['getUser' => $user]), $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged])),
 			$finder,
+			dialLines: $this->createMock(originalClassName: DialLineReaderInterface::class),
 		);
 	}//end controller()
 

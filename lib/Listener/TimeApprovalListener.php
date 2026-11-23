@@ -25,10 +25,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
-use OCA\Pipelinq\Service\ShillinqWipService;
-use OCA\Pipelinq\Service\WipSyncNotifier;
+use OCA\Pipelinq\Kernel\Contracts\ShillinqWipServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\WipSyncNotifierInterface;
+use OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -46,18 +46,34 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
  */
 class TimeApprovalListener implements IEventListener {
+	use ConfiguredSchemaObjectWrite;
+
+	/**
+	 * App-config key of the schema the handled objects live in.
+	 *
+	 * @var string
+	 */
+	private const OBJECT_SCHEMA_KEY = 'timeEntry_schema';
+
+	/**
+	 * Log line when saving the object fails.
+	 *
+	 * @var string
+	 */
+	private const PERSIST_FAILURE_MESSAGE = 'Pipelinq: failed to persist time entry WIP sync status';
+
 	/**
 	 * Constructor.
 	 *
-	 * @param ShillinqWipService $wipService The Shillinq WIP dispatch service.
-	 * @param WipSyncNotifier $notifier The admin failure notifier.
+	 * @param ShillinqWipServiceInterface $wipService The Shillinq WIP dispatch service.
+	 * @param WipSyncNotifierInterface $notifier The admin failure notifier.
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ShillinqWipService $wipService,
-		private WipSyncNotifier $notifier,
+		private ShillinqWipServiceInterface $wipService,
+		private WipSyncNotifierInterface $notifier,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
@@ -116,39 +132,4 @@ class TimeApprovalListener implements IEventListener {
 			uuid: $uuid
 		);
 	}//end handle()
-
-	/**
-	 * Persist the mutated time entry data back to OpenRegister.
-	 *
-	 * No-op when the timeEntry register/schema config keys are unset so the
-	 * listener is safe to install before the schema is bound.
-	 *
-	 * @param string $uuid The time entry UUID.
-	 * @param array<string, mixed> $data The mutated time entry data.
-	 *
-	 * @return void
-	 */
-	private function persist(string $uuid, array $data): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'timeEntry_schema', '');
-		if ($register === '' || $schema === '' || $uuid === '') {
-			return;
-		}
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $register,
-				schema: $schema,
-				uuid: $uuid
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq: failed to persist time entry WIP sync status',
-				['exception' => $e->getMessage(), 'uuid' => $uuid]
-			);
-		}//end try
-	}//end persist()
 }//end class

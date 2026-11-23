@@ -30,6 +30,7 @@ use OCA\Pipelinq\Controller\LetterController;
 use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\Letter\FilinqLetterAdapter;
 use OCA\Pipelinq\Service\Letter\LetterLog;
+use OCA\Pipelinq\Service\Letter\LoggedLetter;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCP\IAppConfig;
@@ -617,11 +618,13 @@ class LetterControllerTest extends TestCase
     public function testContactMomentPayloadMatchesTheRealTicketSchema(): void
     {
         $payload = LetterLog::contactMomentPayload(
-            clientId: self::CLIENT,
-            contactId: self::CONTACT,
-            ticketId: self::TICKET,
-            templateName: 'Appointment letter',
-            path: '/DocuDesk/Appointment letter.pdf',
+            letter: new LoggedLetter(
+                clientId: self::CLIENT,
+                contactId: self::CONTACT,
+                ticketId: self::TICKET,
+                templateName: 'Appointment letter',
+                path: '/DocuDesk/Appointment letter.pdf',
+            ),
             occurredAt: new DateTimeImmutable('2026-09-30T10:15:00+02:00')
         );
         $payload['ticketType'] = TicketService::TYPE_CONTACTMOMENT;
@@ -684,5 +687,65 @@ class LetterControllerTest extends TestCase
 
     }//end mergedSchema()
 
+
+    /**
+     * Both actions refuse in the same order: no user 401, no template 400,
+     * no filinq 503 (with the action's own wording), an unreadable client 404,
+     * an unknown template 404; nothing is rendered or previewed.
+     *
+     * @return void
+     */
+    public function testBothActionsRefuseInOrder(): void
+    {
+        $this->letters->expects($this->never())->method('render');
+        $this->letters->expects($this->never())->method('preview');
+
+        foreach (['create', 'preview'] as $action) {
+            $response = $this->controller(params: ['templateId' => 'tpl-1'], uid: null)->$action(self::CLIENT);
+            $this->assertSame([401, ['message' => 'Authentication required']], [$response->getStatus(), $response->getData()]);
+
+            $response = $this->controller(params: ['templateId' => '  '])->$action(self::CLIENT);
+            $this->assertSame([400, ['message' => 'Missing required parameter: templateId']], [$response->getStatus(), $response->getData()]);
+        }
+
+        $letters = $this->createMock(FilinqLetterAdapter::class);
+        $letters->method('unavailableReason')->willReturn('not installed');
+        $letters->expects($this->never())->method('findTemplate');
+        $this->letters = $letters;
+        $made = $this->controller(params: ['templateId' => 'tpl-1'])->create(self::CLIENT);
+        $this->assertSame([503, ['message' => 'filinq is not available, so no letter can be made.', 'reason' => 'not installed']], [$made->getStatus(), $made->getData()]);
+        $previewed = $this->controller(params: ['templateId' => 'tpl-1'])->preview(self::CLIENT);
+        $this->assertSame([503, ['message' => 'filinq is not available, so no letter can be previewed.', 'reason' => 'not installed']], [$previewed->getStatus(), $previewed->getData()]);
+
+        $this->letters = $this->createMock(FilinqLetterAdapter::class);
+        $this->letters->expects($this->never())->method('render');
+        $this->letters->expects($this->never())->method('preview');
+        $this->filinqPresent();
+        foreach (['create', 'preview'] as $action) {
+            $response = $this->controller(params: ['templateId' => 'tpl-x'])->$action(self::CLIENT);
+            $this->assertSame([404, ['message' => 'Template not found']], [$response->getStatus(), $response->getData()]);
+
+            $response = $this->controller(params: ['templateId' => 'tpl-x'])->$action('unknown-client');
+            $this->assertSame(404, $response->getStatus());
+            $this->assertNotSame(['message' => 'Template not found'], $response->getData());
+        }
+
+    }//end testBothActionsRefuseInOrder()
+
+
+    /**
+     * A failed preview answers 502 with filinq's reason.
+     *
+     * @return void
+     */
+    public function testAFailedPreviewIs502(): void
+    {
+        $this->filinqPresent();
+        $this->letters->method('preview')->willThrowException(new RuntimeException('engine down'));
+
+        $response = $this->controller(params: ['templateId' => 'tpl-1'])->preview(self::CLIENT);
+        $this->assertSame([502, ['message' => 'filinq could not preview the letter.', 'reason' => 'engine down']], [$response->getStatus(), $response->getData()]);
+
+    }//end testAFailedPreviewIs502()
 
 }//end class

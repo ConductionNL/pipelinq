@@ -83,6 +83,21 @@ describe('Call next', () => {
 		expect(deps.http.put).toHaveBeenCalledWith(walkInPath('first'), { id: 'first', status: 'called' })
 	})
 
+	it('names the queue number of the customer it calls', async () => {
+		const { deps } = setup({ get: vi.fn().mockResolvedValue({ data: { results: [{ id: 'first', status: 'waiting', queueNumber: 1 }] } }) })
+		deps.translate = vi.fn((_app, text, vars = {}) => text.replace('{number}', vars.number))
+		const numbered = createWalkInHandlers(deps)
+		expect(await numbered.walkInCallNext()).toBe(true)
+		expect(deps.translate).toHaveBeenCalledWith('pipelinq', 'Number {number} called.', { number: 1 })
+		expect(deps.showSuccess).toHaveBeenCalledWith('Number 1 called.')
+	})
+
+	it('falls back to a plain message for a ticket without a number', async () => {
+		const { deps, handlers } = setup({ get: vi.fn().mockResolvedValue({ data: { results: [{ id: 'first', status: 'waiting' }] } }) })
+		expect(await handlers.walkInCallNext()).toBe(true)
+		expect(deps.showSuccess).toHaveBeenCalledWith('Customer called.')
+	})
+
 	it('says so when nobody waits', async () => {
 		const { deps, handlers } = setup({ get: vi.fn().mockResolvedValue({ data: { results: [] } }) })
 		expect(await handlers.walkInCallNext()).toBe(false)
@@ -91,6 +106,11 @@ describe('Call next', () => {
 })
 
 describe('the walk-in queue page', () => {
+	it('shows each ticket\'s queue number first', () => {
+		const page = JSON.parse(readFileSync(resolve(__dirname, '../../src/manifest.d/81-walk-in-queue.json'), 'utf8')).pages[0]
+		expect(page.config.columns[0]).toMatchObject({ key: 'queueNumber', label: 'Number' })
+	})
+
 	it('titles its table card and draws no search field, as PqInloop does', () => {
 		const page = JSON.parse(readFileSync(resolve(__dirname, '../../src/manifest.d/81-walk-in-queue.json'), 'utf8')).pages[0]
 		expect(page.config.tableTitle).toBe('In the queue')

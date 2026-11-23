@@ -12,7 +12,7 @@
   Props:
     partyId (string, required): the client or contact uuid.
 
-  @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+  @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
 -->
 <template>
 	<component
@@ -181,7 +181,7 @@ export default {
 		/**
 		 * @return {string} The line that says there are no warnings, by the party's kind.
 		 *
-		 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+		 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
 		 */
 		noneText() {
 			if (this.partyKind === 'person') {
@@ -204,7 +204,7 @@ export default {
 			 * Load the warnings of the party now shown.
 			 *
 			 * @param {string} value The party uuid.
-			 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+			 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
 			 */
 			handler(value) {
 				if (value) {
@@ -219,7 +219,7 @@ export default {
 
 		/**
 		 * @return {object} A blank add-warning form starting today.
-		 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md
+		 * @spec openspec/specs/party-fields-and-indicators/spec.md
 		 */
 		emptyForm() {
 			return {
@@ -231,7 +231,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+		 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
 		 */
 		async load() {
 			this.loading = true
@@ -248,7 +248,7 @@ export default {
 
 		/**
 		 * @param {object} indicator The indicator to acknowledge.
-		 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+		 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
 		 */
 		async acknowledge(indicator) {
 			this.busyId = indicator.id
@@ -263,7 +263,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md
+		 * @spec openspec/specs/party-fields-and-indicators/spec.md
 		 */
 		async openForm() {
 			this.form = this.emptyForm()
@@ -277,7 +277,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md
+		 * @spec openspec/specs/party-fields-and-indicators/spec.md
 		 */
 		async save() {
 			this.saving = true
@@ -296,7 +296,7 @@ export default {
 		/**
 		 * @param {string} severity info, warning or critical.
 		 * @return {string} The label.
-		 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+		 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
 		 */
 		severityLabel(severity) {
 			if (severity === 'critical') {
@@ -311,7 +311,7 @@ export default {
 		/**
 		 * @param {object} indicator The indicator.
 		 * @return {string} When it applies.
-		 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+		 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
 		 */
 		periodText(indicator) {
 			if (indicator.validUntil) {
@@ -328,7 +328,7 @@ export default {
 		/**
 		 * @param {string} value An ISO date or date-time.
 		 * @return {string} The day, localised.
-		 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+		 * @spec openspec/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
 		 */
 		formatDay(value) {
 			if (!value) {

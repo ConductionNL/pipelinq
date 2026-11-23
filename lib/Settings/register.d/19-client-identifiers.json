@@ -1,0 +1,185 @@
+{
+  "_note": "An organisation client's official numbers (clients-registry-numbers-and-enrichment, design D1): one list of identifiers, each a scheme and a value with the status, time and source of its last register check. A list rather than a property per number, so a company can hold one VAT number per EU country and a new register needs no schema change. The patterns below are the formats JSON schema can express; the RSIN eleven test and the per-country VAT pattern run in ClientIdentifierService::validateFormat() on every save (ClientIdentifierFormatGuard). `kvkNumber` from 20-organisation-registry-fields stays as it is.",
+  "components": {
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "title": "Identifiers",
+            "description": "The official numbers of the organisation, such as its KvK, RSIN, VAT, DUNS and OIN number, each with the result of its last check.",
+            "items": {
+              "type": "object",
+              "required": [
+                "scheme",
+                "value"
+              ],
+              "properties": {
+                "scheme": {
+                  "type": "string",
+                  "title": "Scheme",
+                  "description": "The register the number belongs to.",
+                  "enum": [
+                    "kvk",
+                    "rsin",
+                    "vat",
+                    "duns",
+                    "oin"
+                  ],
+                  "x-enum-labels": {
+                    "kvk": "KvK number",
+                    "rsin": "RSIN",
+                    "vat": "VAT number",
+                    "duns": "DUNS number",
+                    "oin": "OIN"
+                  }
+                },
+                "value": {
+                  "type": "string",
+                  "title": "Number",
+                  "description": "The number, without spaces.",
+                  "minLength": 1,
+                  "maxLength": 20
+                },
+                "checkStatus": {
+                  "type": "string",
+                  "title": "Check status",
+                  "description": "The result of the last register check.",
+                  "enum": [
+                    "unchecked",
+                    "valid",
+                    "invalid",
+                    "unavailable"
+                  ],
+                  "default": "unchecked",
+                  "x-enum-labels": {
+                    "unchecked": "Not checked",
+                    "valid": "Valid",
+                    "invalid": "Not valid",
+                    "unavailable": "Register unavailable"
+                  }
+                },
+                "checkedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Checked at",
+                  "description": "When the number was last checked against its register."
+                },
+                "checkSource": {
+                  "type": "string",
+                  "title": "Checked with",
+                  "description": "The register the number was checked with, or why it could not be checked.",
+                  "maxLength": 255
+                },
+                "validUntil": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Valid until",
+                  "description": "Until when the register's answer may be relied on, when the register says so."
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "scheme": {
+                        "const": "kvk"
+                      }
+                    },
+                    "required": [
+                      "scheme"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "value": {
+                        "pattern": "^[0-9]{8}$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "scheme": {
+                        "const": "rsin"
+                      }
+                    },
+                    "required": [
+                      "scheme"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "value": {
+                        "pattern": "^[0-9]{9}$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "scheme": {
+                        "const": "duns"
+                      }
+                    },
+                    "required": [
+                      "scheme"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "value": {
+                        "pattern": "^[0-9]{9}$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "scheme": {
+                        "const": "oin"
+                      }
+                    },
+                    "required": [
+                      "scheme"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "value": {
+                        "pattern": "^[0-9]{20}$"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "scheme": {
+                        "const": "vat"
+                      }
+                    },
+                    "required": [
+                      "scheme"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "value": {
+                        "pattern": "^(AT|BE|BG|CY|CZ|DE|DK|EE|EL|ES|FI|FR|HR|HU|IE|IT|LT|LU|LV|MT|NL|PL|PT|RO|SE|SI|SK|XI)[0-9A-Z+*]{2,12}$"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

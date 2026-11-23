@@ -33,7 +33,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use OCA\Pipelinq\Service\Search\HtmlTextExtractor;
 /**
  * Change detection over a CSS-selected fragment.
  *
- * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+ * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
  *
  * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
  *  immutable result type this class returns (WatchOutcome). A value
@@ -80,7 +80,7 @@ class PageWatchReader {
 	 * @param ConnectorEgress $egress The single outbound seam.
 	 * @param HtmlTextExtractor $extractor The CSS-fragment selection.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function __construct(
 		private ConnectorEgress $egress,
@@ -99,7 +99,7 @@ class PageWatchReader {
 	 *
 	 * @return WatchOutcome One item when the fragment changed, none when it did not.
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function read(
 		string $url,
@@ -108,37 +108,82 @@ class PageWatchReader {
 		array $lineFingerprints,
 		string $sourceId = '',
 	): WatchOutcome {
-		$result = $this->egress->readUrl(configKey: CompetitorWatchService::SOURCE_KEY, url: $url, sourceId: $sourceId);
+		return $this->outcomeOf(
+			page: ['url' => $url, 'selector' => $selector, 'sourceId' => $sourceId],
+			previous: ['fingerprint' => $fingerprint, 'lineFingerprints' => $lineFingerprints]
+		);
+	}//end read()
+
+	/**
+	 * Read the page's fragment and compare it against the fingerprints as last seen.
+	 *
+	 * @param array{url: string, selector: string, sourceId: string}            $page     The page URL, fragment selector and source.
+	 * @param array{fingerprint: string, lineFingerprints: array<int, string>} $previous The fingerprints as last seen.
+	 *
+	 * @return WatchOutcome One item when the fragment changed, none when it did not.
+	 */
+	private function outcomeOf(array $page, array $previous): WatchOutcome {
+		$result = $this->egress->readUrl(configKey: CompetitorWatchService::SOURCE_KEY, url: $page['url'], sourceId: $page['sourceId']);
 		if ($result->succeeded === false) {
 			return WatchOutcome::failed(outcome: (string)$result->failure, reason: $result->reason);
 		}
 
-		$fragment = $this->extractor->fragment(html: $result->body, selector: $selector);
+		$fragment = $this->extractor->fragment(html: $result->body, selector: $page['selector']);
 		if ($fragment === null) {
-			return WatchOutcome::failed(
-				outcome: EgressResult::UNPARSABLE,
-				reason: 'The selector ' . $selector . ' matched nothing on ' . $url . '.'
-			);
+			return self::unmatched(selector: $page['selector'], url: $page['url']);
 		}
 
-		$diff = $this->diff(fingerprint: $fingerprint, lineFingerprints: $lineFingerprints, fragment: $fragment);
+		return self::seen(url: $page['url'], diff: $this->diffAgainst(previous: $previous, fragment: $fragment));
+	}//end outcomeOf()
+
+	/**
+	 * The failure of a selector that matched nothing on the page.
+	 *
+	 * @param string $selector The CSS selector of the fragment.
+	 * @param string $url      The page URL.
+	 *
+	 * @return WatchOutcome
+	 */
+	private static function unmatched(string $selector, string $url): WatchOutcome {
+		return WatchOutcome::failed(
+			outcome: EgressResult::UNPARSABLE,
+			reason: 'The selector ' . $selector . ' matched nothing on ' . $url . '.'
+		);
+	}//end unmatched()
+
+	/**
+	 * The outcome of a read fragment: its new state, and one item when it changed.
+	 *
+	 * @param string               $url  The page URL.
+	 * @param array<string, mixed> $diff The diff of the fragment.
+	 *
+	 * @return WatchOutcome
+	 */
+	private static function seen(string $url, array $diff): WatchOutcome {
 		$state = ['fingerprint' => $diff['fingerprint'], 'lineFingerprints' => $diff['lineFingerprints']];
 		if ($diff['changed'] === false) {
 			return WatchOutcome::seen(items: [], state: $state);
 		}
 
-		return WatchOutcome::seen(
-			items: [
-				[
-					'url' => $url,
-					'title' => $url,
-					'summary' => $diff['summary'],
-					'stamp' => $diff['fingerprint'],
-				],
-			],
-			state: $state
-		);
-	}//end read()
+		return WatchOutcome::seen(items: [self::changeItem(url: $url, diff: $diff)], state: $state);
+	}//end seen()
+
+	/**
+	 * The one item a changed fragment reports.
+	 *
+	 * @param string               $url  The page URL.
+	 * @param array<string, mixed> $diff The diff of the fragment.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function changeItem(string $url, array $diff): array {
+		return [
+			'url' => $url,
+			'title' => $url,
+			'summary' => $diff['summary'],
+			'stamp' => $diff['fingerprint'],
+		];
+	}//end changeItem()
 
 	/**
 	 * Compare a fresh fragment against the fingerprints of the previous one.
@@ -149,28 +194,78 @@ class PageWatchReader {
 	 *
 	 * @return array{changed: bool, fingerprint: string, lineFingerprints: array<int, string>, summary: string, added: array<int, string>, removed: int}
 	 *
-	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+	 * @spec openspec/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
 	 */
 	public function diff(string $fingerprint, array $lineFingerprints, string $fragment): array {
-		$lines = $this->lines(fragment: $fragment);
+		return $this->diffAgainst(previous: ['fingerprint' => $fingerprint, 'lineFingerprints' => $lineFingerprints], fragment: $fragment);
+	}//end diff()
+
+	/**
+	 * Compare a fresh fragment against the fingerprints as last seen.
+	 *
+	 * @param array{fingerprint: string, lineFingerprints: array<int, string>} $previous The fingerprints as last seen.
+	 * @param string                                                          $fragment The fragment as read now.
+	 *
+	 * @return array{changed: bool, fingerprint: string, lineFingerprints: array<int, string>, summary: string, added: array<int, string>, removed: int}
+	 */
+	private function diffAgainst(array $previous, string $fragment): array {
+		$current = $this->currentLines(fragment: $fragment);
+		$seen = [
+			'fingerprint' => $this->hash(value: $fragment),
+			'lineFingerprints' => array_slice(array_keys($current), 0, self::MAX_LINES),
+		];
+		if ($previous['fingerprint'] !== '' && $previous['fingerprint'] === $seen['fingerprint']) {
+			return ['changed' => false] + $seen + ['summary' => '', 'added' => [], 'removed' => 0];
+		}
+
+		return ['changed' => true] + $seen + $this->changes(current: $current, previous: $previous);
+	}//end diffAgainst()
+
+	/**
+	 * The fresh fragment's lines by fingerprint.
+	 *
+	 * @param string $fragment The fragment as read now.
+	 *
+	 * @return array<string, string>
+	 */
+	private function currentLines(string $fragment): array {
 		$current = [];
-		foreach ($lines as $line) {
+		foreach ($this->lines(fragment: $fragment) as $line) {
 			$current[$this->hash(value: $line)] = $line;
 		}
 
-		$currentHashes = array_slice(array_keys($current), 0, self::MAX_LINES);
-		$freshFingerprint = $this->hash(value: $fragment);
-		if ($fingerprint !== '' && $fingerprint === $freshFingerprint) {
-			return [
-				'changed' => false,
-				'fingerprint' => $freshFingerprint,
-				'lineFingerprints' => $currentHashes,
-				'summary' => '',
-				'added' => [],
-				'removed' => 0,
-			];
+		return $current;
+	}//end currentLines()
+
+	/**
+	 * The summary, added lines and removed count of a changed fragment.
+	 *
+	 * @param array<string, string>                                         $current  The fresh lines by fingerprint.
+	 * @param array{fingerprint: string, lineFingerprints: array<int, string>} $previous The fingerprints as last seen.
+	 *
+	 * @return array{summary: string, added: array<int, string>, removed: int}
+	 */
+	private function changes(array $current, array $previous): array {
+		$added = self::addedLines(current: $current, lineFingerprints: $previous['lineFingerprints']);
+		$removed = self::removedCount(lineFingerprints: $previous['lineFingerprints'], current: $current);
+
+		$summary = 'First reading of this fragment.';
+		if ($previous['fingerprint'] !== '') {
+			$summary = $this->summary(added: $added, removed: $removed);
 		}
 
+		return ['summary' => $summary, 'added' => $added, 'removed' => $removed];
+	}//end changes()
+
+	/**
+	 * The lines of the fresh fragment whose fingerprint was not seen last time.
+	 *
+	 * @param array<string, string> $current          The fresh lines by fingerprint.
+	 * @param array<int, string>    $lineFingerprints The line fingerprints as last seen.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function addedLines(array $current, array $lineFingerprints): array {
 		$added = [];
 		foreach ($current as $hash => $line) {
 			if (in_array((string)$hash, $lineFingerprints, true) === false) {
@@ -178,6 +273,18 @@ class PageWatchReader {
 			}
 		}
 
+		return $added;
+	}//end addedLines()
+
+	/**
+	 * How many lines seen last time are gone from the fresh fragment.
+	 *
+	 * @param array<int, string>    $lineFingerprints The line fingerprints as last seen.
+	 * @param array<string, string> $current          The fresh lines by fingerprint.
+	 *
+	 * @return int
+	 */
+	private static function removedCount(array $lineFingerprints, array $current): int {
 		$removed = 0;
 		foreach ($lineFingerprints as $hash) {
 			if (array_key_exists($hash, $current) === false) {
@@ -185,30 +292,18 @@ class PageWatchReader {
 			}
 		}
 
-		return [
-			'changed' => true,
-			'fingerprint' => $freshFingerprint,
-			'lineFingerprints' => $currentHashes,
-			'summary' => $this->summary(added: $added, removed: $removed, first: ($fingerprint === '')),
-			'added' => $added,
-			'removed' => $removed,
-		];
-	}//end diff()
+		return $removed;
+	}//end removedCount()
 
 	/**
 	 * The summary a watch event carries.
 	 *
 	 * @param array<int, string> $added The lines this fetch added.
 	 * @param int $removed How many lines are gone.
-	 * @param bool $first Whether this is the first time the fragment was read.
 	 *
 	 * @return string
 	 */
-	private function summary(array $added, int $removed, bool $first): string {
-		if ($first === true) {
-			return 'First reading of this fragment.';
-		}
-
+	private function summary(array $added, int $removed): string {
 		$parts = [];
 		if ($added !== []) {
 			$parts[] = ('Added: ' . implode(' / ', array_slice($added, 0, self::MAX_QUOTED)));

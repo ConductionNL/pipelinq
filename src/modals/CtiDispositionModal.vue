@@ -8,7 +8,7 @@
   - escalation queue when the call was escalated, notes, and what the call
   - was: the client, how long it took and the contact moment it is on.
   -
-  - @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-5.4
+  - @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-5.4
   -->
 <template>
 	<CnDialog
@@ -259,7 +259,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .cti-disposition {
 	display: flex;
 	flex-direction: column;
@@ -301,10 +303,7 @@ export default {
 }
 
 .cti-disposition__hint {
-	margin: 0;
-	font-size: 13px;
-	line-height: normal;
-	color: var(--color-text-maxcontrast);
+	@include muted-hint;
 }
 
 .cti-disposition__facts {
