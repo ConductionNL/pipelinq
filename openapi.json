@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Pipelinq",
-        "version": "0.5.32-unstable.20261122015143",
+        "version": "0.5.33-unstable.20261123110655",
         "description": "The JSON API of Pipelinq, the customer relations app for Nextcloud: contacts and organisations, contact moments, tickets and callbacks, campaigns and mailings, the point of sale, loyalty, social publishing and the settings behind them. The records themselves are stored in OpenRegister and read and written through its API; this document covers the endpoints Pipelinq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here.",
         "contact": {
             "name": "Conduction B.V.",
