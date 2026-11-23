@@ -109,30 +109,14 @@ abstract class AbstractPortalReadFacade implements PortalReadFacadeInterface {
 	 * @param int $perPage The page size.
 	 *
 	 * @return array{total: int, page: int, perPage: int, items: array<int, array<string, mixed>>}
-	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
-	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
-	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
-	 *   audit are all unspecified
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-sees-their-own-invoices-contracts-orders-and-quotes
 	 */
 	public function getForAccount(array $account, int $page = 1, int $perPage = 10): array {
 		$page = max(1, $page);
 		$perPage = min(100, max(1, $perPage));
 
 		$resolved = $this->scope->resolve($account, $this->delegationScope());
-		$rows = [];
-
-		foreach ($this->reader->findAll($this->schemaKey()) as $object) {
-			[$contactId, $clientId] = $this->ownerIds(object: $object);
-			$classification = $this->scope->classify(resolved: $resolved, contactId: $contactId, clientId: $clientId);
-			if ($classification === false) {
-				continue;
-			}
-
-			$rows[] = [
-				'sort' => $this->sortKey(object: $object),
-				'present' => $this->present(object: $object, delegatedFrom: $classification),
-			];
-		}
+		$rows = $this->visibleRows(resolved: $resolved);
 
 		usort($rows, static fn (array $left, array $right): int => strcmp($right['sort'], $left['sort']));
 
@@ -158,14 +142,15 @@ abstract class AbstractPortalReadFacade implements PortalReadFacadeInterface {
 	 * @param string $id The object id.
 	 *
 	 * @return array<string, mixed>|null The row, or null.
-	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
-	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
-	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
-	 *   audit are all unspecified
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-sees-their-own-invoices-contracts-orders-and-quotes
 	 */
 	public function getOneForAccount(array $account, string $id): ?array {
 		$object = $this->reader->find($this->schemaKey(), $id);
 		if ($object === null) {
+			return null;
+		}
+
+		if ($this->isListed(object: $object) === false) {
 			return null;
 		}
 
@@ -178,6 +163,55 @@ abstract class AbstractPortalReadFacade implements PortalReadFacadeInterface {
 
 		return $this->present(object: $object, delegatedFrom: $classification);
 	}//end getOneForAccount()
+
+	/**
+	 * The rows of this facade's schema that the resolved scope may see, each
+	 * with its sort key and its presented shape. A subclass that lists rows
+	 * from a second source adds them here, so sorting and paging stay shared.
+	 *
+	 * @param array<string, mixed> $resolved The resolved scope from PortalScopeResolver::resolve().
+	 *
+	 * @return array<int, array{sort: string, present: array<string, mixed>}> The visible rows, unsorted.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-sees-their-own-invoices-contracts-orders-and-quotes
+	 */
+	protected function visibleRows(array $resolved): array {
+		$rows = [];
+		foreach ($this->reader->findAll($this->schemaKey()) as $object) {
+			if ($this->isListed(object: $object) === false) {
+				continue;
+			}
+
+			[$contactId, $clientId] = $this->ownerIds(object: $object);
+			$classification = $this->scope->classify(resolved: $resolved, contactId: $contactId, clientId: $clientId);
+			if ($classification === false) {
+				continue;
+			}
+
+			$rows[] = [
+				'sort' => $this->sortKey(object: $object),
+				'present' => $this->present(object: $object, delegatedFrom: $classification),
+			];
+		}
+
+		return $rows;
+	}//end visibleRows()
+
+	/**
+	 * Whether a row of this facade's schema belongs in the portal at all,
+	 * whoever owns it. Every row does unless a subclass says otherwise.
+	 *
+	 * @param array<string, mixed> $object The raw object.
+	 *
+	 * @return bool True when the row may be listed.
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) the default lists every row; subclasses read the object.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-sees-their-own-invoices-contracts-orders-and-quotes
+	 */
+	protected function isListed(array $object): bool {
+		return true;
+	}//end isListed()
 
 	/**
 	 * Extract the stable id from a raw object's `@self` envelope or top level.

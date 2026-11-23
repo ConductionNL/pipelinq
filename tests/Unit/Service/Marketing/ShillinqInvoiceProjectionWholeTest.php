@@ -69,6 +69,7 @@ class ShillinqInvoiceProjectionWholeTest extends TestCase {
 				'amount' => 121.5,
 				'currency' => 'EUR',
 				'invoiceDate' => '2026-03-01',
+				'invoiceNumber' => '',
 				'dueDate' => '2026-03-31',
 				'lifecycleState' => 'overdue',
 				'lines' => [['itemName' => 'Adviesuur', 'netAmount' => 100.0, 'quantity' => 1.0, 'unitCode' => 'HUR']],

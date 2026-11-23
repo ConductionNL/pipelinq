@@ -269,7 +269,7 @@ class PortalDataControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame(
-			['id', 'invoiceNumber', 'date', 'amount', 'status', 'delegatedFrom'],
+			['id', 'invoiceNumber', 'date', 'amount', 'status', 'source', 'delegatedFrom'],
 			array_keys($body)
 		);
 		$this->assertSame('inv-own', $body['id']);

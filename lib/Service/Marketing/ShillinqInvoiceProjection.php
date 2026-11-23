@@ -58,6 +58,7 @@ class ShillinqInvoiceProjection {
 	 *         row is a draft or carries no id.
 	 *
 	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-sees-their-own-invoices-contracts-orders-and-quotes
 	 */
 	public function whole(array $row): ?array {
 		$state = strtolower(trim((string)($row['lifecycleState'] ?? '')));
@@ -71,6 +72,7 @@ class ShillinqInvoiceProjection {
 		}
 
 		return $this->head(row: $row, id: $id) + [
+			'invoiceNumber' => trim((string)($row['invoiceNumber'] ?? '')),
 			'dueDate' => substr((string)($row['dueDate'] ?? ''), 0, 10),
 			'lifecycleState' => $state,
 			'lines' => $this->lines(value: ($row['invoiceLines'] ?? null)),
