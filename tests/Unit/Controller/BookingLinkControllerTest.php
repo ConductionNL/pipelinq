@@ -27,6 +27,7 @@ use OCA\Pipelinq\Service\BookingLink\BookingLinkService;
 use OCA\Pipelinq\Service\BookingLink\BookingLinkTokens;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
+use OCP\AppFramework\Http\Attribute\BruteForceProtection;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\IRequest;
@@ -134,6 +135,7 @@ class BookingLinkControllerTest extends TestCase {
 			$reflection = new ReflectionMethod(PublicBookingLinkController::class, $method);
 			$this->assertCount(expectedCount: 1, haystack: $reflection->getAttributes(PublicPage::class), message: $method);
 			$this->assertCount(expectedCount: 1, haystack: $reflection->getAttributes(AnonRateLimit::class), message: $method);
+			$this->assertCount(expectedCount: 1, haystack: $reflection->getAttributes(BruteForceProtection::class), message: $method);
 		}
 	}//end testTheRoutesCarryTheirAccessAttributes()
 
@@ -154,6 +156,9 @@ class BookingLinkControllerTest extends TestCase {
 		$this->assertSame(expected: ['date' => '2026-11-24', 'slots' => [$slot]], actual: $found->getData());
 		$this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $missing->getStatus());
 		$this->assertSame(expected: ['message' => 'Not found'], actual: $missing->getData());
+		$this->assertFalse(condition: $found->isThrottled());
+		$this->assertTrue(condition: $missing->isThrottled());
+		$this->assertSame(expected: ['action' => PublicBookingLinkController::THROTTLE_ACTION], actual: $missing->getThrottleMetadata());
 	}//end testSlotsOrNotFound()
 
 	/**
@@ -191,5 +196,6 @@ class BookingLinkControllerTest extends TestCase {
 
 		$this->assertSame(expected: $status, actual: $response->getStatus());
 		$this->assertSame(expected: ['outcome' => $outcome], actual: $response->getData());
+		$this->assertSame(expected: $outcome === BookingLinkService::UNKNOWN_LINK, actual: $response->isThrottled());
 	}//end testABookingAnswersItsOutcome()
 }//end class

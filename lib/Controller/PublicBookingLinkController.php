@@ -5,8 +5,10 @@
  *
  * The public side of a personal booking link: the free slots of one day and
  * booking one of them. The token in the path is the whole authorisation. A
- * link nobody holds answers 404 with no detail, and the answers name only
- * free times, never what the owner's calendar holds.
+ * link nobody holds answers 404 with no detail and counts as a failed
+ * attempt for Nextcloud's brute-force protection, so guessing tokens slows
+ * down. The answers name only free times, never what the owner's calendar
+ * holds.
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -31,8 +33,10 @@ use OCA\Pipelinq\Service\BookingLink\BookingLinkService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
+use OCP\AppFramework\Http\Attribute\BruteForceProtection;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 
 /**
@@ -41,6 +45,13 @@ use OCP\IRequest;
  * @spec openspec/changes/specify-capability-rows/specs/appointment-booking/spec.md#requirement-a-user-can-send-a-booking-link-that-offers-the-free-slots-in-their-own-calendar
  */
 class PublicBookingLinkController extends Controller {
+
+	/**
+	 * Brute-force protection action for tokens nobody holds.
+	 *
+	 * @var string
+	 */
+	public const THROTTLE_ACTION = 'pipelinq_booking_link';
 
 	/**
 	 * HTTP status per booking outcome.
@@ -74,20 +85,23 @@ class PublicBookingLinkController extends Controller {
 	 * @param string $token The token from the link.
 	 * @param string $date  The day, `YYYY-MM-DD`.
 	 *
-	 * @return Http\JSONResponse `date` and `slots` (start and end per slot), or 404 for a link nobody holds.
+	 * @return JSONResponse `date` and `slots` (start and end per slot), or 404 for a link nobody holds.
 	 *
 	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-34.1
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 60, period: 60)]
-	public function slots(string $token, string $date = ''): Http\JSONResponse {
+	#[BruteForceProtection(action: self::THROTTLE_ACTION)]
+	public function slots(string $token, string $date = ''): JSONResponse {
 		$slots = $this->bookings->slots(token: $token, date: $date);
 		if ($slots === null) {
-			return new Http\JSONResponse(['message' => 'Not found'], Http::STATUS_NOT_FOUND);
+			$response = new JSONResponse(['message' => 'Not found'], Http::STATUS_NOT_FOUND);
+			$response->throttle(['action' => self::THROTTLE_ACTION]);
+			return $response;
 		}
 
-		return new Http\JSONResponse(['date' => $date, 'slots' => $slots]);
+		return new JSONResponse(['date' => $date, 'slots' => $slots]);
 	}//end slots()
 
 	/**
@@ -98,15 +112,21 @@ class PublicBookingLinkController extends Controller {
 	 * @param string $name  The booker's name.
 	 * @param string $email The booker's email address.
 	 *
-	 * @return Http\JSONResponse `outcome`: 201 booked, 400 invalid, 404 unknown link, 409 not free, 503 no calendar.
+	 * @return JSONResponse `outcome`: 201 booked, 400 invalid, 404 unknown link, 409 not free, 503 no calendar.
 	 *
 	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-34.1
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 10, period: 300)]
-	public function book(string $token, string $start = '', string $name = '', string $email = ''): Http\JSONResponse {
+	#[BruteForceProtection(action: self::THROTTLE_ACTION)]
+	public function book(string $token, string $start = '', string $name = '', string $email = ''): JSONResponse {
 		$outcome = $this->bookings->book(token: $token, start: $start, name: $name, email: $email);
-		return new Http\JSONResponse(['outcome' => $outcome], self::STATUS[$outcome] ?? Http::STATUS_INTERNAL_SERVER_ERROR);
+		$response = new JSONResponse(['outcome' => $outcome], (self::STATUS[$outcome] ?? Http::STATUS_INTERNAL_SERVER_ERROR));
+		if ($outcome === BookingLinkService::UNKNOWN_LINK) {
+			$response->throttle(['action' => self::THROTTLE_ACTION]);
+		}
+
+		return $response;
 	}//end book()
 }//end class
