@@ -10183,7 +10183,12 @@ OC.L10N.register(
         "%s is not an attribute of this product": "%s is geen kenmerk van dit product",
         "No variant attributes set. A variant may name any characteristic.": "Geen variantkenmerken vastgelegd. Een variant mag elk kenmerk noemen.",
         "Meeting with %s": "Afspraak met %s",
-        "Booked through your booking link by %1$s (%2$s).": "Geboekt via uw boekingslink door %1$s (%2$s)."
+        "Booked through your booking link by %1$s (%2$s).": "Geboekt via uw boekingslink door %1$s (%2$s).",
+        "Start from a template": "Begin met een sjabloon",
+        "Save as template": "Opslaan als sjabloon",
+        "Saved as template \"{name}\"": "Opgeslagen als sjabloon \"{name}\"",
+        "The template could not be saved": "Het sjabloon kon niet worden opgeslagen",
+        "Give the template a name": "Geef het sjabloon een naam"
     },
     "nplurals=2; plural=(n != 1);"
 )

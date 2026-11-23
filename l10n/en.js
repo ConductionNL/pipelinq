@@ -10168,7 +10168,12 @@ OC.L10N.register(
         "%s is not an attribute of this product": "%s is not an attribute of this product",
         "No variant attributes set. A variant may name any characteristic.": "No variant attributes set. A variant may name any characteristic.",
         "Meeting with %s": "Meeting with %s",
-        "Booked through your booking link by %1$s (%2$s).": "Booked through your booking link by %1$s (%2$s)."
+        "Booked through your booking link by %1$s (%2$s).": "Booked through your booking link by %1$s (%2$s).",
+        "Start from a template": "Start from a template",
+        "Save as template": "Save as template",
+        "Saved as template \"{name}\"": "Saved as template \"{name}\"",
+        "The template could not be saved": "The template could not be saved",
+        "Give the template a name": "Give the template a name"
     },
     "nplurals=2; plural=(n != 1);"
 )
