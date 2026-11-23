@@ -101,7 +101,7 @@ class ClientMergeReferenceListenerTest extends TestCase {
 		);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
 			function (RegisterSchemaSlugs $target, array $filters = []): array {
-				self::assertSame('pipelinq', $target->register);
+				self::assertSame(expected: 'pipelinq', actual: $target->register);
 				$schemaSlug = $target->schema;
 				// Like a query layer that ignores the filter: every row of the schema comes back.
 				$found = [];

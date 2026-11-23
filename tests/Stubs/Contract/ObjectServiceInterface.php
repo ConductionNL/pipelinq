@@ -639,8 +639,6 @@ interface ObjectServiceInterface {
 	 * @param ?string    $id       The object the sample updates, or null for a create.
 	 *
 	 * @return ObjectValidationVerdict `valid`, and one error per refused property with the rule that refused it.
-	 *
-	 * @spec openspec/changes/records-validate-without-saving/specs/objects-crud/spec.md#requirement-a-record-can-be-validated-without-saving-it
 	 */
 	public function validateObject(array $object, string|int $register, string|int $schema, ?string $id=null): ObjectValidationVerdict;
 
