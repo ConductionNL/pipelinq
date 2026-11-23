@@ -526,6 +526,10 @@
         {
             "name": "quote",
             "description": "Controller that sends a quote from a lead's lines: filinq renders the PDF, pipelinq mails it and logs the contact moment."
+        },
+        {
+            "name": "booking-link",
+            "description": "A user's personal booking link and the free slots behind it."
         }
     ],
     "paths": {
@@ -18948,6 +18952,190 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/booking-link": {
+            "get": {
+                "operationId": "booking-link-show",
+                "summary": "The signed-in user's personal booking link",
+                "description": "The token of the signed-in user's personal booking link, made on first read, and `slotsUrl`, the public address that lists the free slots of a day. The uid comes from the session, so a user only sees their own link. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "booking-link"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "booking-link-revoke",
+                "summary": "Switch the signed-in user's booking link off",
+                "description": "Forgets the token, so the old link stops working; the next read makes a new link. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "booking-link"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/booking-links/{token}/slots": {
+            "get": {
+                "operationId": "public-booking-link-slots",
+                "summary": "The free slots of one day behind a booking link",
+                "description": "The 30-minute slots between 09:00 and 17:00 on a working day, in the owner's time zone, that no event of the owner's own calendars overlaps and that are not in the past, up to 60 days ahead. Names free times only, never what the calendar holds. Public: the token is the authorisation; a link nobody holds answers 404.",
+                "tags": [
+                    "booking-link"
+                ],
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "description": "The token of the personal booking link.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": true,
+                        "description": "The day, `YYYY-MM-DD`.",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/booking-links/{token}/bookings": {
+            "post": {
+                "operationId": "public-booking-link-book",
+                "summary": "Book a free slot behind a booking link",
+                "description": "Writes the slot into the owner's first own writable calendar, with the booker's name and email address, after checking again that it is free. Public: the token is the authorisation.",
+                "tags": [
+                    "booking-link"
+                ],
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "description": "The token of the personal booking link.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "start",
+                                    "name",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "start": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "description": "The slot's start, as the slots list gave it."
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "The booker's name, at most 120 characters."
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "description": "The booker's email address."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The slot is booked.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
                     }
                 }
             }

@@ -10166,7 +10166,9 @@ OC.L10N.register(
         "Variant %1$s has no value for %2$s": "Variant %1$s has no value for %2$s",
         "%1$s is not a value of %2$s on this product": "%1$s is not a value of %2$s on this product",
         "%s is not an attribute of this product": "%s is not an attribute of this product",
-        "No variant attributes set. A variant may name any characteristic.": "No variant attributes set. A variant may name any characteristic."
+        "No variant attributes set. A variant may name any characteristic.": "No variant attributes set. A variant may name any characteristic.",
+        "Meeting with %s": "Meeting with %s",
+        "Booked through your booking link by %1$s (%2$s).": "Booked through your booking link by %1$s (%2$s)."
     },
     "nplurals=2; plural=(n != 1);"
 )
