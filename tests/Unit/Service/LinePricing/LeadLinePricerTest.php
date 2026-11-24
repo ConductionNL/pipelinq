@@ -67,6 +67,24 @@ class LeadLinePricerTest extends TestCase {
 	}//end pricer()
 
 	/**
+	 * A resolver answer: the own price without a client, the list price with one.
+	 *
+	 * @param array<string, mixed> $own       The answer without a client.
+	 * @param array<string, mixed> $forClient The answer with the lead's client.
+	 *
+	 * @return callable
+	 */
+	private function ownOrClientPrice(array $own, array $forClient): callable {
+		return static function (array $product, float $quantity, ?string $variantSku=null, ?array $client=null) use ($own, $forClient): array {
+			if ($client === null) {
+				return $own;
+			}
+
+			return $forClient;
+		};
+	}//end ownOrClientPrice()
+
+	/**
 	 * Scenario "A public sector client gets the list price".
 	 *
 	 * @return void
@@ -108,7 +126,9 @@ class LeadLinePricerTest extends TestCase {
 	 * @return void
 	 */
 	public function testANewLineWithATypedPriceIsMarkedAsSetByHand(): void {
-		$this->catalog->expects($this->never())->method('resolveEffectivePrice');
+		$this->catalog->expects($this->once())->method('resolveEffectivePrice')
+			->with($this->objects['product_schema']['p-1'], 1.0, null, null, null)
+			->willReturn(['unitPrice' => 120.0, 'source' => 'base']);
 
 		$figures = $this->pricer()->figures(line: ['lead' => 'l-1', 'product' => 'p-1', 'quantity' => 1, 'unitPrice' => 88], old: null);
 
@@ -121,7 +141,8 @@ class LeadLinePricerTest extends TestCase {
 	 * @return void
 	 */
 	public function testTypingOverAServerPriceMarksTheLineAsSetByHand(): void {
-		$this->catalog->expects($this->never())->method('resolveEffectivePrice');
+		$this->catalog->expects($this->once())->method('resolveEffectivePrice')
+			->willReturn(['unitPrice' => 120.0, 'source' => 'base']);
 		$old = ['lead' => 'l-1', 'product' => 'p-1', 'quantity' => 1, 'unitPrice' => 95, 'priceSource' => 'price-list'];
 
 		$figures = $this->pricer()->figures(line: ['unitPrice' => 88] + $old, old: $old);
@@ -171,6 +192,65 @@ class LeadLinePricerTest extends TestCase {
 			actual: $this->pricer()->figures(line: ['notes' => 'x', 'quantity' => '2', 'unitPrice' => '95.00'] + $old, old: $old)
 		);
 	}//end testAnEditThatTouchesNoPriceInputStoresTheLineAsItIs()
+
+	/**
+	 * A new line whose price the form filled in from the product (its own
+	 * price for the quantity) was not typed: it is priced for the lead's
+	 * client, price list included.
+	 *
+	 * @spec openspec/changes/products-quote-from-lead/tasks.md
+	 *
+	 * @return void
+	 */
+	public function testANewLineWithTheProductsOwnPriceIsPricedForTheClient(): void {
+		$this->catalog->expects($this->once())->method('resolveEffectivePrice')
+			->willReturnCallback(
+				$this->ownOrClientPrice(own: ['unitPrice' => 120.0, 'source' => 'base'], forClient: ['unitPrice' => 95.0, 'source' => 'price-list', 'priceListTitle' => 'Overheid 2027'])
+			);
+
+		$figures = $this->pricer()->figures(line: ['lead' => 'l-1', 'product' => 'p-1', 'quantity' => 1, 'unitPrice' => 120], old: null);
+
+		$this->assertSame(expected: ['unitPrice' => 95.0, 'priceSource' => 'price-list', 'priceListTitle' => 'Overheid 2027'], actual: $figures);
+	}//end testANewLineWithTheProductsOwnPriceIsPricedForTheClient()
+
+	/**
+	 * The form fills in the tier price after a quantity change: that is not
+	 * typed, so a server-priced line is priced again for the new quantity.
+	 *
+	 * @spec openspec/changes/products-quote-from-lead/tasks.md
+	 *
+	 * @return void
+	 */
+	public function testAQuantityChangeWithTheFormsTierPriceRepricesTheLine(): void {
+		$this->catalog->expects($this->exactly(count: 2))->method('resolveEffectivePrice')
+			->willReturnCallback(
+				$this->ownOrClientPrice(own: ['unitPrice' => 80.0, 'source' => 'tier'], forClient: ['unitPrice' => 78.0, 'source' => 'price-list', 'priceListTitle' => 'Overheid 2027'])
+			);
+		$old = ['lead' => 'l-1', 'product' => 'p-1', 'quantity' => 1, 'unitPrice' => 95, 'priceSource' => 'price-list'];
+
+		$figures = $this->pricer()->figures(line: ['quantity' => 12, 'unitPrice' => 80] + $old, old: $old);
+
+		$this->assertSame(expected: 78.0, actual: $figures['unitPrice']);
+	}//end testAQuantityChangeWithTheFormsTierPriceRepricesTheLine()
+
+	/**
+	 * Twelve of a product picked from the catalogue: the form copied the
+	 * product's stored price (120), which is not typed, so the line takes the
+	 * tier price the server works out for twelve.
+	 *
+	 * @spec openspec/changes/products-quote-from-lead/tasks.md
+	 *
+	 * @return void
+	 */
+	public function testAPickedProductsCopiedPriceIsPricedForTheQuantity(): void {
+		$this->catalog->expects($this->once())->method('resolveEffectivePrice')
+			->with($this->objects['product_schema']['p-1'], 12.0, null, null, null)
+			->willReturn(['unitPrice' => 100.0, 'source' => 'tier']);
+
+		$figures = $this->pricer()->figures(line: ['lead' => 'l-2', 'product' => 'p-1', 'quantity' => 12, 'unitPrice' => 120], old: null);
+
+		$this->assertSame(expected: ['unitPrice' => 100.0, 'priceSource' => 'tier', 'priceListTitle' => null], actual: $figures);
+	}//end testAPickedProductsCopiedPriceIsPricedForTheQuantity()
 
 	/**
 	 * A line without a product or with an unreadable one is left alone.

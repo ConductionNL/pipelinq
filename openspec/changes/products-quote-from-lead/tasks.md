@@ -1,6 +1,10 @@
 # Tasks: products-quote-from-lead
 
 - [ ] 1. Product picker on the lead line form: choose a product, call `resolve-price`, fill unit price, unit and VAT rate; allow a manual override. Verify: Vitest with the real resolver response shape for base, tier and variant.
+  - Progress (24 Nov 2026):
+    - nextcloud-vue now has the hook: `CnChildRecordsField` `addFrom.resolve` (`{ url, body, map, when }`), ConductionNL/nextcloud-vue#2309, with jest tests over the resolver's base and tier answer shapes. pipelinq does not use it yet, because `POST /api/products/resolve-price` is gated to POS staff (`ProductCatalogController::requireUserId`) and the lead form is used by sales staff. Opening that endpoint to CRM users is an access decision left for Ruben.
+    - Server side, a line whose price the picker copied from the product is no longer stored as typed by hand. `LeadLinePricer::isOwnPrice()` counts the product's stored price, or its own price for the line's quantity and variant, as not typed, so the line is priced on save with its quantity tier and the client's price list. PHPUnit: `LeadLinePricerTest` (picked price for twelve takes the tier price, own price takes the client's list price, form's tier price after a quantity change reprices) and `LeadLinePricingListenerTest`.
+    - Still open: showing the server price in the form before saving, which needs the access decision above.
 - [x] 2. `lib/Service/QuoteService.php`: totals per VAT rate, quote number allocation, recipient choice. Verify: PHPUnit with real `ProductCatalogService`, lines at 21 and 9 percent, a year rollover and a missing recipient.
 - [x] 3. `POST /api/leads/{id}/quotes` in a new `QuoteController` (auth attribute, 404 when the caller cannot read the lead, 503 when filinq is absent), route registered. Verify: PHPUnit for each status; route-reachability gate.
 - [x] 4. Reuse `FilinqLetterAdapter` to render and store the PDF, then mail with the attachment and log the contact moment. Verify: PHPUnit with a real adapter double built from filinq's real method signature (`onlyMethods`), and the exact contact-moment payload validated against the real `ticket` schema fragment.
