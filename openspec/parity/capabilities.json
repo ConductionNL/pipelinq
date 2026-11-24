@@ -9177,8 +9177,8 @@
 				"state": "specified",
 				"evidence": "no bulk edit in src/views/clients/ or src/components/",
 				"owner": "ConductionNL/pipelinq",
-				"change": "clients-bulk-edit-and-undo",
-				"requirement": "openspec/changes/clients-bulk-edit-and-undo/specs/client-bulk-changes :: Clients and contacts can be changed in bulk (REQ-CBE-001)"
+				"spec": "openspec/specs/client-bulk-changes",
+				"requirement": "openspec/specs/client-bulk-changes :: Clients and contacts can be changed in bulk (REQ-CBE-001)"
 			},
 			"note": "Attio and Pipedrive make this the centre of the product. We edit one record at a time. Specified 2026-09-28 in openspec/changes/clients-bulk-edit-and-undo (OpenSpec pass).",
 			"evidence": {
@@ -9505,8 +9505,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-bulk-edit-and-undo",
-				"requirement": "openspec/changes/clients-bulk-edit-and-undo/specs/client-bulk-changes :: A user can undo their own bulk change (REQ-CBE-002)"
+				"spec": "openspec/specs/client-bulk-changes",
+				"requirement": "openspec/specs/client-bulk-changes :: A user can undo their own bulk change (REQ-CBE-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/restore-crm-changes \"Restore CRM changes by rolling records back to a previous point within the last 14 days. This allows you to undo updates made by workflows, imports, or manual edits\". Marketing, Sales, Service or Data Hub Starter and up.",
