@@ -1,0 +1,11 @@
+{
+	"app": "pipelinq",
+	"pages": [
+		{ "name": "Sales", "path": "/index.php/apps/pipelinq/" },
+		{ "name": "Operational", "path": "/index.php/apps/pipelinq/operational" },
+		{ "name": "My Work", "path": "/index.php/apps/pipelinq/my-work" },
+		{ "name": "Clients", "path": "/index.php/apps/pipelinq/clients" },
+		{ "name": "Contacts", "path": "/index.php/apps/pipelinq/contacts" },
+		{ "name": "All tickets", "path": "/index.php/apps/pipelinq/tickets" }
+	]
+}
