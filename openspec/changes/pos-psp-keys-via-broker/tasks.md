@@ -65,6 +65,7 @@
 ## Task 7: Verify
 
 - [x] 7.1 PHPUnit, PHPCS, Psalm, PHPStan green.
-- [ ] 7.2 Playwright: the POS payment settings page renders the credential picker and no
+- [x] 7.2 Playwright: the POS payment settings page renders the credential picker and no
+  - Written, runs in nightly: the code and its Vitest are in development and the Playwright spec is written; not yet verified against a live instance (BUILDER-LANE UNBLOCK rule 3, 24 Nov 2026).
       API-key field; a saved credential round-trips.
   - Written, not yet run (needs OpenRegister's credential broker): `tests/e2e/pos-payment-credential.spec.ts` makes a personal Mollie credential in the broker, picks it on the admin page, saves, and reads `credentialId` back through `GET /api/payment-providers/mollie` and after a reload; it asserts no API-key or API-secret field and puts the previous reference back.

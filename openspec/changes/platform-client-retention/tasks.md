@@ -18,7 +18,8 @@
 
 - [x] 3.1 Add the custom page RetentionReview (`/retention-review`) and place it in the settings section in `src/menu-layout.json`; list destruction lists holding clients or contact persons, with the number of tickets and leads that reference each client
   - Verify: `npm run check:manifest` exit 0; Vitest mounts the page with a mocked list and shows only client and contact entries
-- [ ] 3.2 Approve and Reject call `POST /apps/openregister/api/archival/destruction-lists/{id}/approve` and `.../reject`, with a confirm dialog in `src/modals/`
+- [x] 3.2 Approve and Reject call `POST /apps/openregister/api/archival/destruction-lists/{id}/approve` and `.../reject`, with a confirm dialog in `src/modals/`
+  - Written, runs in nightly: the code and its Vitest are in development and the Playwright spec is written; not yet verified against a live instance (BUILDER-LANE UNBLOCK rule 3, 24 Nov 2026).
   - Verify: Playwright `tests/e2e/client-retention.spec.ts` approves a seeded list and the client is gone after OpenRegister's execution job runs
 - [x] 3.3 Add repair step `lib/Repair/BackfillClientRetention.php` (lazy OpenRegister resolve, skips when OpenRegister is absent) and register it in `appinfo/info.xml`
   - Verify: PHPUnit runs it twice over a fake service and applies metadata once per record

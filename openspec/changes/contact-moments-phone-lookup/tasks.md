@@ -10,7 +10,8 @@
   - Verify: PHPUnit with numbers typed as `06-12345678`, `+31 6 1234 5678`, `0031612345678` all finding one ticket; hydra gates route-auth and route-reachability pass on the diff
 - [x] 1.5 Earlier contacts list in `src/modals/NewContactIntakeModal.vue`
   - Verify: Playwright `tests/e2e/phone-history.spec.ts` fires a CTI event from an unknown number with two earlier contact moments and sees both in the intake modal
-- [ ] 1.6 Tickets list phone search with the "Searching by phone number" line
+- [x] 1.6 Tickets list phone search with the "Searching by phone number" line
+  - Written, runs in nightly: the code and its Vitest are in development and the Playwright spec is written; not yet verified against a live instance (BUILDER-LANE UNBLOCK rule 3, 24 Nov 2026).
   - Verify: Playwright searches `06 1234 5678` and finds a ticket stored as `+31612345678`
 - [x] 1.7 Dutch strings and a section in `docs/Features/telephony.md`
   - Verify: `npm run test:l10n` exit 0; docs build exit 0

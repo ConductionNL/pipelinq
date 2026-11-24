@@ -6,7 +6,8 @@
   - Verify: PHPUnit `tests/Unit/Service/LeadRotationServiceTest.php`: fewest wins, cap excludes, pause excludes, tie goes to the oldest last assignment, nobody eligible writes only the reason
 - [x] 1.3 Call it from `DealCreatedListener` behind `lead_rotation_enabled`, only for a lead without assignee
   - Verify: PHPUnit on the listener with the switch off, on, and with an assignee already set
-- [ ] 1.4 Admin switch in pipelinq admin settings; cap and pause on the agent profile form
+- [x] 1.4 Admin switch in pipelinq admin settings; cap and pause on the agent profile form
+  - Written, runs in nightly: the code and its Vitest are in development and the Playwright spec is written; not yet verified against a live instance (BUILDER-LANE UNBLOCK rule 3, 24 Nov 2026).
   - Verify: Playwright `tests/e2e/lead-rotation.spec.ts`: switch on, two agents with skill Solar, three Solar leads created by the website form end up 2 and 1
 - [x] 1.5 LeadDetail shows `assignmentReason`
   - Verify: Vitest on the lead header with a reason

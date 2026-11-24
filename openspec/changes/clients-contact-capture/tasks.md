@@ -23,7 +23,8 @@
 - [x] 3.1 `src/modals/ContactCaptureModal.vue`: paste area, photo input with `capture="environment"`, proposed fields, unassigned lines with a field picker; registered in `src/registry.js`
   - Verify: Vitest mounts it and maps an unassigned line to job title
   - Built with `tests/vitest/contactCaptureModal.spec.js`; the photo input is hidden, with the reason, when no provider serves the task.
-- [ ] 3.2 Header action Paste or scan on Clients and Contacts; Use these fields opens the page's create dialog prefilled
+- [x] 3.2 Header action Paste or scan on Clients and Contacts; Use these fields opens the page's create dialog prefilled
+  - Written, runs in nightly: the code and its Vitest are in development and the Playwright spec is written; not yet verified against a live instance (BUILDER-LANE UNBLOCK rule 3, 24 Nov 2026).
   - Verify: Playwright `tests/e2e/contact-capture.spec.ts` pastes a signature and sees name, email and phone in the create form, and nothing saved before Save
   - Built: the `paste-or-scan` header action in `src/manifest.json` on both pages; Use these fields opens `ClientCreateDialog` / `ContactCreateDialog` (now registered) with `values`, which save through the same contact-first create. Left open for the Playwright run, which needs a live instance.
 
