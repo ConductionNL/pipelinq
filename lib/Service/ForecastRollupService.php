@@ -93,17 +93,28 @@ class ForecastRollupService {
 			$dealIds[] = $this->dealId(deal: $deal);
 		}
 
-		foreach (self::AMOUNT_KEYS as $amountKey) {
-			$totals[$amountKey] = round($totals[$amountKey], 2);
-		}
-
 		return [
-			'totals' => $totals,
+			'totals' => self::rounded(totals: $totals),
 			'deal_ids' => array_values(array_filter($dealIds, static fn (string $id): bool => $id !== '')),
 			'currency' => $currency,
 			'rates' => $rates,
 		];
 	}//end bucketDeals()
+
+	/**
+	 * The four amounts rounded to cents.
+	 *
+	 * @param array<string, float> $totals The summed amounts.
+	 *
+	 * @return array<string, float>
+	 */
+	private static function rounded(array $totals): array {
+		foreach (self::AMOUNT_KEYS as $amountKey) {
+			$totals[$amountKey] = round($totals[$amountKey], 2);
+		}
+
+		return $totals;
+	}//end rounded()
 
 	/**
 	 * The rate part of a conversion: rate, source, origin, date, stale flag.

@@ -24,14 +24,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.1
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.1
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\Contracts\PosAccessPolicyInterface;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 
@@ -43,9 +43,9 @@ use OCP\IGroupManager;
  * a cashier-level transition on a given object. The manager predicate gates
  * refund and refund completion to the configured manager group or admins.
  *
- * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.1
+ * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.1
  */
-class PosAccessPolicy {
+class PosAccessPolicy implements PosAccessPolicyInterface {
 	/**
 	 * App-config key for the POS group (cashier-level access).
 	 *
@@ -91,7 +91,7 @@ class PosAccessPolicy {
 	 *
 	 * @return bool Whether the user may transition this transaction.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.1
 	 */
 	public function canAccessTransaction(array $object, string $userId): bool {
 		if ($userId === '') {
@@ -107,16 +107,7 @@ class PosAccessPolicy {
 			return true;
 		}
 
-		$posGroup = $this->appConfig->getValueString(
-			Application::APP_ID,
-			self::POS_GROUP_KEY,
-			self::POS_GROUP_DEFAULT
-		);
-		if ($posGroup === '') {
-			return false;
-		}
-
-		return $this->groupManager->isInGroup($userId, $posGroup);
+		return $this->groupGate()->isMemberOf(userId: $userId, group: $this->posGroup());
 	}//end canAccessTransaction()
 
 	/**
@@ -132,27 +123,10 @@ class PosAccessPolicy {
 	 *
 	 * @return bool Whether the user may use the POS surfaces.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.2
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#4.2
 	 */
 	public function isPosUser(string $userId): bool {
-		if ($userId === '') {
-			return false;
-		}
-
-		if ($this->groupManager->isAdmin($userId) === true) {
-			return true;
-		}
-
-		$posGroup = $this->appConfig->getValueString(
-			Application::APP_ID,
-			self::POS_GROUP_KEY,
-			self::POS_GROUP_DEFAULT
-		);
-		if ($posGroup === '') {
-			return false;
-		}
-
-		return $this->groupManager->isInGroup($userId, $posGroup);
+		return $this->groupGate()->admits(userId: $userId, group: $this->posGroup());
 	}//end isPosUser()
 
 	/**
@@ -166,22 +140,27 @@ class PosAccessPolicy {
 	 *
 	 * @return bool Whether the user is a POS manager.
 	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.1
+	 * @spec openspec/changes/archive/2026-06-01-pos-lifecycle-guard-adoption/tasks.md#2.1
 	 */
 	public function isManager(string $userId): bool {
-		if ($userId === '') {
-			return false;
-		}
-
-		if ($this->groupManager->isAdmin($userId) === true) {
-			return true;
-		}
-
-		$managerGroup = $this->appConfig->getValueString(Application::APP_ID, self::MANAGER_GROUP_KEY, '');
-		if ($managerGroup === '') {
-			return false;
-		}
-
-		return $this->groupManager->isInGroup($userId, $managerGroup);
+		return $this->groupGate()->admits(userId: $userId, group: new ConfiguredGroup(key: self::MANAGER_GROUP_KEY));
 	}//end isManager()
+
+	/**
+	 * The setting naming the POS operator group (`pos` when unset).
+	 *
+	 * @return ConfiguredGroup The setting.
+	 */
+	private function posGroup(): ConfiguredGroup {
+		return new ConfiguredGroup(key: self::POS_GROUP_KEY, default: self::POS_GROUP_DEFAULT);
+	}//end posGroup()
+
+	/**
+	 * The admin-or-member gate over this policy's collaborators.
+	 *
+	 * @return ConfiguredGroupGate The gate.
+	 */
+	private function groupGate(): ConfiguredGroupGate {
+		return new ConfiguredGroupGate(appConfig: $this->appConfig, groupManager: $this->groupManager);
+	}//end groupGate()
 }//end class

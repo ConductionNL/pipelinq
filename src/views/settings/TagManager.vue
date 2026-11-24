@@ -141,7 +141,7 @@ export default {
 		addLabel: {
 			type: String,
 			/**
-			 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-91
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-91
 			 */
 			default() {
 				return t('pipelinq', '+ Add')
@@ -151,7 +151,7 @@ export default {
 		addPlaceholder: {
 			type: String,
 			/**
-			 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-91
+			 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-91
 			 */
 			default() {
 				return t('pipelinq', 'Enter name…')
@@ -196,7 +196,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-94
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-94
 		 */
 		startAdding() {
 			this.adding = true
@@ -208,7 +208,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-88
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-88
 		 */
 		cancelAdding() {
 			this.adding = false
@@ -217,22 +217,13 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-92
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-92
 		 */
 		async saveNew() {
 			const name = this.newName.trim()
 			if (!name) return
 
-			// Check for duplicate names.
-			const duplicate = this.tags.some(
-				(tag) => tag.name.toLowerCase() === name.toLowerCase(),
-			)
-			if (duplicate) {
-				this.error = t(
-					'pipelinq',
-					'An item with the name "{name}" already exists.',
-					{ name },
-				)
+			if (this.refuseTakenName(name, this.tags)) {
 				return
 			}
 
@@ -249,8 +240,30 @@ export default {
 		},
 
 		/**
+		 * Say so when another tag already has the name, in any case.
+		 *
+		 * @param {string} name The trimmed name.
+		 * @param {Array<object>} others The tags to compare with.
+		 * @return {boolean} Whether the name is taken.
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-92
+		 */
+		refuseTakenName(name, others) {
+			const taken = others.some(
+				(tag) => tag.name.toLowerCase() === name.toLowerCase(),
+			)
+			if (taken) {
+				this.error = t(
+					'pipelinq',
+					'An item with the name "{name}" already exists.',
+					{ name },
+				)
+			}
+			return taken
+		},
+
+		/**
 		 * @param {object} tag The tag to edit.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-95
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-95
 		 */
 		startEditing(tag) {
 			this.editingId = tag.id
@@ -262,7 +275,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-89
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-89
 		 */
 		cancelEdit() {
 			this.editingId = null
@@ -272,23 +285,15 @@ export default {
 
 		/**
 		 * @param {string} id Identifier of the tag being renamed.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-93
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-93
 		 */
 		async saveRename(id) {
 			const name = this.editName.trim()
 			if (!name) return
 
-			// Check for duplicate names (excluding the item being renamed).
-			const duplicate = this.tags.some(
-				(tag) =>
-					tag.id !== id && tag.name.toLowerCase() === name.toLowerCase(),
-			)
-			if (duplicate) {
-				this.error = t(
-					'pipelinq',
-					'An item with the name "{name}" already exists.',
-					{ name },
-				)
+			// The item being renamed may keep its own name.
+			const others = this.tags.filter((tag) => tag.id !== id)
+			if (this.refuseTakenName(name, others)) {
 				return
 			}
 
@@ -306,7 +311,7 @@ export default {
 
 		/**
 		 * @param {object} tag The tag the user asked to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-90
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-90
 		 */
 		async confirmRemove(tag) {
 			let message = t(

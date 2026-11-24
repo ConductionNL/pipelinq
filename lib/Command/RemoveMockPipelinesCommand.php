@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
-use OCA\Pipelinq\Service\MockPipelineCleanupService;
+use OCA\Pipelinq\Kernel\Contracts\MockPipelineCleanupServiceInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -40,10 +40,10 @@ class RemoveMockPipelinesCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param MockPipelineCleanupService $cleanup The cleanup service.
+	 * @param MockPipelineCleanupServiceInterface $cleanup The cleanup service.
 	 */
 	public function __construct(
-		private MockPipelineCleanupService $cleanup,
+		private MockPipelineCleanupServiceInterface $cleanup,
 	) {
 		parent::__construct();
 	}//end __construct()
@@ -82,23 +82,8 @@ class RemoveMockPipelinesCommand extends Command {
 			$verb = 'Would remove';
 		}
 
-		foreach ($report['removed'] as $pipeline) {
-			$output->writeln(sprintf('%s "%s" (%s)', $verb, $pipeline['title'], $pipeline['id']));
-		}
-
-		foreach ($report['kept'] as $pipeline) {
-			$usedBy = implode(' and ', $pipeline['usedBy']);
-			$output->writeln(sprintf('<comment>Kept "%s" (%s): %s objects are on it</comment>', $pipeline['title'], $pipeline['id'], $usedBy));
-		}
-
-		foreach ($report['failed'] as $pipeline) {
-			$output->writeln(sprintf('<error>OpenRegister refused to remove "%s" (%s)</error>', $pipeline['title'], $pipeline['id']));
-		}
-
-		if (count($report['defaults']) > 1) {
-			$titles = array_map(static fn (array $pipeline): string => '"'.$pipeline['title'].'"', $report['defaults']);
-			$output->writeln('<comment>More than one pipeline is marked as default: '.implode(', ', $titles).'</comment>');
-		}
+		$output->writeln($this->removalLines(report: $report, verb: $verb));
+		$this->printDefaults(report: $report, output: $output);
 
 		$counts = [count($report['removed']), count($report['kept']), count($report['failed'])];
 		$output->writeln(vsprintf('<info>%d removed, %d kept, %d refused.</info>', $counts));
@@ -109,4 +94,45 @@ class RemoveMockPipelinesCommand extends Command {
 
 		return Command::FAILURE;
 	}//end execute()
+
+	/**
+	 * A line for each removed, kept and refused pipeline.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $report The cleanup report.
+	 * @param string                                           $verb   How a removal is reported.
+	 *
+	 * @return list<string>
+	 */
+	private function removalLines(array $report, string $verb): array {
+		$lines = [];
+		foreach ($report['removed'] as $pipeline) {
+			$lines[] = sprintf('%s "%s" (%s)', $verb, $pipeline['title'], $pipeline['id']);
+		}
+
+		foreach ($report['kept'] as $pipeline) {
+			$usedBy = implode(' and ', $pipeline['usedBy']);
+			$lines[] = sprintf('<comment>Kept "%s" (%s): %s objects are on it</comment>', $pipeline['title'], $pipeline['id'], $usedBy);
+		}
+
+		foreach ($report['failed'] as $pipeline) {
+			$lines[] = sprintf('<error>OpenRegister refused to remove "%s" (%s)</error>', $pipeline['title'], $pipeline['id']);
+		}
+
+		return $lines;
+	}//end removalLines()
+
+	/**
+	 * Warn when more than one pipeline is marked as default.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $report The cleanup report.
+	 * @param OutputInterface                                  $output The console output.
+	 *
+	 * @return void
+	 */
+	private function printDefaults(array $report, OutputInterface $output): void {
+		if (count($report['defaults']) > 1) {
+			$titles = array_map(static fn (array $pipeline): string => '"'.$pipeline['title'].'"', $report['defaults']);
+			$output->writeln('<comment>More than one pipeline is marked as default: '.implode(', ', $titles).'</comment>');
+		}
+	}//end printDefaults()
 }//end class

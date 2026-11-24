@@ -21,13 +21,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-002
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-002
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
 use OCA\Pipelinq\Util\ContrastRatioCalculator;
 use OCP\AppFramework\Http;
 
@@ -39,20 +40,13 @@ use OCP\AppFramework\Http;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalTenantService {
+class PortalTenantService implements PortalTenantServiceInterface {
 	/**
 	 * Schema slug for tenant config.
 	 *
 	 * @var string
 	 */
 	private const SCHEMA = 'portalTenantConfig';
-
-	/**
-	 * The default tenant id for single-tenant instances.
-	 *
-	 * @var string
-	 */
-	public const DEFAULT_TENANT = 'default';
 
 	/**
 	 * The status of a portal residents can use.

@@ -30,6 +30,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\AnalyticsService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -206,6 +207,55 @@ class AnalyticsServiceTest extends TestCase {
 		$this->assertSame('month', $overview['period']);
 		$this->assertArrayHasKey('previousPeriod', $overview);
 		$this->assertArrayHasKey('leadConversionRate', $overview['previousPeriod']);
+	}
+
+	/**
+	 * The previous window has the same length as the current one and ends
+	 * where it starts: a contact moment just inside each edge counts in the
+	 * window it is in, one just past the far edge of the previous window
+	 * counts in neither. Times are relative to now, an hour from each edge.
+	 *
+	 * @param string $period The period.
+	 * @param int    $days   Its length in days.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-001
+	 */
+	#[DataProvider('overviewPeriods')]
+	public function testThePreviousWindowHasTheSameLengthAndEndsWhereTheCurrentStarts(string $period, int $days): void {
+		$ago = static fn (int $hours): string => (new \DateTimeImmutable(sprintf('-%d hours', $hours)))->format(\DateTimeInterface::ATOM);
+		$length = ($days * 24);
+
+		$service = $this->buildService(byCollection: [
+			'ticket_schema:interaction' => [
+				['occurredAt' => $ago(1)],
+				['occurredAt' => $ago($length - 1)],
+				['occurredAt' => $ago($length + 1)],
+				['occurredAt' => $ago(2 * $length - 1)],
+				['occurredAt' => $ago(2 * $length + 1)],
+			],
+		]);
+
+		$overview = $service->getOverview(period: $period);
+
+		$this->assertSame(2, $overview['contactMomentVolume']);
+		$this->assertSame(2, $overview['previousPeriod']['contactMomentVolume']);
+		$this->assertSame($period, $overview['period']);
+	}
+
+	/**
+	 * The overview periods and their lengths in days.
+	 *
+	 * @return array<string, array{0: string, 1: int}>
+	 */
+	public static function overviewPeriods(): array {
+		return [
+			'week' => ['week', 7],
+			'month' => ['month', 30],
+			'quarter' => ['quarter', 90],
+			'year' => ['year', 365],
+		];
 	}
 
 	/**

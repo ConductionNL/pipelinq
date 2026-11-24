@@ -30,8 +30,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Integration;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\TicketLeafProviderInterface;
+use OCA\Pipelinq\Kernel\Contracts\TicketServiceInterface;
 use OCP\IAppConfig;
 use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
@@ -45,20 +46,13 @@ use Throwable;
  *
  * @spec openspec/specs/ticket-leaf/spec.md
  */
-class TicketLeafProvider {
+class TicketLeafProvider implements TicketLeafProviderInterface {
 	/**
 	 * The statuses in which a ticket is no longer open.
 	 *
 	 * @var array<int, string>
 	 */
 	public const CLOSED_STATUSES = ['closed', 'completed', 'converted', 'rejected', 'resolved'];
-
-	/**
-	 * The ticket subtypes that count as tickets; an interaction is a contact moment.
-	 *
-	 * @var array<int, string>
-	 */
-	public const TICKET_TYPES = [TicketService::TYPE_REQUEST, TicketService::TYPE_COMPLAINT];
 
 	/**
 	 * The status filters a read may ask for: the open tickets, the closed
@@ -130,14 +124,7 @@ class TicketLeafProvider {
 			return ['status' => 400, 'error' => 'Unknown ticket status filter.'];
 		}
 
-		$refs = array_values(
-			array_unique(
-				array_filter(
-					array_map('trim', array_filter($refs, 'is_string')),
-					static fn (string $ref): bool => $ref !== ''
-				)
-			)
-		);
+		$refs = self::cleanRefs(refs: $refs);
 		if (count($refs) > self::MAX_REFS) {
 			return ['status' => 400, 'error' => 'Too many master entities in one read.'];
 		}
@@ -146,56 +133,73 @@ class TicketLeafProvider {
 			return ['status' => 200, 'tickets' => []];
 		}
 
-		$ids = [];
-		foreach (['register', 'client_schema', 'ticket_schema'] as $key) {
-			$ids[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, '');
-		}
-
+		$ids = $this->surfaceIds();
 		if (in_array('', $ids, true) === true) {
 			return ['status' => 503, 'error' => 'The ticket surface is not configured.'];
 		}
 
 		[$register, $clientSchema, $ticketSchema] = array_values($ids);
 
-		$refOfClient = $this->refOfClients(register: $register, schema: $clientSchema, refs: $refs);
+		$refOfClient = $this->refOfClients(filters: ['register' => $register, 'schema' => $clientSchema], refs: $refs);
+		$found = $this->ticketsOf(refOfClient: $refOfClient, query: ['register' => $register, 'schema' => $ticketSchema, 'status' => $status]);
 
 		return [
 			'status' => 200,
-			'tickets' => $this->ticketsOf(
-				refs: $refs,
-				refOfClient: $refOfClient,
-				filters: ['register' => $register, 'schema' => $ticketSchema],
-				status: $status
-			),
+			'tickets' => array_replace(array_fill_keys($refs, []), $found),
 		];
 	}//end byMasterEntity()
 
 	/**
-	 * The tickets of the clients, grouped by their master entity, every
-	 * reference present.
+	 * The string references, trimmed, without blanks and duplicates, in first-seen order.
 	 *
-	 * @param array<int, string>    $refs        The master entity references.
+	 * @param array<int, mixed> $refs The master entity references as asked.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function cleanRefs(array $refs): array {
+		return array_values(
+			array_unique(
+				array_filter(
+					array_map('trim', array_filter($refs, 'is_string')),
+					static fn (string $ref): bool => $ref !== ''
+				)
+			)
+		);
+	}//end cleanRefs()
+
+	/**
+	 * The register, client schema and ticket schema ids, '' where not configured.
+	 *
+	 * @return array<string, string>
+	 */
+	private function surfaceIds(): array {
+		$ids = [];
+		foreach (['register', 'client_schema', 'ticket_schema'] as $key) {
+			$ids[$key] = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
+		}
+
+		return $ids;
+	}//end surfaceIds()
+
+	/**
+	 * The tickets of the clients, grouped by their master entity; a reference without tickets is absent.
+	 *
 	 * @param array<string, string> $refOfClient Master entity per client id.
-	 * @param array<string, string> $filters     The register and ticket schema.
-	 * @param string                $status      `open`, `closed` or `all`.
+	 * @param array<string, string> $query       The register, the ticket schema and the status (`open`, `closed` or `all`).
 	 *
 	 * @return array<string, array<int, array<string, string>>> Tickets per reference.
 	 */
-	private function ticketsOf(array $refs, array $refOfClient, array $filters, string $status): array {
-		$tickets = array_fill_keys($refs, []);
+	private function ticketsOf(array $refOfClient, array $query): array {
+		$tickets = [];
 		if ($refOfClient === []) {
 			return $tickets;
 		}
 
+		$status = $query['status'];
+		$filters = ['register' => $query['register'], 'schema' => $query['schema']];
 		$filters['client'] = ['in' => array_keys($refOfClient)];
 		$filters['ticketType'] = ['in' => self::TICKET_TYPES];
-		if ($status === 'open') {
-			$filters['status'] = ['notIn' => self::CLOSED_STATUSES];
-		}
-
-		if ($status === 'closed') {
-			$filters['status'] = ['in' => self::CLOSED_STATUSES];
-		}
+		$filters += self::statusFilter(status: $status);
 
 		foreach ($this->read(filters: $filters) as $ticket) {
 			$ref = ($refOfClient[(string)($ticket['client'] ?? '')] ?? '');
@@ -206,6 +210,25 @@ class TicketLeafProvider {
 
 		return $tickets;
 	}//end ticketsOf()
+
+	/**
+	 * The store filter for a status: open or closed tickets, none for all.
+	 *
+	 * @param string $status `open`, `closed` or `all`.
+	 *
+	 * @return array<string, array<string, array<int, string>>>
+	 */
+	private static function statusFilter(string $status): array {
+		if ($status === 'open') {
+			return ['status' => ['notIn' => self::CLOSED_STATUSES]];
+		}
+
+		if ($status === 'closed') {
+			return ['status' => ['in' => self::CLOSED_STATUSES]];
+		}
+
+		return [];
+	}//end statusFilter()
 
 	/**
 	 * Whether a ticket the store answered fits the asked status filter, so a
@@ -242,27 +265,26 @@ class TicketLeafProvider {
 	 */
 	public function clientIdsOf(string $ref): array {
 		$ref = trim($ref);
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$clientSchema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$clientSchema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
 		if ($ref === '' || $register === '' || $clientSchema === '') {
 			return [];
 		}
 
-		return array_keys($this->refOfClients(register: $register, schema: $clientSchema, refs: [$ref]));
+		return array_keys($this->refOfClients(filters: ['register' => $register, 'schema' => $clientSchema], refs: [$ref]));
 	}//end clientIdsOf()
 
 	/**
 	 * The master entity of each client that maps to one of the references, by client id.
 	 *
-	 * @param string $register The register id.
-	 * @param string $schema The client schema id.
+	 * @param array<string, string> $filters The register and client schema ids.
 	 * @param array<int, string> $refs The master entity references.
 	 *
 	 * @return array<string, string> Master entity per client id.
 	 */
-	private function refOfClients(string $register, string $schema, array $refs): array {
+	private function refOfClients(array $filters, array $refs): array {
 		$refOfClient = [];
-		foreach ($this->read(filters: ['register' => $register, 'schema' => $schema, 'masterEntityRef' => ['in' => $refs]]) as $client) {
+		foreach ($this->read(filters: $filters + ['masterEntityRef' => ['in' => $refs]]) as $client) {
 			$id = (string)($client['id'] ?? $client['uuid'] ?? '');
 			$ref = (string)($client['masterEntityRef'] ?? '');
 			if ($id !== '' && in_array($ref, $refs, true) === true) {

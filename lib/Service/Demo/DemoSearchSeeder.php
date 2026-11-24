@@ -76,14 +76,15 @@ class DemoSearchSeeder {
 		[$rowSchema, $targetSchema] = $this->schemas();
 		$now = gmdate('Y-m-d\TH:i:s\Z');
 
-		$rowsSeeded = ($this->demoRows(schemaSlug: $rowSchema, property: $property, source: $source) !== []);
+		$marker = ['property' => $property, 'source' => $source];
+		$rowsSeeded = ($this->demoRows(schemaSlug: $rowSchema, marker: $marker) !== []);
 		if ($rowsSeeded === true) {
 			$counts['skipped']++;
 		}
 
 		if ($rowsSeeded === false) {
 			foreach (($search['rows'] ?? []) as $row) {
-				$payload = $this->rowPayload(row: $row, property: $property, source: $source, importedAt: $now);
+				$payload = $this->rowPayload(row: $row, stamp: $marker + ['importedAt' => $now]);
 				if ($this->store->save(schemaSlug: $rowSchema, payload: $payload) !== null) {
 					$counts['rows']++;
 				}
@@ -92,9 +93,7 @@ class DemoSearchSeeder {
 
 		$targets = $this->seedTargets(
 			definitions: ($search['targets'] ?? []),
-			schemaSlug: $targetSchema,
-			property: $property,
-			createdAt: $now,
+			destination: ['schemaSlug' => $targetSchema, 'property' => $property, 'createdAt' => $now],
 		);
 		$counts['targets'] = $targets['created'];
 		$counts['skipped'] += $targets['skipped'];
@@ -125,38 +124,82 @@ class DemoSearchSeeder {
 
 		[$rowSchema, $targetSchema] = $this->schemas();
 
-		foreach ($this->demoRows(schemaSlug: $rowSchema, property: $property, source: $source) as $row) {
-			if ($this->store->delete(schemaSlug: $rowSchema, id: $this->store->idOf(payload: $row)) === true) {
-				$counts['rows']++;
-			}
-		}
-
-		foreach ($this->store->findAll(schemaSlug: $targetSchema) as $target) {
-			if ((string)($target['property'] ?? '') !== $property
-				|| str_starts_with((string)($target['notes'] ?? ''), DemoSeedValues::DEMO_PREFIX) === false
-			) {
-				continue;
-			}
-
-			if ($this->store->delete(schemaSlug: $targetSchema, id: $this->store->idOf(payload: $target)) === true) {
-				$counts['targets']++;
-			}
-		}
+		$counts['rows'] = $this->removeDemoRows(rowSchema: $rowSchema, marker: ['property' => $property, 'source' => $source]);
+		$counts['targets'] = $this->removeDemoTargets(targetSchema: $targetSchema, property: $property);
 
 		return $counts;
 	}//end remove()
 
 	/**
+	 * Delete the rows that carry both the demo property and the demo source.
+	 *
+	 * @param string $rowSchema The Search Console row schema.
+	 * @param array{property: string, source: string} $marker The demo property and source.
+	 *
+	 * @return int The number of rows deleted.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function removeDemoRows(string $rowSchema, array $marker): int {
+		$removed = 0;
+		foreach ($this->demoRows(schemaSlug: $rowSchema, marker: $marker) as $row) {
+			if ($this->store->delete(schemaSlug: $rowSchema, id: $this->store->idOf(payload: $row)) === true) {
+				$removed++;
+			}
+		}
+
+		return $removed;
+	}//end removeDemoRows()
+
+	/**
+	 * Delete the keyword targets on the demo property whose note carries the demo marker.
+	 *
+	 * @param string $targetSchema The keyword target schema.
+	 * @param string $property The demo property.
+	 *
+	 * @return int The number of targets deleted.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function removeDemoTargets(string $targetSchema, string $property): int {
+		$removed = 0;
+		foreach ($this->store->findAll(schemaSlug: $targetSchema) as $target) {
+			if ($this->isDemoTarget(target: $target, property: $property) === false) {
+				continue;
+			}
+
+			if ($this->store->delete(schemaSlug: $targetSchema, id: $this->store->idOf(payload: $target)) === true) {
+				$removed++;
+			}
+		}
+
+		return $removed;
+	}//end removeDemoTargets()
+
+	/**
+	 * Whether a keyword target is on the demo property and carries the demo marker.
+	 *
+	 * @param array<string, mixed> $target The keyword target.
+	 * @param string $property The demo property.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function isDemoTarget(array $target, string $property): bool {
+		return (string)($target['property'] ?? '') === $property
+			&& str_starts_with((string)($target['notes'] ?? ''), DemoSeedValues::DEMO_PREFIX) === true;
+	}//end isDemoTarget()
+
+	/**
 	 * One seed row as the import writes it, with its click rate derived.
 	 *
 	 * @param array<string, mixed> $row The seed-file row.
-	 * @param string $property The demo property.
-	 * @param string $source The demo source.
-	 * @param string $importedAt When the demo import ran.
+	 * @param array{property: string, source: string, importedAt: string} $stamp The demo property and source, and when the demo import ran.
 	 *
 	 * @return array<string, mixed> The row payload.
 	 */
-	private function rowPayload(array $row, string $property, string $source, string $importedAt): array {
+	private function rowPayload(array $row, array $stamp): array {
 		$row = $this->values->resolvePlaceholders(data: $row);
 		$clicks = (int)($row['clicks'] ?? 0);
 		$impressions = (int)($row['impressions'] ?? 0);
@@ -166,7 +209,7 @@ class DemoSearchSeeder {
 		}
 
 		return [
-			'property' => $property,
+			'property' => $stamp['property'],
 			'date' => (string)($row['date'] ?? ''),
 			'query' => (string)($row['query'] ?? ''),
 			'page' => (string)($row['page'] ?? ''),
@@ -174,8 +217,8 @@ class DemoSearchSeeder {
 			'impressions' => $impressions,
 			'ctr' => $ctr,
 			'position' => (float)($row['position'] ?? 0),
-			'source' => $source,
-			'importedAt' => $importedAt,
+			'source' => $stamp['source'],
+			'importedAt' => $stamp['importedAt'],
 		];
 	}//end rowPayload()
 
@@ -183,14 +226,14 @@ class DemoSearchSeeder {
 	 * Seed the demo keyword targets, skipping one whose note already exists.
 	 *
 	 * @param array<int, array<string, mixed>> $definitions The `search.targets` definitions.
-	 * @param string $schemaSlug The keyword target schema.
-	 * @param string $property The demo property.
-	 * @param string $createdAt When the targets are created.
+	 * @param array{schemaSlug: string, property: string, createdAt: string} $destination The keyword target schema, the demo
+	 *                                                                         property and when the targets are created.
 	 *
 	 * @return array{created: int, skipped: int} Counts.
 	 */
-	private function seedTargets(array $definitions, string $schemaSlug, string $property, string $createdAt): array {
+	private function seedTargets(array $definitions, array $destination): array {
 		$result = ['created' => 0, 'skipped' => 0];
+		$schemaSlug = $destination['schemaSlug'];
 
 		$notes = [];
 		foreach ($this->store->findAll(schemaSlug: $schemaSlug) as $target) {
@@ -204,8 +247,8 @@ class DemoSearchSeeder {
 				continue;
 			}
 
-			$data['property'] = $property;
-			$data['createdAt'] = $createdAt;
+			$data['property'] = $destination['property'];
+			$data['createdAt'] = $destination['createdAt'];
 			if ($this->store->save(schemaSlug: $schemaSlug, payload: $data) !== null) {
 				$result['created']++;
 			}
@@ -234,12 +277,11 @@ class DemoSearchSeeder {
 	 * filter on the returned rows, so a match is exact either way.
 	 *
 	 * @param string $schemaSlug The row schema.
-	 * @param string $property The demo property.
-	 * @param string $source The demo source.
+	 * @param array{property: string, source: string} $marker The demo property and source.
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
 	 */
-	private function demoRows(string $schemaSlug, string $property, string $source): array {
-		return $this->store->findAll(schemaSlug: $schemaSlug, filters: ['property' => $property, 'source' => $source]);
+	private function demoRows(string $schemaSlug, array $marker): array {
+		return $this->store->findAll(schemaSlug: $schemaSlug, filters: $marker);
 	}//end demoRows()
 }//end class

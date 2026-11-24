@@ -39,6 +39,9 @@ use Psr\Log\LoggerInterface;
  * without it.
  *
  * @covers \OCA\Pipelinq\Service\SlaAttainmentService
+ * @uses \OCA\Pipelinq\Service\BreachTally
+ * @uses \OCA\Pipelinq\Service\SlaAttainmentFigures
+ * @uses \OCA\Pipelinq\Service\SlaGrouping
  *
  * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
  */

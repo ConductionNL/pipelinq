@@ -11,6 +11,7 @@ Reworked on 12 October 2026 onto OpenRegister's draft status (decisions 180, 201
 - [x] 1.3 Restore banner on mount with Restore draft and Discard; Save makes the draft definitive through OpenRegister's owner action
   - Test: `tests/vitest/contactMomentDraft.spec.js`: offer, restore, one POST to `/activate` with the whole form and no second ticket, a 422 keeps the form and the draft, a gone draft is saved as a new contact moment, Discard deletes the draft ticket, a colleague's draft is never offered
   - [ ] Verify: Playwright `tests/e2e/contact-moment-draft.spec.ts`: type, close the page, reopen ClientDetail, the draft is not in the client's ticket list, restore, save, same id and status active (live pass, decision 139)
+    - Live pass 17 Nov 2026: not run to a pass. ClientDetail no longer mounts `ContactmomentQuickLog`: the relation-board layout renders only `client-panels`, and the header's Log contact opens a generic form without drafts, so the spec finds no `contactmoment-quicklog`. Needs a decision: mount the quick log on the board, or move the draft into the Log contact form.
 - [x] 1.4 Session expiry: on 401 or 412 keep the form, show the message, fetch a fresh token and retry on Save
   - Test: `tests/vitest/contactMomentDraft.spec.js`, for the plain save and for the owner action
 - [x] 1.5 Strings in all six locales and a section in `docs/Features/contactmomenten.md`

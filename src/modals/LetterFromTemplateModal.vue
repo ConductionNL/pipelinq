@@ -394,10 +394,7 @@ export default {
 			const templatesLoaded = this.loadTemplates()
 			try {
 				const store = useObjectStore()
-				if (!clientId && ticketId) {
-					const ticket = await store.fetchObject('ticket', ticketId)
-					this.resolvedClientId = ticket?.client || ''
-				}
+				await this.resolveTicketClient(store, { clientId, ticketId })
 				await templatesLoaded
 				if (!this.available) {
 					return
@@ -409,28 +406,64 @@ export default {
 					)
 					return
 				}
-				const client = await store.fetchObject('client', this.resolvedClientId).catch(() => null)
-				this.clientName = client?.name || ''
-				if (!ticketId) {
-					this.tickets = (await store.fetchCollection('ticket', {
-						client: this.resolvedClientId,
-						_limit: 50,
-					}).catch(() => [])) || []
-					if (this.tickets.length > 0) {
-						this.aboutTicketId = this.tickets[0].id
-					}
-				}
-				this.contacts =
-					(await store.fetchCollection('contact', {
-						client: this.resolvedClientId,
-						_limit: 100,
-					})) || []
-				await this.loadAppointment(store)
+				await this.loadClientContext(store, ticketId)
 			} catch {
 				this.error = t(
 					'pipelinq',
 					'The letter templates could not be loaded.',
 				)
+			}
+		},
+
+		/**
+		 * On a ticket page without a client of its own, write to the ticket's client.
+		 *
+		 * @param {object} store The object store.
+		 * @param {{clientId: string, ticketId: string}} ids The ids the page gives.
+		 * @return {Promise<void>}
+		 */
+		async resolveTicketClient(store, ids) {
+			if (!ids.clientId && ids.ticketId) {
+				const ticket = await store.fetchObject('ticket', ids.ticketId)
+				this.resolvedClientId = ticket?.client || ''
+			}
+		},
+
+		/**
+		 * The client's name, its tickets (when the page is not a ticket), its
+		 * contacts and its next appointment.
+		 *
+		 * @param {object} store The object store.
+		 * @param {string} ticketId The ticket the page is on, or ''.
+		 * @return {Promise<void>}
+		 */
+		async loadClientContext(store, ticketId) {
+			const client = await store.fetchObject('client', this.resolvedClientId).catch(() => null)
+			this.clientName = client?.name || ''
+			if (!ticketId) {
+				await this.loadClientTickets(store)
+			}
+			this.contacts =
+				(await store.fetchCollection('contact', {
+					client: this.resolvedClientId,
+					_limit: 100,
+				})) || []
+			await this.loadAppointment(store)
+		},
+
+		/**
+		 * The client's tickets the letter can be about; the first is chosen.
+		 *
+		 * @param {object} store The object store.
+		 * @return {Promise<void>}
+		 */
+		async loadClientTickets(store) {
+			this.tickets = (await store.fetchCollection('ticket', {
+				client: this.resolvedClientId,
+				_limit: 50,
+			}).catch(() => [])) || []
+			if (this.tickets.length > 0) {
+				this.aboutTicketId = this.tickets[0].id
 			}
 		},
 
@@ -500,7 +533,7 @@ export default {
 		 * @spec openspec/specs/client-letters/spec.md
 		 */
 		async loadPreview() {
-			if (!this.templateId || !this.resolvedClientId || !this.available) {
+			if (!this.canPreview()) {
 				this.previewHtml = ''
 				this.fields = []
 				return
@@ -509,12 +542,7 @@ export default {
 			this.previewing = true
 			this.previewError = ''
 			try {
-				const preview = await previewLetter(this.resolvedClientId, {
-					templateId: this.templateId,
-					contactId: this.contactId || undefined,
-					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
-					appointmentId: this.appointmentId || undefined,
-				})
+				const preview = await previewLetter(this.resolvedClientId, this.previewOptions())
 				if (request !== this.previewRequest) return
 				this.previewHtml = letterPreviewBody(preview.html)
 				this.fields = preview.fields
@@ -530,30 +558,32 @@ export default {
 		},
 
 		/**
+		 * @return {boolean} Whether there is a template, a client and filinq to preview with.
+		 */
+		canPreview() {
+			return Boolean(this.templateId && this.resolvedClientId && this.available)
+		},
+
+		/**
+		 * @return {object} The template, contact, ticket and appointment the preview and the letter are made with.
+		 */
+		previewOptions() {
+			return {
+				templateId: this.templateId,
+				contactId: this.contactId || undefined,
+				ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
+				appointmentId: this.appointmentId || undefined,
+			}
+		},
+
+		/**
 		 * Download the letter as a PDF only: nothing is filed or logged.
 		 *
 		 * @spec openspec/specs/client-letters/spec.md
 		 */
 		async download() {
 			if (!this.canMake) return
-			this.making = true
-			this.error = ''
-			try {
-				const letter = await makeLetter(this.resolvedClientId, {
-					templateId: this.templateId,
-					contactId: this.contactId || undefined,
-					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
-					appointmentId: this.appointmentId || undefined,
-					downloadOnly: true,
-				})
-				downloadLetter(letter)
-			} catch (e) {
-				this.error =
-					e?.response?.data?.message
-					|| t('pipelinq', 'The letter could not be made.')
-			} finally {
-				this.making = false
-			}
+			await this.produceLetter({ ...this.previewOptions(), downloadOnly: true }, () => {})
 		},
 
 		/**
@@ -563,17 +593,26 @@ export default {
 		 */
 		async make() {
 			if (!this.canMake) return
+			await this.produceLetter(this.previewOptions(), (letter) => {
+				this.result = letter
+			})
+		},
+
+		/**
+		 * Have filinq make the letter and download it; say why when it fails.
+		 *
+		 * @param {object} options What the letter is made with.
+		 * @param {(letter: object) => void} keep What to do with the made letter, once downloaded.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+		 */
+		async produceLetter(options, keep) {
 			this.making = true
 			this.error = ''
 			try {
-				const letter = await makeLetter(this.resolvedClientId, {
-					templateId: this.templateId,
-					contactId: this.contactId || undefined,
-					ticketId: this.resolvedTicketId || this.aboutTicketId || undefined,
-					appointmentId: this.appointmentId || undefined,
-				})
+				const letter = await makeLetter(this.resolvedClientId, options)
 				downloadLetter(letter)
-				this.result = letter
+				keep(letter)
 			} catch (e) {
 				this.error =
 					e?.response?.data?.message
@@ -586,7 +625,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .letter-modal {
 	display: flex;
 	flex-direction: column;
@@ -621,10 +662,7 @@ export default {
 }
 
 .letter-modal__hint {
-	margin: 0;
-	font-size: 13px;
-	line-height: normal;
-	color: var(--color-text-maxcontrast);
+	@include muted-hint;
 }
 
 /* The letter beside what was filled in, as PqBriefOpstellen draws it. */

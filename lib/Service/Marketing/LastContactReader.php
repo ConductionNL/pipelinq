@@ -64,27 +64,62 @@ class LastContactReader {
 		);
 
 		$latest = null;
-		$latestStamp = null;
 		foreach ($rows as $row) {
-			if ((string)($row['client'] ?? '') !== $clientId
-				|| (string)($row['ticketType'] ?? '') !== TicketService::TYPE_CONTACTMOMENT
-			) {
-				continue;
-			}
-
-			$moment = trim((string)($row['occurredAt'] ?? ''));
-			$stamp = strtotime($moment);
-			if ($moment === '' || $stamp === false) {
-				continue;
-			}
-
-			if ($latestStamp === null || $stamp > $latestStamp) {
+			$moment = $this->momentOf(row: $row, clientId: $clientId);
+			if ($this->isLater(moment: $moment, latest: $latest) === true) {
 				$latest = $moment;
-				$latestStamp = $stamp;
 			}
 		}
 
-		return $latest;
+		return ($latest[0] ?? null);
 	}//end forClient()
+
+	/**
+	 * A row's trimmed moment and its timestamp, when it is a contact moment
+	 * of the client with a readable moment; null otherwise.
+	 *
+	 * @param array<string, mixed> $row      The ticket row.
+	 * @param string               $clientId The client.
+	 *
+	 * @return array{0: string, 1: int}|null
+	 */
+	private function momentOf(array $row, string $clientId): ?array {
+		if ($this->isClientMoment(row: $row, clientId: $clientId) === false) {
+			return null;
+		}
+
+		$moment = trim((string)($row['occurredAt'] ?? ''));
+		$stamp = strtotime($moment);
+		if ($moment === '' || $stamp === false) {
+			return null;
+		}
+
+		return [$moment, $stamp];
+	}//end momentOf()
+
+	/**
+	 * Whether a row is a contact moment of the client (the store's filter is
+	 * not trusted for this).
+	 *
+	 * @param array<string, mixed> $row      The ticket row.
+	 * @param string               $clientId The client.
+	 *
+	 * @return bool
+	 */
+	private function isClientMoment(array $row, string $clientId): bool {
+		return (string)($row['client'] ?? '') === $clientId && (string)($row['ticketType'] ?? '') === TicketService::TYPE_CONTACTMOMENT;
+	}//end isClientMoment()
+
+	/**
+	 * Whether a readable moment is strictly later than the latest so far.
+	 *
+	 * @param array{0: string, 1: int}|null $moment The row's moment.
+	 * @param array{0: string, 1: int}|null $latest The latest so far.
+	 *
+	 * @return bool
+	 */
+	private function isLater(?array $moment, ?array $latest): bool {
+		return $moment !== null && ($latest === null || $moment[1] > $latest[1]);
+	}//end isLater()
 
 }//end class

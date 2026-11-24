@@ -26,6 +26,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Feature | Summary | Status | Standards | Docs |
 |---------|---------|--------|-----------|------|
 | Client Management | CRUD for persons and organizations, contact persons, Nextcloud Contacts sync | Implemented | GEMMA CRM; TEC 1.4; Schema.org Organization/Person | [client-management.md](client-management.md) |
+| Client Identifiers | KvK, RSIN, VAT, DUNS and OIN numbers on an organisation, each checked against its register; empty company details filled from the KvK in bulk | Implemented | TEC 1.4; KvK Handelsregister; VIES | [client-identifiers.md](client-identifiers.md) |
 | Lead Management | Sales opportunity tracking through configurable pipeline stages | Implemented | GEMMA CRM; TEC 1.1, 1.3; Schema.org Offer | [lead-management.md](lead-management.md) |
 | Request Management | Service intake and citizen inquiry handling before case conversion | Implemented | GEMMA Callcenter; TEC 3.1–3.4; VNG Verzoeken | [request-management.md](request-management.md) |
 | Pipeline & Kanban | Configurable kanban boards with stage management for leads and requests | Implemented | TEC 1.10; GEMMA CRM | [pipeline-kanban.md](pipeline-kanban.md) |
@@ -33,11 +34,14 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Action Widgets | Dashboard widgets for quick request, lead, and client actions | Implemented | GEMMA Callcenter; TEC 1.1, 3.1; Nextcloud IWidget | [action-widgets.md](action-widgets.md) |
 | My Work | Personal work queue aggregating all assigned items | Implemented | TEC 1.5 | [my-work.md](my-work.md) |
 | Contacts Sync | Two-way sync with Nextcloud Contacts via IManager | Implemented | vCard RFC 6350 | [contacts-sync.md](contacts-sync.md) |
+| Contact Capture | Paste a signature or scan a business card into a prefilled create form | Implemented | Nextcloud TaskProcessing (OCR) | [contact-capture.md](contact-capture.md) |
 | Entity Notes | Internal notes and comments on all CRM entities | Implemented | TEC 5.3 | [entity-notes.md](entity-notes.md) |
 | Notifications & Activity | Nextcloud activity events and push notifications on CRM changes | Implemented | Nextcloud Activity API | [notifications-activity.md](notifications-activity.md) |
 | Activity Timeline | Chronological event timeline on entity detail views | Implemented | TEC 1.5 | [activity-timeline.md](activity-timeline.md) |
+| Call Review | Transcripts and summaries of recorded calls, scorecards and coaching points | In progress | — | [call-review.md](call-review.md) |
 | Product & Service Catalog | Product/service catalogue with pricing for linking to leads | Implemented | TEC 1.8; Schema.org Product | [product-service-catalog.md](product-service-catalog.md) |
 | Lead–Product Link | Line items linking leads to products/services with quantity and value | Implemented | TEC 1.8 | [lead-product-link.md](lead-product-link.md) |
+| Price lists | Price lists per customer segment, country or client that price a lead line on the server | Implemented | | [price-lists.md](price-lists.md) |
 | Prospect Discovery | ICP-based prospect search using KVK/NHR data for lead generation | Implemented | TEC 1.3 | [prospect-discovery.md](prospect-discovery.md) |
 | OpenRegister Integration | Foundational integration: all data stored as register objects in OpenRegister | Implemented | n/a | [openregister-integration.md](openregister-integration.md) |
 | Register i18n | Multilingual register/schema labels (Dutch + English) | Implemented | n/a | [register-i18n.md](register-i18n.md) |
@@ -49,6 +53,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Contactmomenten | Core CRUD and lifecycle for registered client interaction records | Planned | GEMMA Callcenter; VNG Klantinteracties | [contactmomenten.md](contactmomenten.md) |
 | Contactmomenten Rapportage | Management dashboards and KPI reporting on contact moments | Planned | GEMMA Callcenter; TEC 4.1–4.2 | [contactmomenten-rapportage.md](contactmomenten-rapportage.md) |
 | Customer 360 | Unified 360-degree citizen/client profile view | Planned | GEMMA CRM; TEC 1.4 | [customer-360.md](customer-360.md) |
+| Client risk and history summary | Churn risk level with reasons per client, and a generated summary of recent history | Implemented | n/a | [client-risk-and-summary.md](client-risk-and-summary.md) |
 | Kennisbank | Searchable knowledge base for KCC agents with article lifecycle | Planned | GEMMA Callcenter; TEC 3.5 | [kennisbank.md](kennisbank.md) |
 | Terugbel- & Taakbeheer | Callback requests and follow-up task assignment with deadline tracking | Planned | GEMMA Callcenter; TEC 3.2–3.3 | [terugbel-taakbeheer.md](terugbel-taakbeheer.md) |
 | Skill-based routing | Route a ticket to the best-matched, least-loaded agent | Planned | GEMMA Klantgeleiding; TEC 3.2 | [skill-routing.md](skill-routing.md) |
@@ -60,6 +65,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Public Intake Forms | Public-facing intake forms for citizen self-service | Planned | GEMMA Klantgeleiding; TEC 3.6 | [public-intake-forms.md](public-intake-forms.md) |
 | Marketing | Segments, templates and email blasts today; lists with double opt-in, content hub, social publishing, campaigns with attribution, search and competitor intelligence in six planned phases | Partial | GEMMA Sociale media; GEMMA Mediamonitor en webcare; TEC 2; RFC 8058 | [marketing.md](marketing.md) |
 | Product Catalog Quoting | Quotation generation from product catalog line items | Planned | TEC 1.8 | [product-catalog-quoting.md](product-catalog-quoting.md) |
+| Quotes from a lead | Send a quote PDF built from a lead's lines, mailed to the client and logged on the lead | Implemented | TEC 1.8 | [quotes.md](quotes.md) |
 | CRM MCP Tool Surface | Agent-addressable CRM tools (clients, leads, forecast, create-lead, log-contactmoment) for the Nextcloud Hub Assistant | Implemented | Model Context Protocol; OpenRegister `IMcpToolProvider` | [crm-mcp-tool-surface.md](crm-mcp-tool-surface.md) |
 
 ## Feature Groups
@@ -71,6 +77,7 @@ The foundational sales and relationship management layer. These features are liv
 | Feature | Docs |
 |---------|------|
 | Client Management | [client-management.md](client-management.md) |
+| Client Identifiers | [client-identifiers.md](client-identifiers.md) |
 | Lead Management | [lead-management.md](lead-management.md) |
 | Pipeline & Kanban | [pipeline-kanban.md](pipeline-kanban.md) |
 | Request Management | [request-management.md](request-management.md) |
@@ -78,11 +85,14 @@ The foundational sales and relationship management layer. These features are liv
 | Action Widgets | [action-widgets.md](action-widgets.md) |
 | My Work | [my-work.md](my-work.md) |
 | Contacts Sync | [contacts-sync.md](contacts-sync.md) |
+| Contact Capture | [contact-capture.md](contact-capture.md) |
 | Entity Notes | [entity-notes.md](entity-notes.md) |
 | Notifications & Activity | [notifications-activity.md](notifications-activity.md) |
 | Activity Timeline | [activity-timeline.md](activity-timeline.md) |
+| Call Review | [call-review.md](call-review.md) |
 | Product & Service Catalog | [product-service-catalog.md](product-service-catalog.md) |
 | Lead–Product Link | [lead-product-link.md](lead-product-link.md) |
+| Price lists | [price-lists.md](price-lists.md) |
 | Prospect Discovery | [prospect-discovery.md](prospect-discovery.md) |
 
 ### KCC / Government (V1)
@@ -100,6 +110,7 @@ Features required for Dutch municipal KCC-werkplek deployments. Demand validated
 | Customer 360 | KCC citizen profile | [customer-360.md](customer-360.md) |
 | KCC Werkplek | Municipal KCC | [kcc-werkplek.md](kcc-werkplek.md) |
 | Omnichannel Registration | Channel-aware logging | [omnichannel-registratie.md](omnichannel-registratie.md) |
+| Inbound messages to the Queue | Mail, WhatsApp, SMS and social intake | [inbound-to-queue.md](inbound-to-queue.md) |
 
 ### Analytics & Insights (V1)
 
@@ -140,6 +151,7 @@ Used by `/opsx:archive` to determine the correct feature doc when archiving a ch
 ```
 client-management       → client-management.md
 contacts-sync           → contacts-sync.md
+client-contact-capture  → contact-capture.md
 lead-management         → lead-management.md
 lead-product-link       → lead-product-link.md
 prospect-discovery      → prospect-discovery.md

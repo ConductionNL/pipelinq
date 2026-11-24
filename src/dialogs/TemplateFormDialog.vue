@@ -238,7 +238,15 @@
 					<h3 class="template-form__heading">
 						{{ t('pipelinq', 'Articles') }}
 					</h3>
+					<NcNoteCard
+						v-if="!articlesAvailable"
+						type="info"
+						class="template-form__note"
+						data-testid="template-form-articles-unavailable">
+						{{ t('pipelinq', 'Articles are written in PortaliQ. Install PortaliQ to embed articles in a template.') }}
+					</NcNoteCard>
 					<NcSelect
+						v-else
 						v-model="selectedArticles"
 						:options="publishedArticles"
 						:inputLabel="t('pipelinq', 'Articles')"
@@ -259,6 +267,16 @@
 						class="template-form__note">
 						{{ markerWarningText }}
 					</NcNoteCard>
+					<ul
+						v-if="articlesAvailable && selectedArticles.length > 0"
+						class="template-form__article-links"
+						data-testid="template-form-article-links">
+						<li v-for="article in selectedArticles" :key="articleLinkKey(article)">
+							<a :href="articleLink(article)" target="_blank" rel="noopener">
+								{{ article.title || articleLinkKey(article) }}
+							</a>
+						</li>
+					</ul>
 				</section>
 
 				<NcNoteCard
@@ -307,14 +325,17 @@ import {
 import CodeTags from 'vue-material-design-icons/CodeTags.vue'
 import EyeOutline from 'vue-material-design-icons/EyeOutline.vue'
 import MailBlockEditor from '../components/templates/MailBlockEditor.vue'
-import { fetchArticles } from '../services/articlesApi.js'
 import { starterBlocks, withFooterLast } from '../services/mailBlocks.js'
+import { mailPreviewDocument } from '../services/mailPreview.js'
+import { fetchPortaliqArticles, portaliqArticleUrl } from '../services/portaliqArticles.js'
 import {
+	articleId,
 	orderedArticleIds,
 	publishedOnly,
 	resolveSelectedArticles,
 	shouldWarnMissingMarker,
 } from '../services/templateArticlePicker.js'
+import hostedFormDialogMixin from './hostedFormDialogMixin.js'
 
 // Where the address goes in an email body. Must match PhysicalAddressRenderer::TOKENS,
 // whose render() places it the same way on send.
@@ -388,33 +409,7 @@ export default {
 		NcTextField,
 	},
 
-	inheritAttrs: false,
-
-	props: {
-		/** Whether the index page has the dialog open. */
-		show: {
-			type: Boolean,
-			default: false,
-		},
-
-		/** The row being edited, or null to create. */
-		item: {
-			type: Object,
-			default: null,
-		},
-
-		/** Closes the dialog. */
-		close: {
-			type: Function,
-			default: () => {},
-		},
-
-		/** Re-reads the index page's list. */
-		refresh: {
-			type: Function,
-			default: null,
-		},
-	},
+	mixins: [hostedFormDialogMixin],
 
 	data() {
 		return {
@@ -427,6 +422,7 @@ export default {
 			// places it on the field it is about.
 			fieldErrors: {},
 			articles: [],
+			articlesAvailable: true,
 			articlesLoading: false,
 			previewing: false,
 			previewWidth: 600,
@@ -442,7 +438,7 @@ export default {
 		 *
 		 * @return {string|null}
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		templateId() {
 			return (
@@ -463,7 +459,7 @@ export default {
 		 *
 		 * @return {Array<{value: string, label: string}>}
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		channelOptions() {
 			return [
@@ -476,7 +472,7 @@ export default {
 		 * The channel decides the fields: email adds subject, sender,
 		 * reply-to, plain-text body and footer; SMS does not.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		channelOption: {
 			/**
@@ -484,7 +480,7 @@ export default {
 			 *
 			 * @return {{value: string, label: string}}
 			 *
-			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+			 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 			 */
 			get() {
 				return (
@@ -498,7 +494,7 @@ export default {
 			 *
 			 * @param {object} option The picked option.
 			 *
-			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+			 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 			 */
 			set(option) {
 				this.model.channel = option?.value || 'email'
@@ -567,18 +563,11 @@ export default {
 		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
 		 */
 		previewDocument() {
-			const csp =
-				"default-src 'none'; style-src 'unsafe-inline'; img-src data: https:; font-src data: https:"
-			return (
-				'<!DOCTYPE html><html><head><meta charset="utf-8">'
-				+ `<meta http-equiv="Content-Security-Policy" content="${csp}">`
-				+ '<style>body{margin:16px;font-family:sans-serif;color:#222;background:#fff}</style>'
-				+ `</head><body>${this.isBlocks ? this.blocksPreviewHtml : withAddress(this.model.bodyHtml, this.model.footerOverride)}</body></html>`
-			)
+			return mailPreviewDocument(this.isBlocks ? this.blocksPreviewHtml : withAddress(this.model.bodyHtml, this.model.footerOverride))
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 * @return {Array<object>} Only published articles may be embedded.
 		 */
 		publishedArticles() {
@@ -589,7 +578,7 @@ export default {
 		 * The picked articles in the order `model.articleIds` holds them, so
 		 * opening the picker never reorders the embed.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 */
 		selectedArticles: {
 			/**
@@ -597,7 +586,7 @@ export default {
 			 *
 			 * @return {Array<object>}
 			 *
-			 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+			 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 			 */
 			get() {
 				return resolveSelectedArticles(this.model.articleIds, this.articles)
@@ -608,7 +597,7 @@ export default {
 			 *
 			 * @param {Array<object>} options The picked article options.
 			 *
-			 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+			 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 			 */
 			set(options) {
 				this.model.articleIds = orderedArticleIds(options)
@@ -616,7 +605,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 * @return {boolean} Articles are picked but the body has no marker to put them at.
 		 */
 		showMarkerWarning() {
@@ -629,7 +618,7 @@ export default {
 		/**
 		 * @return {string} The hint under the article picker.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 */
 		articlesHintText() {
 			return this.t(
@@ -641,7 +630,7 @@ export default {
 		/**
 		 * @return {string} The warning when the body has no articles marker.
 		 *
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#scenario-picking-articles-for-a-body-without-the-marker-warns-the-marketer
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-picking-articles-for-a-body-without-the-marker-warns-the-marketer
 		 */
 		markerWarningText() {
 			return this.t(
@@ -653,7 +642,7 @@ export default {
 		/**
 		 * @return {boolean} A name and a body, and nothing loading or saving.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		canSave() {
 			return (
@@ -667,7 +656,7 @@ export default {
 		/**
 		 * @return {string} Why Save is disabled.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		saveHint() {
 			if (this.loading || this.saving || this.loadError) {
@@ -684,21 +673,6 @@ export default {
 	},
 
 	watch: {
-		show: {
-			immediate: true,
-			/**
-			 * Reset the form each time the dialog opens.
-			 *
-			 * @param {boolean} open Whether the dialog is open.
-			 *
-			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
-			 */
-			handler(open) {
-				if (open) {
-					this.reset()
-				}
-			},
-		},
 
 		// An error clears once the field it is about is edited.
 		'model.bodyHtml': function () {
@@ -751,9 +725,18 @@ export default {
 
 	methods: {
 		/**
+		 * Reset the form each time the dialog opens.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 */
+		prepareOnOpen() {
+			this.reset()
+		},
+
+		/**
 		 * Clear the form, load the articles, and read the template when editing one.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		reset() {
 			this.model = blankModel()
@@ -871,12 +854,32 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @param {object} article A picked portaliq article.
+		 * @return {string} Its id.
+		 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 */
+		articleLinkKey(article) {
+			return articleId(article)
+		},
+
+		/**
+		 * @param {object} article A picked portaliq article.
+		 * @return {string} Where it opens in portaliq.
+		 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 */
+		articleLink(article) {
+			return portaliqArticleUrl(articleId(article))
+		},
+
+		/**
+		 * @spec openspec/changes/marketing-articles-move-to-portaliq/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 */
 		async loadArticles() {
 			this.articlesLoading = true
 			try {
-				this.articles = await fetchArticles()
+				const answer = await fetchPortaliqArticles()
+				this.articlesAvailable = answer.available
+				this.articles = answer.data
 			} catch {
 				this.articles = []
 			} finally {
@@ -887,7 +890,7 @@ export default {
 		/**
 		 * Read the template being edited into the form.
 		 *
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		async loadTemplate() {
 			this.loading = true
@@ -927,7 +930,7 @@ export default {
 		 *
 		 * @param {string} message The error from the API.
 		 * @return {object} A `{ bodyHtml?, footerOverride?, subject? }` map.
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#scenario-template-create-validates-compliance
+		 * @spec openspec/specs/marketing-api/spec.md#scenario-template-create-validates-compliance
 		 */
 		parseFieldErrors(message) {
 			const lower = (message || '').toLowerCase()
@@ -944,7 +947,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#scenario-template-create-validates-compliance
+		 * @spec openspec/specs/marketing-api/spec.md#scenario-template-create-validates-compliance
 		 */
 		async save() {
 			if (!this.canSave) {
@@ -1004,7 +1007,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .template-form__mode {
 	display: flex;
 	flex-wrap: wrap;
@@ -1024,18 +1029,11 @@ export default {
 }
 
 .template-form__grid {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	align-items: start;
-	gap: 12px 16px;
+	@include two-column-form-grid;
 }
 
 .template-form__section {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	padding-top: 16px;
-	border-top: 1px solid var(--color-border);
+	@include bordered-form-section;
 }
 
 .template-form__heading {
@@ -1079,7 +1077,7 @@ export default {
 	height: 216px;
 	border: 1px solid var(--color-border-dark);
 	border-radius: var(--border-radius-large);
-	background: #fff;
+	background: var(--color-main-background, #fff);
 }
 
 .template-form__body-html--code :deep(textarea) {
@@ -1090,6 +1088,12 @@ export default {
 	margin: 0;
 	color: var(--color-text-maxcontrast);
 	font-size: 0.9em;
+}
+
+.template-form__article-links {
+	margin: 4px 0 0;
+	padding-inline-start: 20px;
+	color: var(--color-text-maxcontrast);
 }
 
 .template-form__note {

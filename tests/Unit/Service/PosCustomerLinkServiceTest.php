@@ -34,6 +34,7 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for PosCustomerLinkService.
@@ -305,6 +306,7 @@ class PosCustomerLinkServiceTest extends TestCase {
 			->method('saveObject')
 			->willReturnCallback(
 				function (array $object, ...$rest) use (&$written) {
+					$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 					$written = $object;
 					return self::entity(['id' => 'c1', 'marketingConsent' => true]);
 				}

@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Activity;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\Activity\Exceptions\UnknownActivityException;
 use OCP\Activity\IEvent;
 use OCP\Activity\IProvider;
@@ -80,7 +80,20 @@ class Provider implements IProvider {
 	 * @spec openspec/specs/notifications-activity/spec.md
 	 */
 	public function parse($language, IEvent $event, ?IEvent $previousEvent = null): IEvent {
-		if ($event->getApp() !== Application::APP_ID) {
+		return $this->render(event: self::handled(event: $event), language: $language);
+	}//end parse()
+
+	/**
+	 * The event, when it is one of this app's handled subjects.
+	 *
+	 * @param IEvent $event The event to check.
+	 *
+	 * @return IEvent The same event.
+	 *
+	 * @throws UnknownActivityException When the event is not handled by this provider.
+	 */
+	private static function handled(IEvent $event): IEvent {
+		if ($event->getApp() !== AppIdentity::APP_ID) {
 			throw new UnknownActivityException();
 		}
 
@@ -88,7 +101,19 @@ class Provider implements IProvider {
 			throw new UnknownActivityException();
 		}
 
-		$l = $this->l10nFactory->get(Application::APP_ID, $language);
+		return $event;
+	}//end handled()
+
+	/**
+	 * Set a Pipelinq event's subject text and icon in the language.
+	 *
+	 * @param IEvent $event    The event to parse.
+	 * @param string $language The language code.
+	 *
+	 * @return IEvent The parsed event.
+	 */
+	private function render(IEvent $event, $language): IEvent {
+		$l = $this->l10nFactory->get(AppIdentity::APP_ID, $language);
 		$params = $event->getSubjectParameters();
 
 		$this->subjectHandler->applySubjectText(
@@ -99,10 +124,10 @@ class Provider implements IProvider {
 
 		$event->setIcon(
 			$this->urlGenerator->getAbsoluteURL(
-				$this->urlGenerator->imagePath(appName: Application::APP_ID, file: 'app.svg')
+				$this->urlGenerator->imagePath(appName: AppIdentity::APP_ID, file: 'app.svg')
 			)
 		);
 
 		return $event;
-	}//end parse()
+	}//end render()
 }//end class

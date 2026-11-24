@@ -40,8 +40,8 @@ class ConfigFileLoaderServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$appManager = $this->createMock(IAppManager::class);
-		$this->service = new ConfigFileLoaderService($appManager);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
+		$this->service = new ConfigFileLoaderService(appManager: $appManager);
 	}//end setUp()
 
 	/**
@@ -53,7 +53,7 @@ class ConfigFileLoaderServiceTest extends TestCase {
 		$data = ['key' => 'value'];
 		$result = $this->service->ensureSourceType($data);
 
-		$this->assertSame('local', $result['x-openregister']['sourceType']);
+		$this->assertSame(expected: 'local', actual: $result['x-openregister']['sourceType']);
 	}//end testEnsureSourceTypeAddsIfMissing()
 
 	/**
@@ -65,7 +65,7 @@ class ConfigFileLoaderServiceTest extends TestCase {
 		$data = ['x-openregister' => ['sourceType' => 'remote']];
 		$result = $this->service->ensureSourceType($data);
 
-		$this->assertSame('remote', $result['x-openregister']['sourceType']);
+		$this->assertSame(expected: 'remote', actual: $result['x-openregister']['sourceType']);
 	}//end testEnsureSourceTypePreservesExisting()
 
 	/**
@@ -77,8 +77,8 @@ class ConfigFileLoaderServiceTest extends TestCase {
 		$data = ['x-openregister' => ['other' => 'val']];
 		$result = $this->service->ensureSourceType($data);
 
-		$this->assertSame('local', $result['x-openregister']['sourceType']);
-		$this->assertSame('val', $result['x-openregister']['other']);
+		$this->assertSame(expected: 'local', actual: $result['x-openregister']['sourceType']);
+		$this->assertSame(expected: 'val', actual: $result['x-openregister']['other']);
 	}//end testEnsureSourceTypeAddsSourceTypeToExisting()
 
 	/**
@@ -87,13 +87,13 @@ class ConfigFileLoaderServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testLoadConfigurationFileThrowsOnMissingFile(): void {
-		$appManager = $this->createMock(IAppManager::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('getAppPath')->willReturn('/nonexistent/path');
 
-		$service = new ConfigFileLoaderService($appManager);
+		$service = new ConfigFileLoaderService(appManager: $appManager);
 
-		$this->expectException(\RuntimeException::class);
-		$this->expectExceptionMessage('Configuration file not found');
+		$this->expectException(exception: \RuntimeException::class);
+		$this->expectExceptionMessage(message: 'Configuration file not found');
 
 		$service->loadConfigurationFile();
 	}//end testLoadConfigurationFileThrowsOnMissingFile()
@@ -117,10 +117,10 @@ class ConfigFileLoaderServiceTest extends TestCase {
 
 		$this->tempRoots[] = $root;
 
-		$appManager = $this->createMock(IAppManager::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('getAppPath')->willReturn($root);
 
-		return new ConfigFileLoaderService($appManager);
+		return new ConfigFileLoaderService(appManager: $appManager);
 	}//end serviceWithFixture()
 
 	/**
@@ -179,14 +179,14 @@ class ConfigFileLoaderServiceTest extends TestCase {
 			],
 		];
 
-		$result = $this->serviceWithFixture($monolith, ['40-portal.json' => $fragment])
+		$result = $this->serviceWithFixture(monolith: $monolith, fragments: ['40-portal.json' => $fragment])
 			->loadConfigurationFile();
 
 		$slugs = array_column($result['components']['objects'], 'slug');
-		$this->assertContains('base-a', $slugs, 'monolith seed objects must survive the merge');
-		$this->assertContains('base-b', $slugs);
-		$this->assertContains('frag-c', $slugs, 'fragment seed objects must be appended');
-		$this->assertCount(3, $slugs);
+		$this->assertContains(needle: 'base-a', haystack: $slugs, message: 'monolith seed objects must survive the merge');
+		$this->assertContains(needle: 'base-b', haystack: $slugs);
+		$this->assertContains(needle: 'frag-c', haystack: $slugs, message: 'fragment seed objects must be appended');
+		$this->assertCount(expectedCount: 3, haystack: $slugs);
 	}//end testFragmentObjectsAreUnionedNotReplaced()
 
 	/**
@@ -202,11 +202,11 @@ class ConfigFileLoaderServiceTest extends TestCase {
 		];
 		$fragment = ['components' => ['objects' => []]];
 
-		$result = $this->serviceWithFixture($monolith, ['40-portal.json' => $fragment])
+		$result = $this->serviceWithFixture(monolith: $monolith, fragments: ['40-portal.json' => $fragment])
 			->loadConfigurationFile();
 
-		$this->assertCount(1, $result['components']['objects']);
-		$this->assertSame('keep-me', $result['components']['objects'][0]['slug']);
+		$this->assertCount(expectedCount: 1, haystack: $result['components']['objects']);
+		$this->assertSame(expected: 'keep-me', actual: $result['components']['objects'][0]['slug']);
 	}//end testEmptyFragmentObjectsDoesNotWipeMonolith()
 
 	/**
@@ -223,11 +223,11 @@ class ConfigFileLoaderServiceTest extends TestCase {
 			'components' => ['objects' => [['x' => 1, 'slug' => 'a'], ['slug' => 'b']]],
 		];
 
-		$result = $this->serviceWithFixture($monolith, ['40-portal.json' => $fragment])
+		$result = $this->serviceWithFixture(monolith: $monolith, fragments: ['40-portal.json' => $fragment])
 			->loadConfigurationFile();
 
 		$slugs = array_column($result['components']['objects'], 'slug');
-		$this->assertSame(['a', 'b'], $slugs, 'identical object (key order irrelevant) must not duplicate');
+		$this->assertSame(expected: ['a', 'b'], actual: $slugs, message: 'identical object (key order irrelevant) must not duplicate');
 	}//end testUnionDeduplicatesIdenticalObjects()
 
 	/**
@@ -255,15 +255,15 @@ class ConfigFileLoaderServiceTest extends TestCase {
 			],
 		];
 
-		$result = $this->serviceWithFixture($monolith, ['40-portal.json' => $fragment])
+		$result = $this->serviceWithFixture(monolith: $monolith, fragments: ['40-portal.json' => $fragment])
 			->loadConfigurationFile();
 		$registers = $result['components']['registers'];
 
-		$this->assertArrayHasKey('pipelinq-portal', $registers, 'new register must be added');
+		$this->assertArrayHasKey(key: 'pipelinq-portal', array: $registers, message: 'new register must be added');
 		$this->assertSame(
-			['client', 'contact', 'request'],
-			$registers['pipelinq']['schemas'],
-			'existing register schemas[] membership must union, not replace'
+			expected: ['client', 'contact', 'request'],
+			actual: $registers['pipelinq']['schemas'],
+			message: 'existing register schemas[] membership must union, not replace'
 		);
 	}//end testRegisterSchemasMembershipIsUnioned()
 
@@ -314,19 +314,19 @@ class ConfigFileLoaderServiceTest extends TestCase {
 			],
 		];
 
-		$result = $this->serviceWithFixture($monolith, ['50-forecast.json' => $fragment])
+		$result = $this->serviceWithFixture(monolith: $monolith, fragments: ['50-forecast.json' => $fragment])
 			->loadConfigurationFile();
 		$leadConf = $result['components']['schemas']['lead']['configuration'];
 
 		$this->assertArrayHasKey(
-			'x-openregister-mcp',
-			$leadConf,
-			'lead x-openregister-mcp must survive the forecast fragment merge (pipelinq#396)'
+			key: 'x-openregister-mcp',
+			array: $leadConf,
+			message: 'lead x-openregister-mcp must survive the forecast fragment merge (pipelinq#396)'
 		);
-		$this->assertArrayHasKey('x-pipelinq-forecast-lifecycle', $leadConf);
+		$this->assertArrayHasKey(key: 'x-pipelinq-forecast-lifecycle', array: $leadConf);
 		$this->assertSame(
-			['status', 'stage', 'client'],
-			$leadConf['x-openregister-mcp']['tools']['search']['filters']
+			expected: ['status', 'stage', 'client'],
+			actual: $leadConf['x-openregister-mcp']['tools']['search']['filters']
 		);
 	}//end testForecastFragmentPreservesLeadMcpAnnotation()
 
@@ -353,13 +353,199 @@ class ConfigFileLoaderServiceTest extends TestCase {
 			],
 		];
 
-		$result = $this->serviceWithFixture($monolith, ['40-portal.json' => $fragment])
+		$result = $this->serviceWithFixture(monolith: $monolith, fragments: ['40-portal.json' => $fragment])
 			->loadConfigurationFile();
 
 		$this->assertSame(
-			['new1', 'new2'],
-			$result['components']['schemas']['thing']['properties']['status']['enum'],
-			'a normal list value must be replaced, not unioned'
+			expected: ['new1', 'new2'],
+			actual: $result['components']['schemas']['thing']['properties']['status']['enum'],
+			message: 'a normal list value must be replaced, not unioned'
 		);
 	}//end testNonAdditiveListsAreStillReplaced()
+	/**
+	 * Build a fake app root whose fragment files hold raw text, so unreadable
+	 * JSON and non-object fragments can be written.
+	 *
+	 * @param array                $monolith  The monolith register data.
+	 * @param array<string,string> $fragments Map of fragment filename => raw content.
+	 *
+	 * @return ConfigFileLoaderService The service bound to the fake app root.
+	 */
+	private function serviceWithRawFragments(array $monolith, array $fragments): ConfigFileLoaderService {
+		$service = $this->serviceWithFixture(monolith: $monolith, fragments: []);
+		$root = end($this->tempRoots);
+		foreach ($fragments as $name => $content) {
+			file_put_contents($root . '/lib/Settings/register.d/' . $name, $content);
+		}
+
+		return $service;
+	}//end serviceWithRawFragments()
+
+	/**
+	 * Without a fragment directory, or with an empty one, the monolith is
+	 * returned unchanged, version included.
+	 *
+	 * @return void
+	 */
+	public function testNoFragmentsLeavesTheMonolithUnchanged(): void {
+		$monolith = ['info' => ['version' => '2.0.0'], 'components' => ['objects' => [1]]];
+		$this->assertSame(expected: $monolith, actual: $this->serviceWithFixture(monolith: $monolith, fragments: [])->loadConfigurationFile());
+
+		$service = $this->serviceWithFixture(monolith: $monolith, fragments: []);
+		rmdir(end($this->tempRoots) . '/lib/Settings/register.d');
+		$this->assertSame(expected: $monolith, actual: $service->loadConfigurationFile());
+
+		$service = $this->serviceWithRawFragments(monolith: $monolith, fragments: ['10-notes.txt' => '{"a":1}']);
+		$this->assertSame(expected: $monolith, actual: $service->loadConfigurationFile());
+	}//end testNoFragmentsLeavesTheMonolithUnchanged()
+
+	/**
+	 * Fragments merge in file-name order and fold a hash of their content
+	 * into the version; a fragment that is not an object is skipped and
+	 * leaves no trace in the hash.
+	 *
+	 * @return void
+	 */
+	public function testFragmentsMergeInNameOrderAndStampTheVersion(): void {
+		$second = '{"a":"second","c":3}';
+		$first = '{"a":"first","b":2}';
+		$service = $this->serviceWithRawFragments(
+			monolith: ['info' => ['version' => '1.2.3']],
+			fragments: ['20-b.json' => $second, '15-scalar.json' => '5', '10-a.json' => $first]
+		);
+
+		$result = $service->loadConfigurationFile();
+
+		$this->assertSame(expected: 'second', actual: $result['a']);
+		$this->assertSame(expected: 2, actual: $result['b']);
+		$this->assertSame(expected: 3, actual: $result['c']);
+		$this->assertSame(expected: '1.2.3+frag.' . substr(hash('sha256', $first . $second), 0, 8), actual: $result['info']['version']);
+	}//end testFragmentsMergeInNameOrderAndStampTheVersion()
+
+	/**
+	 * A monolith without version, or whose info is not an object, gets a
+	 * fresh info block carrying only the stamped version.
+	 *
+	 * @return void
+	 */
+	public function testVersionStampWithoutAnInfoBlock(): void {
+		$fragment = '{"x":1}';
+		$hash = substr(hash('sha256', $fragment), 0, 8);
+
+		$result = $this->serviceWithRawFragments(monolith: [], fragments: ['10-x.json' => $fragment])->loadConfigurationFile();
+		$this->assertSame(expected: ['version' => '0.0.0+frag.' . $hash], actual: $result['info']);
+
+		$result = $this->serviceWithRawFragments(monolith: ['info' => 'flat'], fragments: ['10-x.json' => $fragment])->loadConfigurationFile();
+		$this->assertSame(expected: ['version' => '0.0.0+frag.' . $hash], actual: $result['info']);
+	}//end testVersionStampWithoutAnInfoBlock()
+
+	/**
+	 * A fragment that is not valid JSON stops the load with its file name.
+	 *
+	 * @return void
+	 */
+	public function testInvalidFragmentJsonThrows(): void {
+		$service = $this->serviceWithRawFragments(monolith: [], fragments: ['10-ok.json' => '{"a":1}', '20-bad.json' => '{"a":']);
+		$root = end($this->tempRoots);
+
+		$this->expectException(exception: \RuntimeException::class);
+		$this->expectExceptionMessage(message: 'Invalid JSON in register fragment ' . $root . '/lib/Settings/register.d/20-bad.json: Syntax error');
+		$service->loadConfigurationFile();
+	}//end testInvalidFragmentJsonThrows()
+
+	/**
+	 * An empty fragment object keeps a populated base object, an empty list
+	 * over an empty base replaces it, and a list over an object replaces it.
+	 *
+	 * @return void
+	 */
+	public function testEmptyAndMixedShapesMerge(): void {
+		$monolith = [
+			'keep' => ['a' => 1],
+			'emptyBase' => [],
+			'shape' => ['a' => 1],
+			'scalar' => 'x',
+			'nested' => ['inner' => ['b' => 1, 'list' => [1, 2]]],
+		];
+		$fragment = '{"keep":{},"emptyBase":[],"shape":[1,2],"scalar":{"now":"object"},"nested":{"inner":{"list":[3],"c":2}},"fresh":{}}';
+
+		$result = $this->serviceWithRawFragments(monolith: $monolith, fragments: ['10-x.json' => $fragment])->loadConfigurationFile();
+
+		$this->assertSame(expected: ['a' => 1], actual: $result['keep']);
+		$this->assertSame(expected: [], actual: $result['emptyBase']);
+		$this->assertSame(expected: [1, 2], actual: $result['shape']);
+		$this->assertSame(expected: ['now' => 'object'], actual: $result['scalar']);
+		$this->assertSame(expected: ['b' => 1, 'list' => [3], 'c' => 2], actual: $result['nested']['inner']);
+		$this->assertSame(expected: [], actual: $result['fresh']);
+	}//end testEmptyAndMixedShapesMerge()
+	/**
+	 * A fragment that adds verbs to a schema's tools map keeps the base's verbs
+	 * (mcp-full-action-coverage: client gains create/update, leadProduct gains
+	 * update/delete, from register.d), and a fragment that adds a whole block
+	 * to a schema that had none (contact, crmTask) lands it intact.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/mcp-full-action-coverage/specs/crm-mcp-tool-surface/spec.md#requirement-crm-crud-tools-are-declared-on-the-schema-not-hand-coded
+	 */
+	public function testFragmentVerbsAreAddedToTheBaseToolsMap(): void {
+		$monolith = [
+			'info' => ['version' => '1.0.0'],
+			'components' => [
+				'schemas' => [
+					'client' => [
+						'slug' => 'client',
+						'configuration' => [
+							'x-openregister-mcp' => [
+								'enabled' => true,
+								'tools' => [
+									'search' => ['scope' => 'read', 'readOnlyHint' => true],
+									'get' => ['scope' => 'read', 'readOnlyHint' => true],
+								],
+							],
+						],
+					],
+					'contact' => ['slug' => 'contact', 'configuration' => ['x-other' => ['kept' => true]]],
+				],
+			],
+		];
+		$fragment = [
+			'components' => [
+				'schemas' => [
+					'client' => [
+						'slug' => 'client',
+						'configuration' => [
+							'x-openregister-mcp' => [
+								'tools' => [
+									'create' => ['scope' => 'create'],
+									'update' => ['scope' => 'update'],
+								],
+							],
+						],
+					],
+					'contact' => [
+						'slug' => 'contact',
+						'configuration' => [
+							'x-openregister-mcp' => [
+								'enabled' => true,
+								'tools' => ['search' => ['scope' => 'read', 'filters' => ['client']]],
+							],
+						],
+					],
+				],
+			],
+		];
+
+		$schemas = $this->serviceWithFixture(monolith: $monolith, fragments: ['99-mcp.json' => $fragment])
+			->loadConfigurationFile()['components']['schemas'];
+
+		$client = $schemas['client']['configuration']['x-openregister-mcp'];
+		$this->assertTrue(condition: $client['enabled'], message: 'the base enabled flag survives');
+		$this->assertSame(expected: ['search', 'get', 'create', 'update'], actual: array_keys($client['tools']));
+		$this->assertTrue(condition: $client['tools']['search']['readOnlyHint'], message: 'the base verb config is untouched');
+
+		$contact = $schemas['contact']['configuration'];
+		$this->assertSame(expected: ['client'], actual: $contact['x-openregister-mcp']['tools']['search']['filters']);
+		$this->assertSame(expected: ['kept' => true], actual: $contact['x-other'], message: 'the sibling configuration key survives');
+	}//end testFragmentVerbsAreAddedToTheBaseToolsMap()
 }//end class

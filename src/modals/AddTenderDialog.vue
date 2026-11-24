@@ -9,8 +9,8 @@
   - Submits POST /api/pos-transactions/{id}/tenders and emits `added` on
   - success so the parent panel can refresh.
   -
-  - @spec openspec/changes/pos-split-tender/tasks.md#7.3
-  - @spec openspec/changes/pos-split-tender/tasks.md#7.4
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.3
+  - @spec openspec/changes/archive/2026-06-14-pos-split-tender/tasks.md#7.4
   -->
 <template>
 	<CnDialog
@@ -103,6 +103,7 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import { posRecordId } from '../services/posRecordId.js'
 import { formatEur } from '../services/posTotals.js'
 
 export default {
@@ -179,12 +180,7 @@ export default {
 
 	methods: {
 		formatEur,
-		idOf(type) {
-			if (type?.['@self']?.id) {
-				return type['@self'].id
-			}
-			return type?.id || type?.uuid || ''
-		},
+		idOf: posRecordId,
 
 		async submit() {
 			this.saving = true
@@ -215,13 +211,11 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .add-tender {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	padding: 8px 0;
-	min-width: 360px;
+	@include dialog-form-body;
 }
 
 .add-tender__change {

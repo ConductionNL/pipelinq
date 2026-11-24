@@ -173,7 +173,7 @@ export default {
 
 .portal-button-primary {
 	background: var(--portal-brand-primary, #21468b);
-	color: #fff;
+	color: var(--color-primary-element-text, #fff);
 	border: none;
 	border-radius: 4px;
 	padding: 0.5rem 1rem;
@@ -181,8 +181,8 @@ export default {
 }
 
 .portal-button-danger {
-	background: #b00020;
-	color: #fff;
+	background: var(--color-error, #b00020);
+	color: var(--color-primary-element-text, #fff);
 	border: none;
 	border-radius: 4px;
 	padding: 0.5rem 1rem;
@@ -199,11 +199,11 @@ export default {
 }
 
 .portal-error {
-	color: #b00020;
+	color: var(--color-error-text, #b00020);
 }
 
 .portal-success {
-	color: #1a7f37;
+	color: var(--color-success-text, #1a7f37);
 }
 
 .portal-session-warning {
@@ -211,7 +211,7 @@ export default {
 	bottom: 1rem;
 	inset-inline-start: 50%;
 	transform: translateX(-50%);
-	background: #fff;
+	background: var(--color-main-background, #fff);
 	border: 2px solid var(--portal-brand-primary, #21468b);
 	border-radius: 8px;
 	padding: 1rem;

@@ -82,33 +82,16 @@ import {
 } from '../../services/posRefundLines.js'
 import { formatEur } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import posDetailWidgetMixin from './posDetailWidgetMixin.js'
 
 export default {
 	name: 'PosRefundItemsWidget',
 	components: { CnIcon, CnWidgetWrapper, NcLoadingIcon },
+	mixins: [posDetailWidgetMixin],
+
 	// The host also hands over register / schema / store and the widget
 	// content; none of them belong on the root element.
 	inheritAttrs: false,
-
-	props: {
-		/** The refund, from the detail page. */
-		objectData: {
-			type: Object,
-			default: null,
-		},
-
-		/** The refund id, from the detail page. */
-		objectId: {
-			type: String,
-			default: '',
-		},
-
-		/** The manifest widget title. */
-		title: {
-			type: String,
-			default: '',
-		},
-	},
 
 	data() {
 		return {
@@ -266,7 +249,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../../assets/scss/shared-rules.scss' as *;
+
 .pos-refund-items {
 	height: 100%;
 	display: flex;
@@ -279,11 +264,7 @@ export default {
 }
 
 .pos-refund-items__table th {
-	text-align: start;
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	padding: 6px 8px;
-	border-bottom: 1px solid var(--color-border);
+	@include table-head-cell;
 }
 
 .pos-refund-items__table td {

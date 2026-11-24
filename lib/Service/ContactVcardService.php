@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Kernel\Contracts\ContactVcardServiceInterface;
 use OCP\Contacts\IManager as IContactsManager;
 use Psr\Log\LoggerInterface;
 
@@ -31,7 +32,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/contacts-sync/spec.md
  */
-class ContactVcardService {
+class ContactVcardService implements ContactVcardServiceInterface {
 	/**
 	 * Constructor.
 	 *
@@ -113,16 +114,57 @@ class ContactVcardService {
 	 * @spec openspec/specs/unify-client-contact/spec.md
 	 */
 	public function provisionContactFromForm(array $form, string $objectType): ?array {
+		if ($this->canProvision(objectType: $objectType) === false) {
+			return null;
+		}
+
+		$contactsUid = $this->contactUidFor(form: $form, objectType: $objectType);
+		if ($contactsUid === null || $contactsUid === '') {
+			return null;
+		}
+
+		return [
+			'contactsUid' => $contactsUid,
+			'name' => (string)($form['name'] ?? ''),
+			'email' => (string)($form['email'] ?? ''),
+			'phone' => (string)($form['phone'] ?? ''),
+		];
+	}//end provisionContactFromForm()
+
+	/**
+	 * Whether a contact can be provisioned for the type, logging why not.
+	 *
+	 * @param string $objectType The object type ('client' or 'contact').
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function canProvision(string $objectType): bool {
 		if (in_array($objectType, ContactObjectReader::OBJECT_TYPES, true) === false) {
 			$this->logger->warning('ContactVcardService: invalid objectType for provisioning', ['objectType' => $objectType]);
-			return null;
+			return false;
 		}
 
 		if ($this->contactsManager->isEnabled() === false) {
 			$this->logger->warning('Pipelinq: cannot provision contact -- Contacts (IManager) not available');
-			return null;
+			return false;
 		}
 
+		return true;
+	}//end canProvision()
+
+	/**
+	 * The UID of the matching existing contact, or of a fresh vCard built from the form.
+	 *
+	 * @param array $form The raw create-form fields.
+	 * @param string $objectType The object type ('client' or 'contact').
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	private function contactUidFor(array $form, string $objectType): string|null {
 		// 1) Try to match an EXISTING contact (email first, then ORG for orgs) so
 		// we never create a duplicate identity when one already exists.
 		$contactsUid = $this->matchExistingContact(form: $form);
@@ -138,17 +180,8 @@ class ContactVcardService {
 			$contactsUid = $this->writerService->writeVcard(properties: $properties);
 		}
 
-		if ($contactsUid === null || $contactsUid === '') {
-			return null;
-		}
-
-		return [
-			'contactsUid' => $contactsUid,
-			'name' => (string)($form['name'] ?? ''),
-			'email' => (string)($form['email'] ?? ''),
-			'phone' => (string)($form['phone'] ?? ''),
-		];
-	}//end provisionContactFromForm()
+		return $contactsUid;
+	}//end contactUidFor()
 
 	/**
 	 * Match an existing Nextcloud Contact for a create form by email first, then
@@ -162,6 +195,24 @@ class ContactVcardService {
 	 * @return ?string The matched contactsUid, or null when none matches.
 	 */
 	private function matchExistingContact(array $form): ?string {
+		foreach ($this->matchSearches(form: $form) as $search) {
+			$uid = $this->firstMatch(search: $search);
+			if ($uid !== null) {
+				return $uid;
+			}
+		}
+
+		return null;
+	}//end matchExistingContact()
+
+	/**
+	 * The contact searches for a create form: its email, then an organisation's name.
+	 *
+	 * @param array $form The raw create-form fields.
+	 *
+	 * @return array<int, array{term: string, props: array<int, string>}> The searches, in order.
+	 */
+	private function matchSearches(array $form): array {
 		$searchTerms = [];
 
 		$email = (string)($form['email'] ?? '');
@@ -169,32 +220,39 @@ class ContactVcardService {
 			$searchTerms[] = ['term' => $email, 'props' => ['EMAIL', 'UID']];
 		}
 
-		if ((string)($form['type'] ?? '') === 'organization') {
-			$name = (string)($form['name'] ?? '');
-			if ($name !== '') {
-				$searchTerms[] = ['term' => $name, 'props' => ['ORG', 'UID']];
-			}
+		$name = (string)($form['name'] ?? '');
+		if ((string)($form['type'] ?? '') === 'organization' && $name !== '') {
+			$searchTerms[] = ['term' => $name, 'props' => ['ORG', 'UID']];
 		}
 
-		foreach ($searchTerms as $search) {
-			try {
-				$results = $this->contactsManager->search($search['term'], $search['props'], ['limit' => 1]);
-			} catch (\Exception $e) {
-				$this->logger->warning(
-					'Pipelinq: contact match search failed',
-					['term' => $search['term'], 'exception' => $e->getMessage()]
-				);
-				continue;
-			}
+		return $searchTerms;
+	}//end matchSearches()
 
-			foreach ($results as $hit) {
-				$uid = (string)($hit['UID'] ?? '');
-				if ($uid !== '') {
-					return $uid;
-				}
+	/**
+	 * The uid of the first hit of one search, or null; a failing search is logged.
+	 *
+	 * @param array{term: string, props: array<int, string>} $search The search.
+	 *
+	 * @return string|null The contactsUid.
+	 */
+	private function firstMatch(array $search): ?string {
+		try {
+			$results = $this->contactsManager->search($search['term'], $search['props'], ['limit' => 1]);
+		} catch (\Exception $e) {
+			$this->logger->warning(
+				'Pipelinq: contact match search failed',
+				['term' => $search['term'], 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		foreach ($results as $hit) {
+			$uid = (string)($hit['UID'] ?? '');
+			if ($uid !== '') {
+				return $uid;
 			}
 		}
 
 		return null;
-	}//end matchExistingContact()
+	}//end firstMatch()
 }//end class

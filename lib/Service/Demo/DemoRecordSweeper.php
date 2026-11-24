@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+ * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  */
 
 declare(strict_types=1);
@@ -27,8 +27,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Demo;
 
 use OCA\OpenRegister\Db\SchemaMapper;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 
 /**
@@ -37,7 +39,7 @@ use OCP\IAppConfig;
  * renamed is theirs now. Append-only schemas keep their rows until the
  * retention cron expires them.
  *
- * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+ * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  */
 class DemoRecordSweeper {
 	/**
@@ -68,10 +70,10 @@ class DemoRecordSweeper {
 	 *
 	 * @return array{removed: int, retained: int}|null Null when no register is provisioned.
 	 *
-	 * @spec openspec/changes/example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 * @spec openspec/changes/archive/2026-10-07-example-data-out-of-the-register/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	public function removeMatching(array $objects): ?array {
-		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($registerId === '') {
 			return null;
 		}
@@ -188,7 +190,9 @@ class DemoRecordSweeper {
 	 */
 	private function delete(array $scope, array $data): string {
 		try {
-			$this->objectService->deleteObject((string) $data['id'], $scope['register'], $scope['schema']);
+			$this->objectService->deleteObject(
+				new ObjectDeletion(uuid: (string) $data['id'], target: new ObjectFindTarget(register: $scope['register'], schema: $scope['schema']))
+			);
 			return 'removed';
 		} catch (\Throwable $e) {
 			if (str_contains($e->getMessage(), 'SCHEMA_ARCHIVAL_IMMUTABLE') === false) {

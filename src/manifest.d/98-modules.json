@@ -67,10 +67,6 @@
 								"route": "Templates"
 							},
 							{
-								"label": "Articles",
-								"route": "Articles"
-							},
-							{
 								"label": "Mailing lists",
 								"route": "MailingLists",
 								"highlight": true
@@ -141,6 +137,10 @@
 							{
 								"label": "Products",
 								"route": "Products"
+							},
+							{
+								"label": "Price lists",
+								"route": "PriceLists"
 							}
 						],
 						"settings": {
@@ -263,6 +263,14 @@
 						"icon": "AccountClockOutline",
 						"category": "other",
 						"route": "WalkInQueue"
+					},
+					{
+						"id": "CallReviews",
+						"label": "Call reviews",
+						"description": "Recorded calls scored on a scorecard, with coaching points the agent agrees.",
+						"icon": "AccountStarOutline",
+						"category": "other",
+						"route": "CallReviews"
 					},
 					{
 						"id": "Programmes",

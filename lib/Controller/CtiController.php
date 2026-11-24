@@ -16,17 +16,17 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ConnectionReportServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\CtiServiceInterface;
 use OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck;
-use OCA\Pipelinq\Service\ConnectionReportService;
-use OCA\Pipelinq\Service\CtiService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -55,28 +55,29 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Thin controller wiring the
  *  CtiService surface to HTTP — coupling is unavoidable on a CRUD facade.
  *
- * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class CtiController extends Controller {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The HTTP request.
-	 * @param CtiService $ctiService The CTI service.
+	 * @param CtiServiceInterface $ctiService The CTI service.
 	 * @param CrmPrivilegeCheck $privilege The session user and the CRM privilege check.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
-	 * @param ConnectionReportService $connectionReports Reports the CTI check to integriq's connection registry.
+	 * @param ConnectionReportServiceInterface $connectionReports Reports the CTI check to integriq's connection registry.
 	 */
 	public function __construct(
 		IRequest $request,
-		private CtiService $ctiService,
+		private CtiServiceInterface $ctiService,
 		private CrmPrivilegeCheck $privilege,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
-		private ConnectionReportService $connectionReports,
+		private ConnectionReportServiceInterface $connectionReports,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -95,13 +96,39 @@ class CtiController extends Controller {
 	 * Telephony platform events — one per call state change, so a busy contact
 	 * centre generates these steadily and the rate-limit ceiling is generous.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function webhook(string $platform): JSONResponse {
 		$rawBody = (string)file_get_contents('php://input');
+		$signature = $this->webhookSignature();
+		$payload = $this->webhookPayload(rawBody: $rawBody);
+
+		try {
+			$result = $this->ctiService->handleWebhook(
+				platform: $platform,
+				payload: $payload,
+				rawBody: $rawBody,
+				signature: $signature,
+			);
+		} catch (\InvalidArgumentException $e) {
+			return $this->unparseableWebhook(platform: $platform, error: $e);
+		} catch (\RuntimeException $e) {
+			return $this->unknownWebhookPlatform(platform: $platform, error: $e);
+		}
+
+		return $this->webhookAnswer(result: $result);
+	}//end webhook()
+
+	/**
+	 * The delivery's signature: the X-Pipelinq-Signature header, else the
+	 * Validation-Token header, else the `signature` parameter.
+	 *
+	 * @return string|null The signature, or null when the delivery carries none.
+	 */
+	private function webhookSignature(): ?string {
 		$signature = (string)$this->request->getHeader('X-Pipelinq-Signature');
 		if ($signature === '') {
 			$signature = (string)$this->request->getHeader('Validation-Token');
@@ -111,46 +138,80 @@ class CtiController extends Controller {
 			$signature = (string)($this->request->getParam('signature', '') ?? '');
 		}
 
+		if ($signature === '') {
+			return null;
+		}
+
+		return $signature;
+	}//end webhookSignature()
+
+	/**
+	 * The delivery's payload: the JSON body, else the request parameters.
+	 *
+	 * @param string $rawBody The raw request body.
+	 *
+	 * @return array<mixed> The payload.
+	 */
+	private function webhookPayload(string $rawBody): array {
 		$payload = json_decode($rawBody, true);
 		if (is_array($payload) === false) {
 			$payload = (array)$this->request->getParams();
 		}
 
-		$signatureArg = null;
-		if ($signature !== '') {
-			$signatureArg = $signature;
-		}
+		return $payload;
+	}//end webhookPayload()
 
-		try {
-			$result = $this->ctiService->handleWebhook(
-				platform: $platform,
-				payload: $payload,
-				rawBody: $rawBody,
-				signature: $signatureArg,
-			);
-		} catch (\InvalidArgumentException $e) {
-			// A body this adapter cannot parse. 400, not 5xx: a 5xx tells the
-			// platform to redeliver a payload that will never parse, and this
-			// route is public so the response must say nothing more than that.
-			$this->logger->warning(
-				'CTI webhook: unparseable payload',
-				['platform' => $platform, 'exception' => $e->getMessage()]
-			);
-			return new JSONResponse(
-				['error' => 'The webhook payload could not be parsed'],
-				Http::STATUS_BAD_REQUEST
-			);
-		} catch (\RuntimeException $e) {
-			$this->logger->warning(
-				'CTI webhook: unknown platform',
-				['platform' => $platform, 'exception' => $e->getMessage()]
-			);
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		}
+	/**
+	 * The answer to a body this adapter cannot parse.
+	 *
+	 * 400, not 5xx: a 5xx tells the platform to redeliver a payload that will
+	 * never parse, and this route is public so the response must say nothing
+	 * more than that.
+	 *
+	 * @param string                    $platform The platform identifier.
+	 * @param \InvalidArgumentException $error    The parse failure.
+	 *
+	 * @return JSONResponse The 400.
+	 */
+	private function unparseableWebhook(string $platform, \InvalidArgumentException $error): JSONResponse {
+		$this->logger->warning(
+			'CTI webhook: unparseable payload',
+			['platform' => $platform, 'exception' => $error->getMessage()]
+		);
+		return new JSONResponse(
+			['error' => 'The webhook payload could not be parsed'],
+			Http::STATUS_BAD_REQUEST
+		);
+	}//end unparseableWebhook()
 
+	/**
+	 * The answer to a delivery for a platform without an adapter.
+	 *
+	 * @param string            $platform The platform identifier.
+	 * @param \RuntimeException $error    The lookup failure.
+	 *
+	 * @return JSONResponse The 404.
+	 */
+	private function unknownWebhookPlatform(string $platform, \RuntimeException $error): JSONResponse {
+		$this->logger->warning(
+			'CTI webhook: unknown platform',
+			['platform' => $platform, 'exception' => $error->getMessage()]
+		);
+		return new JSONResponse(['error' => $error->getMessage()], Http::STATUS_NOT_FOUND);
+	}//end unknownWebhookPlatform()
+
+	/**
+	 * The answer to a handled delivery.
+	 *
+	 * 422 (Unprocessable Entity) signals an invalid webhook signature without
+	 * leaking session-level auth status to the telephony platform.
+	 *
+	 * @param array<string, mixed> $result The service's result.
+	 *
+	 * @return JSONResponse The 422, or the acknowledgement.
+	 */
+	private function webhookAnswer(array $result): JSONResponse {
 		if ($result['valid'] === false) {
-			// 422 (Unprocessable Entity) signals an invalid webhook signature
-			// without leaking session-level auth status to the telephony platform.
 			return new JSONResponse(
 				['error' => 'Invalid webhook signature', 'logged' => true],
 				Http::STATUS_UNPROCESSABLE_ENTITY
@@ -163,14 +224,14 @@ class CtiController extends Controller {
 				'interactionId' => ($result['interactionId'] ?? null),
 			]
 		);
-	}//end webhook()
+	}//end webhookAnswer()
 
 	/**
 	 * Trigger a screen-pop lookup.
 	 *
 	 * @return JSONResponse The screen-pop result.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	#[NoAdminRequired]
 	public function screenPop(): JSONResponse {
@@ -196,7 +257,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse The originate result.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	#[NoAdminRequired]
 	public function clickToDial(): JSONResponse {
@@ -213,36 +274,9 @@ class CtiController extends Controller {
 
 		$targetNumber = (string)$this->request->getParam('targetNumber', '');
 		$extension = (string)$this->request->getParam('extension', '');
-		if ($targetNumber === '' || $extension === '') {
-			return new JSONResponse(
-				['error' => 'targetNumber and extension are required'],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
-
-		// 🔴 NON-EMPTY IS NOT DIALABLE.
-		//
-		// Both values were forwarded to the telephony adapter verbatim once
-		// they were non-empty, so anything at all reached the PBX --
-		// 'sip:attacker@evil.example' among them. What a dial string can make a
-		// PBX do is the adapter's business and varies per platform, which is
-		// exactly why the app must not hand it arbitrary text.
-		//
-		// A dialable target is E.164, optionally with the separators a person
-		// might paste from a contact card, and an extension is digits. Anything
-		// else is refused here rather than interpreted downstream.
-		if (preg_match('/^\+?[0-9][0-9 ()-]{1,20}$/', $targetNumber) !== 1) {
-			return new JSONResponse(
-				['error' => 'targetNumber is not a dialable number'],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
-
-		if (preg_match('/^[0-9]{1,10}$/', $extension) !== 1) {
-			return new JSONResponse(
-				['error' => 'extension is not a dialable extension'],
-				Http::STATUS_BAD_REQUEST
-			);
+		$refusal = (new CtiDialRules())->refusal(targetNumber: $targetNumber, extension: $extension);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$result = $this->ctiService->originateCall(
@@ -266,7 +300,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse Outcome with optional task id.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	#[NoAdminRequired]
 	public function disposition(string $id): JSONResponse {
@@ -288,14 +322,27 @@ class CtiController extends Controller {
 			);
 		}
 
-		try {
-			$result = $this->ctiService->processDisposition(
+		return $this->dispositionAnswer(
+			process: fn (): array => $this->ctiService->processDisposition(
 				interactionId: $id,
 				subject: $subject,
 				outcome: $outcome,
 				notes: $notes,
 				queue: $queue,
-			);
+			)
+		);
+	}//end disposition()
+
+	/**
+	 * Run the disposition and answer its outcome, a 400 for a refused value or a logged 500.
+	 *
+	 * @param callable(): array<string, mixed> $process The disposition call.
+	 *
+	 * @return JSONResponse
+	 */
+	private function dispositionAnswer(callable $process): JSONResponse {
+		try {
+			$result = $process();
 		} catch (\InvalidArgumentException $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		} catch (\Throwable $e) {
@@ -307,7 +354,7 @@ class CtiController extends Controller {
 		}
 
 		return new JSONResponse($result);
-	}//end disposition()
+	}//end dispositionAnswer()
 
 	/**
 	 * Attach recording metadata to a contactmoment.
@@ -320,7 +367,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse Acknowledgement.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	#[NoAdminRequired]
 	public function attachRecording(string $id): JSONResponse {
@@ -363,7 +410,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse Current config (credentials never returned).
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	public function getConfig(): JSONResponse {
 		$uid = $this->privilege->actingUserId();
@@ -393,7 +440,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse The saved configuration.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function updateConfig(): JSONResponse {
@@ -402,6 +449,27 @@ class CtiController extends Controller {
 			return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 
+		$payload = $this->configPayload();
+		$saved = $this->ctiService->saveConfig($payload);
+		$this->logger->info(
+			'CTI config updated',
+			['user' => $uid, 'fields' => array_keys($payload)]
+		);
+
+		if ($saved !== []) {
+			$this->connectionReports->reportCtiCheck(outcome: $this->ctiService->testConnection());
+		}
+
+		unset($saved['webhook_secret']);
+		return new JSONResponse($saved);
+	}//end updateConfig()
+
+	/**
+	 * The configuration fields the request carries, in the fixed field order; absent or null ones are left out.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function configPayload(): array {
 		$allowedFields = [
 			'platform',
 			'api_base_url',
@@ -423,19 +491,8 @@ class CtiController extends Controller {
 			}
 		}
 
-		$saved = $this->ctiService->saveConfig($payload);
-		$this->logger->info(
-			'CTI config updated',
-			['user' => $uid, 'fields' => array_keys($payload)]
-		);
-
-		if ($saved !== []) {
-			$this->connectionReports->reportCtiCheck(outcome: $this->ctiService->testConnection());
-		}
-
-		unset($saved['webhook_secret']);
-		return new JSONResponse($saved);
-	}//end updateConfig()
+		return $payload;
+	}//end configPayload()
 
 	/**
 	 * Test platform connectivity (admin only).
@@ -447,7 +504,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse Test outcome.
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function testConnection(): JSONResponse {
@@ -469,7 +526,7 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse Event log entries (max 30-day retention).
 	 *
-	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	public function eventLog(): JSONResponse {
 		$uid = $this->privilege->actingUserId();

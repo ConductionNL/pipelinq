@@ -27,9 +27,20 @@ export function variantStats(blast, templateSubjects = {}) {
 	return {
 		delivered,
 		clicked,
-		clickRate: delivered > 0 ? clicked / delivered : 0,
+		clickRate: clickRate(clicked, delivered),
 		subject: templateSubjects[blast?.templateId] || '',
 	}
+}
+
+/**
+ * Clicks per delivered message, or 0 when nothing was delivered.
+ *
+ * @param {number} clicked The clicks.
+ * @param {number} delivered The delivered messages.
+ * @return {number} The rate.
+ */
+function clickRate(clicked, delivered) {
+	return delivered > 0 ? clicked / delivered : 0
 }
 
 /**
@@ -45,12 +56,23 @@ export function abTemplateIds(blasts) {
 	const parents = new Set(blasts.map((b) => b.abVariantOf).filter(Boolean))
 	const ids = new Set()
 	for (const blast of blasts) {
-		const id = blast.id || blast.uuid || blast.slug
-		if ((blast.abVariantOf || parents.has(id)) && blast.templateId) {
+		if (takesPartInAbTest(blast, parents) && blast.templateId) {
 			ids.add(blast.templateId)
 		}
 	}
 	return [...ids]
+}
+
+/**
+ * Whether a blast is a variant, or the parent a variant names.
+ *
+ * @param {object} blast The blast.
+ * @param {Set<string>} parents The ids variants name as their parent.
+ * @return {boolean} Whether it takes part.
+ */
+function takesPartInAbTest(blast, parents) {
+	const id = blast.id || blast.uuid || blast.slug
+	return Boolean(blast.abVariantOf || parents.has(id))
 }
 
 /**
@@ -82,25 +104,57 @@ export function erfc(x) {
  * @return {number|null} The p-value, or null when the table is degenerate.
  */
 export function chiSquarePValue(aClicks, aDelivered, bClicks, bDelivered) {
-	const aNon = aDelivered - aClicks
-	const bNon = bDelivered - bClicks
-	if (aDelivered <= 0 || bDelivered <= 0 || aNon < 0 || bNon < 0) {
+	const a = { clicks: aClicks, delivered: aDelivered, non: aDelivered - aClicks }
+	const b = { clicks: bClicks, delivered: bDelivered, non: bDelivered - bClicks }
+	if (!isUsableTable(a, b)) {
 		return null
 	}
-	const colClicks = aClicks + bClicks
-	const colNon = aNon + bNon
-	const total = aDelivered + bDelivered
-	if (colClicks <= 0 || colNon <= 0) {
-		return null
+	return erfc(Math.sqrt(chiSquare(a, b) / 2))
+}
+
+/**
+ * Whether a variant has deliveries and no more clicks than deliveries.
+ *
+ * @param {{delivered: number, non: number}} variant The variant's counts.
+ * @return {boolean} Whether it can be tested.
+ */
+function isUsableVariant(variant) {
+	return !(variant.delivered <= 0 || variant.non < 0)
+}
+
+/**
+ * Whether the two variants make a table the test can judge: both usable,
+ * and both a click and a non-click column.
+ *
+ * @param {{clicks: number, delivered: number, non: number}} a Variant A's counts.
+ * @param {{clicks: number, delivered: number, non: number}} b Variant B's counts.
+ * @return {boolean} Whether the table is usable.
+ */
+function isUsableTable(a, b) {
+	if (!isUsableVariant(a) || !isUsableVariant(b)) {
+		return false
 	}
+	return !(a.clicks + b.clicks <= 0 || a.non + b.non <= 0)
+}
+
+/**
+ * Pearson's chi-square statistic over the four cells.
+ *
+ * @param {{clicks: number, delivered: number, non: number}} a Variant A's counts.
+ * @param {{clicks: number, delivered: number, non: number}} b Variant B's counts.
+ * @return {number} The statistic.
+ */
+function chiSquare(a, b) {
+	const colClicks = a.clicks + b.clicks
+	const colNon = a.non + b.non
+	const total = a.delivered + b.delivered
 	const cells = [
-		[aClicks, (aDelivered * colClicks) / total],
-		[aNon, (aDelivered * colNon) / total],
-		[bClicks, (bDelivered * colClicks) / total],
-		[bNon, (bDelivered * colNon) / total],
+		[a.clicks, (a.delivered * colClicks) / total],
+		[a.non, (a.delivered * colNon) / total],
+		[b.clicks, (b.delivered * colClicks) / total],
+		[b.non, (b.delivered * colNon) / total],
 	]
-	const chi = cells.reduce((sum, [observed, expected]) => sum + (observed - expected) ** 2 / expected, 0)
-	return erfc(Math.sqrt(chi / 2))
+	return cells.reduce((sum, [observed, expected]) => sum + (observed - expected) ** 2 / expected, 0)
 }
 
 /**

@@ -19,13 +19,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-010
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-010
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalAuditServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Log\LoggerInterface;
 
@@ -37,7 +38,7 @@ use Psr\Log\LoggerInterface;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalAuditService {
+class PortalAuditService implements PortalAuditServiceInterface {
 	/**
 	 * Schema slug for audit events.
 	 *
@@ -83,17 +84,25 @@ class PortalAuditService {
 		string $outcome,
 		array $details = [],
 	): void {
-		$record = [
-			'accountId' => $accountId,
-			'tenantId' => $tenantId,
-			'eventType' => $eventType,
-			'outcome' => $outcome,
-			'occurredAt' => $this->time->getDateTime()->format(DATE_ATOM),
-			'targetObjectType' => ($details['targetObjectType'] ?? null),
-			'targetObjectId' => ($details['targetObjectId'] ?? null),
-			'ipHash' => ($details['ipHash'] ?? null),
-			'userAgentHash' => ($details['userAgentHash'] ?? null),
-		];
+		$event = ['accountId' => $accountId, 'tenantId' => $tenantId, 'eventType' => $eventType, 'outcome' => $outcome];
+
+		$this->write(record: $this->withDetails(record: $event, details: $details));
+	}//end log()
+
+	/**
+	 * The audit record stamped now, with its promoted detail columns and any remaining structured details.
+	 *
+	 * @param array<string, mixed> $record  The event's own columns.
+	 * @param array<string, mixed> $details Event-specific structured detail.
+	 *
+	 * @return array<string, mixed> The full record.
+	 */
+	private function withDetails(array $record, array $details): array {
+		$record['occurredAt'] = $this->time->getDateTime()->format(DATE_ATOM);
+		$record['targetObjectType'] = ($details['targetObjectType'] ?? null);
+		$record['targetObjectId'] = ($details['targetObjectId'] ?? null);
+		$record['ipHash'] = ($details['ipHash'] ?? null);
+		$record['userAgentHash'] = ($details['userAgentHash'] ?? null);
 
 		// Keep structured details that are not promoted to first-class columns.
 		$extra = $details;
@@ -102,15 +111,26 @@ class PortalAuditService {
 			$record['details'] = $extra;
 		}
 
+		return $record;
+	}//end withDetails()
+
+	/**
+	 * Save an audit record; a failure is logged, never thrown.
+	 *
+	 * @param array<string, mixed> $record The full record.
+	 *
+	 * @return void
+	 */
+	private function write(array $record): void {
 		try {
 			$this->repository->save(self::SCHEMA, $record);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'Pipelinq portal: failed to write audit event',
-				['eventType' => $eventType, 'exception' => $e->getMessage()]
+				['eventType' => $record['eventType'], 'exception' => $e->getMessage()]
 			);
 		}
-	}//end log()
+	}//end write()
 
 	/**
 	 * List audit events for a single account (the account's own trail).

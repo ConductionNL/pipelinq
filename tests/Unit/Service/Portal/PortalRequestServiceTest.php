@@ -200,6 +200,44 @@ class PortalRequestServiceTest extends TestCase {
 	}//end testSubmitCreatesRequestTicket()
 
 	/**
+	 * A request through a municipality's portal carries that municipality.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/requests-municipality-per-contact/specs/served-municipality/spec.md
+	 */
+	public function testSubmitStampsTheTenantsMunicipality(): void {
+		$this->reader->seed('servedMunicipality', 'mun-goes', ['name' => 'Goes', 'code' => '0664', 'portalTenantId' => 'tenant-a']);
+		$this->reader->seed('servedMunicipality', 'mun-borsele', ['name' => 'Borsele', 'code' => '0654', 'portalTenantId' => 'tenant-b']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+
+		$result = $this->service->submit($account, 'tenant-a', 'Subject', 'Body', [], 'cat-1');
+
+		$this->assertSame('mun-goes', $this->reader->find('ticket', $result['requestId'])['municipality']);
+	}//end testSubmitStampsTheTenantsMunicipality()
+
+	/**
+	 * A tenant without a municipality, or without the schema set up, leaves the field out.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/requests-municipality-per-contact/specs/served-municipality/spec.md
+	 */
+	public function testSubmitLeavesTheMunicipalityOutWithoutOne(): void {
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+
+		$result = $this->service->submit($account, 'tenant-a', 'Subject', 'Body', [], 'cat-1');
+		$this->assertArrayNotHasKey('municipality', $this->reader->find('ticket', $result['requestId']));
+
+		$this->reader->seed('servedMunicipality', 'mun-borsele', ['name' => 'Borsele', 'portalTenantId' => 'tenant-b']);
+		$result = $this->service->submit($account, 'tenant-a', 'Subject', 'Body', [], 'cat-1');
+		$this->assertArrayNotHasKey('municipality', $this->reader->find('ticket', $result['requestId']));
+
+		$result = $this->service->submit($account, '', 'Subject', 'Body', [], 'cat-1');
+		$this->assertArrayNotHasKey('municipality', $this->reader->find('ticket', $result['requestId']));
+	}//end testSubmitLeavesTheMunicipalityOutWithoutOne()
+
+	/**
 	 * The 6th submission within the hour is rate-limited (429).
 	 *
 	 * @return void
@@ -272,6 +310,53 @@ class PortalRequestServiceTest extends TestCase {
 		$this->assertSame(['first', 'Here is my reply'], array_column($stored['portalReplies'], 'message'));
 		$this->assertFalse($detail['canReply']);
 	}//end testReplyUnpausesAndKeepsInternalNotes()
+
+	/**
+	 * A reply that is empty after trimming is refused with 400 and nothing is stored.
+	 *
+	 * @return void
+	 */
+	public function testBlankReplyIsRefused(): void {
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$this->reader->seed('ticket', 'r1', ['ticketType' => 'request', 'contact' => 'contact-a', 'status' => 'awaiting_customer']);
+
+		try {
+			$this->service->addReply($account, 'tenant-a', 'r1', "  \n ");
+			$this->fail('Expected a refused blank reply');
+		} catch (PortalException $e) {
+			$this->assertSame(Http::STATUS_BAD_REQUEST, $e->getStatus());
+			$this->assertSame('missingFields', $e->getErrorCode());
+		}
+
+		$stored = $this->reader->find('ticket', 'r1');
+		$this->assertSame('awaiting_customer', $stored['status']);
+		$this->assertArrayNotHasKey('portalReplies', $stored);
+	}//end testBlankReplyIsRefused()
+
+	/**
+	 * Replying to another customer's request, to a ticket that is not a request,
+	 * or to an unknown id answers 404 and leaves the ticket untouched.
+	 *
+	 * @return void
+	 */
+	public function testReplyToARequestTheAccountMayNotSeeIsNotFound(): void {
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$this->reader->seed('ticket', 'r-x', ['ticketType' => 'request', 'contact' => 'contact-x', 'status' => 'awaiting_customer']);
+		$this->reader->seed('ticket', 'c1', ['ticketType' => 'complaint', 'contact' => 'contact-a', 'status' => 'awaiting_customer']);
+
+		foreach (['r-x', 'c1', 'missing'] as $requestId) {
+			try {
+				$this->service->addReply($account, 'tenant-a', $requestId, 'reply');
+				$this->fail("Expected 404 for {$requestId}");
+			} catch (PortalException $e) {
+				$this->assertSame(Http::STATUS_NOT_FOUND, $e->getStatus(), $requestId);
+				$this->assertSame('notFound', $e->getErrorCode(), $requestId);
+			}
+		}
+
+		$this->assertArrayNotHasKey('portalReplies', $this->reader->find('ticket', 'r-x'));
+		$this->assertArrayNotHasKey('portalReplies', $this->reader->find('ticket', 'c1'));
+	}//end testReplyToARequestTheAccountMayNotSeeIsNotFound()
 
 	/**
 	 * Every field the portal writes, and every status it writes or waits on,
@@ -383,4 +468,22 @@ class PortalRequestServiceTest extends TestCase {
 
 		$this->assertNull($this->service->previewDetail(ticket: ['ticketType' => 'complaint'], exposeAssigneeName: false));
 	}//end testThePreviewEqualsThePortalDetail()
+
+	/**
+	 * A list of linked ids yields its first usable one, read from a plain id or
+	 * an `{id}` / `{uuid}` reference; a list with no usable id links nothing.
+	 *
+	 * @return void
+	 */
+	public function testSubmitLinksTheFirstUsableIdOfALinkedList(): void {
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', [
+			'linkedContactId' => ['', ['name' => 'no id'], ['uuid' => 'contact-b'], 'contact-c'],
+			'linkedOrganisationId' => [null, ['name' => 'no id']],
+		]);
+		$result = $this->service->submit($account, 'tenant-a', 'Subject', 'Body', [], 'cat-1');
+
+		$stored = $this->reader->find('ticket', $result['requestId']);
+		$this->assertSame('contact-b', $stored['contact']);
+		$this->assertNull($stored['client'] ?? null);
+	}//end testSubmitLinksTheFirstUsableIdOfALinkedList()
 }//end class

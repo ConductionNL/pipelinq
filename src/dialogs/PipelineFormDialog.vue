@@ -371,6 +371,81 @@ import {
 } from '../services/pipelinePayload.js'
 import { getViews } from '../services/viewService.js'
 
+/**
+ * @param {(string|number|null|undefined)} value A stage field.
+ * @return {boolean} Whether it is set: not null, undefined or ''.
+ */
+function isSet(value) {
+	return value != null && value !== ''
+}
+
+/**
+ * @param {object} stage A stage.
+ * @return {boolean} Whether it has no name.
+ */
+function hasNoName(stage) {
+	return !stage.name || !stage.name.trim()
+}
+
+/**
+ * @param {object} stage A stage.
+ * @return {boolean} Whether it is a Won stage that is not closed.
+ */
+function isOpenWon(stage) {
+	return stage.isWon && !stage.isClosed
+}
+
+/**
+ * @param {object} stage A stage.
+ * @return {boolean} Whether its probability is set and outside 0 to 100.
+ */
+function hasBadProbability(stage) {
+	return isSet(stage.probability)
+		&& (Number(stage.probability) < 0
+			|| Number(stage.probability) > 100)
+}
+
+/**
+ * @param {object} stage A stage.
+ * @return {boolean} Whether an open stage carries a limit that is not a whole number of 1 or more.
+ */
+function hasBadLimit(stage) {
+	return !stage.isClosed
+		&& isSet(stage.maxItems)
+		&& (!Number.isInteger(Number(stage.maxItems)) || Number(stage.maxItems) < 1)
+}
+
+/**
+ * The checks of one stage, in order: the field an error belongs to, the
+ * check that finds it, and the error.
+ */
+const STAGE_CHECKS = [
+	['name', hasNoName, () => t('pipelinq', 'Stage name is required')],
+	['isWon', isOpenWon, () => t(
+		'pipelinq',
+		'A Won stage must also be marked as Closed',
+	)],
+	['probability', hasBadProbability, () => t(
+		'pipelinq',
+		'Probability must be between 0 and 100',
+	)],
+	['maxItems', hasBadLimit, () => t('pipelinq', 'A limit is a whole number of 1 or more')],
+]
+
+/**
+ * @param {object} stage A stage.
+ * @return {(object|null)} The stage's errors by field, or null when it is fine.
+ */
+function stageErrorsOf(stage) {
+	const errors = {}
+	for (const [field, fails, message] of STAGE_CHECKS) {
+		if (fails(stage)) {
+			errors[field] = message()
+		}
+	}
+	return Object.keys(errors).length > 0 ? errors : null
+}
+
 export default {
 	name: 'PipelineFormDialog',
 	components: {
@@ -418,7 +493,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-43
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-43
 		 */
 		viewOptions() {
 			return this.views.map((v) => ({
@@ -428,7 +503,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-33
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-33
 		 */
 		errors() {
 			const errors = {}
@@ -446,46 +521,15 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-42
-		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-2.2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-42
+		 * @spec openspec/changes/archive/2026-05-31-2026-03-20-pipeline/tasks.md#task-2.2
 		 */
 		stageErrors() {
-			return this.form.stages.map((stage) => {
-				const errors = {}
-				if (!stage.name || !stage.name.trim()) {
-					errors.name = t('pipelinq', 'Stage name is required')
-				}
-				if (stage.isWon && !stage.isClosed) {
-					errors.isWon = t(
-						'pipelinq',
-						'A Won stage must also be marked as Closed',
-					)
-				}
-				if (
-					stage.probability != null
-					&& stage.probability !== ''
-					&& (Number(stage.probability) < 0
-						|| Number(stage.probability) > 100)
-				) {
-					errors.probability = t(
-						'pipelinq',
-						'Probability must be between 0 and 100',
-					)
-				}
-				if (
-					!stage.isClosed
-					&& stage.maxItems != null
-					&& stage.maxItems !== ''
-					&& (!Number.isInteger(Number(stage.maxItems)) || Number(stage.maxItems) < 1)
-				) {
-					errors.maxItems = t('pipelinq', 'A limit is a whole number of 1 or more')
-				}
-				return Object.keys(errors).length > 0 ? errors : null
-			})
+			return this.form.stages.map(stageErrorsOf)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-34
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-34
 		 */
 		isValid() {
 			if (Object.keys(this.errors).length > 0) return false
@@ -496,7 +540,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-32
+	 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-32
 	 */
 	async created() {
 		if (this.pipeline) {
@@ -511,7 +555,9 @@ export default {
 					(m) => ({ ...m }),
 				),
 
-				stages: (this.pipeline.stages || []).map((s) => ({ ...s })),
+				stages: (this.pipeline.stages || [])
+					.map((s) => ({ ...s }))
+					.sort((a, b) => a.order - b.order),
 			}
 			// `form.stages` is now the display order (see recomputeOrders): the
 			// vuedraggable v4 item slot iterates the bound list rather than a
@@ -524,7 +570,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-35
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-35
 		 */
 		async loadViews() {
 			this.loadingViews = true
@@ -537,7 +583,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-30
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-30
 		 */
 		addMapping() {
 			this.form.propertyMappings.push({
@@ -549,14 +595,14 @@ export default {
 
 		/**
 		 * @param {number} index Index of the property mapping to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-39
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-39
 		 */
 		removeMapping(index) {
 			this.form.propertyMappings.splice(index, 1)
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-31
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-31
 		 */
 		addStage() {
 			const maxOrder = this.form.stages.reduce(
@@ -575,7 +621,7 @@ export default {
 
 		/**
 		 * @param {number} index Index of the stage to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-40
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-40
 		 */
 		removeStage(index) {
 			// `index` is now the position in `form.stages`, which recomputeOrders()
@@ -589,7 +635,7 @@ export default {
 		/**
 		 * @param {object} stage The stage to move.
 		 * @param {number} direction -1 to move earlier, 1 to move later.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-36
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-36
 		 */
 		moveStage(stage, direction) {
 			const stages = this.form.stages
@@ -612,22 +658,20 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-38
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-38
 		 */
 		recomputeOrders() {
-			// Sort IN PLACE so `form.stages` is itself the display order. The item
-			// slot of vuedraggable v4 iterates the bound list, so the array order
-			// and the `order` field must agree — and keeping them in one array is
-			// what lets `stageErrors[index]` line up with the row it is shown on.
-			this.form.stages.sort((a, b) => a.order - b.order)
+			// The array position is the display order: the item slot of
+			// vuedraggable v4 iterates the bound list, so `order` follows the
+			// array, and `stageErrors[index]` lines up with the row it is shown on.
 			this.form.stages.forEach((stage, i) => {
 				stage.order = i
 			})
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-37
-		 * @spec openspec/changes/review-finish/specs/pipeline/spec.md
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-settings-ui/tasks.md#task-37
+		 * @spec openspec/specs/pipeline/spec.md
 		 */
 		onSave() {
 			if (!this.isValid) return
@@ -647,7 +691,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/shared-rules.scss' as *;
+
 .pipeline-form {
 	padding: 24px;
 }
@@ -694,11 +740,7 @@ export default {
 }
 
 .mappings-empty {
-	text-align: center;
-	padding: 24px;
-	color: var(--color-text-maxcontrast);
-	border: 1px dashed var(--color-border);
-	border-radius: var(--border-radius-large);
+	@include dashed-empty-state;
 }
 
 .mappings-list {
@@ -708,13 +750,7 @@ export default {
 }
 
 .mapping-row {
-	display: flex;
-	align-items: flex-start;
-	gap: 8px;
-	padding: 8px 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	background: var(--color-main-background);
+	@include bordered-row;
 }
 
 .mapping-fields {
@@ -746,11 +782,7 @@ export default {
 }
 
 .stages-empty {
-	text-align: center;
-	padding: 24px;
-	color: var(--color-text-maxcontrast);
-	border: 1px dashed var(--color-border);
-	border-radius: var(--border-radius-large);
+	@include dashed-empty-state;
 }
 
 .stages-list {
@@ -760,13 +792,7 @@ export default {
 }
 
 .stage-row {
-	display: flex;
-	align-items: flex-start;
-	gap: 8px;
-	padding: 8px 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	background: var(--color-main-background);
+	@include bordered-row;
 }
 
 .stage-order {

@@ -37,7 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -114,27 +114,49 @@ class ProductVendorProviderService {
 	public function getProduct(string $productId, string $consumerAppSlug = '', bool $authorisedConsumer = false): ?array {
 		$productData = $this->fetchObjectBySchemaAndId(
 			schema: 'product',
-			idField: 'productId',
-			idValue: $productId,
+			match: new FieldMatch(field: 'productId', value: $productId),
 		);
 
-		if ($productData === null) {
-			$this->logger->warning(
-				'ProductVendorProviderService: product not found',
-				['productId' => $productId, 'consumer' => $consumerAppSlug]
-			);
-			return null;
-		}
-
-		$isAuthorised = $authorisedConsumer || $this->isAuthorisedForPrivateFields(
-			consumerAppSlug: $consumerAppSlug
-		);
-
-		return $this->projectProductView(
+		return $this->productViewFor(
 			product: $productData,
-			authorised: $isAuthorised,
+			consumer: ['productId' => $productId, 'consumerAppSlug' => $consumerAppSlug, 'authorised' => $authorisedConsumer]
 		);
 	}//end getProduct()
+
+	/**
+	 * The product projected for the consumer, or null (logged) when it was not found.
+	 *
+	 * @param array<string,mixed>|null                                            $product  The product data, or null.
+	 * @param array{productId: string, consumerAppSlug: string, authorised: bool} $consumer The productId, consumer app, authorised.
+	 *
+	 * @return array<string,mixed>|null The projected product array, or null on failure.
+	 */
+	private function productViewFor(?array $product, array $consumer): ?array {
+		if ($product === null) {
+			return $this->productNotFound(productId: $consumer['productId'], consumerAppSlug: $consumer['consumerAppSlug']);
+		}
+
+		return $this->projectProductView(
+			product: $product,
+			authorised: $consumer['authorised'] || $this->isAuthorisedForPrivateFields(consumerAppSlug: $consumer['consumerAppSlug']),
+		);
+	}//end productViewFor()
+
+	/**
+	 * Log a product that could not be found; there is nothing to project.
+	 *
+	 * @param string $productId       The stable productId.
+	 * @param string $consumerAppSlug Slug of the consuming app.
+	 *
+	 * @return null Always.
+	 */
+	private function productNotFound(string $productId, string $consumerAppSlug): null {
+		$this->logger->warning(
+			'ProductVendorProviderService: product not found',
+			['productId' => $productId, 'consumer' => $consumerAppSlug]
+		);
+		return null;
+	}//end productNotFound()
 
 	/**
 	 * Resolve the supplier commercial profile for a given contactsUid.
@@ -154,8 +176,7 @@ class ProductVendorProviderService {
 	public function resolveSupplier(string $contactsUid, string $consumerAppSlug = ''): ?array {
 		$supplierData = $this->fetchObjectBySchemaAndId(
 			schema: 'supplier',
-			idField: 'contactsUid',
-			idValue: $contactsUid,
+			match: new FieldMatch(field: 'contactsUid', value: $contactsUid),
 		);
 
 		if ($supplierData === null) {
@@ -187,7 +208,7 @@ class ProductVendorProviderService {
 		}
 
 		$authorised = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'product_vendor_cost_consumers',
 			''
 		);
@@ -225,57 +246,82 @@ class ProductVendorProviderService {
 	 * Fetch a single object from the pipelinq register by schema slug and a
 	 * field value. Uses the OpenRegister ObjectService; returns null on any error.
 	 *
-	 * @param string $schema The schema slug to query.
-	 * @param string $idField The property name to filter on.
-	 * @param string $idValue The value to match.
+	 * @param string     $schema The schema slug to query.
+	 * @param FieldMatch $match  The property and the value to match.
 	 *
 	 * @return array<string,mixed>|null The first matching object, or null.
 	 */
-	private function fetchObjectBySchemaAndId(string $schema, string $idField, string $idValue): ?array {
+	private function fetchObjectBySchemaAndId(string $schema, FieldMatch $match): ?array {
 		try {
-			$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, "{$schema}_schema", '');
-
-			if ($registerId === '' || $schemaId === '') {
-				$this->logger->warning(
-					'ProductVendorProviderService: register or schema not configured',
-					['schema' => $schema, 'registerId' => $registerId, 'schemaId' => $schemaId]
-				);
+			$ids = $this->configuredIds(schema: $schema);
+			if ($ids === null) {
 				return null;
 			}
 
 			$results = $this->objectService->findAll(
 				config: [
 					'filters' => [
-						$idField => $idValue,
-						'register' => $registerId,
-						'schema' => $schemaId,
+						$match->field => $match->value,
+						'register' => $ids[0],
+						'schema' => $ids[1],
 					],
 					'limit' => 1,
 					'offset' => 0,
 				]
 			);
 
-			if (empty($results) === true) {
-				return null;
-			}
-
-			$first = reset($results);
-			if (is_object($first) === true && method_exists($first, 'jsonSerialize') === true) {
-				return $first->jsonSerialize();
-			}
-
-			if (is_array($first) === true) {
-				return $first;
-			}
-
-			return null;
+			return self::firstObject(results: $results);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'ProductVendorProviderService: lookup failed',
-				['schema' => $schema, 'idField' => $idField, 'error' => $e->getMessage()]
+				['schema' => $schema, 'idField' => $match->field, 'error' => $e->getMessage()]
 			);
 			return null;
 		}//end try
 	}//end fetchObjectBySchemaAndId()
+
+	/**
+	 * The register id and the schema id of a schema slug; null (logged) when either is unset.
+	 *
+	 * @param string $schema The schema slug.
+	 *
+	 * @return array{0: string, 1: string}|null
+	 */
+	private function configuredIds(string $schema): ?array {
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$schema}_schema", '');
+		if ($registerId === '' || $schemaId === '') {
+			$this->logger->warning(
+				'ProductVendorProviderService: register or schema not configured',
+				['schema' => $schema, 'registerId' => $registerId, 'schemaId' => $schemaId]
+			);
+			return null;
+		}
+
+		return [$registerId, $schemaId];
+	}//end configuredIds()
+
+	/**
+	 * The first result as an array: its serialised form, or the row itself.
+	 *
+	 * @param array<int|string, mixed> $results The lookup results.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function firstObject(array $results): ?array {
+		if (empty($results) === true) {
+			return null;
+		}
+
+		$first = reset($results);
+		if (is_object($first) === true && method_exists($first, 'jsonSerialize') === true) {
+			return $first->jsonSerialize();
+		}
+
+		if (is_array($first) === true) {
+			return $first;
+		}
+
+		return null;
+	}//end firstObject()
 }//end class

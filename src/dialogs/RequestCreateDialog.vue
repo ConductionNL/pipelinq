@@ -59,9 +59,11 @@ pipeline and stage stay one click away under More details.
 <script>
 import { CnDialog } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { emit } from '@nextcloud/event-bus'
 import { NcButton, NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import RequestForm from '../views/requests/RequestForm.vue'
+import createDialogMixin from '../mixins/createDialogMixin.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 export default {
@@ -74,6 +76,8 @@ export default {
 		RequestForm,
 	},
 
+	mixins: [createDialogMixin],
+
 	props: {
 		/**
 		 * The client the request is for, picked already (the client page's
@@ -83,21 +87,28 @@ export default {
 			type: String,
 			default: '',
 		},
+
+		/**
+		 * Start with "Open after creating" unticked. My work's New ticket
+		 * sets it, so the agent stays on the list the new ticket lands on.
+		 */
+		stayAfterCreate: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
 	emits: ['created', 'close'],
 
 	data() {
 		return {
-			valid: false,
-			saving: false,
-			openAfter: true,
+			openAfter: !this.stayAfterCreate,
 		}
 	},
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-1
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -106,25 +117,6 @@ export default {
 
 	methods: {
 		/**
-		 * Navigate to the created record and close.
-		 *
-		 * A registry modal is mounted by CnAppRoot, which forwards only
-		 * `close` — there is no parent to route on the dialog's behalf the way
-		 * the old bespoke header-actions component did.
-		 *
-		 * @param {string} route The detail route name.
-		 * @param {string} id The created object's id.
-		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
-		 */
-		goToDetail(route, id) {
-			this.$emit('close')
-			if (id && this.$router) {
-				this.$router.push({ name: route, params: { id } }).catch(() => {})
-			}
-		},
-
-		/**
 		 * Trigger the form's own validate-then-emit flow; `@save` fires onSave.
 		 */
 		submit() {
@@ -132,8 +124,13 @@ export default {
 		},
 
 		/**
+		 * Save the ticket; then open it, or stay and ask the page's lists to
+		 * read again (`cn:page:refresh`) so the new ticket shows without a
+		 * page reload.
+		 *
 		 * @param {object} formData The raw create-form fields.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-2
+		 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-quick-actions-on-my-work-req-mw-100
 		 */
 		async onSave(formData) {
 			this.saving = true
@@ -150,6 +147,7 @@ export default {
 						this.goToDetail('TicketDetail', result.id)
 					} else {
 						showSuccess(t('pipelinq', 'The ticket is created.'))
+						emit('cn:page:refresh', {})
 						this.$emit('close')
 					}
 				} else {

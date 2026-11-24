@@ -28,7 +28,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
+ * @spec openspec/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -39,8 +39,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Portal\PortalContributionProvider;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PortalContributionInterface;
+use OCA\Pipelinq\Kernel\Contracts\QuestionAnsweredNoticeInterface;
 use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
 use Psr\Log\LoggerInterface;
@@ -49,9 +52,9 @@ use Throwable;
 /**
  * Tells the resident their question was answered.
  *
- * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
+ * @spec openspec/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
  */
-class QuestionAnsweredNotice {
+class QuestionAnsweredNotice implements QuestionAnsweredNoticeInterface {
 
 	/**
 	 * The language of the message.
@@ -107,7 +110,7 @@ class QuestionAnsweredNotice {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
 	 */
 	public function isAnswered(array $before, array $after): bool {
 		$answer = trim((string)($after['customerMessage'] ?? ''));
@@ -130,7 +133,7 @@ class QuestionAnsweredNotice {
 	 *
 	 * @return bool Whether a message was written.
 	 *
-	 * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
+	 * @spec openspec/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
 	 */
 	public function tell(array $ticket, string $ticketId): bool {
 		$subjectRef = trim((string)($ticket['portalSubject'] ?? ''));
@@ -139,9 +142,9 @@ class QuestionAnsweredNotice {
 		}
 
 		try {
-			$l10n = $this->l10nFactory->get(Application::APP_ID, self::LANGUAGE);
+			$l10n = $this->l10nFactory->get(AppIdentity::APP_ID, self::LANGUAGE);
 			$link = $this->urlGenerator->getAbsoluteURL(self::SITE)
-				.'#open='.Application::APP_ID.'/'.self::COLLECTION.'/'.rawurlencode($ticketId);
+				.'#open='.AppIdentity::APP_ID.'/'.self::COLLECTION.'/'.rawurlencode($ticketId);
 
 			$message = [
 				'subjectRef' => $subjectRef,
@@ -150,15 +153,17 @@ class QuestionAnsweredNotice {
 					."\n\n".$l10n->t('Read the answer here: %1$s', [$link]),
 				'read' => false,
 				'receivedAt' => gmdate('c'),
-				'ruleKey' => PortalContributionProvider::RULE_QUESTION_ANSWERED,
-				'recordLink' => ['app' => Application::APP_ID, 'collection' => self::COLLECTION, 'id' => $ticketId],
+				'ruleKey' => PortalContributionInterface::RULE_QUESTION_ANSWERED,
+				'recordLink' => ['app' => AppIdentity::APP_ID, 'collection' => self::COLLECTION, 'id' => $ticketId],
 			];
 
 			$this->objectService->runAsSystem(
 				fn (): mixed => $this->objectService->saveObject(
 					object: $message,
-					register: self::PORTAL_MESSAGE_REGISTER,
-					schema: self::PORTAL_MESSAGE_SCHEMA,
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(
+							register: self::PORTAL_MESSAGE_REGISTER,
+							schema: self::PORTAL_MESSAGE_SCHEMA
+						)),
 					_rbac: false,
 					_multitenancy: false
 				)
@@ -166,7 +171,7 @@ class QuestionAnsweredNotice {
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'QuestionAnsweredNotice: the resident could not be told their question was answered',
-				['app' => Application::APP_ID, 'ticket' => $ticketId, 'error' => $e->getMessage()]
+				['app' => AppIdentity::APP_ID, 'ticket' => $ticketId, 'error' => $e->getMessage()]
 			);
 			return false;
 		}//end try

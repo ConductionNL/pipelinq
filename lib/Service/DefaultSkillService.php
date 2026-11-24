@@ -23,7 +23,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\InjectedObjectService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -34,6 +37,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/specs/skill-routing/spec.md
  */
 class DefaultSkillService {
+	use InjectedObjectService;
+
 	/**
 	 * Default skill definitions.
 	 *
@@ -89,57 +94,62 @@ class DefaultSkillService {
 	 */
 	public function createDefaultSkills(): void {
 		$registerId = $this->registerResolver->resolve('skill');
-		$skillSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'skill_schema', '');
+		$skillSchemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'skill_schema', '');
 
 		if ($registerId === '' || $skillSchemaId === '') {
-			$this->logger->warning(
-				'Pipelinq: Cannot create default skills -- register or skill schema not configured'
-			);
+			$this->logger->warning('Pipelinq: Cannot create default skills -- register or skill schema not configured');
 			return;
 		}
 
 		try {
-			$objectService = $this->getObjectService();
-
-			$existing = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $registerId,
-						'schema' => $skillSchemaId,
-					],
-					'limit' => 1,
-				]
-			);
-
-			if (empty($existing) === false) {
-				$this->logger->info('Pipelinq: Default skills already exist, skipping creation');
-				return;
-			}
-
-			foreach (self::DEFAULT_SKILLS as $skillData) {
-				$objectService->saveObject(
-					$skillData,
-					[],
-					$registerId,
-					$skillSchemaId,
-					null
-				);
-				$this->logger->info("Pipelinq: Created default skill '{$skillData['title']}'");
-			}
+			$this->seedDefaultSkills(registerId: $registerId, skillSchemaId: $skillSchemaId);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Pipelinq: Failed to create default skills',
-				['exception' => $e->getMessage()]
-			);
+			$this->logger->error('Pipelinq: Failed to create default skills', ['exception' => $e->getMessage()]);
 		}//end try
 	}//end createDefaultSkills()
 
 	/**
-	 * Get the OpenRegister ObjectService via the container.
+	 * Save the default skills unless the skill schema already holds one.
 	 *
-	 * @return object The object service.
+	 * @param string $registerId    The register id.
+	 * @param string $skillSchemaId The skill schema id.
+	 *
+	 * @return void
 	 */
-	private function getObjectService(): object {
-		return $this->objectService;
-	}//end getObjectService()
+	private function seedDefaultSkills(string $registerId, string $skillSchemaId): void {
+		$objectService = $this->getObjectService();
+
+		$existing = $objectService->findAll(
+			[
+				'filters' => ['register' => $registerId, 'schema' => $skillSchemaId],
+				'limit' => 1,
+			]
+		);
+
+		if (empty($existing) === false) {
+			$this->logger->info('Pipelinq: Default skills already exist, skipping creation');
+			return;
+		}
+
+		$this->saveDefaultSkills(objectService: $objectService, registerId: $registerId, skillSchemaId: $skillSchemaId);
+	}//end seedDefaultSkills()
+
+	/**
+	 * Save every default skill.
+	 *
+	 * @param object $objectService The object service.
+	 * @param string $registerId    The register id.
+	 * @param string $skillSchemaId The skill schema id.
+	 *
+	 * @return void
+	 */
+	private function saveDefaultSkills(object $objectService, string $registerId, string $skillSchemaId): void {
+		foreach (self::DEFAULT_SKILLS as $skillData) {
+			$objectService->saveObject(
+				$skillData,
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $skillSchemaId))
+			);
+			$this->logger->info("Pipelinq: Created default skill '{$skillData['title']}'");
+		}
+	}//end saveDefaultSkills()
 }//end class

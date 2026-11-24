@@ -23,19 +23,19 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\KvkApiClientInterface;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * Client for the KVK Handelsregister Zoeken API.
  *
  * @spec openspec/specs/prospect-discovery/spec.md#requirement-kvk-api-integration
  */
-class KvkApiClient {
+class KvkApiClient implements KvkApiClientInterface {
 	/**
 	 * Default KVK API base URL when unconfigured.
 	 *
@@ -74,7 +74,7 @@ class KvkApiClient {
 	private function getApiBase(): string {
 		return rtrim(
 			$this->appConfig->getValueString(
-				Application::APP_ID,
+				AppIdentity::APP_ID,
 				'kvk.api_base_url',
 				self::DEFAULT_API_BASE
 			),
@@ -98,7 +98,7 @@ class KvkApiClient {
 		$sbiCodes = $criteria['sbiCodes'] ?? [];
 
 		foreach ($sbiCodes as $sbiCode) {
-			$this->searchBySbiCode(apiKey: $apiKey, sbiCode: $sbiCode, results: $results);
+			$results = array_replace($results, $this->searchBySbiCode(apiKey: $apiKey, sbiCode: $sbiCode));
 		}
 
 		return array_values(array: $results);
@@ -131,20 +131,20 @@ class KvkApiClient {
 	}//end searchByName()
 
 	/**
-	 * Search for a single SBI code and merge results.
+	 * Search for a single SBI code; a failed search keeps the rows mapped before it failed.
 	 *
 	 * @param string $apiKey The KVK API key.
 	 * @param string $sbiCode The SBI code to search.
-	 * @param array $results The results array to populate (by reference).
 	 *
-	 * @return void
+	 * @return array<string, array<string, mixed>> The mapped rows, keyed by KvK number.
 	 */
-	private function searchBySbiCode(string $apiKey, string $sbiCode, array &$results): void {
+	private function searchBySbiCode(string $apiKey, string $sbiCode): array {
+		$results = [];
 		try {
 			$body = $this->fetchResults(apiKey: $apiKey, sbiCode: $sbiCode);
 
 			if (isset($body['resultaten']) === false) {
-				return;
+				return $results;
 			}
 
 			foreach ($body['resultaten'] as $item) {
@@ -159,6 +159,8 @@ class KvkApiClient {
 				context: ['sbi' => $sbiCode, 'error' => $e->getMessage()]
 			);
 		}//end try
+
+		return $results;
 	}//end searchBySbiCode()
 
 	/**
@@ -194,23 +196,7 @@ class KvkApiClient {
 		];
 
 		$url = $this->getApiBase() . '/zoeken?' . http_build_query(data: $queryParams);
-
-		$client = $this->clientService->newClient();
-		$response = $client->get(
-			uri: $url,
-			options: [
-				'headers' => ['Accept' => 'application/json'],
-				'timeout' => 15,
-			]
-		);
-
-		$decoded = json_decode(json: $response->getBody(), associative: true);
-
-		if (is_array(value: $decoded) === true) {
-			return $decoded;
-		}
-
-		return [];
+		return $this->http()->getJson(url: $url);
 	}//end fetchResults()
 
 	/**
@@ -256,41 +242,15 @@ class KvkApiClient {
 	private function getViaOpenRegister(string $path, array $query): ?array {
 		$params = http_build_query($query);
 		$url = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/kvk/' . $path . '?' . $params);
-
-		try {
-			$client = $this->clientService->newClient();
-			$response = $client->get(
-				$url,
-				[
-					'timeout' => 15,
-					'connect_timeout' => 3,
-					'headers' => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
-					'nextcloud' => ['allow_local_address' => true],
-				]
-			);
-		} catch (Throwable $e) {
-			// 503 (source not usable) surfaces as a client exception here — fall
-			// back to the legacy path. Also covers connection refused / OR absent.
-			$this->logger->debug('KVK OR search unavailable, falling back to direct path', ['exception' => $e]);
-			return null;
-		}
-
-		if ($response->getStatusCode() !== 200) {
-			return null;
-		}
-
-		$decoded = json_decode((string)$response->getBody(), true);
-		if (is_array($decoded) === false || isset($decoded['results']) === false || is_array($decoded['results']) === false) {
-			return null;
-		}
-
-		$rows = [];
-		foreach ($decoded['results'] as $row) {
-			if (is_array($row) === true) {
-				$rows[] = $row;
-			}
-		}
-
-		return $rows;
+		return $this->http()->leafRows(url: $url, unavailable: 'KVK OR search unavailable, falling back to direct path');
 	}//end getViaOpenRegister()
+
+	/**
+	 * The shared registry HTTP plumbing on this client's HTTP client and logger.
+	 *
+	 * @return CompanyRegistryHttp The plumbing.
+	 */
+	private function http(): CompanyRegistryHttp {
+		return new CompanyRegistryHttp(clientService: $this->clientService, logger: $this->logger);
+	}//end http()
 }//end class

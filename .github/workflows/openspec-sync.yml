@@ -6,8 +6,14 @@ on:
     paths: ['openspec/**']
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   sync:
+    permissions:
+      issues: write
+      contents: read
     uses: ConductionNL/.github/.github/workflows/openspec-sync.yml@main
     with:
       app-name: pipelinq

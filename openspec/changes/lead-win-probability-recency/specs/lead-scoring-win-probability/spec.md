@@ -22,3 +22,18 @@ The win probability SHALL be visible to a salesperson on the `Leads` index, on t
 #### Scenario: The lead score is not called win chance
 - **WHEN** a user views the `Leads` index
 - **THEN** no column labelled "Win chance" shows `qualificationScore`
+
+### Requirement: Seed data spans the win-probability bands
+
+The register seed SHALL include representative leads whose `probability` and notes
+place them in the hot, warm and cold bands as they age. The decay is keyed on
+`@self.updated`, which OpenRegister writes and no client or import may set, so on a
+fresh install every seed reads its full probability; the warm and cold seeds reach
+their decayed bands only once they have stood still past 14, 30 or 60 days. The
+bands themselves are proven against the lead schema's real `winProbability`
+expression in the unit suite, not on a fresh install.
+
+#### Scenario: Seed leads read their full probability on a fresh install
+@e2e exclude a fresh import stamps every seed's `@self.updated` with the import moment, so the bands cannot be observed until the seeds age; the band boundaries are asserted against the real expression by the unit suite.
+- **WHEN** the register seed is imported and the `Leads` index is opened
+- **THEN** each seeded open lead's Win chance reads its own probability

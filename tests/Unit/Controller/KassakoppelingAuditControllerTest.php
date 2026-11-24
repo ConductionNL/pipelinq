@@ -371,4 +371,79 @@ class KassakoppelingAuditControllerTest extends TestCase {
 
 	}//end testExportBadServiceInputMapsTo422()
 
+	/**
+	 * Golden: every refusal and failure body of the export, its log line, and the download it streams.
+	 *
+	 * @return void
+	 */
+	public function testExportAnswersExactly(): void {
+		$cases = [
+			'no session' => [null, false, [], null, [401, ['error' => 'Authenticatie vereist.']], []],
+			'not an admin' => ['john', false, ['from' => '2026-05-01', 'to' => '2026-05-31'], null, [403, ['error' => 'Alleen administrators kunnen exporteren naar de Belastingdienst.']], []],
+			'no end date' => ['admin', true, ['from' => '2026-05-01'], null, [400, ['error' => 'Parameters "from" en "to" zijn verplicht (YYYY-MM-DD).']], []],
+			'bad input' => ['admin', true, ['from' => '2026-05-01', 'to' => 'x'], new \OCP\AppFramework\OCS\OCSBadRequestException('Invalid date'), [422, ['error' => 'Invalid date']], []],
+			'failure' => ['admin', true, ['from' => '2026-05-01', 'to' => '2026-05-31'], new \RuntimeException('disk full'), [500, ['error' => 'Belastingdienst export mislukt.']], [['KassakoppelingAuditController::export failed', ['exception' => 'disk full']]]],
+		];
+		foreach ($cases as $name => [$uid, $isAdmin, $params, $thrown, $answer, $logs]) {
+			[$controller, $service, $lines] = $this->exportController(uid: $uid, isAdmin: $isAdmin, params: $params);
+			if ($thrown !== null) {
+				$service->method('exportForBelastingdienst')->willThrowException($thrown);
+			} else {
+				$service->expects($this->never())->method('exportForBelastingdienst');
+			}
+
+			$response = $controller->export();
+			$this->assertSame($answer, [$response->getStatus(), $response->getData()], $name);
+			$this->assertSame($logs, $lines->getArrayCopy(), $name.' logs');
+		}
+
+		[$controller, $service] = $this->exportController(uid: 'admin', isAdmin: true, params: ['from' => '2026-05-01', 'to' => '2026-05-31']);
+		$service->expects($this->once())->method('exportForBelastingdienst')
+			->with(fromDate: '2026-05-01', toDate: '2026-05-31', format: 'xml')
+			->willReturn(['body' => '<X/>', 'contentType' => 'application/xml', 'filename' => 'export.xml']);
+		$download = $controller->export();
+		$this->assertInstanceOf(DataDownloadResponse::class, $download);
+		$this->assertSame('<X/>', $download->render());
+		$headers = (new \ReflectionProperty(\OCP\AppFramework\Http\Response::class, 'headers'))->getValue($download);
+		$this->assertSame('application/xml', $headers['Content-Type']);
+		$this->assertStringContainsString('export.xml', $headers['Content-Disposition']);
+	}//end testExportAnswersExactly()
+
+	/**
+	 * A controller for one caller and query, its service mock, and its recorded error lines.
+	 *
+	 * @param string|null          $uid     The caller, or null for no session.
+	 * @param bool                 $isAdmin Whether the caller is an administrator.
+	 * @param array<string, mixed> $params  The query parameters.
+	 *
+	 * @return array{0: KassakoppelingAuditController, 1: KassakoppelingAuditService, 2: \ArrayObject} The parts.
+	 */
+	private function exportController(?string $uid, bool $isAdmin, array $params): array {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			static fn (string $key, mixed $default = null): mixed => ($params[$key] ?? $default)
+		);
+		$session = $this->createMock(IUserSession::class);
+		$user = null;
+		if ($uid !== null) {
+			$user = $this->createMock(IUser::class);
+			$user->method('getUID')->willReturn($uid);
+		}
+
+		$session->method('getUser')->willReturn($user);
+		$groups = $this->createMock(IGroupManager::class);
+		$groups->method('isAdmin')->willReturn($isAdmin);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(fn (string $text): string => $text);
+		$lines = new \ArrayObject();
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('error')->willReturnCallback(
+			static function (string $message, array $context = []) use ($lines): void {
+				$lines->append([$message, $context]);
+			}
+		);
+		$service = $this->createMock(KassakoppelingAuditService::class);
+		$controller = new KassakoppelingAuditController($request, $service, $session, $groups, $l10n, $logger);
+		return [$controller, $service, $lines];
+	}//end exportController()
 }//end class

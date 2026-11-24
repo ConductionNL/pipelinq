@@ -30,9 +30,9 @@ namespace OCA\Pipelinq\BackgroundJob;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\AppointmentEmailService;
-use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\AppointmentEmailServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\BookingServiceInterface;
 use OCA\Pipelinq\Util\EntityIdOf;
 use OCA\Pipelinq\Util\NullablePayloadToArray;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -109,69 +109,85 @@ class ReminderDispatchJob extends TimedJob {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	protected function run(mixed $argument): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, BookingService::BOOKING_SCHEMA_KEY, '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, BookingServiceInterface::BOOKING_SCHEMA_KEY, '');
 		if ($register === '' || $schema === '') {
 			$this->logger->debug('ReminderDispatchJob: register/booking schema not configured, skipping');
 			return;
 		}
 
+		$window = $this->startCycle();
+		$counts = ['sent' => 0, 'skipped' => 0, 'failures' => 0];
+		foreach ($this->loadDueBookings(register: $register, schema: $schema) as $row) {
+			$counts[$this->dispatchOne(row: $row, window: $window)]++;
+		}
+
+		$this->logger->info('ReminderDispatchJob: cycle complete', $counts);
+	}//end run()
+
+	/**
+	 * The window of this cycle, logged as the cycle starts.
+	 *
+	 * @return ReminderWindow The bookings' start-time window.
+	 */
+	private function startCycle(): ReminderWindow {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-		$windowStartIso = $now->modify('+' . self::WINDOW_LOWER_SECONDS . ' seconds')->format('Y-m-d\TH:i:sP');
-		$windowEndIso = $now->modify('+' . self::WINDOW_UPPER_SECONDS . ' seconds')->format('Y-m-d\TH:i:sP');
+		$window = new ReminderWindow(
+			startIso: $now->modify('+' . self::WINDOW_LOWER_SECONDS . ' seconds')->format('Y-m-d\TH:i:sP'),
+			endIso: $now->modify('+' . self::WINDOW_UPPER_SECONDS . ' seconds')->format('Y-m-d\TH:i:sP')
+		);
 
 		$this->logger->info(
 			'ReminderDispatchJob: starting cycle',
-			['window_start' => $windowStartIso, 'window_end' => $windowEndIso]
+			['window_start' => $window->startIso, 'window_end' => $window->endIso]
 		);
+		return $window;
+	}//end startCycle()
 
-		$rows = $this->loadDueBookings(register: $register, schema: $schema);
+	/**
+	 * Send the reminder of one booking row when it is due.
+	 *
+	 * @param mixed          $row    One booking row.
+	 * @param ReminderWindow $window The cycle's window.
+	 *
+	 * @return string The outcome: sent, skipped or failures.
+	 */
+	private function dispatchOne(mixed $row, ReminderWindow $window): string {
+		$booking = $this->toArray(object: $row);
+		if ($booking === null || $this->isDueForReminder(booking: $booking, windowStartIso: $window->startIso, windowEndIso: $window->endIso) === false) {
+			return 'skipped';
+		}
 
-		$sent = 0;
-		$skipped = 0;
-		$failures = 0;
-		foreach ($rows as $row) {
-			$booking = $this->toArray(object: $row);
-			if ($booking === null) {
-				++$skipped;
-				continue;
+		$bookingId = $this->idOf(object: $booking);
+		if ($bookingId === '') {
+			return 'skipped';
+		}
+
+		return $this->sendReminder(bookingId: $bookingId);
+	}//end dispatchOne()
+
+	/**
+	 * Ask the email service for the reminder; a failure is logged and the cycle continues.
+	 *
+	 * @param string $bookingId The booking id.
+	 *
+	 * @return string The outcome: sent or failures.
+	 */
+	private function sendReminder(string $bookingId): string {
+		try {
+			if ($this->emailService()->sendReminder(bookingId: $bookingId) === true) {
+				return 'sent';
 			}
 
-			if ($this->isDueForReminder(booking: $booking, windowStartIso: $windowStartIso, windowEndIso: $windowEndIso) === false) {
-				++$skipped;
-				continue;
-			}
-
-			$bookingId = $this->idOf(object: $booking);
-			if ($bookingId === '') {
-				++$skipped;
-				continue;
-			}
-
-			try {
-				$emailService = $this->emailService();
-				$reminderSent = $emailService->sendReminder(bookingId: $bookingId);
-				if ($reminderSent === true) {
-					++$sent;
-					continue;
-				}
-
-				++$failures;
-			} catch (\Throwable $e) {
-				++$failures;
-				$this->logger->warning(
-					'ReminderDispatchJob: per-booking dispatch failed, continuing',
-					['booking' => $bookingId, 'exception' => $e->getMessage()]
-				);
-				continue;
-			}
-		}//end foreach
-
-		$this->logger->info(
-			'ReminderDispatchJob: cycle complete',
-			['sent' => $sent, 'skipped' => $skipped, 'failures' => $failures]
-		);
-	}//end run()
+			return 'failures';
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'ReminderDispatchJob: per-booking dispatch failed, continuing',
+				['booking' => $bookingId, 'exception' => $e->getMessage()]
+			);
+			return 'failures';
+		}
+	}//end sendReminder()
 
 	/**
 	 * True when the booking is `confirmed`, has no `reminderSentAt`, and starts
@@ -186,23 +202,37 @@ class ReminderDispatchJob extends TimedJob {
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	public function isDueForReminder(array $booking, string $windowStartIso, string $windowEndIso): bool {
-		$status = (string)($booking['status'] ?? '');
-		if ($status !== 'confirmed') {
-			return false;
-		}
-
-		$reminderAt = (string)($booking['reminderSentAt'] ?? '');
-		if ($reminderAt !== '') {
-			return false;
-		}
-
-		$startAt = (string)($booking['startAt'] ?? '');
-		if ($startAt === '') {
-			return false;
-		}
-
-		return ($startAt >= $windowStartIso && $startAt <= $windowEndIso);
+		return self::startsWithin(booking: $booking, window: [$windowStartIso, $windowEndIso]);
 	}//end isDueForReminder()
+
+	/**
+	 * Whether a booking awaiting its reminder starts inside the window.
+	 *
+	 * @param array<string, mixed>        $booking The booking.
+	 * @param array{0: string, 1: string} $window  The ISO window start and end, inclusive.
+	 *
+	 * @return bool
+	 */
+	private static function startsWithin(array $booking, array $window): bool {
+		$startAt = (string)($booking['startAt'] ?? '');
+		if (self::awaitsReminder(booking: $booking) === false || $startAt === '') {
+			return false;
+		}
+
+		return ($startAt >= $window[0] && $startAt <= $window[1]);
+	}//end startsWithin()
+
+	/**
+	 * Whether a booking is confirmed and has had no reminder yet.
+	 *
+	 * @param array<string, mixed> $booking The booking entity.
+	 *
+	 * @return bool
+	 */
+	private static function awaitsReminder(array $booking): bool {
+		return (string)($booking['status'] ?? '') === 'confirmed'
+			&& (string)($booking['reminderSentAt'] ?? '') === '';
+	}//end awaitsReminder()
 
 	/**
 	 * Load candidate bookings (confirmed + reminderSentAt unset) for the cycle.
@@ -238,10 +268,10 @@ class ReminderDispatchJob extends TimedJob {
 	/**
 	 * Resolve the AppointmentEmailService via the DI container.
 	 *
-	 * @return AppointmentEmailService
+	 * @return AppointmentEmailServiceInterface
 	 */
-	private function emailService(): AppointmentEmailService {
-		return $this->container->get(AppointmentEmailService::class);
+	private function emailService(): AppointmentEmailServiceInterface {
+		return $this->container->get(AppointmentEmailServiceInterface::class);
 	}//end emailService()
 
 	/**

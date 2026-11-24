@@ -104,6 +104,12 @@
 						"formatter": "enumLabel"
 					},
 					{
+						"key": "requiredSkills",
+						"label": "Matching resources",
+						"sortable": false,
+						"formatter": "serviceMatchLine"
+					},
+					{
 						"key": "status",
 						"label": "Status",
 						"formatter": "enumLabel",

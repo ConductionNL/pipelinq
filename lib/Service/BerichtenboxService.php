@@ -37,7 +37,12 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\BerichtenboxServiceInterface;
 use OCA\Pipelinq\Service\Berichtenbox\CaseStatusMessage;
 use OCA\Pipelinq\Service\Berichtenbox\MessageOptions;
 use OCA\Pipelinq\Util\OptionalPayloadToArray;
@@ -45,7 +50,6 @@ use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Berichtenbox message lifecycle service.
@@ -62,7 +66,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
  */
-class BerichtenboxService {
+class BerichtenboxService implements BerichtenboxServiceInterface {
 	use OptionalPayloadToArray;
 
 	/**
@@ -141,7 +145,7 @@ class BerichtenboxService {
 		$template  = $this->templateFor(message: $message, options: $options);
 		$variables = $options->variablesOver(
 			defaults: $message->variables(
-				gemeente: $this->appConfig->getValueString(Application::APP_ID, 'tenant_display_name', 'Gemeente'),
+				gemeente: $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_display_name', 'Gemeente'),
 				messageId: $this->logius->newUuidV4()
 			)
 		);
@@ -185,11 +189,7 @@ class BerichtenboxService {
 	 * @return array The template.
 	 */
 	private function templateFor(CaseStatusMessage $message, MessageOptions $options): array {
-		return ($options->templateOverride ?? $this->findTemplate(
-			caseType: $options->caseType(),
-			status: $message->status,
-			language: $options->language()
-		) ?? $this->fallbackTemplate());
+		return ($options->templateOverride ?? $this->findTemplate(message: $message, options: $options) ?? $this->fallbackTemplate());
 	}//end templateFor()
 
 	/**
@@ -299,62 +299,132 @@ class BerichtenboxService {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$sent = 0;
 		foreach ($unread as $message) {
-			$sentToBerichtenboxAt = (string)($message['sentToBerichtenboxAt'] ?? '');
-			if ($sentToBerichtenboxAt === '') {
-				continue;
+			if ($this->sendFiveDayFallback(message: $message, now: $now) === true) {
+				$sent++;
 			}
-
-			try {
-				$sentDate = new DateTimeImmutable($sentToBerichtenboxAt);
-			} catch (\Throwable) {
-				continue;
-			}
-
-			$eligibleAt = $this->holidayCalendar->addWorkingDays($sentDate, 5);
-			if ($eligibleAt > $now) {
-				continue;
-			}
-
-			$burgerEmail = (string)($message['burgerEmail'] ?? '');
-			if ($burgerEmail === '') {
-				$this->logger->info(
-					'Berichtenbox 5-day fallback skipped: no burgerEmail.',
-					['messageId' => (string)($message['uuid'] ?? '')]
-				);
-				continue;
-			}
-
-			try {
-				$accepted = $this->emailFallback->send($message, $burgerEmail, true);
-				if ($accepted === false && $this->emailFallback->lastRefusal() !== null) {
-					// Integriq refused it (opt-out-before-send): logged by the
-					// sender, and the message status stays as it is.
-					continue;
-				}
-			} catch (\Throwable $e) {
-				$this->logger->warning(
-					'5-day fallback email send failed.',
-					['exception' => $e->getMessage()]
-				);
-				continue;
-			}
-
-			$message['deliveryStatus'] = 'fallback-emailed';
-			$message['fallbackTriggeredAt'] = $now->format(DATE_ATOM);
-			$message['fallbackEmail'] = $burgerEmail;
-			$message['fallbackSentAt'] = $now->format(DATE_ATOM);
-			$this->saveMessage(payload: $message);
-
-			$this->auditLogger->logFallback(
-				messageId: (string)($message['uuid'] ?? ''),
-				reason: '5-day-unread',
-				payloadHash: $this->auditLogger->hashPayload((string)($message['body'] ?? ''))
-			);
-			$sent++;
-		}//end foreach
+		}
 
 		return $sent;
 	}//end processFallbackQueue()
+
+	/**
+	 * Send the 5-day fallback email for one unread message when it is due.
+	 *
+	 * @param array             $message The unread sent message.
+	 * @param DateTimeImmutable $now     The pass time.
+	 *
+	 * @return bool True when a fallback email was sent.
+	 */
+	private function sendFiveDayFallback(array $message, DateTimeImmutable $now): bool {
+		if ($this->isFiveDayFallbackDue(message: $message, now: $now) === false) {
+			return false;
+		}
+
+		$burgerEmail = $this->fiveDayFallbackEmail(message: $message);
+		if ($burgerEmail === '') {
+			return false;
+		}
+
+		if ($this->trySendFiveDayFallback(message: $message, burgerEmail: $burgerEmail) === false) {
+			return false;
+		}
+
+		$this->markFallbackEmailed(message: $message, burgerEmail: $burgerEmail, now: $now);
+
+		$this->auditLogger->logFallback(
+			messageId: (string)($message['uuid'] ?? ''),
+			reason: '5-day-unread',
+			payloadHash: $this->auditLogger->hashPayload((string)($message['body'] ?? ''))
+		);
+		return true;
+	}//end sendFiveDayFallback()
+
+	/**
+	 * Whether a sent message has been unread for 5 working days.
+	 *
+	 * @param array             $message The sent message.
+	 * @param DateTimeImmutable $now     The pass time.
+	 *
+	 * @return bool
+	 */
+	private function isFiveDayFallbackDue(array $message, DateTimeImmutable $now): bool {
+		$sentToBerichtenboxAt = (string)($message['sentToBerichtenboxAt'] ?? '');
+		if ($sentToBerichtenboxAt === '') {
+			return false;
+		}
+
+		try {
+			$sentDate = new DateTimeImmutable($sentToBerichtenboxAt);
+		} catch (\Throwable) {
+			return false;
+		}
+
+		$eligibleAt = $this->holidayCalendar->addWorkingDays($sentDate, 5);
+		return ($eligibleAt > $now) === false;
+	}//end isFiveDayFallbackDue()
+
+	/**
+	 * The burger email for the 5-day fallback; logs and returns '' when there is none.
+	 *
+	 * @param array $message The sent message.
+	 *
+	 * @return string
+	 */
+	private function fiveDayFallbackEmail(array $message): string {
+		$burgerEmail = (string)($message['burgerEmail'] ?? '');
+		if ($burgerEmail === '') {
+			$this->logger->info(
+				'Berichtenbox 5-day fallback skipped: no burgerEmail.',
+				['messageId' => (string)($message['uuid'] ?? '')]
+			);
+		}
+
+		return $burgerEmail;
+	}//end fiveDayFallbackEmail()
+
+	/**
+	 * Send the 5-day fallback email; false when refused or failed.
+	 *
+	 * @param array  $message     The sent message.
+	 * @param string $burgerEmail The fallback address.
+	 *
+	 * @return bool True when the email went out.
+	 */
+	private function trySendFiveDayFallback(array $message, string $burgerEmail): bool {
+		try {
+			$accepted = $this->emailFallback->send($message, $burgerEmail, true);
+			if ($accepted === false && $this->emailFallback->lastRefusal() !== null) {
+				// Integriq refused it (opt-out-before-send): logged by the
+				// sender, and the message status stays as it is.
+				return false;
+			}
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'5-day fallback email send failed.',
+				['exception' => $e->getMessage()]
+			);
+			return false;
+		}
+
+		return true;
+	}//end trySendFiveDayFallback()
+
+	/**
+	 * Record a sent fallback email on the message and save it.
+	 *
+	 * @param array             $message     The message.
+	 * @param string            $burgerEmail The fallback address.
+	 * @param DateTimeImmutable $now         The send time.
+	 *
+	 * @return void
+	 */
+	private function markFallbackEmailed(array $message, string $burgerEmail, DateTimeImmutable $now): void {
+		$message['deliveryStatus'] = 'fallback-emailed';
+		$message['fallbackTriggeredAt'] = $now->format(DATE_ATOM);
+		$message['fallbackEmail'] = $burgerEmail;
+		$message['fallbackSentAt'] = $now->format(DATE_ATOM);
+		$this->saveMessage(payload: $message);
+	}//end markFallbackEmailed()
 
 	/**
 	 * Process an inbound reply from Logius — creates BerichtenboxReply,
@@ -384,24 +454,60 @@ class BerichtenboxService {
 			);
 		}
 
+		$reply = $this->newReply(parent: $parent, parentMessageId: $parentMessageId, logiusReplyId: $logiusReplyId);
+		$reply['bodyText'] = $bodyText;
+		$reply['attachments'] = $attachments;
+
+		$reply = $this->persistNewReply(reply: $reply, bodyText: $bodyText);
+
+		$reply = $this->linkReplyToContactmoment(parent: $parent, reply: $reply, bodyText: $bodyText);
+
+		$this->auditLogger->logReplyReceived(
+			replyId: $reply['uuid'],
+			payloadHash: $this->auditLogger->hashPayload($bodyText)
+		);
+
+		return $reply;
+	}//end handleInboundReply()
+
+	/**
+	 * Start a BerichtenboxReply for a parent message, re-encrypting the parent's BSN.
+	 *
+	 * @param array  $parent          The parent BerichtenboxMessage.
+	 * @param string $parentMessageId Parent BerichtenboxMessage uuid.
+	 * @param string $logiusReplyId   Logius reply id.
+	 *
+	 * @return array The reply without its body and attachments.
+	 */
+	private function newReply(array $parent, string $parentMessageId, string $logiusReplyId): array {
 		$tenantId = $this->resolveTenantId();
 		$bsnPlain = $this->decryptBsn(row: $parent, tenantId: $tenantId);
 		$bsnHash = $this->encryption->hashBsn($bsnPlain, $tenantId);
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 
-		$reply = [
+		return [
 			'uuid' => $this->logius->newUuidV4(),
 			'parentMessageId' => $parentMessageId,
 			'logiusReplyId' => $logiusReplyId,
 			'receivedAt' => $now->format(DATE_ATOM),
 			'bsn' => $this->encryption->encrypt($bsnPlain, $tenantId),
 			'bsnHash' => $bsnHash,
-			'bodyText' => $bodyText,
-			'attachments' => $attachments,
 		];
+	}//end newReply()
 
+	/**
+	 * Save a new reply; a failed save is audited and rethrown.
+	 *
+	 * @param array  $reply    The reply.
+	 * @param string $bodyText Plain-text reply.
+	 *
+	 * @return array The saved reply.
+	 *
+	 * @throws \Throwable When the save fails.
+	 */
+	private function persistNewReply(array $reply, string $bodyText): array {
 		try {
-			$reply = $this->saveReply(payload: $reply);
+			return $this->saveReply(payload: $reply);
 		} catch (\Throwable $e) {
 			$this->auditLogger->logProcessingError(
 				messageId: $reply['uuid'],
@@ -410,8 +516,20 @@ class BerichtenboxService {
 			);
 			throw $e;
 		}
+	}//end persistNewReply()
 
-		$interactionId = null;
+	/**
+	 * Create the Contactmoment for a saved reply and record it on the reply.
+	 *
+	 * @param array  $parent   The parent BerichtenboxMessage.
+	 * @param array  $reply    The saved reply.
+	 * @param string $bodyText Plain-text reply.
+	 *
+	 * @return array The updated reply.
+	 *
+	 * @throws \Throwable When the Contactmoment cannot be created; the error is saved on the reply and audited.
+	 */
+	private function linkReplyToContactmoment(array $parent, array $reply, string $bodyText): array {
 		try {
 			$interactionId = $this->createContactmomentFromReply(parent: $parent, reply: $reply);
 			$reply['createdInteractionId'] = $interactionId;
@@ -428,13 +546,8 @@ class BerichtenboxService {
 			throw $e;
 		}
 
-		$this->auditLogger->logReplyReceived(
-			replyId: $reply['uuid'],
-			payloadHash: $this->auditLogger->hashPayload($bodyText)
-		);
-
 		return $reply;
-	}//end handleInboundReply()
+	}//end linkReplyToContactmoment()
 
 	/**
 	 * Crypto-shred (re-encrypt with a destruction key) all rows for the
@@ -458,57 +571,90 @@ class BerichtenboxService {
 
 		$total = 0;
 		foreach (['berichtenboxMessage_schema', 'berichtenboxReply_schema', 'mailboxResolution_schema'] as $schemaKey) {
-			$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-			$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-			if ($schemaId === '' || $registerId === '') {
-				continue;
-			}
-
-			try {
-				$rows = $this->getObjectService()->findAll(
-					config: [
-						'filters' => [
-							'register' => $registerId,
-							'schema' => $schemaId,
-							'bsnHash' => $bsnHash,
-						],
-					]
-				);
-			} catch (\Throwable $e) {
-				$this->logger->warning(
-					'cryptoShred lookup failed.',
-					['exception' => $e->getMessage(), 'schemaKey' => $schemaKey]
-				);
-				continue;
-			}
-
-			foreach ($rows as $row) {
-				$data = $this->toArray(object: $row);
-				if ($data === null) {
-					continue;
-				}
-
-				$data['bsn'] = $shredBlob;
-				try {
-					$this->getObjectService()->saveObject(
-						object: $data,
-						extend: [],
-						register: $registerId,
-						schema: $schemaId,
-						uuid: ($data['uuid'] ?? null)
-					);
-					$total++;
-				} catch (\Throwable $e) {
-					$this->logger->warning(
-						'cryptoShred save failed.',
-						['exception' => $e->getMessage(), 'schemaKey' => $schemaKey]
-					);
-				}
-			}//end foreach
-		}//end foreach
+			$total += $this->shredSchema(schemaKey: $schemaKey, bsnHash: $bsnHash, shredBlob: $shredBlob);
+		}
 
 		return $total;
 	}//end cryptoShred()
+
+	/**
+	 * Crypto-shred the rows of one schema that carry a BSN hash.
+	 *
+	 * @param string $schemaKey App config key of the schema.
+	 * @param string $bsnHash   The BSN hash to match.
+	 * @param string $shredBlob The opaque blob written over the BSN.
+	 *
+	 * @return int Number of rows shredded.
+	 */
+	private function shredSchema(string $schemaKey, string $bsnHash, string $shredBlob): int {
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
+		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		if ($schemaId === '' || $registerId === '') {
+			return 0;
+		}
+
+		$target = ['register' => $registerId, 'schema' => $schemaId, 'schemaKey' => $schemaKey];
+		$rows = $this->findShredRows(target: $target, bsnHash: $bsnHash);
+
+		$total = 0;
+		foreach ($rows as $row) {
+			if ($this->shredRow(row: $row, target: $target, shredBlob: $shredBlob) === true) {
+				$total++;
+			}
+		}
+
+		return $total;
+	}//end shredSchema()
+
+	/**
+	 * Find the rows of a schema that carry a BSN hash ([] when the lookup fails).
+	 *
+	 * @param array{register: string, schema: string, schemaKey: string} $target  The register, schema and its config key.
+	 * @param string                                                     $bsnHash The BSN hash to match.
+	 *
+	 * @return iterable<mixed>
+	 */
+	private function findShredRows(array $target, string $bsnHash): iterable {
+		try {
+			return $this->getObjectService()->findAll(
+				config: ['filters' => ['register' => $target['register'], 'schema' => $target['schema'], 'bsnHash' => $bsnHash]]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning('cryptoShred lookup failed.', ['exception' => $e->getMessage(), 'schemaKey' => $target['schemaKey']]);
+			return [];
+		}
+	}//end findShredRows()
+
+	/**
+	 * Overwrite one row's BSN with the shred blob and save it.
+	 *
+	 * @param mixed                                                      $row       The row.
+	 * @param array{register: string, schema: string, schemaKey: string} $target    The register, schema and its config key.
+	 * @param string                                                     $shredBlob The opaque blob written over the BSN.
+	 *
+	 * @return bool True when the row was shredded.
+	 */
+	private function shredRow(mixed $row, array $target, string $shredBlob): bool {
+		$data = $this->toArray(object: $row);
+		if ($data === null) {
+			return false;
+		}
+
+		$data['bsn'] = $shredBlob;
+		try {
+			$this->getObjectService()->saveObject(
+				object: $data,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+					uuid: $data['uuid'] ?? null
+				)
+			);
+			return true;
+		} catch (\Throwable $e) {
+			$this->logger->warning('cryptoShred save failed.', ['exception' => $e->getMessage(), 'schemaKey' => $target['schemaKey']]);
+			return false;
+		}
+	}//end shredRow()
 
 	// ------------------------- Internal helpers ----------------------------
 
@@ -538,8 +684,8 @@ class BerichtenboxService {
 		// signing silently deactivated. The empty default is the permissive
 		// value here, so refuse the dispatch and let the normal retry/fail path
 		// record it instead of shipping an unsigned citizen message.
-		$cert = $this->appConfig->getValueString(Application::APP_ID, 'pki_cert', '');
-		$key = $this->appConfig->getValueString(Application::APP_ID, 'pki_key', '');
+		$cert = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pki_cert', '');
+		$key = $this->appConfig->getValueString(AppIdentity::APP_ID, 'pki_key', '');
 		if ($cert === '' || $key === '') {
 			$this->logger->error(
 				'Pipelinq Berichtenbox: refusing to dispatch — tenant PKI-overheid cert/key is not configured, '
@@ -594,47 +740,21 @@ class BerichtenboxService {
 		string $bodyHash,
 		bool $optedOut,
 	): void {
-		$reason = 'no-mailbox';
-		if ($optedOut === true) {
-			$reason = 'opted-out';
-		}
+		$reason = $this->fallbackReason(optedOut: $optedOut);
 
 		$burgerEmail = (string)($message['burgerEmail'] ?? '');
 
 		if ($burgerEmail === '') {
-			$this->logger->warning(
-				'Berichtenbox fallback skipped: no email available.',
-				['messageId' => $messageId, 'reason' => $reason]
-			);
-			if ($optedOut === true) {
-				$message['deliveryStatus'] = 'opted-out';
-				$this->saveMessage(payload: $message);
-				$this->auditLogger->logOptedOut(
-					messageId: $messageId,
-					payloadHash: $bodyHash
-				);
-			}
-
+			$this->skipFallbackWithoutEmail(message: $message, messageId: $messageId, bodyHash: $bodyHash, optedOut: $optedOut);
 			return;
 		}
 
-		try {
-			$accepted = $this->emailFallback->send($message, $burgerEmail, false);
-			if ($accepted === false && $this->emailFallback->lastRefusal() !== null) {
-				// Integriq refused it: logged by the sender, status unchanged.
-				return;
-			}
-		} catch (\Throwable $e) {
-			$this->markFailedOrRetry(message: $message, reason: $e->getMessage(), bodyHash: $bodyHash);
+		if ($this->trySendFallback(message: $message, burgerEmail: $burgerEmail, bodyHash: $bodyHash) === false) {
 			return;
 		}
 
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-		$message['deliveryStatus'] = 'fallback-emailed';
-		$message['fallbackTriggeredAt'] = $now->format(DATE_ATOM);
-		$message['fallbackEmail'] = $burgerEmail;
-		$message['fallbackSentAt'] = $now->format(DATE_ATOM);
-		$this->saveMessage(payload: $message);
+		$this->markFallbackEmailed(message: $message, burgerEmail: $burgerEmail, now: $now);
 
 		$this->auditLogger->logFallback(
 			messageId: $messageId,
@@ -642,6 +762,71 @@ class BerichtenboxService {
 			payloadHash: $bodyHash
 		);
 	}//end dispatchFallback()
+
+	/**
+	 * The fallback reason for a message: opted-out or no-mailbox.
+	 *
+	 * @param bool $optedOut Whether the burger opted out.
+	 *
+	 * @return string
+	 */
+	private function fallbackReason(bool $optedOut): string {
+		$reason = 'no-mailbox';
+		if ($optedOut === true) {
+			$reason = 'opted-out';
+		}
+
+		return $reason;
+	}//end fallbackReason()
+
+	/**
+	 * Log a fallback skipped for want of an email; an opted-out message is marked so.
+	 *
+	 * @param array  $message   Message payload.
+	 * @param string $messageId UUID.
+	 * @param string $bodyHash  SHA-256 of body.
+	 * @param bool   $optedOut  Whether the burger opted out.
+	 *
+	 * @return void
+	 */
+	private function skipFallbackWithoutEmail(array $message, string $messageId, string $bodyHash, bool $optedOut): void {
+		$this->logger->warning(
+			'Berichtenbox fallback skipped: no email available.',
+			['messageId' => $messageId, 'reason' => $this->fallbackReason(optedOut: $optedOut)]
+		);
+		if ($optedOut === true) {
+			$message['deliveryStatus'] = 'opted-out';
+			$this->saveMessage(payload: $message);
+			$this->auditLogger->logOptedOut(
+				messageId: $messageId,
+				payloadHash: $bodyHash
+			);
+		}
+	}//end skipFallbackWithoutEmail()
+
+	/**
+	 * Send the fallback email; a refusal or a failure (re-queued) returns false.
+	 *
+	 * @param array  $message     Message payload.
+	 * @param string $burgerEmail The fallback address.
+	 * @param string $bodyHash    SHA-256 of body.
+	 *
+	 * @return bool True when the email went out.
+	 */
+	private function trySendFallback(array $message, string $burgerEmail, string $bodyHash): bool {
+		try {
+			$accepted = $this->emailFallback->send($message, $burgerEmail, false);
+			if ($accepted === false && $this->emailFallback->lastRefusal() !== null) {
+				// Integriq refused it: logged by the sender, status unchanged.
+				return false;
+			}
+		} catch (\Throwable $e) {
+			$this->markFailedOrRetry(message: $message, reason: $e->getMessage(), bodyHash: $bodyHash);
+			return false;
+		}
+
+		return true;
+	}//end trySendFallback()
 
 	/**
 	 * Mark a message failed and re-queue with backoff, or hard-fail after
@@ -693,49 +878,61 @@ class BerichtenboxService {
 	 */
 	private function findDispatchableMessages(int $limit): array {
 		[$register, $schema] = $this->messageConfig();
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'deliveryStatus' => 'queued',
-					],
-					'limit' => $limit,
-				]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'BerichtenboxService findDispatchable failed.',
-				['exception' => $e->getMessage()]
-			);
-			return [];
-		}
+		$rows = $this->findMessageRows(
+			config: ['filters' => ['register' => $register, 'schema' => $schema, 'deliveryStatus' => 'queued'], 'limit' => $limit],
+			failure: 'BerichtenboxService findDispatchable failed.'
+		);
 
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$result = [];
 		foreach ($rows as $row) {
 			$data = $this->toArray(object: $row);
-			if ($data === null) {
-				continue;
+			if ($data !== null && $this->isDueForRetry(data: $data, now: $now) === true) {
+				$result[] = $data;
 			}
-
-			$nextRetryAt = ($data['nextRetryAt'] ?? '');
-			if (is_string($nextRetryAt) === true && $nextRetryAt !== '') {
-				try {
-					if (new DateTimeImmutable($nextRetryAt) > $now) {
-						continue;
-					}
-				} catch (\Throwable) {
-					// Treat unparseable as eligible.
-				}
-			}
-
-			$result[] = $data;
 		}
 
 		return $result;
 	}//end findDispatchableMessages()
+
+	/**
+	 * Find message rows; a failed lookup is logged and yields no rows.
+	 *
+	 * @param array  $config  The findAll config.
+	 * @param string $failure The warning logged when the lookup fails.
+	 *
+	 * @return iterable<mixed>
+	 */
+	private function findMessageRows(array $config, string $failure): iterable {
+		try {
+			return $this->getObjectService()->findAll(config: $config);
+		} catch (\Throwable $e) {
+			$this->logger->warning($failure, ['exception' => $e->getMessage()]);
+			return [];
+		}
+	}//end findMessageRows()
+
+	/**
+	 * Whether a queued message's nextRetryAt has passed (unset or unparseable counts as due).
+	 *
+	 * @param array             $data The message.
+	 * @param DateTimeImmutable $now  The current time.
+	 *
+	 * @return bool
+	 */
+	private function isDueForRetry(array $data, DateTimeImmutable $now): bool {
+		$nextRetryAt = ($data['nextRetryAt'] ?? '');
+		if (is_string($nextRetryAt) === false || $nextRetryAt === '') {
+			return true;
+		}
+
+		try {
+			return (new DateTimeImmutable($nextRetryAt) > $now) === false;
+		} catch (\Throwable) {
+			// Treat unparseable as eligible.
+			return true;
+		}
+	}//end isDueForRetry()
 
 	/**
 	 * Find unread sent messages for the 5-day fallback pass.
@@ -744,40 +941,32 @@ class BerichtenboxService {
 	 */
 	private function findUnreadSentMessages(): array {
 		[$register, $schema] = $this->messageConfig();
-		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'deliveryStatus' => 'sent',
-					],
-				]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'BerichtenboxService findUnreadSent failed.',
-				['exception' => $e->getMessage()]
-			);
-			return [];
-		}
+		$rows = $this->findMessageRows(
+			config: ['filters' => ['register' => $register, 'schema' => $schema, 'deliveryStatus' => 'sent']],
+			failure: 'BerichtenboxService findUnreadSent failed.'
+		);
 
 		$unread = [];
 		foreach ($rows as $row) {
 			$data = $this->toArray(object: $row);
-			if ($data === null) {
-				continue;
+			if ($data !== null && $this->isUnread(data: $data) === true) {
+				$unread[] = $data;
 			}
-
-			if (($data['readAt'] ?? '') !== '' && $data['readAt'] !== null) {
-				continue;
-			}
-
-			$unread[] = $data;
 		}
 
 		return $unread;
 	}//end findUnreadSentMessages()
+
+	/**
+	 * Whether a sent message has no readAt.
+	 *
+	 * @param array $data The message.
+	 *
+	 * @return bool
+	 */
+	private function isUnread(array $data): bool {
+		return ($data['readAt'] ?? '') === '' || $data['readAt'] === null;
+	}//end isUnread()
 
 	/**
 	 * Find a message by logiusMessageId.
@@ -820,7 +1009,7 @@ class BerichtenboxService {
 	private function findMessageByUuid(string $uuid): ?array {
 		[$register, $schema] = $this->messageConfig();
 		try {
-			$row = $this->getObjectService()->find(id: $uuid, register: $register, schema: $schema);
+			$row = $this->getObjectService()->find(id: $uuid, options: new ObjectFindOptions(register: $register, schema: $schema));
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -829,18 +1018,40 @@ class BerichtenboxService {
 	}//end findMessageByUuid()
 
 	/**
-	 * Find a matching template for zaaktype + status + language.
+	 * Look up the registry template for a message's case type, status and
+	 * language; none when the template store is not configured, has no
+	 * match, or the lookup fails.
 	 *
-	 * @param string $caseType zaaktype slug.
-	 * @param string $status status.
-	 * @param string $language language.
+	 * @param CaseStatusMessage $message The message, for its status.
+	 * @param MessageOptions    $options Its options, for the case type and language.
 	 *
-	 * @return array|null
+	 * @return array|null The template, or null.
 	 */
-	private function findTemplate(string $caseType, string $status, string $language): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+	private function findTemplate(CaseStatusMessage $message, MessageOptions $options): ?array {
+		$scope = $this->templateScope();
+		if ($scope === null) {
+			return null;
+		}
+
+		return $this->firstTemplate(
+			filters: $scope + [
+				'caseType' => $options->caseType(),
+				'status' => $message->status,
+				'language' => $options->language(),
+			]
+		);
+	}//end findTemplate()
+
+	/**
+	 * The register and template schema the templates are kept in, or null
+	 * when either is not configured.
+	 *
+	 * @return array{register: string, schema: string}|null The scope.
+	 */
+	private function templateScope(): ?array {
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'berichtenboxTemplate_schema',
 			''
 		);
@@ -848,19 +1059,20 @@ class BerichtenboxService {
 			return null;
 		}
 
+		return ['register' => $register, 'schema' => $schema];
+	}//end templateScope()
+
+	/**
+	 * The first template matching the filters, or null when none matches
+	 * or the lookup fails.
+	 *
+	 * @param array<string, string> $filters The template filters.
+	 *
+	 * @return array|null The template, or null.
+	 */
+	private function firstTemplate(array $filters): ?array {
 		try {
-			$rows = $this->getObjectService()->findAll(
-				config: [
-					'filters' => [
-						'register' => $register,
-						'schema' => $schema,
-						'caseType' => $caseType,
-						'status' => $status,
-						'language' => $language,
-					],
-					'limit' => 1,
-				]
-			);
+			$rows = $this->getObjectService()->findAll(config: ['filters' => $filters, 'limit' => 1]);
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -870,7 +1082,7 @@ class BerichtenboxService {
 		}
 
 		return null;
-	}//end findTemplate()
+	}//end firstTemplate()
 
 	/**
 	 * Return a minimal default template when no match is configured.
@@ -982,10 +1194,10 @@ class BerichtenboxService {
 		[$register, $schema] = $this->messageConfig();
 		$saved = $this->getObjectService()->saveObject(
 			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: ($payload['uuid'] ?? null)
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: $payload['uuid'] ?? null
+			)
 		);
 		return ($this->toArray(object: $saved) ?? $payload);
 	}//end saveMessage()
@@ -998,9 +1210,9 @@ class BerichtenboxService {
 	 * @return array
 	 */
 	private function saveReply(array $payload): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'berichtenboxReply_schema',
 			''
 		);
@@ -1010,10 +1222,10 @@ class BerichtenboxService {
 
 		$saved = $this->getObjectService()->saveObject(
 			object: $payload,
-			extend: [],
-			register: $register,
-			schema: $schema,
-			uuid: ($payload['uuid'] ?? null)
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $register, schema: $schema),
+				uuid: $payload['uuid'] ?? null
+			)
 		);
 		return ($this->toArray(object: $saved) ?? $payload);
 	}//end saveReply()
@@ -1024,9 +1236,9 @@ class BerichtenboxService {
 	 * @return array{0: string, 1: string}
 	 */
 	private function messageConfig(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			'berichtenboxMessage_schema',
 			''
 		);
@@ -1043,7 +1255,7 @@ class BerichtenboxService {
 	 * @return string
 	 */
 	private function resolveTenantId(): string {
-		$tenant = $this->appConfig->getValueString(Application::APP_ID, 'tenant_id', '');
+		$tenant = $this->appConfig->getValueString(AppIdentity::APP_ID, 'tenant_id', '');
 		if ($tenant === '') {
 			return self::DEFAULT_TENANT_ID;
 		}

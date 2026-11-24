@@ -218,14 +218,30 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 </template>
 
 <script>
+import { bookingPrice } from '../../components/bookings/bookingFormat.js'
 import {
 	fetchAvailability,
 	fetchServiceBySlug,
 	submitBooking,
 } from '../../services/bookingPortalApi.js'
-import { currencyOr } from '../../services/reportingCurrency.js'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+/**
+ * @param {object|null} e The error.
+ * @return {number|undefined} The HTTP status it carries.
+ */
+function errorStatus(e) {
+	return e && e.response ? e.response.status : e && e.status
+}
+
+/**
+ * @param {object|null} e The error.
+ * @return {string|null} The message the API answered with, if any.
+ */
+function apiMessage(e) {
+	return e && e.response && e.response.data ? e.response.data.message : null
+}
 
 export default {
 	name: 'BookingPortal',
@@ -300,16 +316,7 @@ export default {
 		 * @spec exclude display formatter: amount and currency to a localised price string
 		 */
 		priceLabel() {
-			const cur = currencyOr(this.service && this.service.currency)
-			const amount = Number(this.service ? this.service.price : 0)
-			try {
-				return new Intl.NumberFormat(undefined, {
-					style: 'currency',
-					currency: cur,
-				}).format(amount)
-			} catch {
-				return amount + ' ' + cur
-			}
+			return bookingPrice(this.service)
 		},
 
 		/**
@@ -453,25 +460,44 @@ export default {
 			}
 			this.submitting = true
 			try {
-				const result = await submitBooking({
-					serviceId: this.service.id,
-					startAt: this.selectedSlot,
-					name: this.form.name,
-					email: this.form.email,
-					phone: this.form.phone || null,
-					notes: this.form.notes || null,
-				})
-				if (result.depositRequired && result.paymentUrl) {
-					window.location.assign(result.paymentUrl)
-					return
-				}
-				const id = result.id || result.bookingId
-				this.$router.push('/booking-confirmation/' + encodeURIComponent(id))
+				const result = await submitBooking(this.bookingRequest())
+				this.showBooked(result)
 			} catch (e) {
 				this.submitError = this.friendlyError(e)
 			} finally {
 				this.submitting = false
 			}
+		},
+
+		/**
+		 * The booking the form asks for.
+		 *
+		 * @return {object} The request.
+		 */
+		bookingRequest() {
+			return {
+				serviceId: this.service.id,
+				startAt: this.selectedSlot,
+				name: this.form.name,
+				email: this.form.email,
+				phone: this.form.phone || null,
+				notes: this.form.notes || null,
+			}
+		},
+
+		/**
+		 * Send a booking that needs a deposit to the payment page, else open
+		 * its confirmation.
+		 *
+		 * @param {object} result The booking answer.
+		 */
+		showBooked(result) {
+			if (result.depositRequired && result.paymentUrl) {
+				window.location.assign(result.paymentUrl)
+				return
+			}
+			const id = result.id || result.bookingId
+			this.$router.push('/booking-confirmation/' + encodeURIComponent(id))
 		},
 
 		/**
@@ -481,7 +507,7 @@ export default {
 		 * @return {string} The user-facing message.
 		 */
 		friendlyError(e) {
-			const status = e && e.response ? e.response.status : e && e.status
+			const status = errorStatus(e)
 			if (status === 409) {
 				return this.t(
 					'pipelinq',
@@ -491,10 +517,8 @@ export default {
 			if (status === 404) {
 				return this.t('pipelinq', 'This service could not be found.')
 			}
-			const apiMessage =
-				e && e.response && e.response.data ? e.response.data.message : null
 			return (
-				apiMessage
+				apiMessage(e)
 				|| this.t('pipelinq', 'Something went wrong. Please try again.')
 			)
 		},

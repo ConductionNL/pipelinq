@@ -15,6 +15,44 @@
 				"default": 14,
 				"placeholder": "14",
 				"hint": "Number of days a lead can stay untouched before it is flagged as stale. Default: 14."
+			},
+			{
+				"key": "lead_rotation_enabled",
+				"label": "Assign new leads in turn",
+				"type": "switch",
+				"trueValue": "true",
+				"falseValue": "false",
+				"hint": "A new lead without an owner goes to the colleague with the matching skills who received the fewest leads in the last 30 days. Set a cap or a pause per colleague on their agent profile."
+			}
+		]
+	},
+	"myWork": {
+		"name": "My work",
+		"description": "Who sees the work of a whole team on My work.",
+		"saveLabel": "Save My work settings",
+		"valuesPath": "config",
+		"fields": [
+			{
+				"key": "my_work_manager_groups",
+				"label": "Team manager groups",
+				"placeholder": "team-leads",
+				"hint": "Group IDs, separated by commas. A member of one of these groups can switch My work to Team and see the open work of everyone in that group. Leave empty to show everyone only their own work."
+			}
+		]
+	},
+	"callReview": {
+		"name": "Call transcription",
+		"description": "Transcribe a recorded call and summarise it on its contact moment. The audio is sent to the app that provides speech to text and is not kept.",
+		"saveLabel": "Save transcription settings",
+		"valuesPath": "config",
+		"fields": [
+			{
+				"key": "call_transcription_enabled",
+				"label": "Transcribe recorded calls",
+				"type": "switch",
+				"trueValue": "true",
+				"falseValue": "false",
+				"hint": "Needs a Nextcloud app that provides speech to text. Without one, a contact moment shows the transcript status unavailable."
 			}
 		]
 	},
@@ -85,6 +123,19 @@
 				"required": true,
 				"default": 24,
 				"hint": "Triggers an at-risk warning if no run has succeeded in this many hours."
+			},
+			{
+				"key": "export_failure_threshold",
+				"label": "Switch off an export job after this many failed runs in a row",
+				"type": "number",
+				"min": 1,
+				"max": 10,
+				"integer": true,
+				"required": true,
+				"default": 3,
+				"pattern": "^\\s*(10|[1-9])\\s*$",
+				"patternMessage": "Enter a number from 1 to 10",
+				"hint": "A job that fails this many times in a row is switched off and the administrators are notified. From 1 to 10; default 3."
 			}
 		]
 	},
@@ -186,61 +237,20 @@
 			}
 		]
 	},
-	"brpMonitor": {
-		"name": "BRP monitor",
-		"description": "Lookups in the persons registry over the last 24 hours, and the mTLS client certificate.",
-		"url": "/apps/pipelinq/api/brp/monitor",
+	"posRefunds": {
+		"name": "Refunds",
+		"description": "A refund at or below this amount can be completed by any till user who may act on the receipt. Above it, or with no amount set, a POS manager completes the refund.",
+		"saveLabel": "Save refund settings",
+		"valuesPath": "config",
 		"fields": [
 			{
-				"key": "lookups",
-				"type": "status",
-				"text": "Last 24 hours: {report.totalLookups} lookups, {report.cacheHits} from the cache, {report.errorCount} errors, {report.avgResponseMs} ms average response time.",
-				"visibleWhen": {
-					"key": "report",
-					"empty": false
-				}
-			},
-			{
-				"key": "period",
-				"type": "status",
-				"text": "Reporting period {report.windowStart} to {report.windowEnd}, generated on {report.generatedAt}.",
-				"visibleWhen": {
-					"key": "report",
-					"empty": false
-				}
-			},
-			{
-				"key": "noLookups",
-				"type": "status",
-				"text": "No BRP lookups have been reported yet.",
-				"visibleWhen": {
-					"key": "report",
-					"empty": true
-				}
-			},
-			{
-				"key": "cert.status",
-				"type": "status",
-				"textMap": {
-					"ok": "The mTLS certificate is valid until {cert.expiry}, {cert.daysLeft} days from now.",
-					"warning": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it soon.",
-					"critical": "The mTLS certificate expires on {cert.expiry}, in {cert.daysLeft} days. Replace it now.",
-					"*": ""
-				},
-				"toneMap": {
-					"ok": "success",
-					"warning": "warning",
-					"critical": "error"
-				}
-			},
-			{
-				"key": "noCertificate",
-				"type": "status",
-				"text": "No mTLS certificate is configured.",
-				"visibleWhen": {
-					"key": "cert",
-					"empty": true
-				}
+				"key": "pos.refund_limit",
+				"label": "Refund limit (euros)",
+				"type": "number",
+				"min": 0,
+				"required": false,
+				"placeholder": "25",
+				"hint": "Leave empty to have a manager complete every refund."
 			}
 		]
 	}

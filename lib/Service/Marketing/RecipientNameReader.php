@@ -25,7 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -118,18 +119,18 @@ class RecipientNameReader {
 	 * @return array<string, mixed>|null The record's data.
 	 */
 	private function recordFor(string $recipientId): ?array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
 		if ($recipientId === '' || $register === '') {
 			return null;
 		}
 
 		foreach (self::SCHEMA_KEYS as $schemaKey) {
-			$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+			$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, $schemaKey, '');
 			if ($schema === '') {
 				continue;
 			}
 
-			$record = $this->read(id: $recipientId, register: $register, schema: $schema);
+			$record = $this->read(id: $recipientId, scope: ['register' => $register, 'schema' => $schema]);
 			if ($record !== null) {
 				return $record;
 			}
@@ -141,20 +142,19 @@ class RecipientNameReader {
 	/**
 	 * One object's data, or null when it is not there or cannot be read.
 	 *
-	 * @param string $id The object id.
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
+	 * @param string                $id    The object id.
+	 * @param array<string, string> $scope The register id and the schema id.
 	 *
 	 * @return array<string, mixed>|null The object's data.
 	 */
-	private function read(string $id, string $register, string $schema): ?array {
+	private function read(string $id, array $scope): ?array {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find(id: $id, register: $register, schema: $schema);
+			$object = $objectService->find(id: $id, options: new ObjectFindOptions(register: $scope['register'], schema: $scope['schema']));
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'RecipientNameReader: recipient not read',
-				['id' => $id, 'schema' => $schema, 'exception' => $e->getMessage()]
+				['id' => $id, 'schema' => $scope['schema'], 'exception' => $e->getMessage()]
 			);
 			return null;
 		}

@@ -32,6 +32,7 @@ use PHPUnit\Framework\TestCase;
  * ticket's own category stays a plain string code.
  *
  * @covers \OCA\Pipelinq\Service\ConfigFileLoaderService
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
  */
 class TicketCategoryVocabularyTest extends TestCase {
 	/**
