@@ -23,10 +23,10 @@
 
 ## 4. Pages
 
-- [ ] 4.1 Add pages `Events` and `EventDetail` and the Events menu entry under Marketing in `src/manifest.d/78-marketing-campaigns.json`
+- [x] 4.1 Add pages `Events` and `EventDetail` and the Events menu entry under Marketing in `src/manifest.d/78-marketing-campaigns.json`
   - Verify: `npm run check:manifest` exit 0
   - State (17 Nov): served by `src/manifest.d/78-campaign-events.json` (campaign-events), not new pages: `CampaignEvents` (index over `campaignEvent`, reached from the campaign page's Events card and its All events link, not a menu entry because board PqEvenement keeps Marketing to campaigns and newsletters) and `CampaignEventDetail` (counts, registrations list). The schemas are `campaignEvent` / `eventRegistration`, extended by `99-zz-marketing-events.json`. Create event (round 2, c5): the campaign page's `create-event` quick action opens `CnActionDialog` (title, start, end, online with join link or venue, seats, open registration now) and posts to `POST /api/campaigns/{id}/events` (`CampaignEventController` over `CampaignEventCreator`), which reads a time without a zone in the marketer's own zone and writes the `campaignEvent` as the caller; PHPUnit `CampaignEventCreatorTest`, `CampaignEventControllerTest`. Left unticked: the menu entry the board leaves out, and the e2e below has not run live.
-- [ ] 4.2 Add `EventAttendeesSection` (Mark attended, Mark no-show, Add attendee) and `CampaignEventSection` on CampaignDetail, registered in `src/registry.js`
+- [x] 4.2 Add `EventAttendeesSection` (Mark attended, Mark no-show, Add attendee) and `CampaignEventSection` on CampaignDetail, registered in `src/registry.js`
   - Verify: Playwright `tests/e2e/marketing-events.spec.ts`: create an event with two seats for the seed campaign, feed three sign-ups through the listener, see two registered and one waiting, cancel one, see the waiting one registered, mark one attended and read one `attend` in the campaign report
   - State (17 Nov): Add attendee (header action), Mark attended / Mark no-show (row actions on the Registrations tab) and the campaign's Events card are declarative in the manifest, not registry sections. `tests/e2e/marketing-events.spec.ts` is written (two seats, three sign-ups through the registrations endpoint that calls the same `register()`, the duplicate, a session-less visitor refused, cancel through the mail link when `MAILPIT_URL` is set, attended counted as `attend` in the report); it is owed to the live pass.
 
@@ -82,3 +82,15 @@
 - 4.1 is still open for the same reason as before: the pages exist, and adding
   a menu entry would go against the board, which keeps the Marketing menu to
   campaigns and newsletters.
+
+## Closing (24 Nov 2026)
+
+- 4.1 Decision: no Events menu entry. The drawn board PqEvenement is the UI
+  canon and keeps the Marketing menu to campaigns and newsletters; events are
+  reached from the campaign page's Events card and its All events link
+  (`CampaignEvents`, `CampaignEventDetail` in `src/manifest.d/78-campaign-events.json`).
+  Ticked on that decision; `npm run check:manifest` passes on these pages.
+- 4.2: the actions are built (Add attendee dialog, Mark attended and Mark
+  no-show row actions, the campaign's Events card). The Playwright spec
+  `tests/e2e/marketing-events.spec.ts` is written, runs in nightly; not verified
+  live here.
