@@ -67,6 +67,24 @@ class LeadLinePricerTest extends TestCase {
 	}//end pricer()
 
 	/**
+	 * A resolver answer: the own price without a client, the list price with one.
+	 *
+	 * @param array<string, mixed> $own       The answer without a client.
+	 * @param array<string, mixed> $forClient The answer with the lead's client.
+	 *
+	 * @return callable
+	 */
+	private function ownOrClientPrice(array $own, array $forClient): callable {
+		return static function (array $product, float $quantity, ?string $variantSku=null, ?array $client=null) use ($own, $forClient): array {
+			if ($client === null) {
+				return $own;
+			}
+
+			return $forClient;
+		};
+	}//end ownOrClientPrice()
+
+	/**
 	 * Scenario "A public sector client gets the list price".
 	 *
 	 * @return void
@@ -187,9 +205,7 @@ class LeadLinePricerTest extends TestCase {
 	public function testANewLineWithTheProductsOwnPriceIsPricedForTheClient(): void {
 		$this->catalog->expects($this->once())->method('resolveEffectivePrice')
 			->willReturnCallback(
-				static fn (array $product, float $quantity, ?string $variantSku=null, ?array $client=null): array => $client === null
-					? ['unitPrice' => 120.0, 'source' => 'base']
-					: ['unitPrice' => 95.0, 'source' => 'price-list', 'priceListTitle' => 'Overheid 2027']
+				$this->ownOrClientPrice(own: ['unitPrice' => 120.0, 'source' => 'base'], forClient: ['unitPrice' => 95.0, 'source' => 'price-list', 'priceListTitle' => 'Overheid 2027'])
 			);
 
 		$figures = $this->pricer()->figures(line: ['lead' => 'l-1', 'product' => 'p-1', 'quantity' => 1, 'unitPrice' => 120], old: null);
@@ -206,11 +222,9 @@ class LeadLinePricerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAQuantityChangeWithTheFormsTierPriceRepricesTheLine(): void {
-		$this->catalog->expects($this->exactly(2))->method('resolveEffectivePrice')
+		$this->catalog->expects($this->exactly(count: 2))->method('resolveEffectivePrice')
 			->willReturnCallback(
-				static fn (array $product, float $quantity, ?string $variantSku=null, ?array $client=null): array => $client === null
-					? ['unitPrice' => 80.0, 'source' => 'tier']
-					: ['unitPrice' => 78.0, 'source' => 'price-list', 'priceListTitle' => 'Overheid 2027']
+				$this->ownOrClientPrice(own: ['unitPrice' => 80.0, 'source' => 'tier'], forClient: ['unitPrice' => 78.0, 'source' => 'price-list', 'priceListTitle' => 'Overheid 2027'])
 			);
 		$old = ['lead' => 'l-1', 'product' => 'p-1', 'quantity' => 1, 'unitPrice' => 95, 'priceSource' => 'price-list'];
 
