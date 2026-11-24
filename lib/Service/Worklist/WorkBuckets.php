@@ -62,19 +62,29 @@ class WorkBuckets {
 	private const WAITING_ON_CUSTOMER = 'awaiting_customer';
 
 	/**
-	 * The work rows decorated with their bucket, kept to one list and lens, and sorted.
+	 * The work rows decorated with their bucket, kept to one list, lens,
+	 * priority and pipeline, and sorted.
 	 *
 	 * @param array<int, array<string, mixed>> $rows The open work rows.
-	 * @param array{now: DateTimeImmutable, bucket: string, lens: string, sort: string} $list The moment to judge on, the
-	 *   bucket ('' for all), the lens ('' or `all` for all) and the sort.
+	 * @param array<string, mixed>             $list The moment to judge on (`now`), the bucket ('' for all), the lens
+	 *   ('' or `all` for all), the sort, and optionally the priorities (`priority`, comma separated) and the pipeline
+	 *   (`pipeline`) to keep ({@see WorkFilters}).
 	 *
 	 * @return array<int, array<string, mixed>> The items.
 	 *
+	 * @throws \InvalidArgumentException For an unknown priority.
+	 *
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	public function listed(array $rows, array $list): array {
+		$narrow = new WorkFilters(
+			priorities: (string)($list['priority'] ?? ''),
+			pipeline: (string)($list['pipeline'] ?? '')
+		);
+
 		$items = [];
-		foreach ($rows as $row) {
+		foreach ($narrow->keep(rows: $rows) as $row) {
 			$row = $this->decorate(row: $row, now: $list['now']);
 			if (($list['bucket'] === '' || $row['bucket'] === $list['bucket']) && $this->inLens(kind: $row['kind'], lens: $list['lens']) === true) {
 				$items[] = $row;

@@ -51,7 +51,6 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
 use OCA\Pipelinq\Service\Worklist\WeekStats;
 use OCA\Pipelinq\Service\Worklist\WorkBuckets;
-use OCA\Pipelinq\Service\Worklist\WorkFilters;
 use OCA\Pipelinq\Service\Worklist\WorkScope;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -447,7 +446,7 @@ class WorklistService implements WorklistServiceInterface {
 	 *   - done:   true to list finished work too (the page's "Toon afgerond").
 	 *   - scope:  whose work, `mine` (default), `team` or `organisation` ({@see WorkScope}, REQ-MW-180).
 	 *   - member: with `team`, one member of the team; '' for the whole team.
-	 *   - priority: comma-separated priorities to keep (`urgent,high`); '' for all ({@see WorkFilters}, REQ-MW-200).
+	 *   - priority: comma-separated priorities to keep (`urgent,high`); '' for all (REQ-MW-200).
 	 *   - pipeline: keep only the leads of this pipeline id; tickets and follow-ups stay; '' for every pipeline.
 	 *
 	 * @param string $userId The Nextcloud UID asking.
@@ -464,24 +463,19 @@ class WorklistService implements WorklistServiceInterface {
 	 */
 	public function items(string $userId, array $view=[]): array {
 		$list = [
-			'now'    => new DateTimeImmutable(),
-			'bucket' => (string)($view['bucket'] ?? ''),
-			'lens'   => (string)($view['lens'] ?? ''),
-			'sort'   => (string)($view['sort'] ?? 'deadline'),
+			'now'      => new DateTimeImmutable(),
+			'bucket'   => (string)($view['bucket'] ?? ''),
+			'lens'     => (string)($view['lens'] ?? ''),
+			'sort'     => (string)($view['sort'] ?? 'deadline'),
+			'priority' => (string)($view['priority'] ?? ''),
+			'pipeline' => (string)($view['pipeline'] ?? ''),
 		];
 		$filters = $this->workScope->assigneeFilters(
 			userId: $userId,
 			scope: (string)($view['scope'] ?? WorkScope::MINE),
 			member: (string)($view['member'] ?? '')
 		);
-		$narrow = new WorkFilters(
-			priorities: (string)($view['priority'] ?? ''),
-			pipeline: (string)($view['pipeline'] ?? '')
-		);
-		$rows   = $narrow->keep(
-			rows: $this->openWorkRows(assigneeFilters: $filters, done: ($view['done'] ?? false) === true)
-		);
-
+		$rows  = $this->openWorkRows(assigneeFilters: $filters, done: ($view['done'] ?? false) === true);
 		$items = (new WorkBuckets())->listed(rows: $rows, list: $list);
 
 		return ['items' => $this->withClientNames(items: $items), 'total' => count($items)];
