@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationLayout;
 use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 
 /**
@@ -69,7 +70,7 @@ final class StaffGroupTotals {
 			metric: $metric,
 			field: $sumField,
 			filter: $filter,
-			groupBy: ['field' => 'staffMemberId'],
+			layout: new AggregationLayout(groupBy: ['field' => 'staffMemberId']),
 		);
 		$result = $this->runner->runAdhocByRef(registerRef: $this->table->register, schemaRef: $this->table->schema, query: $query);
 		return $this->valuesByKey(groups: ($result['groups'] ?? []));
