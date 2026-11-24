@@ -674,6 +674,7 @@ const registry = {
 		component: ContactmomentQuickLog,
 		_note: 'Inline contactmoment quick-log form pre-bound to the client (clientId, inline mode). On save it emits @saved; in declarative mode the page is refreshed via the CnDetailPage Refresh action rather than an imperative re-fetch.',
 	},
+	// @custom-widget-ratchet exclude replaces the ContactmomentQuickLog body section (same host code, now a card in the Contact moments tab); no built-in widget autosaves a server draft of a form
 	ContactmomentQuickLogWidget: {
 		kind: 'widget',
 		component: sectionWidget(
