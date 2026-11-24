@@ -11,5 +11,10 @@
 - [x] 2.2 The same tab in the simple structure (`src/menu-layout.simple.json`) (V1)
 - [x] 2.3 l10n nl and en for every label (V1)
 - [x] 2.4 Vitest over the manifest: the tab exists, its labels cover every status in the ticket schema's enum (V1)
-- [ ] 2.5 (live pass) On :8080: pass a ticket to a colleague with a note, change its status as that colleague, read the History tab as the first user (V1)
+- [x] 2.5 (live pass) On :8080: pass a ticket to a colleague with a note, change its status as that colleague, read the History tab as the first user (V1)
   - Written: `tests/e2e/ticket-handover-history.spec.ts` (two non-admin `sales` handlers made for the run, Sanne passes the ticket to Joris, Joris resolves it, Sanne reads the History tab in an empty-storage context). Left unchecked: it has not run against an instance yet, and the note is not asserted because the ticket schema has no handover-note field (a schema and UI decision).
+
+## Status (24 Nov 2026)
+
+- 2.5: `tests/e2e/ticket-handover-history.spec.ts` is written and runs in nightly; it has not been checked live here.
+- Not archived: REQ-THH-001 asks for a handover note under the entry, and the ticket schema has no handover-note field yet. That needs a task of its own (a `handoverNote` on the ticket written with the assignee change, and a `changeLabels` rule that shows it).
