@@ -43,7 +43,7 @@ interface EventEmailServiceInterface {
 	 *
 	 * @return bool True when the mail was accepted for delivery.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
 	 */
 	public function sendClosed(array $event, array $person): bool;
 
@@ -55,7 +55,7 @@ interface EventEmailServiceInterface {
 	 *
 	 * @return bool True when the mail was accepted for delivery.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function sendConfirmation(array $event, array $registration): bool;
 
@@ -67,7 +67,7 @@ interface EventEmailServiceInterface {
 	 *
 	 * @return bool True when the mail was accepted for delivery.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function sendPlaceFreed(array $event, array $registration): bool;
 
@@ -79,7 +79,7 @@ interface EventEmailServiceInterface {
 	 *
 	 * @return bool True when the mail was accepted for delivery.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function sendReminder(array $event, array $registration): bool;
 
@@ -90,7 +90,7 @@ interface EventEmailServiceInterface {
 	 *
 	 * @return string|null The registration id, or null.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function verifyCancelToken(string $token): ?string;
 
@@ -102,7 +102,7 @@ interface EventEmailServiceInterface {
 	 *
 	 * @return bool True when the mail was accepted for delivery.
 	 *
-	 * @spec openspec/changes/marketing-events/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-11-24-marketing-events/tasks.md#3.1
 	 */
 	public function sendEventCancelled(array $event, array $registration): bool;
 }//end interface

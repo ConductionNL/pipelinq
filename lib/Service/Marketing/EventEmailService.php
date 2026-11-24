@@ -26,7 +26,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+ * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Throwable;
 /**
  * Compose and send the mails of a campaign event.
  *
- * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+ * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
  */
 class EventEmailService implements EventEmailServiceInterface {
 
@@ -83,7 +83,7 @@ class EventEmailService implements EventEmailServiceInterface {
 	 * @param ITimeFactory    $time      The clock.
 	 * @param LoggerInterface $logger    The logger.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function __construct(
 		private IMailer $mailer,
@@ -103,7 +103,7 @@ class EventEmailService implements EventEmailServiceInterface {
 	 *
 	 * @return bool True when the mail was accepted for delivery.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function sendConfirmation(array $event, array $registration): bool {
 		$title = $this->title(event: $event);
@@ -142,7 +142,7 @@ class EventEmailService implements EventEmailServiceInterface {
 	 *
 	 * @return bool True when the mail was accepted for delivery.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function sendPlaceFreed(array $event, array $registration): bool {
 		$title = $this->title(event: $event);
@@ -168,7 +168,7 @@ class EventEmailService implements EventEmailServiceInterface {
 	 *
 	 * @return bool True when the mail was accepted for delivery.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
 	 */
 	public function sendClosed(array $event, array $person): bool {
 		$title = $this->title(event: $event);
@@ -192,7 +192,7 @@ class EventEmailService implements EventEmailServiceInterface {
 	 *
 	 * @return bool True when the mail was accepted for delivery.
 	 *
-	 * @spec openspec/changes/marketing-events/tasks.md#3.1
+	 * @spec openspec/changes/archive/2026-11-24-marketing-events/tasks.md#3.1
 	 */
 	public function sendEventCancelled(array $event, array $registration): bool {
 		$title = $this->title(event: $event);
@@ -217,7 +217,7 @@ class EventEmailService implements EventEmailServiceInterface {
 	 *
 	 * @return bool True when the mail was accepted for delivery.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function sendReminder(array $event, array $registration): bool {
 		$title = $this->title(event: $event);
@@ -240,7 +240,7 @@ class EventEmailService implements EventEmailServiceInterface {
 	 *
 	 * @return string `<id>.<action>.<expiresAt>.<signature>`.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function cancelToken(string $registrationId, int $expiresAt): string {
 		$payload = $registrationId . '.' . self::CANCEL_ACTION . '.' . $expiresAt;
@@ -254,7 +254,7 @@ class EventEmailService implements EventEmailServiceInterface {
 	 *
 	 * @return string|null The registration id, or null.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function verifyCancelToken(string $token): ?string {
 		$parts = explode('.', trim($token));
@@ -287,7 +287,7 @@ class EventEmailService implements EventEmailServiceInterface {
 	 *
 	 * @return string The link, or '' when the registration has no id.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function cancelUrl(array $event, array $registration): string {
 		$id = (string)($registration['uuid'] ?? $registration['id'] ?? '');
@@ -311,7 +311,7 @@ class EventEmailService implements EventEmailServiceInterface {
 	 *
 	 * @return string The `.ics` body, CRLF line endings.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function ics(array $event, array $registration): string {
 		$eventId = (string)($event['uuid'] ?? $event['id'] ?? '');

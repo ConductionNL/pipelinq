@@ -5332,10 +5332,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Campaigns, CampaignNew, CampaignDetail (src/manifest.d/78-marketing-campaigns.json)",
 				"readOn": "2026-09-26",
-				"change": "marketing-events",
+				"spec": "openspec/specs/marketing-events-and-attendees",
 				"requirement": [
-					"openspec/changes/marketing-events/specs/marketing-events-and-attendees :: A campaign can have an event (REQ-MEV-001)",
-					"openspec/changes/marketing-events/specs/marketing-events-and-attendees :: A landing page sign-up registers for the event (REQ-MEV-002)"
+					"openspec/specs/marketing-events-and-attendees :: A campaign can have an event (REQ-MEV-001)",
+					"openspec/specs/marketing-events-and-attendees :: A landing page sign-up registers for the event (REQ-MEV-002)"
 				]
 			},
 			"note": "an event can be run as a campaign whose landing-page form turns each sign-up into a lead; registrations are not kept as attendees of an event. Specified 2026-09-28 in openspec/changes/marketing-events (OpenSpec pass).",

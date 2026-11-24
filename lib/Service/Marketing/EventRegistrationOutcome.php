@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+ * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\Service\Marketing;
 /**
  * The result of one registration call.
  *
- * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+ * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
  */
 final class EventRegistrationOutcome {
 
@@ -68,7 +68,7 @@ final class EventRegistrationOutcome {
 	 * @param array<string, mixed>|null $registration The registration as it now stands.
 	 * @param array<string, mixed>|null $promoted     The registration that moved up from the waiting list.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
 	 */
 	public function __construct(
 		public readonly string $status,

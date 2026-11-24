@@ -21,7 +21,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+ * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use OCP\IURLGenerator;
 /**
  * Show and perform the cancellation of one event registration.
  *
- * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+ * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
  */
 class EventCancelController extends Controller {
 
@@ -55,7 +55,7 @@ class EventCancelController extends Controller {
 	 * @param EventEmailServiceInterface        $mails         Verifies the token and mails whoever moves up.
 	 * @param IURLGenerator            $urls          Builds the form action.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function __construct(
 		IRequest $request,
@@ -73,7 +73,7 @@ class EventCancelController extends Controller {
 	 *
 	 * @return TemplateResponse The page.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -99,7 +99,7 @@ class EventCancelController extends Controller {
 	 *
 	 * @return TemplateResponse The page.
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

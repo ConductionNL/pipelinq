@@ -227,7 +227,7 @@ class CampaignReportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
+	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
 	 */
 	public function testAnAttendTouchpointIsCounted(): void {
 		$rows = $this->build()->channels(

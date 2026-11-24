@@ -22,7 +22,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+ * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Throwable;
 /**
  * Create a campaign's event.
  *
- * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+ * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
  */
 class CampaignEventController extends Controller
 {
@@ -64,7 +64,7 @@ class CampaignEventController extends Controller
      * @param IUserSession         $userSession The caller.
      * @param LoggerInterface      $logger      The logger.
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     public function __construct(
         IRequest $request,
@@ -84,7 +84,7 @@ class CampaignEventController extends Controller
      * @return JSONResponse 201 with the event; 400 for invalid input or a refused write,
      *                      401 signed out, 404 when the caller cannot read the campaign.
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     #[NoAdminRequired]
     public function create(string $id): JSONResponse

@@ -8,7 +8,7 @@
  * address to pipelinq's registrations endpoint, so a hand-added attendee goes
  * through the same seat count, waiting list and confirmation as a form sign-up.
  *
- * @spec openspec/changes/marketing-events/tasks.md#4-pages
+ * @spec openspec/changes/archive/2026-11-24-marketing-events/tasks.md#4-pages
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

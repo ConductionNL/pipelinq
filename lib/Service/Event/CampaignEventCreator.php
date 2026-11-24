@@ -23,7 +23,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+ * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use Throwable;
 /**
  * Writes a campaign's event from the Create event dialog.
  *
- * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+ * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
  */
 class CampaignEventCreator
 {
@@ -56,7 +56,7 @@ class CampaignEventCreator
      *
      * @var integer
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     private const MAX_CAPACITY = 100000;
 
@@ -65,7 +65,7 @@ class CampaignEventCreator
      *
      * @var string
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     private const LOCAL_TIME = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/';
 
@@ -77,7 +77,7 @@ class CampaignEventCreator
      * @param IAppConfig                  $appConfig     The schema slugs.
      * @param IDateTimeZone               $timeZone      The caller's time zone, for a time typed without one.
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     public function __construct(
         private readonly ObjectServiceInterface $objectService,
@@ -95,7 +95,7 @@ class CampaignEventCreator
      *
      * @return bool True when the campaign exists for the caller.
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     public function campaignExists(string $campaignId): bool
     {
@@ -113,7 +113,7 @@ class CampaignEventCreator
      *
      * @throws InvalidArgumentException With a message the marketer can act on.
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     public function payload(string $campaignId, array $input): array
     {
@@ -166,7 +166,7 @@ class CampaignEventCreator
      *
      * @throws InvalidArgumentException When the input is not a valid event.
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     public function create(string $campaignId, array $input): array
     {
@@ -195,7 +195,7 @@ class CampaignEventCreator
      *
      * @throws InvalidArgumentException When the join link is not a web address.
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     private function place(array $input, bool $online): array
     {
@@ -232,7 +232,7 @@ class CampaignEventCreator
      *
      * @throws InvalidArgumentException When the value is not a moment.
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     private function time(mixed $value, string $label): ?DateTimeImmutable
     {
@@ -259,7 +259,7 @@ class CampaignEventCreator
      *
      * @return DateTimeZone The zone.
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     private function zone(): DateTimeZone
     {
@@ -280,7 +280,7 @@ class CampaignEventCreator
      *
      * @throws InvalidArgumentException When it is not a whole number.
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     private static function capacity(mixed $value): ?int
     {
@@ -314,7 +314,7 @@ class CampaignEventCreator
      *
      * @return string The text.
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     private static function text(mixed $value): string
     {
@@ -333,7 +333,7 @@ class CampaignEventCreator
      *
      * @return bool True for true, 1, "1", "true", "on" or "yes".
      *
-     * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+     * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
      */
     private static function flag(mixed $value): bool
     {
