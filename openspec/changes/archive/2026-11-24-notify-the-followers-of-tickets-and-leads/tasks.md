@@ -26,5 +26,6 @@
 
 ## 5. Working on it together
 
-- [ ] 5.1 Grant an added colleague read and write access to the ticket or lead for as long as they are on it, through OpenRegister's per-object authorisation (no pipelinq-side check), and take it back on removal (REQ-NFTL-005, row `work-collaborators`)
+- [x] 5.1 Grant an added colleague read and write access to the ticket or lead for as long as they are on it, through OpenRegister's per-object authorisation (no pipelinq-side check), and take it back on removal (REQ-NFTL-005, row `work-collaborators`)
   - Verify: PHPUnit or an API test: the added colleague reads and patches the record; after removal both answer 403
+  - Built: `collaborators` (user ids) on ticket and lead, and `{"group": "authenticated", "match": {"collaborators": {"$contains": "$userId"}}}` on their read and update, in `lib/Settings/register.d/99-zzzzzzzzzzzzzzz-collaborators-on-ticket-and-lead.json`. `tests/Unit/Settings/CollaboratorAccessTest.php` reads the merged blocks and runs the rule through OpenRegister's real `ConditionMatcher`: a listed colleague is admitted, after removal refused. The HTTP 403 pass on a live instance runs in the nightly.

@@ -869,7 +869,7 @@
 				"marketing-integrated-campaigns",
 				"my-work",
 				"my-work-roadmap",
-				"notify-the-followers-of-tickets-and-leads",
+				"notifications-activity",
 				"project-portfolio",
 				"task-background-jobs",
 				"work-letter-from-filinq-template"
@@ -4364,10 +4364,10 @@
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "TicketDetail, LeadDetail sidebar Tasks tab",
 				"readOn": "2026-10-07",
-				"change": "notify-the-followers-of-tickets-and-leads",
+				"change": "openspec/changes/archive/2026-11-24-notify-the-followers-of-tickets-and-leads",
 				"requirement": [
-					"openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity :: A user adds a colleague to a ticket or lead as a follower (REQ-NFTL-004)",
-					"openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity :: A colleague added to a ticket or lead can work on it (REQ-NFTL-005)"
+					"openspec/specs/notifications-activity :: A user adds a colleague to a ticket or lead as a follower (REQ-NFTL-004)",
+					"openspec/specs/notifications-activity :: A colleague added to a ticket or lead can work on it (REQ-NFTL-005)"
 				]
 			},
 			"evidence": {
