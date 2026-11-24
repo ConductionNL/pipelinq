@@ -2606,7 +2606,7 @@
 			"id": "lead-win-probability",
 			"area": "pipeline",
 			"name": "See how likely you are to win a lead, judged by how recently it moved",
-			"pipelinq": "partial",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -2617,11 +2617,10 @@
 			"feature": "pipeline",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Settings/pipelinq_register.json:658 declares winProbability on lead and lib/Service/LeadService.php derives it; no page shows it (grep of src for winProbability is empty). The Win chance column on Leads shows qualificationScore, the lead score",
+				"state": "built",
+				"evidence": "src/views/leads/LeadList.vue reads extend ['client', 'calculations'] and shows winProbability in the Win chance column; LeadDetail extend ['calculations'] shows it in Deal data; PipelineBoard.fetchSchemaItems asks _extend[]=calculations and PipelineCard shows it; tests/vitest/leadWinProbabilitySurfaces.spec.js, leadWinProbabilityBands.spec.js; e2e tests/e2e/spec-coverage/lead-scoring-win-probability.spec.ts written, runs in nightly (archived change lead-win-probability-recency, 2026-11-24)",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/lead-scoring-win-probability",
-				"change": "openspec/changes/lead-win-probability-recency",
 				"requirement": "openspec/specs/lead-scoring-win-probability :: Win probability is surfaced on the pipeline list and deal detail"
 			},
 			"source": "spec-round-2026-10-07",
@@ -9177,8 +9176,8 @@
 				"state": "specified",
 				"evidence": "no bulk edit in src/views/clients/ or src/components/",
 				"owner": "ConductionNL/pipelinq",
-				"change": "clients-bulk-edit-and-undo",
-				"requirement": "openspec/changes/clients-bulk-edit-and-undo/specs/client-bulk-changes :: Clients and contacts can be changed in bulk (REQ-CBE-001)"
+				"spec": "openspec/specs/client-bulk-changes",
+				"requirement": "openspec/specs/client-bulk-changes :: Clients and contacts can be changed in bulk (REQ-CBE-001)"
 			},
 			"note": "Attio and Pipedrive make this the centre of the product. We edit one record at a time. Specified 2026-09-28 in openspec/changes/clients-bulk-edit-and-undo (OpenSpec pass).",
 			"evidence": {
@@ -9505,8 +9504,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-bulk-edit-and-undo",
-				"requirement": "openspec/changes/clients-bulk-edit-and-undo/specs/client-bulk-changes :: A user can undo their own bulk change (REQ-CBE-002)"
+				"spec": "openspec/specs/client-bulk-changes",
+				"requirement": "openspec/specs/client-bulk-changes :: A user can undo their own bulk change (REQ-CBE-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/restore-crm-changes \"Restore CRM changes by rolling records back to a previous point within the last 14 days. This allows you to undo updates made by workflows, imports, or manual edits\". Marketing, Sales, Service or Data Hub Starter and up.",

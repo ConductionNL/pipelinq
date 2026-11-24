@@ -63,12 +63,7 @@ introduced.
 
 ### Requirement: Win probability is surfaced on the pipeline list and deal detail
 
-@e2e exclude BOTH scenarios below are UNSATISFIED by the shipped product — this is a defect record, not a permanent exemption, and the exclusion lapses the moment either fix lands. MEASURED, run 31473685688: (a) `GET /index.php/apps/openregister/api/objects/pipelinq/lead?_limit=25` served every lead with NO `winProbability` key — `typeof` was `undefined`, not `null`; (b) the Leads index Win % cell (`tbody tr:first td:nth(6)`) rendered `"—"`, unchanged across 33 polls of a 15s expect. ROOT CAUSE, read out of source rather than inferred: `winProbability` is `materialise: false`, and OpenRegister evaluates virtual calculations in `RenderObject::renderEntity()` only inside `if (in_array('calculations', $extendArr, true) === true)` — i.e. only when the request carried `_extend[]=calculations`. Neither surface asks for it: the `Leads` and `LeadDetail` page configs in src/manifest.json declare no `extend`, and in @conduction/nextcloud-vue `_extend` exists in exactly one data path (`CnWidgetObjectTable`'s `source.extend`, ADR-049) — `useListView.js` and `useDetailView.js`, which drive `type: "index"` and `type: "detail"`, have no `extend` handling at all. The control that proves the surfaces themselves are healthy is the sibling calculation `qualificationScore`, declared `materialise: true` and therefore persisted on save, which renders on the Qualification widget. Coverage that does exist and is real: tests/Unit/Service/LeadServiceTest.php (testCreateLeadWritesLeadAndReturnsMaterialisedCalculations — pipelinq never writes the field and returns OpenRegister's value unmodified) and tests/Unit/Settings/RegisterAnnotationsTest.php (testCalculationAnnotationsAreWellFormed — the declaration is well-formed and every `prop` reference resolves). Neither can observe delivery to a browser, which is the half that is broken. Tracked as pipelinq#774; this exclusion lapses when that lands. tests/e2e/spec-coverage/lead-scoring-win-probability.spec.ts is kept as the written record of the measurement and declares no tests.
-
-The win probability SHALL be visible to a salesperson without any new frontend code:
-it SHALL appear on the `LeadDetail` Deal data widget and as a column on the `Leads`
-index in `src/manifest.json`, the index column reusing the existing
-`lead-probability` cell widget for a colour-banded 0–100 rendering.
+The win probability SHALL be visible to a salesperson on the `Leads` index, on the lead page's Deal data and on the pipeline board's lead cards, as boards PqLeads, PqLead and PqPipeline draw it. The index column SHALL be labelled "Win chance" and SHALL show `winProbability` with the shared colour-banded `lead-probability` cell widget; the lead score (`qualificationScore`) SHALL keep a label of its own and SHALL NOT be shown as "Win chance". Because `winProbability` is a calculation with `materialise: false`, each of these pages SHALL request it from OpenRegister with `_extend[]=calculations` through a declared `extend` option on the page, not through page-specific code.
 
 #### Scenario: Deal page shows win probability
 - **WHEN** a user opens a lead's detail page
@@ -76,16 +71,28 @@ index in `src/manifest.json`, the index column reusing the existing
 
 #### Scenario: Pipeline list shows a colour-banded win probability column
 - **WHEN** a user views the `Leads` index
-- **THEN** a `winProbability` column renders each lead's decayed probability with the shared colour-banded cell widget, so cold deals read visually distinct from hot ones
+- **THEN** a "Win chance" column renders each lead's decayed probability with the shared colour-banded cell widget, so cold deals read visually distinct from hot ones
+
+#### Scenario: A cold lead on the pipeline board
+- **GIVEN** a lead with `probability: 60` untouched for 45 days
+- **WHEN** a user opens the pipeline board
+- **THEN** its card shows a win chance of 30%
+
+#### Scenario: The lead score is not called win chance
+- **WHEN** a user views the `Leads` index
+- **THEN** no column labelled "Win chance" shows `qualificationScore`
 
 ### Requirement: Seed data spans the win-probability bands
 
-The register seed SHALL include representative leads whose age and `probability`
-place them across the hot / warm / cold bands, so the surfaced value is verifiable
-on a fresh install.
+The register seed SHALL include representative leads whose `probability` and notes
+place them in the hot, warm and cold bands as they age. The decay is keyed on
+`@self.updated`, which OpenRegister writes and no client or import may set, so on a
+fresh install every seed reads its full probability; the warm and cold seeds reach
+their decayed bands only once they have stood still past 14, 30 or 60 days. The
+bands themselves are proven against the lead schema's real `winProbability`
+expression in the unit suite, not on a fresh install.
 
-@e2e exclude the scenario is unsatisfiable on the install it names, for two independent reasons. First, the three band seeds in lib/Settings/pipelinq_register.json say so themselves: the warm one is annotated "winProbability decays toward the 80%/50% bands **as this seed ages past 14/30 days untouched**" and the cold one "decays to the 25% band **once this seed ages past 60 days untouched**". On a FRESH import every seed's `@self.updated` is the import moment, so all three read their full probability and no decayed band exists to observe — and CI reimports on every run (tests/e2e/ci-seed.sh step 1). Second, and measured in run 31473685688, the Win % column renders `"—"` for every seeded lead because the value never reaches the index at all — the `materialise: false` calculation is evaluated by OpenRegister only under `_extend[]=calculations`, which no pipelinq index or detail fetch sends; see the surfacing requirement above for the full source trace, tracked as pipelinq#774. Making this scenario testable needs BOTH seeds with an explicitly backdated activity timestamp AND the surfacing fix — product changes, not test changes.
-
-#### Scenario: Seed leads render distinct bands
+#### Scenario: Seed leads read their full probability on a fresh install
+@e2e exclude a fresh import stamps every seed's `@self.updated` with the import moment, so the bands cannot be observed until the seeds age; the band boundaries are asserted against the real expression by the unit suite.
 - **WHEN** the register seed is imported and the `Leads` index is opened
-- **THEN** at least one recently-touched lead reads its full probability (hot) and at least one long-untouched lead reads a decayed value (cold)
+- **THEN** each seeded open lead's Win chance reads its own probability

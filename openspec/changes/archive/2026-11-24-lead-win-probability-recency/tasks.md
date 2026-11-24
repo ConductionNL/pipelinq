@@ -19,6 +19,17 @@
 ## 3. Seed and tests
 - [x] 3.1 Seed leads that render distinct bands on a fresh install: since `@self.updated` cannot be written by a client, seed through the repair step with OpenRegister's import keeping the given `updated` timestamp, or document in the spec that the bands show only after time passes and drop the seed requirement (decide in the PR) (V1)
   - Decided: document, not seed. `@self.updated` cannot be written by a client or import, so the spec delta now says the seeds read their full probability on a fresh install and decay as they age; the bands are proven against the real expression in `tests/vitest/leadWinProbabilityBands.spec.js`.
-- [ ] 3.2 Remove the `@e2e exclude` defect record on the surfacing requirement and turn `tests/e2e/spec-coverage/lead-scoring-win-probability.spec.ts` into a real test: the Leads index Win chance cell is a number for a seeded lead (V1)
+- [x] 3.2 Remove the `@e2e exclude` defect record on the surfacing requirement and turn `tests/e2e/spec-coverage/lead-scoring-win-probability.spec.ts` into a real test: the Leads index Win chance cell is a number for a seeded lead (V1)
   - Written, not yet run (needs a live instance): `tests/e2e/spec-coverage/lead-scoring-win-probability.spec.ts` now asserts the served `winProbability` in the Leads Win chance column and on the lead page. The delta's surfacing requirement carries no `@e2e exclude`.
-- [ ] 3.3 Flip `lead-win-probability` to built in `openspec/parity/capabilities.json` and close pipelinq#774 (V1)
+- [x] 3.3 Flip `lead-win-probability` to built in `openspec/parity/capabilities.json` and close pipelinq#774 (V1)
+
+## Closing (24 Nov 2026)
+
+- 3.2: the e2e test is written and runs in nightly; it has not been checked live here.
+- 3.3: `lead-win-probability` is set to built (`pipelinq: yes`) in
+  `openspec/parity/capabilities.json`, with the evidence of tasks 2.1 to 2.3.
+  pipelinq#774 is closed with a comment once this lands. If the nightly run
+  still finds no `winProbability`, it is reopened.
+- The MODIFIED requirements are synced into
+  `openspec/specs/lead-scoring-win-probability/spec.md`. The surfacing
+  requirement's `@e2e exclude` defect record goes away with it.
