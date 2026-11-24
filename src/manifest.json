@@ -11801,7 +11801,7 @@
 						"id": "8",
 						"widgetId": "my-items-phone",
 						"gridX": 0,
-						"gridY": 24,
+						"gridY": 27,
 						"gridWidth": 12,
 						"gridHeight": 4,
 						"sizeToContent": true,
@@ -11891,7 +11891,7 @@
 						"id": "6",
 						"widgetId": "my-leads",
 						"gridX": 0,
-						"gridY": 17,
+						"gridY": 20,
 						"gridWidth": 6,
 						"gridHeight": 4,
 						"sizeToContent": true
@@ -11900,7 +11900,7 @@
 						"id": "7",
 						"widgetId": "my-follow-ups",
 						"gridX": 6,
-						"gridY": 17,
+						"gridY": 20,
 						"gridWidth": 6,
 						"gridHeight": 4,
 						"sizeToContent": true
@@ -11919,7 +11919,7 @@
 						"id": "10",
 						"widgetId": "my-meetings",
 						"gridX": 0,
-						"gridY": 21,
+						"gridY": 24,
 						"gridWidth": 12,
 						"gridHeight": 3,
 						"sizeToContent": true
