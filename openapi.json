@@ -18219,6 +18219,24 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "priority",
+                        "in": "query",
+                        "required": false,
+                        "description": "Keep only these priorities, comma separated (urgent, high, normal, low); an unknown priority answers 400.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "pipeline",
+                        "in": "query",
+                        "required": false,
+                        "description": "Keep only the leads of this pipeline id; tickets and follow-ups stay in the list.",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {

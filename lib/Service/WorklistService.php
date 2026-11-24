@@ -51,6 +51,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
 use OCA\Pipelinq\Service\Worklist\WeekStats;
 use OCA\Pipelinq\Service\Worklist\WorkBuckets;
+use OCA\Pipelinq\Service\Worklist\WorkFilters;
 use OCA\Pipelinq\Service\Worklist\WorkScope;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
@@ -446,17 +447,20 @@ class WorklistService implements WorklistServiceInterface {
 	 *   - done:   true to list finished work too (the page's "Toon afgerond").
 	 *   - scope:  whose work, `mine` (default), `team` or `organisation` ({@see WorkScope}, REQ-MW-180).
 	 *   - member: with `team`, one member of the team; '' for the whole team.
+	 *   - priority: comma-separated priorities to keep (`urgent,high`); '' for all ({@see WorkFilters}, REQ-MW-200).
+	 *   - pipeline: keep only the leads of this pipeline id; tickets and follow-ups stay; '' for every pipeline.
 	 *
 	 * @param string $userId The Nextcloud UID asking.
-	 * @param array{bucket?: string, lens?: string, sort?: string, done?: bool, scope?: string, member?: string} $view The view.
+	 * @param array{bucket?: string, lens?: string, sort?: string, done?: bool, scope?: string, member?: string, priority?: string, pipeline?: string} $view The view.
 	 *
 	 * @return array{items: array<int, array<string, mixed>>, total: int}
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable.
-	 * @throws InvalidArgumentException For a scope the user may not choose, or a member outside their team.
+	 * @throws InvalidArgumentException For a scope the user may not choose, a member outside their team, or an unknown priority.
 	 *
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	public function items(string $userId, array $view=[]): array {
 		$list = [
@@ -470,7 +474,14 @@ class WorklistService implements WorklistServiceInterface {
 			scope: (string)($view['scope'] ?? WorkScope::MINE),
 			member: (string)($view['member'] ?? '')
 		);
-		$rows  = $this->openWorkRows(assigneeFilters: $filters, done: ($view['done'] ?? false) === true);
+		$narrow = WorkFilters::fromQuery(
+			priorities: (string)($view['priority'] ?? ''),
+			pipeline: (string)($view['pipeline'] ?? '')
+		);
+		$rows   = $narrow->keep(
+			rows: $this->openWorkRows(assigneeFilters: $filters, done: ($view['done'] ?? false) === true)
+		);
+
 		$items = (new WorkBuckets())->listed(rows: $rows, list: $list);
 
 		return ['items' => $this->withClientNames(items: $items), 'total' => count($items)];

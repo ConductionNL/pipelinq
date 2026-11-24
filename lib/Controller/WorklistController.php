@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
+use OCA\Pipelinq\Service\Worklist\WorkFilters;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -164,27 +165,39 @@ class WorklistController extends Controller {
 	}//end items()
 
 	/**
-	 * Read the items of a bucket with the requested lens, sort, finished work
-	 * and scope (`?scope=mine|team|organisation`, `?member=`, REQ-MW-180).
+	 * Read the items of a bucket with the requested lens, sort, finished work,
+	 * scope (`?scope=mine|team|organisation`, `?member=`, REQ-MW-180) and
+	 * filters (`?priority=urgent,high`, `?pipeline=<id>`, REQ-MW-200).
 	 *
 	 * @param IUser $user The signed-in user.
 	 * @param string $bucket The validated bucket.
 	 *
 	 * @return array<string, mixed>|JSONResponse The worklist result, a 400 for a scope the user may not
-	 *   ask for, or a 500 envelope when it is unavailable.
+	 *   ask for or an unknown priority, or a 500 envelope when it is unavailable.
 	 *
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	private function fetchItems(IUser $user, string $bucket): array|JSONResponse {
+		$priority = (string)$this->request->getParam('priority', '');
+		$pipeline = (string)$this->request->getParam('pipeline', '');
+		try {
+			WorkFilters::fromQuery(priorities: $priority, pipeline: $pipeline);
+		} catch (\InvalidArgumentException $e) {
+			return new JSONResponse(['message' => 'Invalid priority'], Http::STATUS_BAD_REQUEST);
+		}
+
 		[$scope, $member] = $this->workScopeParams();
 		$view = [
-			'bucket' => $bucket,
-			'lens'   => (string)$this->request->getParam('lens', ''),
-			'sort'   => (string)$this->request->getParam('sort', 'deadline'),
-			'done'   => $this->doneParam(),
-			'scope'  => $scope,
-			'member' => $member,
+			'bucket'   => $bucket,
+			'lens'     => (string)$this->request->getParam('lens', ''),
+			'sort'     => (string)$this->request->getParam('sort', 'deadline'),
+			'done'     => $this->doneParam(),
+			'scope'    => $scope,
+			'member'   => $member,
+			'priority' => $priority,
+			'pipeline' => $pipeline,
 		];
 
 		try {

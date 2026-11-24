@@ -10173,7 +10173,9 @@ OC.L10N.register(
         "Save as template": "Save as template",
         "Saved as template \"{name}\"": "Saved as template \"{name}\"",
         "The template could not be saved": "The template could not be saved",
-        "Give the template a name": "Give the template a name"
+        "Give the template a name": "Give the template a name",
+        "All priorities": "All priorities",
+        "All pipelines": "All pipelines"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -10857,7 +10857,7 @@
 						"id": "my-work-download",
 						"label": "Download",
 						"icon": "Download",
-						"href": "/apps/pipelinq/api/worklist/items?format=csv&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member"
+						"href": "/apps/pipelinq/api/worklist/items?format=csv&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member&priority=@workspace.priority&pipeline=@workspace.pipeline"
 					}
 				],
 				"gridSideColumn": {
@@ -10980,6 +10980,28 @@
 								},
 								{
 									"style": "select",
+									"label": "Priority",
+									"_note": "my-work-roadmap REQ-MW-200: one priority at a time for now; the several-at-once choice, Filters (N) and Clear filters wait on a multi-select workspace filter in nextcloud-vue.",
+									"writes": "@workspace.priority",
+									"urlKey": "priority",
+									"allLabel": "All priorities",
+									"options": [
+										{ "value": "urgent", "label": "Urgent" },
+										{ "value": "high", "label": "High" },
+										{ "value": "normal", "label": "Normal" },
+										{ "value": "low", "label": "Low" }
+									]
+								},
+								{
+									"label": "Pipeline",
+									"_note": "my-work-roadmap REQ-MW-200: narrows the leads to one pipeline; tickets and follow-ups stay in the list.",
+									"writes": "@workspace.pipeline",
+									"urlKey": "pipeline",
+									"allLabel": "All pipelines",
+									"objectSource": { "register": "pipelinq", "schema": "pipeline", "labelField": "title", "placeholder": "All pipelines", "ariaLabel": "Pipeline", "preload": true }
+								},
+								{
+									"style": "select",
 									"label": "Sorting",
 									"writes": "@workspace.sort",
 									"urlKey": "sort",
@@ -11014,7 +11036,7 @@
 						"viewport": "narrow",
 						"content": {
 							"endpointSource": {
-								"url": "/apps/pipelinq/api/worklist/items?lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member",
+								"url": "/apps/pipelinq/api/worklist/items?lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member&priority=@workspace.priority&pipeline=@workspace.pipeline",
 								"responsePath": "items"
 							},
 							"presentation": "rows",
@@ -11231,7 +11253,7 @@
 							"chevron": true,
 							"headerNote": "deadline is today or has passed",
 							"endpointSource": {
-								"url": "/apps/pipelinq/api/worklist/items?bucket=answer-today&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member",
+								"url": "/apps/pipelinq/api/worklist/items?bucket=answer-today&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member&priority=@workspace.priority&pipeline=@workspace.pipeline",
 								"responsePath": "items"
 							},
 							"limit": 5,
@@ -11319,7 +11341,7 @@
 							"chevron": true,
 							"headerNote": "the customer has replied",
 							"endpointSource": {
-								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member",
+								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member&priority=@workspace.priority&pipeline=@workspace.pipeline",
 								"responsePath": "items"
 							},
 							"limit": 5,
@@ -11407,7 +11429,7 @@
 							"chevron": true,
 							"headerNote": "nothing to do until they reply",
 							"endpointSource": {
-								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member",
+								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member&priority=@workspace.priority&pipeline=@workspace.pipeline",
 								"responsePath": "items"
 							},
 							"limit": 5,

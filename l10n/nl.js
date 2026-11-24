@@ -10188,7 +10188,9 @@ OC.L10N.register(
         "Save as template": "Opslaan als sjabloon",
         "Saved as template \"{name}\"": "Opgeslagen als sjabloon \"{name}\"",
         "The template could not be saved": "Het sjabloon kon niet worden opgeslagen",
-        "Give the template a name": "Geef het sjabloon een naam"
+        "Give the template a name": "Geef het sjabloon een naam",
+        "All priorities": "Alle prioriteiten",
+        "All pipelines": "Alle pijplijnen"
     },
     "nplurals=2; plural=(n != 1);"
 )
