@@ -674,6 +674,17 @@ const registry = {
 		component: ContactmomentQuickLog,
 		_note: 'Inline contactmoment quick-log form pre-bound to the client (clientId, inline mode). On save it emits @saved; in declarative mode the page is refreshed via the CnDetailPage Refresh action rather than an imperative re-fetch.',
 	},
+	ContactmomentQuickLogWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ContactmomentQuickLogWidget',
+			ContactmomentQuickLog,
+			({ objectId }) => ({ clientId: objectId, inline: true }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'The quick log with its server draft as a grid widget, so ClientDetail mounts it on top of the Contact moments tab (contact-moments-keep-draft): the relation-board layout does not reach a body section below the tab strip.',
+	},
 	ContactLinks: {
 		kind: 'section',
 		component: ContactLinks,
