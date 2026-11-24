@@ -135,10 +135,12 @@ describe('the My work page', () => {
 		const week = widget('my-week')
 		expect(week.type).toBe('stats-block')
 		expect(week.content.layout).toBe('grid')
+		// REQ-MW-090: the four figures come from the server, scoped to the
+		// user (or the team they chose), not from per-tile list counts.
 		for (const stat of week.content.stats) {
-			expect(stat.source.filter.assignee, stat.label).toBe('@me')
+			expect(stat.endpointSource.url, stat.label).toBe('/apps/pipelinq/api/my-work/week-stats?scope=@workspace.scope')
 		}
-		expect(week.content.stats.map((s) => s.source.kind)).toContain('elapsed')
+		expect(week.content.stats.map((s) => s.valueField)).toEqual(['answered', 'withinDeadline', 'averageAnswerDays', 'converted'])
 	})
 
 	it('says what each list shows when it is empty, and labels the channel', () => {

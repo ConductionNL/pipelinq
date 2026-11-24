@@ -110,7 +110,7 @@
 		{
 			"id": "MyWork",
 			"order": 12,
-			"icon": "InboxOutline",
+			"icon": "ClipboardAccountOutline",
 			"count": {
 				"register": "pipelinq",
 				"schema": "ticket",
