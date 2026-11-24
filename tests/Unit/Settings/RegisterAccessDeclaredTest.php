@@ -51,6 +51,12 @@ class RegisterAccessDeclaredTest extends TestCase {
 	private const VOCABULARIES = ['partyFieldSet', 'partyIndicator', 'partyKind', 'product', 'productCategory'];
 
 	/**
+	 * The one non-staff read and update grant on ticket and lead: a colleague listed on the record
+	 * (notify-the-followers-of-tickets-and-leads, REQ-NFTL-005).
+	 */
+	private const COLLABORATOR_RULE = ['group' => 'authenticated', 'match' => ['collaborators' => ['$contains' => '$userId']]];
+
+	/**
 	 * The merged register configuration.
 	 *
 	 * @var array<string, mixed>
@@ -138,7 +144,7 @@ class RegisterAccessDeclaredTest extends TestCase {
 		foreach (['ticket', 'channelMessage', 'channelConversation', 'messagingConsentRecord'] as $slug) {
 			$this->assertContains('pipelinq-messaging-service', $schemas[$slug]['authorization']['create'], $slug);
 			$this->assertContains('pipelinq-messaging-service', $schemas[$slug]['authorization']['update'], $slug);
-			$this->assertSame(self::STAFF, $schemas[$slug]['authorization']['read'], $slug);
+			$this->assertSame(expected: self::STAFF, actual: $this->withoutCollaborators(rules: $schemas[$slug]['authorization']['read']), message: $slug);
 		}
 
 		foreach (['crmPortalAccount', 'crmPortalSession', 'portalDelegation', 'portalAuditEvent', 'portalTenantConfig'] as $slug) {
@@ -147,8 +153,21 @@ class RegisterAccessDeclaredTest extends TestCase {
 		}
 
 		$this->assertContains('public', $schemas['lead']['authorization']['create'], 'the website form still creates a lead');
-		$this->assertSame(self::STAFF, $schemas['lead']['authorization']['read']);
+		$this->assertSame(expected: self::STAFF, actual: $this->withoutCollaborators(rules: $schemas['lead']['authorization']['read']));
 	}//end testServiceAccountsAndTheWebFormKeepTheirGrants()
+
+	/**
+	 * The rules without the collaborator grant, which ticket and lead add to read and update.
+	 *
+	 * @param array<int, mixed> $rules The verb's rules.
+	 *
+	 * @return array<int, mixed> The rules without it.
+	 *
+	 * @spec openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity/spec.md#requirement-a-colleague-added-to-a-ticket-or-lead-can-work-on-it-req-nftl-005
+	 */
+	private function withoutCollaborators(array $rules): array {
+		return array_values(array_filter($rules, static fn (mixed $rule): bool => $rule !== self::COLLABORATOR_RULE));
+	}//end withoutCollaborators()
 
 	/**
 	 * The schemas the CRM read group reads carry the staff block as their own.
@@ -165,7 +184,11 @@ class RegisterAccessDeclaredTest extends TestCase {
 		foreach (\OCA\Pipelinq\Service\Access\RegisterAccessSync::READ_SCHEMAS as $slug) {
 			$authorization = $this->config['components']['schemas'][$slug]['authorization'] ?? [];
 			foreach (['read', 'export'] as $verb) {
-				$this->assertSame(self::STAFF, $authorization[$verb] ?? null, $slug.'.'.$verb);
+				$this->assertSame(
+					expected: self::STAFF,
+					actual: $this->withoutCollaborators(rules: (array)($authorization[$verb] ?? [])),
+					message: $slug.'.'.$verb
+				);
 			}
 
 			// Writes name the staff; ticket also keeps the messaging account's create and update.

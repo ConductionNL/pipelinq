@@ -10193,6 +10193,8 @@ OC.L10N.register(
         "All pipelines": "Alle pijplijnen",
         "A call comes in for me or my sales team": "Er komt een gesprek binnen voor mij of mijn verkoopteam",
         "An email comes in for me or my sales team": "Er komt een e-mail binnen voor mij of mijn verkoopteam",
+        "Colleagues": "Collega's",
+        "The colleagues who work on this with the assignee. They can open and change it while they are listed.": "De collega's die hier samen met de behandelaar aan werken. Zolang ze erop staan, kunnen ze het openen en wijzigen.",
         "Pass on": "Doorzetten",
         "Note for your colleague": "Notitie voor uw collega",
         "Shown under the handover in the ticket's History.": "Staat onder de overdracht in de Geschiedenis van het ticket.",
