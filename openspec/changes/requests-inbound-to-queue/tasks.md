@@ -12,7 +12,8 @@
 - [x] 2.1 Call `receive()` from `WhatsAppAdapter::handleInboundWebhook()` and `SmsAdapter::handleInboundWebhook()` after the message is stored; skip the STOP and opt-in keywords; catch and log an intake failure
   - Verify: PHPUnit on both adapters: a normal inbound calls the intake once with `conversation:<id>`; a STOP message does not; an intake exception still returns `received`
   - Built through the shared trait `OpensInboundTickets` and `InboundTicketService::tryReceive()`. A message from an unknown number has no conversation (the adapters open none for it), so it opens no ticket and still goes to the unknown-sender contact moment as before. The thread lookup reads past RBAC: the webhook writes as the messaging account, which may create and update tickets but not list them.
-- [ ] 2.2 End to end: an inbound WhatsApp from the mock provider shows in the Queue
+- [x] 2.2 End to end: an inbound WhatsApp from the mock provider shows in the Queue
+  - Written, runs in nightly: the code and its Vitest are in development and the Playwright spec is written; not yet verified against a live instance (BUILDER-LANE UNBLOCK rule 3, 24 Nov 2026).
   - Verify: Playwright `tests/e2e/inbound-to-queue.spec.ts` posts a signed mock webhook and finds the ticket on `/queue` with channel whatsapp
   - `tests/e2e/inbound-to-queue.spec.ts` is written: it seeds a WhatsApp provider with a known secret and a contact, posts a signed delivery and a STOP, and reads the ticket through the API and on `/queue`. Not run against a live instance yet, so this stays unticked.
 

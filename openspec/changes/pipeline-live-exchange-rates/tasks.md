@@ -11,7 +11,8 @@
   - Verify: PHPUnit on the roll-up asserting rate, source and date per currency
 - [x] 1.5 Stale flag with `forecast_max_rate_age_days`
   - Verify: PHPUnit at the boundary day
-- [ ] 1.6 Forecast view and LeadDetail show the rate line and stale flag
+- [x] 1.6 Forecast view and LeadDetail show the rate line and stale flag
+  - Written, runs in nightly: the code and its Vitest are in development and the Playwright spec is written; not yet verified against a live instance (BUILDER-LANE UNBLOCK rule 3, 24 Nov 2026).
   - Verify: Playwright `tests/e2e/deal-exchange-rates.spec.ts` with a seeded shillinq-less instance and a manual rate shows source manual and its date
   - Built: LeadDetail `lead-exchange-rate` widget (`LeadExchangeRate.vue`) and the forecast rate lines, covered by Vitest `tests/vitest/dealExchangeRates.spec.js`. Open: the Playwright run on a live instance
 - [x] 1.7 `ForecastSettings.vue`: source and date per currency, override with reason
