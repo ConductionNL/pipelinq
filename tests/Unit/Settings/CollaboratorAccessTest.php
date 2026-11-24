@@ -54,10 +54,10 @@ class CollaboratorAccessTest extends TestCase {
 	 * @return array<string, mixed> The configuration.
 	 */
 	private function merged(): array {
-		$appManager = $this->createMock(IAppManager::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('getAppPath')->willReturn(dirname(__DIR__, 3));
 
-		return (new ConfigFileLoaderService($appManager))->loadConfigurationFile();
+		return (new ConfigFileLoaderService(appManager: $appManager))->loadConfigurationFile();
 	}//end merged()
 
 	/**
@@ -85,9 +85,9 @@ class CollaboratorAccessTest extends TestCase {
 			$staff = $this->staffBlock(schema: $schema);
 			foreach (['read', 'update'] as $verb) {
 				$this->assertSame(
-					array_merge($staff[$verb], [self::RULE]),
-					$schemas[$schema]['authorization'][$verb],
-					"{$schema}.{$verb}"
+					expected: array_merge($staff[$verb], [self::RULE]),
+					actual: $schemas[$schema]['authorization'][$verb],
+					message: "{$schema}.{$verb}"
 				);
 			}
 		}
@@ -103,7 +103,7 @@ class CollaboratorAccessTest extends TestCase {
 		foreach (['ticket', 'lead'] as $schema) {
 			$staff = $this->staffBlock(schema: $schema);
 			foreach (['create', 'delete', 'export'] as $verb) {
-				$this->assertSame($staff[$verb], $schemas[$schema]['authorization'][$verb], "{$schema}.{$verb}");
+				$this->assertSame(expected: $staff[$verb], actual: $schemas[$schema]['authorization'][$verb], message: "{$schema}.{$verb}");
 			}
 		}
 	}//end testOtherVerbsStayWithTheStaff()
@@ -117,8 +117,8 @@ class CollaboratorAccessTest extends TestCase {
 		$schemas = $this->merged()['components']['schemas'];
 		foreach (['ticket', 'lead'] as $schema) {
 			$property = $schemas[$schema]['properties']['collaborators'];
-			$this->assertSame('array', $property['type'], $schema);
-			$this->assertSame(['type' => 'string', 'format' => 'user'], $property['items'], $schema);
+			$this->assertSame(expected: 'array', actual: $property['type'], message: $schema);
+			$this->assertSame(expected: ['type' => 'string', 'format' => 'user'], actual: $property['items'], message: $schema);
 		}
 	}//end testCollaboratorsIsAListOfUsers()
 
@@ -133,14 +133,14 @@ class CollaboratorAccessTest extends TestCase {
 	public function testOpenRegisterAdmitsOnlyWhileListed(): void {
 		$matcher = $this->openRegisterMatcher(uid: 'jeroen');
 		if ($matcher === null) {
-			$this->markTestSkipped('No OpenRegister checkout with ConditionMatcher found (set OPENREGISTER_PATH).');
+			$this->markTestSkipped(message: 'No OpenRegister checkout with ConditionMatcher found (set OPENREGISTER_PATH).');
 		}
 
 		$match = self::RULE['match'];
-		$this->assertTrue($matcher->objectMatchesConditions(['collaborators' => ['sanne', 'jeroen']], $match));
-		$this->assertFalse($matcher->objectMatchesConditions(['collaborators' => ['sanne']], $match));
-		$this->assertFalse($matcher->objectMatchesConditions(['collaborators' => []], $match));
-		$this->assertFalse($matcher->objectMatchesConditions(['collaborators' => null], $match));
+		$this->assertTrue(condition: $matcher->objectMatchesConditions(['collaborators' => ['sanne', 'jeroen']], $match));
+		$this->assertFalse(condition: $matcher->objectMatchesConditions(['collaborators' => ['sanne']], $match));
+		$this->assertFalse(condition: $matcher->objectMatchesConditions(['collaborators' => []], $match));
+		$this->assertFalse(condition: $matcher->objectMatchesConditions(['collaborators' => null], $match));
 	}//end testOpenRegisterAdmitsOnlyWhileListed()
 
 	/**
@@ -175,9 +175,9 @@ class CollaboratorAccessTest extends TestCase {
 			}
 		);
 
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn($uid);
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
 		$users = new ('OCA\\OpenRegister\\Service\\ConditionUserResolvers')($session);
@@ -185,7 +185,7 @@ class CollaboratorAccessTest extends TestCase {
 
 		return new ('OCA\\OpenRegister\\Service\\ConditionMatcher')(
 			$users,
-			$this->createMock(ContainerInterface::class),
+			$this->createMock(originalClassName: ContainerInterface::class),
 			$evaluator,
 			new NullLogger()
 		);

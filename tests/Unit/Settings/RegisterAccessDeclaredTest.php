@@ -144,7 +144,7 @@ class RegisterAccessDeclaredTest extends TestCase {
 		foreach (['ticket', 'channelMessage', 'channelConversation', 'messagingConsentRecord'] as $slug) {
 			$this->assertContains('pipelinq-messaging-service', $schemas[$slug]['authorization']['create'], $slug);
 			$this->assertContains('pipelinq-messaging-service', $schemas[$slug]['authorization']['update'], $slug);
-			$this->assertSame(self::STAFF, $this->withoutCollaborators(rules: $schemas[$slug]['authorization']['read']), $slug);
+			$this->assertSame(expected: self::STAFF, actual: $this->withoutCollaborators(rules: $schemas[$slug]['authorization']['read']), message: $slug);
 		}
 
 		foreach (['crmPortalAccount', 'crmPortalSession', 'portalDelegation', 'portalAuditEvent', 'portalTenantConfig'] as $slug) {
@@ -153,7 +153,7 @@ class RegisterAccessDeclaredTest extends TestCase {
 		}
 
 		$this->assertContains('public', $schemas['lead']['authorization']['create'], 'the website form still creates a lead');
-		$this->assertSame(self::STAFF, $this->withoutCollaborators(rules: $schemas['lead']['authorization']['read']));
+		$this->assertSame(expected: self::STAFF, actual: $this->withoutCollaborators(rules: $schemas['lead']['authorization']['read']));
 	}//end testServiceAccountsAndTheWebFormKeepTheirGrants()
 
 	/**
@@ -184,7 +184,11 @@ class RegisterAccessDeclaredTest extends TestCase {
 		foreach (\OCA\Pipelinq\Service\Access\RegisterAccessSync::READ_SCHEMAS as $slug) {
 			$authorization = $this->config['components']['schemas'][$slug]['authorization'] ?? [];
 			foreach (['read', 'export'] as $verb) {
-				$this->assertSame(self::STAFF, $this->withoutCollaborators(rules: (array)($authorization[$verb] ?? [])), $slug.'.'.$verb);
+				$this->assertSame(
+					expected: self::STAFF,
+					actual: $this->withoutCollaborators(rules: (array)($authorization[$verb] ?? [])),
+					message: $slug.'.'.$verb
+				);
 			}
 
 			// Writes name the staff; ticket also keeps the messaging account's create and update.
