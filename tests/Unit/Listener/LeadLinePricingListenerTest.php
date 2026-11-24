@@ -50,7 +50,8 @@ class LeadLinePricingListenerTest extends TestCase {
 	}//end testANewLeadLineGetsItsPriceMergedIntoWhatIsStored()
 
 	/**
-	 * An edit compares with the stored line.
+	 * An edit compares with the stored line: a typed 88 is not the product's
+	 * own price (95), so the line is marked as set by hand.
 	 *
 	 * @return void
 	 */
@@ -65,7 +66,7 @@ class LeadLinePricingListenerTest extends TestCase {
 		);
 		$event = new ObjectUpdatingEvent($new, $old);
 
-		$this->listener(resolves: false)->handle(event: $event);
+		$this->listener(resolves: true)->handle(event: $event);
 
 		$this->assertSame(expected: ['priceSource' => 'manual', 'priceListTitle' => null], actual: $event->getModifiedData());
 	}//end testAnEditComparesWithTheStoredLine()
