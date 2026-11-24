@@ -316,7 +316,16 @@ class WorklistControllerTest extends TestCase {
 		$this->service->expects($this->exactly(2))->method('items')
 			->with(
 				'pieter',
-				['bucket' => 'answer-today', 'lens' => 'leads', 'sort' => 'priority', 'done' => true, 'scope' => 'mine', 'member' => '', 'priority' => '', 'pipeline' => '']
+				[
+					'bucket'   => 'answer-today',
+					'lens'     => 'leads',
+					'sort'     => 'priority',
+					'done'     => true,
+					'scope'    => 'mine',
+					'member'   => '',
+					'priority' => '',
+					'pipeline' => '',
+				]
 			)
 			->willReturn(['items' => [$item], 'total' => 1]);
 
