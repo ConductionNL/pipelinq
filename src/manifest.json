@@ -561,7 +561,7 @@
 		{
 			"id": "MyWork",
 			"label": "My Work",
-			"icon": "InboxOutline",
+			"icon": "ClipboardAccountOutline",
 			"route": "MyWork",
 			"order": 20
 		},
