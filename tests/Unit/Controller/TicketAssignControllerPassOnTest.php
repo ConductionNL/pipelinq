@@ -55,9 +55,9 @@ class TicketAssignControllerPassOnTest extends TestCase {
 	 * @return TicketAssignController The controller.
 	 */
 	private function controller(bool $signedIn=true): TicketAssignController {
-		$this->objects = $this->createMock(ObjectServiceInterface::class);
+		$this->objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 
-		$tickets = $this->createMock(TicketService::class);
+		$tickets = $this->createMock(originalClassName: TicketService::class);
 		$tickets->method('isConfigured')->willReturn(true);
 		$tickets->method('getRegisterId')->willReturn('20');
 		$tickets->method('getSchemaId')->willReturn('40');
@@ -65,14 +65,14 @@ class TicketAssignControllerPassOnTest extends TestCase {
 
 		$user = null;
 		if ($signedIn === true) {
-			$user = $this->createMock(IUser::class);
+			$user = $this->createMock(originalClassName: IUser::class);
 			$user->method('getUID')->willReturn('sanne');
 		}
 
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
-		return new TicketAssignController($this->createMock(IRequest::class), $tickets, $session);
+		return new TicketAssignController(request: $this->createMock(originalClassName: IRequest::class), tickets: $tickets, userSession: $session);
 	}//end controller()
 
 	/**
@@ -96,7 +96,7 @@ class TicketAssignControllerPassOnTest extends TestCase {
 	 */
 	private function expectSave(callable $check): void {
 		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
-				'object' => $this->callback($check),
+				'object' => $this->callback(callback: $check),
 				'extend' => $this->anything(),
 				'register' => '20',
 				'schema' => '40',
@@ -112,15 +112,15 @@ class TicketAssignControllerPassOnTest extends TestCase {
 	public function testPassesTheTicketWithItsNoteInOneSave(): void {
 		$controller = $this->controller();
 		$this->objects->method('find')->willReturn($this->ticket());
-		$this->expectSave(static fn (array $object): bool => $object['assignee'] === 'joris'
+		$this->expectSave(check: static fn (array $object): bool => $object['assignee'] === 'joris'
 			&& $object['handoverNote'] === 'Needs the permit number'
 			&& $object['title'] === 'Permit question'
 			&& isset($object['@self']) === false);
 
 		$response = $controller->passOn(id: 't-1', assignee: ' joris ', handoverNote: "  Needs the permit number\n");
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(['id' => 't-1', 'assignee' => 'joris'], $response->getData());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['id' => 't-1', 'assignee' => 'joris'], actual: $response->getData());
 	}//end testPassesTheTicketWithItsNoteInOneSave()
 
 	/**
@@ -131,9 +131,9 @@ class TicketAssignControllerPassOnTest extends TestCase {
 	public function testAHandoverWithoutANoteClearsTheOldOne(): void {
 		$controller = $this->controller();
 		$this->objects->method('find')->willReturn($this->ticket());
-		$this->expectSave(static fn (array $object): bool => $object['assignee'] === 'joris' && $object['handoverNote'] === '');
+		$this->expectSave(check: static fn (array $object): bool => $object['assignee'] === 'joris' && $object['handoverNote'] === '');
 
-		$this->assertSame(Http::STATUS_OK, $controller->passOn(id: 't-1', assignee: 'joris')->getStatus());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $controller->passOn(id: 't-1', assignee: 'joris')->getStatus());
 	}//end testAHandoverWithoutANoteClearsTheOldOne()
 
 	/**
@@ -169,7 +169,7 @@ class TicketAssignControllerPassOnTest extends TestCase {
 		$this->objects->expects($this->never())->method('find');
 		$this->objects->expects($this->never())->method('saveObject');
 
-		$this->assertSame($status, $controller->passOn(id: $id, assignee: $assignee, handoverNote: $note)->getStatus());
+		$this->assertSame(expected: $status, actual: $controller->passOn(id: $id, assignee: $assignee, handoverNote: $note)->getStatus());
 	}//end testRefusedRequestsWriteNothing()
 
 	/**
@@ -181,11 +181,11 @@ class TicketAssignControllerPassOnTest extends TestCase {
 		$controller = $this->controller();
 		$this->objects->method('find')->willThrowException(new RuntimeException('no read permission'));
 		$this->objects->expects($this->never())->method('saveObject');
-		$this->assertSame(Http::STATUS_NOT_FOUND, $controller->passOn(id: 't-x', assignee: 'joris')->getStatus());
+		$this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $controller->passOn(id: 't-x', assignee: 'joris')->getStatus());
 
 		$controller = $this->controller();
 		$this->objects->method('find')->willReturn($this->ticket());
 		$this->objects->method('saveObject')->willThrowException(new RuntimeException('no update permission'));
-		$this->assertSame(Http::STATUS_FORBIDDEN, $controller->passOn(id: 't-1', assignee: 'joris')->getStatus());
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $controller->passOn(id: 't-1', assignee: 'joris')->getStatus());
 	}//end testUnreadableIsNotFoundAndRefusedWriteIsForbidden()
 }//end class

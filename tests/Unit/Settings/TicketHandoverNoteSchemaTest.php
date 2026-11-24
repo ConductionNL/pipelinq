@@ -41,9 +41,9 @@ class TicketHandoverNoteSchemaTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function ticket(): array {
-		$appManager = $this->createMock(IAppManager::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('getAppPath')->willReturn(dirname(__DIR__, 3));
-		$config = (new ConfigFileLoaderService($appManager))->loadConfigurationFile();
+		$config = (new ConfigFileLoaderService(appManager: $appManager))->loadConfigurationFile();
 		return $config['components']['schemas']['ticket'];
 	}//end ticket()
 
@@ -56,12 +56,12 @@ class TicketHandoverNoteSchemaTest extends TestCase {
 		$ticket = $this->ticket();
 		$note = $ticket['properties']['handoverNote'];
 
-		$this->assertSame('string', $note['type']);
-		$this->assertSame(1000, $note['maxLength']);
-		$this->assertFalse($note['visible']);
-		$this->assertNotSame('', $note['title']);
-		$this->assertNotSame('', $note['description']);
-		$this->assertTrue(version_compare($ticket['version'], '1.10.0', '>='));
-		$this->assertSame('user', $ticket['properties']['assignee']['format']);
+		$this->assertSame(expected: 'string', actual: $note['type']);
+		$this->assertSame(expected: 1000, actual: $note['maxLength']);
+		$this->assertFalse(condition: $note['visible']);
+		$this->assertNotSame(expected: '', actual: $note['title']);
+		$this->assertNotSame(expected: '', actual: $note['description']);
+		$this->assertTrue(condition: version_compare($ticket['version'], '1.10.0', '>='));
+		$this->assertSame(expected: 'user', actual: $ticket['properties']['assignee']['format']);
 	}//end testTheTicketCarriesAHiddenHandoverNote()
 }//end class

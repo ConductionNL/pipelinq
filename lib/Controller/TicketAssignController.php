@@ -112,16 +112,7 @@ class TicketAssignController extends Controller {
 			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		if ($this->tickets->isConfigured() === false) {
-			return new JSONResponse(['error' => 'Tickets are not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
-		}
-
-		$ticket = $this->findTicket(id: $id);
-		if ($ticket === null) {
-			return new JSONResponse(['error' => 'Ticket not found'], Http::STATUS_NOT_FOUND);
-		}
-
-		return $this->assign(ticket: array_replace($ticket, ['assignee' => $user->getUID()]), id: $id);
+		return $this->reassign(id: $id, changes: ['assignee' => $user->getUID()]);
 	}//end assignToMe()
 
 	/**
@@ -153,6 +144,20 @@ class TicketAssignController extends Controller {
 			return new JSONResponse(['error' => 'Choose a colleague, and keep the note under 1000 characters'], Http::STATUS_BAD_REQUEST);
 		}
 
+		return $this->reassign(id: $id, changes: ['assignee' => $assignee, 'handoverNote' => $note]);
+	}//end passOn()
+
+	/**
+	 * Read a ticket and save it with the given fields changed.
+	 *
+	 * @param string               $id      The ticket id.
+	 * @param array<string, mixed> $changes The fields to set, carrying the new `assignee`.
+	 *
+	 * @return JSONResponse The ticket's id and new assignee, or an error.
+	 *
+	 * @spec openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#REQ-THH-001
+	 */
+	private function reassign(string $id, array $changes): JSONResponse {
 		if ($this->tickets->isConfigured() === false) {
 			return new JSONResponse(['error' => 'Tickets are not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
@@ -162,8 +167,8 @@ class TicketAssignController extends Controller {
 			return new JSONResponse(['error' => 'Ticket not found'], Http::STATUS_NOT_FOUND);
 		}
 
-		return $this->assign(ticket: array_replace($ticket, ['assignee' => $assignee, 'handoverNote' => $note]), id: $id);
-	}//end passOn()
+		return $this->assign(ticket: array_replace($ticket, $changes), id: $id);
+	}//end reassign()
 
 	/**
 	 * A ticket's data, read under the user's RBAC; null when absent or unreadable.
