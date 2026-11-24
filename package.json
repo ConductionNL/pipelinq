@@ -95,7 +95,7 @@
     "postcss-html": "^2.0.0",
     "prettier": "^3.9.9",
     "sass": "^1.104.0",
-    "sass-loader": "^17.0.0",
+    "sass-loader": "^17.1.1",
     "style-loader": "~4.0.0",
     "stylelint": "^17.15.0",
     "stylelint-config-html": "^1.1.0",
