@@ -10177,7 +10177,9 @@ OC.L10N.register(
         "All priorities": "All priorities",
         "All pipelines": "All pipelines",
         "A call comes in for me or my sales team": "A call comes in for me or my sales team",
-        "An email comes in for me or my sales team": "An email comes in for me or my sales team"
+        "An email comes in for me or my sales team": "An email comes in for me or my sales team",
+        "Colleagues": "Colleagues",
+        "The colleagues who work on this with the assignee. They can open and change it while they are listed.": "The colleagues who work on this with the assignee. They can open and change it while they are listed."
     },
     "nplurals=2; plural=(n != 1);"
 )
