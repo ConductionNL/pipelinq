@@ -10287,6 +10287,13 @@
         "All priorities": "All priorities",
         "All pipelines": "All pipelines",
         "A call comes in for me or my sales team": "A call comes in for me or my sales team",
-        "An email comes in for me or my sales team": "An email comes in for me or my sales team"
+        "An email comes in for me or my sales team": "An email comes in for me or my sales team",
+        "Pass on": "Pass on",
+        "Note for your colleague": "Note for your colleague",
+        "Shown under the handover in the ticket's History.": "Shown under the handover in the ticket's History.",
+        "Ticket passed on.": "Ticket passed on.",
+        "Could not pass this ticket on.": "Could not pass this ticket on.",
+        "Handover note": "Handover note",
+        "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note.": "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note."
     }
 }
