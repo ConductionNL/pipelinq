@@ -44,7 +44,7 @@ interface EventRegistrationServiceInterface {
 	 *
 	 * @return EventRegistrationOutcome The cancelled registration and whoever moved up.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function cancel(string $registrationId): EventRegistrationOutcome;
 
@@ -55,7 +55,7 @@ interface EventRegistrationServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The event.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function event(string $eventId): ?array;
 
@@ -70,7 +70,7 @@ interface EventRegistrationServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The event.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
 	 */
 	public function eventForCampaign(string $campaignId): ?array;
 
@@ -82,7 +82,7 @@ interface EventRegistrationServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The events.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function eventsStartingBetween(int $from, int $to): array;
 
@@ -94,7 +94,7 @@ interface EventRegistrationServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The registration, or null when it does not exist.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
 	 */
 	public function markAttendance(string $registrationId, bool $attended): ?array;
 
@@ -107,7 +107,7 @@ interface EventRegistrationServiceInterface {
 	 *
 	 * @return EventRegistrationOutcome What happened, and the registration as it stands.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
 	 */
 	public function register(array $event, array $person): EventRegistrationOutcome;
 
@@ -118,7 +118,7 @@ interface EventRegistrationServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The registration.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function registration(string $registrationId): ?array;
 
@@ -130,7 +130,7 @@ interface EventRegistrationServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The registrations, in the order they came in.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
 	 */
 	public function registrationsWithStatus(string $eventId, string $status): array;
 
@@ -142,7 +142,7 @@ interface EventRegistrationServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function stamp(array $registration, string $field): void;
 }//end interface

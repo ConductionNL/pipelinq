@@ -21,7 +21,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/archive/2026-11-24-marketing-events/tasks.md#3.1
+ * @spec openspec/changes/marketing-events/tasks.md#3.1
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/archive/2026-11-24-marketing-events/tasks.md#3.1
+ * @spec openspec/changes/marketing-events/tasks.md#3.1
  */
 class EventCancelledListener implements IEventListener, DeferredObjectWork {
 	use DefersObjectWork;
@@ -88,7 +88,7 @@ class EventCancelledListener implements IEventListener, DeferredObjectWork {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/archive/2026-11-24-marketing-events/tasks.md#3.1
+	 * @spec openspec/changes/marketing-events/tasks.md#3.1
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectUpdatedEvent) === false) {
@@ -117,7 +117,7 @@ class EventCancelledListener implements IEventListener, DeferredObjectWork {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/archive/2026-11-24-marketing-events/tasks.md#3.1
+	 * @spec openspec/changes/marketing-events/tasks.md#3.1
 	 */
 	public function runDeferredWork(array $entry): void {
 		$uuid = (string)($entry['uuid'] ?? '');

@@ -20,7 +20,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
+ * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use OCP\IUserSession;
 /**
  * Add attendees by hand and record who came.
  *
- * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
+ * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
  */
 class EventAttendanceController extends Controller {
 
@@ -55,7 +55,7 @@ class EventAttendanceController extends Controller {
 	 * @param CallerObjectReaderInterface       $reader        Reads as the caller, so access rules apply.
 	 * @param IUserSession             $userSession   The caller.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
 	 */
 	public function __construct(
 		IRequest $request,
@@ -75,7 +75,7 @@ class EventAttendanceController extends Controller {
 	 *
 	 * @return JSONResponse The registration, 401 without a user, 404 when the caller cannot read it.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
 	 */
 	#[NoAdminRequired]
 	public function attendance(string $id, bool $attended = true): JSONResponse {
@@ -104,7 +104,7 @@ class EventAttendanceController extends Controller {
 	 *
 	 * @return JSONResponse The outcome and registration; 400 without an address, 409 when the event is closed.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
 	 */
 	#[NoAdminRequired]
 	public function add(string $id, string $name = '', string $email = ''): JSONResponse {

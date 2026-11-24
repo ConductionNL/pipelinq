@@ -184,7 +184,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
 	 */
 	private function registerForEvent(LandingSubmission $submission, SubmissionRecords $records): void {
 		$values = $submission->event->getValues();
@@ -229,7 +229,7 @@ class LandingPageFormSubmittedListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	private function mailConfirmation(array $campaignEvent, EventRegistrationOutcome $outcome): void {
 		if ($this->eventMails === null) {

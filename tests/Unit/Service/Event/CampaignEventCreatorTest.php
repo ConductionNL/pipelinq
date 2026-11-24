@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+ * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The campaign page's Create event: what is checked, how times are read and what is written.
  *
- * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+ * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
  */
 #[CoversClass(CampaignEventCreator::class)]
 class CampaignEventCreatorTest extends TestCase

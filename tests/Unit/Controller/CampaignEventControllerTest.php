@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+ * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ use RuntimeException;
 /**
  * The Create event route: who may call it, what it answers, and that a refusal writes nothing.
  *
- * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
+ * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-campaign-can-have-an-event-req-mev-001
  */
 #[CoversClass(CampaignEventController::class)]
 #[UsesClass(CampaignEventCreator::class)]

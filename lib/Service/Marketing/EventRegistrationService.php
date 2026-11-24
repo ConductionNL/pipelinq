@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+ * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 /**
  * Registrations for a campaign event: register, cancel, mark attendance.
  *
- * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+ * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
  *
  * @SuppressWarnings(PHPMD.TooManyMethods) The total is the sum of small private steps; each method stays under the method thresholds.
  */
@@ -68,7 +68,7 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 * @param TouchpointService $touchpoints Where attendance is counted.
 	 * @param ITimeFactory      $time        The clock.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -88,7 +88,7 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The event.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
 	 */
 	public function eventForCampaign(string $campaignId): ?array {
 		if (trim($campaignId) === '') {
@@ -123,7 +123,7 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The events.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function eventsStartingBetween(int $from, int $to): array {
 		$out = [];
@@ -148,7 +148,7 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The event.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function event(string $eventId): ?array {
 		return $this->store->find(schemaSlug: $this->eventSlug(), id: $eventId);
@@ -161,7 +161,7 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The registration.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function registration(string $registrationId): ?array {
 		return $this->store->find(schemaSlug: $this->registrationSlug(), id: $registrationId);
@@ -174,7 +174,7 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 *
 	 * @return bool True while its status takes registrations and its closing time has not passed.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
 	 */
 	public function isTaking(array $event): bool {
 		if (in_array((string)($event['signupStatus'] ?? ''), self::TAKING, true) === false) {
@@ -194,7 +194,7 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 *
 	 * @return EventRegistrationOutcome What happened, and the registration as it stands.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
 	 */
 	public function register(array $event, array $person): EventRegistrationOutcome {
 		$eventId = $this->store->idOf(payload: $event);
@@ -313,7 +313,7 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 *
 	 * @return EventRegistrationOutcome The cancelled registration and whoever moved up.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function cancel(string $registrationId): EventRegistrationOutcome {
 		$registration = $this->registration(registrationId: $registrationId);
@@ -382,7 +382,7 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The registration, or null when it does not exist.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-the-team-keeps-the-attendee-list-and-who-came-req-mev-004
 	 */
 	public function markAttendance(string $registrationId, bool $attended): ?array {
 		$registration = $this->registration(registrationId: $registrationId);
@@ -416,7 +416,7 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-attendees-get-a-confirmation-a-reminder-and-a-way-to-cancel-req-mev-003
 	 */
 	public function stamp(array $registration, string $field): void {
 		$id = $this->store->idOf(payload: $registration);
@@ -436,7 +436,7 @@ class EventRegistrationService implements EventRegistrationServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The registrations, in the order they came in.
 	 *
-	 * @spec openspec/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
+	 * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md#requirement-a-landing-page-sign-up-registers-for-the-event-req-mev-002
 	 */
 	public function registrationsWithStatus(string $eventId, string $status): array {
 		$rows = $this->store->findAll(

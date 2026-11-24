@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/specs/marketing-events-and-attendees/spec.md
+ * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use PHPUnit\Framework\TestCase;
  * @uses   \OCA\Pipelinq\Service\Marketing\EventRegistrationOutcome
  * @uses   \OCA\Pipelinq\Service\TouchpointService
  *
- * @spec openspec/specs/marketing-events-and-attendees/spec.md
+ * @spec openspec/changes/marketing-events/specs/marketing-events-and-attendees/spec.md
  */
 class EventRegistrationServiceEdgesTest extends TestCase {
 
