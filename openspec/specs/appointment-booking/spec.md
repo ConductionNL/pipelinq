@@ -872,3 +872,39 @@ SHALL use library widgets and declared actions; it SHALL NOT be a pipelinq compo
 - GIVEN three walk-in tickets waiting today
 - WHEN the operator chooses Call next
 - THEN the oldest waiting ticket is called and leaves the waiting list
+
+### Requirement: A booking can name its request
+
+An appointment booking SHALL be able to reference one ticket (`ticket`, optional). The booking page SHALL show that
+ticket's title, reference, status and handler in a "Linked request" card that opens the ticket, and SHALL say "Not
+linked to a request" when there is none.
+
+#### Scenario: Sanne's site visit
+
+- **GIVEN** a booking whose `ticket` is request PQ-2026-0417
+- **WHEN** a user opens the booking
+- **THEN** the Gekoppeld verzoek card SHALL show PQ-2026-0417 and open its ticket page
+
+### Requirement: A desk works the walk-in queue from one page (REQ-APT-BOARD-004)
+The app MUST offer a walk-in queue page listing today's walk-in tickets oldest first, with Call next calling the customer who has waited longest, and per row Call in for a waiting customer, Help for a called one and Left for either.
+
+#### Scenario: Call next
+@e2e exclude Handler behaviour asserted in tests/vitest/walkInQueue.spec.js; the e2e instance has no walk-in tickets.
+- **GIVEN** two waiting customers
+- **WHEN** the employee picks Call next
+- **THEN** the customer who arrived first MUST become called
+
+#### Scenario: Help a called customer
+@e2e exclude Handler behaviour asserted in tests/vitest/walkInQueue.spec.js.
+- **GIVEN** a called customer
+- **WHEN** the employee picks Help
+- **THEN** the ticket MUST be served with the time it was served
+
+### Requirement: The resource page reads as its board (REQ-APT-BOARD-005)
+The resource page MUST show the resource type and status as labelled pills, a breadcrumb to Resources, and working hours and vacations side by side.
+
+#### Scenario: A staff resource
+@e2e exclude Presentational; verified on the PqResource pixel check.
+- **GIVEN** an active staff resource
+- **WHEN** an employee opens it
+- **THEN** the pills MUST read Staff and Active in the reader's language
