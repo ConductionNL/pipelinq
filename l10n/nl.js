@@ -10190,7 +10190,9 @@ OC.L10N.register(
         "The template could not be saved": "Het sjabloon kon niet worden opgeslagen",
         "Give the template a name": "Geef het sjabloon een naam",
         "All priorities": "Alle prioriteiten",
-        "All pipelines": "Alle pijplijnen"
+        "All pipelines": "Alle pijplijnen",
+        "A call comes in for me or my sales team": "Er komt een gesprek binnen voor mij of mijn verkoopteam",
+        "An email comes in for me or my sales team": "Er komt een e-mail binnen voor mij of mijn verkoopteam"
     },
     "nplurals=2; plural=(n != 1);"
 )

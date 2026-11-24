@@ -51,11 +51,14 @@ describe('the My work page', () => {
 	it('has a bar with the lens chips, the completed switch and the sort select', () => {
 		const bar = widget('my-lens').content
 		expect(bar.layout).toBe('bar')
-		expect(bar.controls.map((c) => c.style)).toEqual([
-			'chips',
-			'toggle',
-			'select',
+		expect(bar.controls.map((c) => c.writes)).toEqual([
+			'@workspace.lens',
+			'@workspace.showDone',
+			'@workspace.priority',
+			'@workspace.pipeline',
+			'@workspace.sort',
 		])
+		expect(bar.controls.map((c) => c.style)).toEqual(['chips', 'toggle', 'select', undefined, 'select'])
 		const chips = bar.controls[0].options.map((o) => o.value)
 		expect(chips).toEqual(['all', 'tickets', 'leads', 'tasks'])
 	})
@@ -111,7 +114,7 @@ describe('the My work page', () => {
 
 	it('offers sorting by priority', () => {
 		const select = widget('my-lens').content.controls.find(
-			(c) => c.style === 'select',
+			(c) => c.writes === '@workspace.sort',
 		)
 		expect(select.options.map((o) => o.value)).toContain('priority')
 		expect(widget('my-leads').content.pageControls.sort.map.priority.rank).toEqual(['urgent', 'high', 'normal', 'low'])
@@ -169,7 +172,7 @@ describe('the My work page', () => {
 		const lens = widget('my-lens')
 		expect(lens.borderless).toBe('narrow')
 		expect(lens.content.controls.find((c) => c.style === 'chips').chipsOnPhone).toBe('pills')
-		expect(lens.content.controls.map((c) => c.style)).toEqual(['chips', 'toggle', 'select'])
+		expect(lens.content.controls.map((c) => c.style)).toEqual(['chips', 'toggle', 'select', undefined, 'select'])
 		const phone = widget('my-items-phone')
 		expect(phone.content.groupLook).toBe('cards')
 		expect(phone.content.groupTones).toEqual({ late: 'error' })

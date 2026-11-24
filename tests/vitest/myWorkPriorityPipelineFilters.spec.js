@@ -2,9 +2,11 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * My work's priority and pipeline filters (REQ-MW-200): two controls next to
- * the type buttons write the workspace, and every list and the download pass
- * them to the worklist, which narrows the items server side.
+ * My work's priority and pipeline filters (REQ-MW-200): a priority select that
+ * takes several priorities and a pipeline picker next to the type buttons
+ * write the workspace, the bar counts the filters set and clears them, and
+ * every list and the download pass them to the worklist, which narrows the
+ * items server side.
  *
  * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
  */
@@ -22,15 +24,22 @@ const control = (writes) => lens.content.controls.find((entry) => entry.writes =
 const FILTER_PARAMS = 'priority=@workspace.priority&pipeline=@workspace.pipeline'
 
 describe('the priority and pipeline filters on My work', () => {
-	it('offers the four priorities with All priorities to clear the choice', () => {
+	it('offers the four priorities, several at once', () => {
 		const priority = control('@workspace.priority')
-		expect(priority).toMatchObject({ style: 'select', label: 'Priority', urlKey: 'priority', allLabel: 'All priorities' })
+		expect(priority).toMatchObject({ style: 'select', label: 'Priority', urlKey: 'priority', multiple: true, filter: true })
 		expect(priority.options.map((option) => option.value)).toEqual(['urgent', 'high', 'normal', 'low'])
+	})
+
+	it('counts the type, priority and pipeline filters and clears them, not the sorting or Show completed', () => {
+		expect(lens.content.clear).toEqual({})
+		const counted = lens.content.controls.filter((entry) => entry.filter === true).map((entry) => entry.writes)
+		expect(counted).toEqual(['@workspace.lens', '@workspace.priority', '@workspace.pipeline'])
+		expect(control('@workspace.lens').default).toBe('all')
 	})
 
 	it('picks one pipeline by its title, with All pipelines to clear the choice', () => {
 		const pipeline = control('@workspace.pipeline')
-		expect(pipeline).toMatchObject({ label: 'Pipeline', urlKey: 'pipeline', allLabel: 'All pipelines' })
+		expect(pipeline).toMatchObject({ label: 'Pipeline', urlKey: 'pipeline', allLabel: 'All pipelines', filter: true })
 		expect(pipeline.objectSource).toMatchObject({ register: 'pipelinq', schema: 'pipeline', labelField: 'title' })
 	})
 
@@ -50,7 +59,7 @@ describe('the priority and pipeline filters on My work', () => {
 	})
 
 	it('has Dutch text for every new label', () => {
-		for (const key of ['Priority', 'All priorities', 'Pipeline', 'All pipelines', 'Urgent', 'High', 'Normal', 'Low']) {
+		for (const key of ['Priority', 'Pipeline', 'All pipelines', 'Urgent', 'High', 'Normal', 'Low']) {
 			expect(nl.translations[key], key).toBeTruthy()
 		}
 	})

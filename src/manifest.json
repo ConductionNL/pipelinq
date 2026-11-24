@@ -10877,6 +10877,7 @@
 						"showTitle": false,
 						"content": {
 							"layout": "bar",
+							"clear": {},
 							"controls": [
 								{
 									"style": "chips",
@@ -10885,6 +10886,7 @@
 									"writes": "@workspace.lens",
 									"urlKey": "lens",
 									"default": "all",
+									"filter": true,
 									"options": [
 										{
 											"value": "all",
@@ -10981,10 +10983,11 @@
 								{
 									"style": "select",
 									"label": "Priority",
-									"_note": "my-work-roadmap REQ-MW-200: one priority at a time for now; the several-at-once choice, Filters (N) and Clear filters wait on a multi-select workspace filter in nextcloud-vue.",
+									"_note": "my-work-roadmap REQ-MW-200: several priorities at once, written comma-joined (urgent,high) and counted in Filters (N).",
+									"multiple": true,
+									"filter": true,
 									"writes": "@workspace.priority",
 									"urlKey": "priority",
-									"allLabel": "All priorities",
 									"options": [
 										{ "value": "urgent", "label": "Urgent" },
 										{ "value": "high", "label": "High" },
@@ -10995,6 +10998,7 @@
 								{
 									"label": "Pipeline",
 									"_note": "my-work-roadmap REQ-MW-200: narrows the leads to one pipeline; tickets and follow-ups stay in the list.",
+									"filter": true,
 									"writes": "@workspace.pipeline",
 									"urlKey": "pipeline",
 									"allLabel": "All pipelines",

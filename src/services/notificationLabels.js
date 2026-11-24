@@ -40,6 +40,8 @@ export function notificationLabels(t) {
 		'lead.leadUpdated': t('pipelinq', 'A lead assigned to me changes'),
 		'ticket.newTicket': t('pipelinq', 'A new ticket comes in'),
 		'ticket.ticketUpdated': t('pipelinq', 'A ticket assigned to me changes'),
+		'ticket.incomingCall': t('pipelinq', 'A call comes in for me or my sales team'),
+		'ticket.incomingEmail': t('pipelinq', 'An email comes in for me or my sales team'),
 		'crmTask.taskCompleted': t('pipelinq', 'A task assigned to me is completed'),
 		'crmTask.taskExpired': t('pipelinq', 'A task assigned to me expires'),
 		'crmTask.taskUpdated': t('pipelinq', 'A task assigned to me changes'),

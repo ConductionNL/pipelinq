@@ -10175,7 +10175,9 @@ OC.L10N.register(
         "The template could not be saved": "The template could not be saved",
         "Give the template a name": "Give the template a name",
         "All priorities": "All priorities",
-        "All pipelines": "All pipelines"
+        "All pipelines": "All pipelines",
+        "A call comes in for me or my sales team": "A call comes in for me or my sales team",
+        "An email comes in for me or my sales team": "An email comes in for me or my sales team"
     },
     "nplurals=2; plural=(n != 1);"
 )
