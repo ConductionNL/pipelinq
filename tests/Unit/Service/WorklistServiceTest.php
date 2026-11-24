@@ -890,7 +890,7 @@ class WorklistServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testItemsHonourThePriorityAndPipelineFilters(): void {
-		$service = $this->buildService([
+		$service = $this->buildService(byCollection: [
 			'lead_schema' => [
 				['id' => 'l1', 'title' => 'Catering', 'priority' => 'urgent', 'pipeline' => 'sales', 'stage' => 'Offerte'],
 				['id' => 'l2', 'title' => 'Beurs', 'priority' => 'low', 'pipeline' => 'events', 'stage' => 'Offerte'],
@@ -905,11 +905,11 @@ class WorklistServiceTest extends TestCase {
 
 		$urgentHigh = $ids($service->items(userId: 'pieter', view: ['priority' => 'urgent,high', 'sort' => 'newest']));
 		sort($urgentHigh);
-		self::assertSame(['l1', 't1'], $urgentHigh);
+		self::assertSame(expected: ['l1', 't1'], actual: $urgentHigh);
 
 		$sales = $ids($service->items(userId: 'pieter', view: ['pipeline' => 'sales']));
 		sort($sales);
-		self::assertSame(['k1', 'l1', 't1'], $sales);
+		self::assertSame(expected: ['k1', 'l1', 't1'], actual: $sales);
 	}//end testItemsHonourThePriorityAndPipelineFilters()
 
 	/**

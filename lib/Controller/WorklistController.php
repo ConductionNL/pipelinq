@@ -183,7 +183,7 @@ class WorklistController extends Controller {
 		$priority = (string)$this->request->getParam('priority', '');
 		$pipeline = (string)$this->request->getParam('pipeline', '');
 		try {
-			WorkFilters::fromQuery(priorities: $priority, pipeline: $pipeline);
+			new WorkFilters(priorities: $priority, pipeline: $pipeline);
 		} catch (\InvalidArgumentException $e) {
 			return new JSONResponse(['message' => 'Invalid priority'], Http::STATUS_BAD_REQUEST);
 		}

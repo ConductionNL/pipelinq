@@ -60,49 +60,34 @@ class WorkFilters {
 	private string $pipeline;
 
 	/**
-	 * Build the filters.
-	 *
-	 * @param array<int, string> $priorities The chosen priorities; empty for all of them.
-	 * @param string             $pipeline   The chosen pipeline id; empty for every pipeline.
-	 *
-	 * @throws InvalidArgumentException When a priority is not one of {@see self::PRIORITIES}.
-	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
-	 */
-	public function __construct(array $priorities=[], string $pipeline='') {
-		foreach ($priorities as $priority) {
-			if (in_array($priority, self::PRIORITIES, true) === false) {
-				throw new InvalidArgumentException('Unknown priority: '.$priority);
-			}
-		}
-
-		$this->priorities = array_values(array_unique($priorities));
-		$this->pipeline   = trim($pipeline);
-	}//end __construct()
-
-	/**
-	 * The filters from a comma-separated priority list (`urgent,high`) and a
-	 * pipeline id, as the page sends them.
+	 * Build the filters from a comma-separated priority list (`urgent,high`)
+	 * and a pipeline id, as the page sends them.
 	 *
 	 * @param string $priorities The comma-separated priorities; empty for all of them.
 	 * @param string $pipeline   The pipeline id; empty for every pipeline.
 	 *
-	 * @return self
-	 *
 	 * @throws InvalidArgumentException When a priority is not one of {@see self::PRIORITIES}.
 	 *
 	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
-	public static function fromQuery(string $priorities, string $pipeline): self {
-		$list = array_values(
-			array_filter(
-				array_map('trim', explode(',', strtolower($priorities))),
-				static fn (string $priority): bool => $priority !== ''
-			)
-		);
+	public function __construct(string $priorities='', string $pipeline='') {
+		$chosen = [];
+		foreach (explode(',', strtolower($priorities)) as $priority) {
+			$priority = trim($priority);
+			if ($priority === '') {
+				continue;
+			}
 
-		return new self(priorities: $list, pipeline: $pipeline);
-	}//end fromQuery()
+			if (in_array($priority, self::PRIORITIES, true) === false) {
+				throw new InvalidArgumentException('Unknown priority: '.$priority);
+			}
+
+			$chosen[$priority] = $priority;
+		}
+
+		$this->priorities = array_values($chosen);
+		$this->pipeline   = trim($pipeline);
+	}//end __construct()
 
 	/**
 	 * How many filters are set: each chosen priority and the pipeline count

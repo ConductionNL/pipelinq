@@ -451,7 +451,7 @@ class WorklistService implements WorklistServiceInterface {
 	 *   - pipeline: keep only the leads of this pipeline id; tickets and follow-ups stay; '' for every pipeline.
 	 *
 	 * @param string $userId The Nextcloud UID asking.
-	 * @param array{bucket?: string, lens?: string, sort?: string, done?: bool, scope?: string, member?: string, priority?: string, pipeline?: string} $view The view.
+	 * @param array<string, mixed> $view The view (the keys above).
 	 *
 	 * @return array{items: array<int, array<string, mixed>>, total: int}
 	 *
@@ -474,7 +474,7 @@ class WorklistService implements WorklistServiceInterface {
 			scope: (string)($view['scope'] ?? WorkScope::MINE),
 			member: (string)($view['member'] ?? '')
 		);
-		$narrow = WorkFilters::fromQuery(
+		$narrow = new WorkFilters(
 			priorities: (string)($view['priority'] ?? ''),
 			pipeline: (string)($view['pipeline'] ?? '')
 		);

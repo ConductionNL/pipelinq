@@ -87,7 +87,7 @@ interface WorklistServiceInterface {
 	 * only the leads of this pipeline; tickets and follow-ups stay, REQ-MW-200).
 	 *
 	 * @param string $userId The Nextcloud UID asking.
-	 * @param array{bucket?: string, lens?: string, sort?: string, done?: bool, scope?: string, member?: string, priority?: string, pipeline?: string} $view The view.
+	 * @param array<string, mixed> $view The view (the keys above).
 	 *
 	 * @return array{items: array<int, array<string, mixed>>, total: int}
 	 *

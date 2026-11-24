@@ -64,10 +64,10 @@ class WorkFiltersTest extends TestCase {
 	 * @return void
 	 */
 	public function testNoFiltersKeepEverything(): void {
-		$filters = WorkFilters::fromQuery(priorities: '', pipeline: '');
+		$filters = new WorkFilters(priorities: '', pipeline: '');
 
-		$this->assertSame(['l1', 'l2', 't1', 'f1'], $this->kept(filters: $filters));
-		$this->assertSame(0, $filters->activeCount());
+		$this->assertSame(expected: ['l1', 'l2', 't1', 'f1'], actual: $this->kept(filters: $filters));
+		$this->assertSame(expected: 0, actual: $filters->activeCount());
 	}//end testNoFiltersKeepEverything()
 
 	/**
@@ -76,10 +76,10 @@ class WorkFiltersTest extends TestCase {
 	 * @return void
 	 */
 	public function testUrgentAndHighOnly(): void {
-		$filters = WorkFilters::fromQuery(priorities: 'urgent, HIGH', pipeline: '');
+		$filters = new WorkFilters(priorities: 'urgent, HIGH', pipeline: '');
 
-		$this->assertSame(['l1', 'l2', 't1'], $this->kept(filters: $filters));
-		$this->assertSame(2, $filters->activeCount());
+		$this->assertSame(expected: ['l1', 'l2', 't1'], actual: $this->kept(filters: $filters));
+		$this->assertSame(expected: 2, actual: $filters->activeCount());
 	}//end testUrgentAndHighOnly()
 
 	/**
@@ -88,7 +88,7 @@ class WorkFiltersTest extends TestCase {
 	 * @return void
 	 */
 	public function testAMissingPriorityIsNormal(): void {
-		$this->assertSame(['f1'], $this->kept(filters: WorkFilters::fromQuery(priorities: 'normal', pipeline: '')));
+		$this->assertSame(expected: ['f1'], actual: $this->kept(filters: new WorkFilters(priorities: 'normal', pipeline: '')));
 	}//end testAMissingPriorityIsNormal()
 
 	/**
@@ -97,10 +97,10 @@ class WorkFiltersTest extends TestCase {
 	 * @return void
 	 */
 	public function testOnePipelineLeavesTicketsAndFollowUps(): void {
-		$filters = WorkFilters::fromQuery(priorities: '', pipeline: 'sales');
+		$filters = new WorkFilters(priorities: '', pipeline: 'sales');
 
-		$this->assertSame(['l1', 't1', 'f1'], $this->kept(filters: $filters));
-		$this->assertSame(1, $filters->activeCount());
+		$this->assertSame(expected: ['l1', 't1', 'f1'], actual: $this->kept(filters: $filters));
+		$this->assertSame(expected: 1, actual: $filters->activeCount());
 	}//end testOnePipelineLeavesTicketsAndFollowUps()
 
 	/**
@@ -109,10 +109,10 @@ class WorkFiltersTest extends TestCase {
 	 * @return void
 	 */
 	public function testPriorityAndPipelineTogether(): void {
-		$filters = WorkFilters::fromQuery(priorities: 'high,high', pipeline: 'events');
+		$filters = new WorkFilters(priorities: 'high,high', pipeline: 'events');
 
-		$this->assertSame(['l2', 't1'], $this->kept(filters: $filters));
-		$this->assertSame(2, $filters->activeCount());
+		$this->assertSame(expected: ['l2', 't1'], actual: $this->kept(filters: $filters));
+		$this->assertSame(expected: 2, actual: $filters->activeCount());
 	}//end testPriorityAndPipelineTogether()
 
 	/**
@@ -121,9 +121,10 @@ class WorkFiltersTest extends TestCase {
 	 * @return void
 	 */
 	public function testALeadWithoutAPipelineIsDroppedByThePipelineFilter(): void {
-		$filters = new WorkFilters(priorities: [], pipeline: 'sales');
+		$filters = new WorkFilters(priorities: '', pipeline: 'sales');
 
-		$this->assertSame([], $filters->keep(rows: [['kind' => 'lead', 'id' => 'l3', 'priority' => 'low', 'record' => []]]));
+		$lead = ['kind' => 'lead', 'id' => 'l3', 'priority' => 'low', 'record' => []];
+		$this->assertSame(expected: [], actual: $filters->keep(rows: [$lead]));
 	}//end testALeadWithoutAPipelineIsDroppedByThePipelineFilter()
 
 	/**
@@ -132,8 +133,8 @@ class WorkFiltersTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnknownPriorityIsRefused(): void {
-		$this->expectException(InvalidArgumentException::class);
+		$this->expectException(exception: InvalidArgumentException::class);
 
-		WorkFilters::fromQuery(priorities: 'urgent,critical', pipeline: '');
+		new WorkFilters(priorities: 'urgent,critical', pipeline: '');
 	}//end testAnUnknownPriorityIsRefused()
 }//end class

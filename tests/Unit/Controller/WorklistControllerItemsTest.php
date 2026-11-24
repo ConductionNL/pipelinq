@@ -96,7 +96,10 @@ class WorklistControllerItemsTest extends TestCase {
 	 */
 	public function testItemsUseTheDefaults(): void {
 		$this->worklist->expects($this->once())->method('items')
-			->with(userId: 'agent', view: ['bucket' => '', 'lens' => '', 'sort' => 'deadline', 'done' => false, 'scope' => 'mine', 'member' => '', 'priority' => '', 'pipeline' => ''])
+			->with(
+				userId: 'agent',
+				view: ['bucket' => '', 'lens' => '', 'sort' => 'deadline', 'done' => false, 'scope' => 'mine', 'member' => '', 'priority' => '', 'pipeline' => '']
+			)
 			->willReturn(['items' => [], 'counts' => []]);
 
 		$response = $this->controller()->items();
@@ -257,13 +260,22 @@ class WorklistControllerItemsTest extends TestCase {
 		$this->worklist->expects($this->once())->method('items')
 			->with(
 				userId: 'agent',
-				view: ['bucket' => '', 'lens' => '', 'sort' => 'deadline', 'done' => false, 'scope' => 'mine', 'member' => '', 'priority' => 'urgent,high', 'pipeline' => 'pipe-sales']
+				view: [
+					'bucket'   => '',
+					'lens'     => '',
+					'sort'     => 'deadline',
+					'done'     => false,
+					'scope'    => 'mine',
+					'member'   => '',
+					'priority' => 'urgent,high',
+					'pipeline' => 'pipe-sales',
+				]
 			)
 			->willReturn(['items' => []]);
 
 		$response = $this->controller(params: ['priority' => 'urgent,high', 'pipeline' => 'pipe-sales'])->items();
 
-		$this->assertSame(200, $response->getStatus());
+		$this->assertSame(expected: 200, actual: $response->getStatus());
 	}//end testItemsPassThePriorityAndPipelineFilters()
 
 	/**
@@ -278,7 +290,7 @@ class WorklistControllerItemsTest extends TestCase {
 
 		$refused = $this->controller(params: ['priority' => 'urgent,critical'])->items();
 
-		$this->assertSame(400, $refused->getStatus());
-		$this->assertSame(['message' => 'Invalid priority'], $refused->getData());
+		$this->assertSame(expected: 400, actual: $refused->getStatus());
+		$this->assertSame(expected: ['message' => 'Invalid priority'], actual: $refused->getData());
 	}//end testAnUnknownPriorityIs400()
 }//end class
