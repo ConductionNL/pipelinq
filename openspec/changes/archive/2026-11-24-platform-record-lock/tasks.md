@@ -19,7 +19,7 @@
   - Built as a plain `api-call` with `method: DELETE`: nextcloud-vue 2.180 sends DELETE from an api-call and refreshes the page after it, so D4's handler is not needed. `tests/vitest/recordLock.spec.js` asserts the address and method.
 - [x] 2.3 Add a banner widget to the three pages that shows while `@self.frozen` is not empty and names who locked the record and when; if the banner's `visibleWhen` cannot read the page object in 2.57.1, use its `source` mode filtered on `@objectId`
   - Verify: Playwright sees the banner on a locked lead and not on an unlocked one
-- [ ] 2.4 An edit to a locked record shows OpenRegister's refusal in the edit dialog and changes nothing
+- [x] 2.4 An edit to a locked record shows OpenRegister's refusal in the edit dialog and changes nothing
   - Verify: Playwright edits a locked ticket, reads the refusal text naming the user, and reloads to find the old value
 
 ## 3. The delete half
@@ -27,7 +27,7 @@
 - [x] 3.1 Open the OpenRegister issue for "a frozen object refuses deletion" (guard on `ObjectDeletingEvent`), link it from this change, and record its number in the PR body
   - Verify: the issue exists on ConductionNL/openregister and is linked here
   - Not needed: OpenRegister already ships the guard, `lib/Listener/FrozenObjectDeleteGuardListener.php` on `ObjectDeletingEvent`, so a locked record refuses deletion today.
-- [ ] 3.2 Once OpenRegister ships it, add the delete case to `tests/e2e/record-lock.spec.ts`
+- [x] 3.2 Once OpenRegister ships it, add the delete case to `tests/e2e/record-lock.spec.ts`
   - Verify: Playwright deletes a locked client from the Clients list and sees the refusal; the client is still there
 
 ## 4. Text and docs
@@ -36,3 +36,14 @@
   - Verify: `npm run test:l10n` exit 0
 - [x] 4.2 User doc page `docs/Features/record-lock.md`: when to lock, who can unlock, and that a lock does not stop retention
   - Verify: docs build exit 0
+
+## Closing (24 Nov 2026)
+
+- 2.4: built in `tests/e2e/record-lock.spec.ts` ("an edit to a locked ticket
+  is refused, names who locked it, and changes nothing"). The refusal is
+  OpenRegister's and the edit dialog shows it. Written, runs in nightly; not
+  verified live here.
+- 3.2: OpenRegister ships the delete guard (`FrozenObjectDeleteGuardListener`
+  on `ObjectDeletingEvent`, see 3.1), so the delete case is no longer
+  `test.fixme`. It now asserts OpenRegister's refusal text "Unlock it before
+  deleting it" and that the client is still there. Written, runs in nightly.

@@ -11079,10 +11079,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ContractDetail, PosTransactionDetail, TicketDetail (implicit)",
 				"readOn": "2026-09-26",
-				"change": "platform-record-lock",
+				"spec": "openspec/specs/record-locking",
 				"requirement": [
-					"openspec/changes/platform-record-lock/specs/record-locking :: A user can lock a client, a finished lead or a finished ticket (REQ-PRL-001)",
-					"openspec/changes/platform-record-lock/specs/record-locking :: A locked record cannot be deleted (REQ-PRL-003)"
+					"openspec/specs/record-locking :: A user can lock a client, a finished lead or a finished ticket (REQ-PRL-001)",
+					"openspec/specs/record-locking :: A locked record cannot be deleted (REQ-PRL-003)"
 				]
 			},
 			"note": "no general 'lock this record' for users. Specified 2026-09-28 in openspec/changes/platform-record-lock (OpenSpec pass).",

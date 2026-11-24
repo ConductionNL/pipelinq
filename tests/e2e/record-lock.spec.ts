@@ -18,10 +18,11 @@
  * reads the locker's name from the record's own `@self.frozen.by`, so it
  * asserts the name the server stored, whatever the display name is.
  *
- * The delete case waits on OpenRegister refusing deletion of a frozen object
- * (task 3.1's issue), so it is `test.fixme` until that ships.
+ * The delete case relies on OpenRegister's own guard on `ObjectDeletingEvent`
+ * (`FrozenObjectDeleteGuardListener`), which refuses with "This record is
+ * locked by <name> since <date>. Unlock it before deleting it."
  *
- * @spec openspec/changes/platform-record-lock/specs/record-locking/spec.md#requirement-a-user-can-lock-a-client-a-finished-lead-or-a-finished-ticket-req-prl-001
+ * @spec openspec/specs/record-locking/spec.md#requirement-a-user-can-lock-a-client-a-finished-lead-or-a-finished-ticket-req-prl-001
  */
 import type { APIRequestContext, Page } from '@playwright/test'
 
@@ -330,13 +331,11 @@ test.describe('Lock and unlock a record', () => {
 		expect((await read('ticket', ticketId)).title).toBe(oldTitle)
 	})
 
-	test.fixme('a locked client cannot be deleted from the Clients list', async ({
+	test('a locked client cannot be deleted from the Clients list', async ({
 		page,
 	}) => {
-		// Waits on OpenRegister refusing deletion of a frozen object (guard on
-		// ObjectDeletingEvent, the issue opened under task 3.1). Until it ships,
-		// OpenRegister deletes a frozen client and this test would fail for that
-		// reason only.
+		// OpenRegister refuses the delete of a frozen object
+		// (FrozenObjectDeleteGuardListener on ObjectDeletingEvent).
 		const name = `E2E-PRL-${RUN} locked client to delete`
 		const clientId = await seed('client', { name, type: 'organization' })
 		const locked = await api.post(`${OBJECTS}/client/${clientId}/freeze`)
@@ -349,7 +348,7 @@ test.describe('Lock and unlock a record', () => {
 		await page.getByRole('menuitem', { name: 'Delete' }).click()
 		await page.getByTestId('cn-confirm-dialog-confirm').click()
 
-		await expect(page.getByText(/locked/i).first()).toBeVisible({
+		await expect(page.getByText(/Unlock it before deleting it/i).first()).toBeVisible({
 			timeout: 20_000,
 		})
 		await page.reload()
