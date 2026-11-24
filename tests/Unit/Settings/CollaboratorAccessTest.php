@@ -35,7 +35,7 @@ use Psr\Log\NullLogger;
 /**
  * Read and update admit the listed colleagues; create, delete and export do not.
  *
- * @spec openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity/spec.md#requirement-a-colleague-added-to-a-ticket-or-lead-can-work-on-it-req-nftl-005
+ * @spec openspec/specs/notifications-activity/spec.md#requirement-a-colleague-added-to-a-ticket-or-lead-can-work-on-it-req-nftl-005
  */
 class CollaboratorAccessTest extends TestCase {
 	/**

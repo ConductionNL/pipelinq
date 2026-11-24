@@ -163,7 +163,7 @@ class RegisterAccessDeclaredTest extends TestCase {
 	 *
 	 * @return array<int, mixed> The rules without it.
 	 *
-	 * @spec openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity/spec.md#requirement-a-colleague-added-to-a-ticket-or-lead-can-work-on-it-req-nftl-005
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-a-colleague-added-to-a-ticket-or-lead-can-work-on-it-req-nftl-005
 	 */
 	private function withoutCollaborators(array $rules): array {
 		return array_values(array_filter($rules, static fn (mixed $rule): bool => $rule !== self::COLLABORATOR_RULE));
