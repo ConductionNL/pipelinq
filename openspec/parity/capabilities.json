@@ -2461,8 +2461,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "lead create and edit form; Leads list currency column; admin Forecast settings, Exchange rates",
 				"readOn": "2026-09-27",
-				"change": "pipeline-live-exchange-rates",
-				"requirement": "openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates :: Rates come from the fleet's rate store before the hand-kept table (REQ-DXR-001)"
+				"spec": "openspec/specs/deal-exchange-rates",
+				"requirement": "openspec/specs/deal-exchange-rates :: Rates come from the fleet's rate store before the hand-kept table (REQ-DXR-001)"
 			},
 			"note": "lead: since pipelinq#2040 a deal carries its currency and the forecast converts it; the rate table is maintained by hand in Forecast settings, not fetched live, hence partial. The forecast and the setup wizard now share one reporting currency (app config 'currency'). Specified 2026-09-28 in openspec/changes/pipeline-live-exchange-rates (OpenSpec pass).",
 			"evidence": {
@@ -2502,8 +2502,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "LeadDetail Suggested agents (colleagues ranked by skill, availability and workload, capped per person)",
 				"readOn": "2026-09-27",
-				"change": "pipeline-lead-rotation",
-				"requirement": "openspec/changes/pipeline-lead-rotation/specs/lead-rotation :: New unassigned leads are assigned in turn (REQ-LRT-001)"
+				"spec": "openspec/specs/lead-rotation",
+				"requirement": "openspec/specs/lead-rotation :: New unassigned leads are assigned in turn (REQ-LRT-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/assign-and-rotate-record-owners-using-workflows \"Rotate record to owner\" with \"load balanced, round robin, and random\" options for tickets and leads (Sales or Service Hub Professional, Enterprise); a cap per person applies to help desk tickets (https://knowledge.hubspot.com/help-desk/set-ticket-capacity-limits-for-users-in-help-desk), not described for leads.",
@@ -2540,10 +2540,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "pipeline-stage-limit",
+				"spec": "openspec/specs/pipeline-stage-limits",
 				"requirement": [
-					"openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits :: A stage can carry a limit (REQ-PSL-001)",
-					"openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits :: No write puts an item into a full stage (REQ-PSL-002)"
+					"openspec/specs/pipeline-stage-limits :: A stage can carry a limit (REQ-PSL-001)",
+					"openspec/specs/pipeline-stage-limits :: No write puts an item into a full stage (REQ-PSL-002)"
 				]
 			},
 			"evidence": {
@@ -3645,10 +3645,9 @@
 				"requirement": [
 					"openspec/specs/appointment-booking :: REQ-APT-012 Walk-In Queue",
 					"openspec/changes/specify-capability-rows/specs/appointment-booking :: A walk-in visitor gets a queue number",
-					"openspec/changes/walk-in-queue-page/specs/appointment-booking :: A walk-in operator works the queue on a manifest page"
+					"openspec/specs/appointment-booking :: A walk-in operator works the queue on a manifest page"
 				],
-				"plan": "openspec/changes/specify-capability-rows",
-				"change": "openspec/changes/walk-in-queue-page"
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no queue ticket or counter calling feature in the HubSpot knowledge base (searched the KB sitemap for queue, walk-in, counter, kiosk and check-in, 2026-09-26); the marketplace was not searched for a queue management app; the docs do not state an absence. Note: Was no without a source.",
@@ -8719,8 +8718,7 @@
 				"requirement": [
 					"openspec/specs/berichtenbox :: Encryption Key Management (REQ-KEYVAULT-015)",
 					"openspec/specs/pos-payment-provider-adapter :: Provider Credential Storage & Encryption (REQ-PAY-002)"
-				],
-				"change": "openspec/changes/pos-psp-keys-via-broker"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "https://legal.hubspot.com/security \"The physical and virtualized hard drives used by HubSpot product server instances as well as long-term storage solutions like AWS S3 use AES-256 encryption\"; connected app tokens are held by HubSpot in that store.",
@@ -9145,8 +9143,8 @@
 				"state": "specified",
 				"evidence": "no extension or plugin directory in the repo",
 				"owner": "ConductionNL/pipelinq",
-				"change": "contact-moments-mail-add-in",
-				"requirement": "openspec/changes/contact-moments-mail-add-in/specs/mail-add-in :: The pane shows the sender's record or adds it (REQ-MAI-002)"
+				"spec": "openspec/specs/mail-add-in",
+				"requirement": "openspec/specs/mail-add-in :: The pane shows the sender's record or adds it (REQ-MAI-002)"
 			},
 			"note": "Ours files mail afterwards by matching the address. Theirs works while you read the mail. Specified 2026-09-28 in openspec/changes/contact-moments-mail-add-in (OpenSpec pass).",
 			"evidence": {
@@ -9349,8 +9347,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-contact-capture",
-				"requirement": "openspec/changes/clients-contact-capture/specs/client-contact-capture :: Pasted text becomes proposed contact fields (REQ-CCC-001)"
+				"spec": "openspec/specs/client-contact-capture",
+				"requirement": "openspec/specs/client-contact-capture :: Pasted text becomes proposed contact fields (REQ-CCC-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the knowledge base list for signature parsing and smart paste; enrichment fills fields from HubSpot's dataset (https://knowledge.hubspot.com/records/enrich-your-contact-and-company-data), not from pasted text (read 2026-09-26).",
@@ -9547,8 +9545,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-contact-capture",
-				"requirement": "openspec/changes/clients-contact-capture/specs/client-contact-capture :: A business card photo is read into the same fields (REQ-CCC-002)"
+				"spec": "openspec/specs/client-contact-capture",
+				"requirement": "openspec/specs/client-contact-capture :: A business card photo is read into the same fields (REQ-CCC-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the knowledge base list for business card and scanner; https://knowledge.hubspot.com/account-mangagement/how-to-install-the-hubspot-mobile-application names records, calls and email but no card scanner (read 2026-09-26).",
@@ -10022,8 +10020,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "CTI screen pop; Tickets list search (literal)",
 				"readOn": "2026-09-26",
-				"change": "contact-moments-phone-lookup",
-				"requirement": "openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone :: A ticket is found by phone number however it was typed (REQ-CHP-002)"
+				"spec": "openspec/specs/contact-history-by-phone",
+				"requirement": "openspec/specs/contact-history-by-phone :: A ticket is found by phone number however it was typed (REQ-CHP-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/format-phone-numbers-using-workflows normalises phone number formats with a workflow action (Professional hubs), which makes later searches match; search tolerance for any typed format is not described.",
@@ -10648,8 +10646,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Tickets list (from_number on each record); CTI screen pop for known callers",
 				"readOn": "2026-09-26",
-				"change": "contact-moments-phone-lookup",
-				"requirement": "openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone :: An unknown caller's earlier contacts are shown (REQ-CHP-001)"
+				"spec": "openspec/specs/contact-history-by-phone",
+				"requirement": "openspec/specs/contact-history-by-phone :: An unknown caller's earlier contacts are shown (REQ-CHP-001)"
 			},
 			"note": "the data is there, the view for an unknown caller is not. Specified 2026-09-28 in openspec/changes/contact-moments-phone-lookup (OpenSpec pass).",
 			"evidence": {
@@ -10847,10 +10845,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "background jobs (no page needed); tickets and tasks are the Tickets, Queue and Tasks pages",
 				"readOn": "2026-09-26",
-				"change": "platform-client-retention",
+				"spec": "openspec/specs/client-retention",
 				"requirement": [
-					"openspec/changes/platform-client-retention/specs/client-retention :: A records officer approves each destruction (REQ-PCR-003)",
-					"openspec/changes/platform-client-retention/specs/client-retention :: Client and contact schemas declare their personal data (REQ-PCR-004)"
+					"openspec/specs/client-retention :: A records officer approves each destruction (REQ-PCR-003)",
+					"openspec/specs/client-retention :: Client and contact schemas declare their personal data (REQ-PCR-004)"
 				]
 			},
 			"note": "contact moments, tasks and BRP data expire by themselves; client and contact records have no retention term, and request/complaint tickets are set to P100Y. Specified 2026-09-28 in openspec/changes/platform-client-retention (OpenSpec pass).",
