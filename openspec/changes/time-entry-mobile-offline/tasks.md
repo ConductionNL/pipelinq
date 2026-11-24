@@ -1,7 +1,8 @@
 # Tasks: time-entry-mobile-offline
 
 ## 1. nextcloud-vue (shared)
-- [ ] 1.1 `useOfflineQueue(name)`: enqueue a write (method, url, body) with an idempotency key, persist in IndexedDB, flush in order on `online` and on page load, drop an entry only after a 2xx or a 409 duplicate, expose `pendingCount`; unit tests with fake-indexeddb (V1)
+- [x] 1.1 `useOfflineQueue(name)`: enqueue a write (method, url, body) with an idempotency key, persist in IndexedDB, flush in order on `online` and on page load, drop an entry only after a 2xx or a 409 duplicate, expose `pendingCount`; unit tests with fake-indexeddb (V1)
+  - Built in `@conduction/nextcloud-vue` (`src/composables/useOfflineQueue.js`, change `use-offline-queue`, merged on nextcloud-vue main 23 Nov 2026 with the same-ms ordering fix) and shipped in 2.203.0, which pipelinq's lock already resolves. Its IndexedDB store is `conduction-offline-queue`, every request sends `Idempotency-Key: <key>`, an entry is dropped only on 2xx or 409, the flush runs in order on `online` and on load, and `pendingCount` is exposed. Its unit tests run against fake-indexeddb in nextcloud-vue's suite. Nothing was copied into pipelinq (REQ-002).
 - [ ] 1.2 Check that OpenRegister honours an idempotency key (header or object id chosen client-side) on the time-tracker leaf's capture endpoint; if not, build it there (REQ-001 idempotent submission) (V1)
 
 ## 2. pipelinq mobile timer
