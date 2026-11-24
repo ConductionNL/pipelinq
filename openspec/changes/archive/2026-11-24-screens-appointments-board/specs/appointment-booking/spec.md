@@ -17,7 +17,7 @@ The appointments list MUST be titled Appointments and MUST show a count line, th
 - **THEN** the list MUST show only the bookings whose handler is that employee
 
 ### Requirement: The appointment page keeps its actions in view (REQ-APT-BOARD-002)
-The appointment page MUST show Confirm deposit, Mark completed, Mark no-show, Reschedule and Cancel as a row of buttons under the title, each disabled while it does not apply to the booking, and Send reminder beside them when a reminder can be sent.
+The appointment page MUST show Confirm deposit, Mark completed, Mark no-show, Reschedule and Cancel as a row of buttons under the title, each disabled while it does not apply to the booking. Send reminder MUST be on the When and where card, beside the reminder line, when a reminder can be sent.
 
 #### Scenario: A finished booking keeps the row
 @e2e exclude Component behaviour of BookingHeaderActions; the time-window rules are the ones the booking endpoints enforce.
