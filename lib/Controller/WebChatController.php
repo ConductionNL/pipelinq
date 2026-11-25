@@ -1,7 +1,7 @@
 <?php
 
 /**
- * The public side of a website chat: the window in its frame, and start, send and poll.
+ * The public side of a website chat: start, send and poll.
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -25,25 +25,20 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\WebChat\WebChatRefusal;
 use OCA\Pipelinq\Service\WebChat\WebChatService;
-use OCA\Pipelinq\Service\WebChat\WebChatFrame;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\Http\TemplateResponse;
-use OCP\AppFramework\Services\IInitialState;
 use OCP\IRequest;
-use OCP\IURLGenerator;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
  * Every route here runs for an anonymous visitor (D3): no account, no
  * session, no cookie. A chat is proven by the secret its window holds, which
- * travels in the body. The window is a pipelinq page that only the channel's
- * own websites may frame.
+ * travels in the body. The window itself is WebChatWindowController's.
  *
  * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-a-visitor-chats-without-an-account-req-wch-002
  */
@@ -54,60 +49,15 @@ class WebChatController extends Controller {
 	 *
 	 * @param IRequest        $request The request.
 	 * @param WebChatService  $chat    The chat.
-	 * @param WebChatFrame    $frame   The channel the window is for, and who may frame it.
-	 * @param IURLGenerator   $urls    The routes the window calls.
-	 * @param IInitialState   $state   What the window starts from.
 	 * @param LoggerInterface $logger  Where an unexpected failure is logged.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly WebChatService $chat,
-		private readonly WebChatFrame $frame,
-		private readonly IURLGenerator $urls,
-		private readonly IInitialState $state,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
-
-	/**
-	 * The chat window, framed only by the channel's own websites.
-	 *
-	 * @param string $channelToken The channel token.
-	 *
-	 * @return TemplateResponse
-	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.2
-	 */
-	#[PublicPage]
-	#[NoCSRFRequired]
-	#[AnonRateLimit(limit: 60, period: 60)]
-	public function window(string $channelToken): TemplateResponse {
-		$channel = $this->frame->channel(token: $channelToken);
-
-		$token = '';
-		if ($channel !== null) {
-			$token = $channelToken;
-		}
-
-		$this->state->provideInitialState(
-			'web-chat',
-			[
-				'available' => $channel !== null,
-				'name'      => (string)($channel['name'] ?? ''),
-				'startUrl'  => $this->urls->linkToRoute('pipelinq.webChat.start', ['channelToken' => $token]),
-				'sendUrl'   => $this->urls->linkToRoute('pipelinq.webChat.send', ['channelToken' => $token]),
-				'pollUrl'   => $this->urls->linkToRoute('pipelinq.webChat.poll', ['channelToken' => $token]),
-			]
-		);
-		$response = new TemplateResponse(AppIdentity::APP_ID, 'web-chat', ['available' => $channel !== null], TemplateResponse::RENDER_AS_BASE);
-		$response->setContentSecurityPolicy($this->frame->policy(channel: $channel));
-		if ($channel === null) {
-			$response->setStatus(Http::STATUS_NOT_FOUND);
-		}
-
-		return $response;
-	}//end window()
 
 	/**
 	 * Start a chat.

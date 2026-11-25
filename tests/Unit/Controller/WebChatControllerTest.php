@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\WebChatController;
+use OCA\Pipelinq\Controller\WebChatWindowController;
 use OCA\Pipelinq\Service\WebChat\WebChatRefusal;
 use OCA\Pipelinq\Service\WebChat\WebChatService;
 use OCA\Pipelinq\Service\WebChat\WebChatFrame;
@@ -43,6 +44,7 @@ use RuntimeException;
  * REQ-WCH-001 and REQ-WCH-002 on the controller.
  *
  * @covers \OCA\Pipelinq\Controller\WebChatController
+ * @covers \OCA\Pipelinq\Controller\WebChatWindowController
  * @uses   \OCA\Pipelinq\Service\WebChat\WebChatRefusal
  */
 class WebChatControllerTest extends TestCase {
@@ -79,6 +81,20 @@ class WebChatControllerTest extends TestCase {
 		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParam')->willReturnCallback(static fn (string $key, mixed $default=null): mixed => ($params[$key] ?? $default));
 		$this->chat ??= $this->createMock(originalClassName: WebChatService::class);
+
+		return new WebChatController(
+			request: $request,
+			chat: $this->chat,
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+		);
+	}//end controller()
+
+	/**
+	 * The window's controller, over the store; the initial state it hands out lands in $initial.
+	 *
+	 * @return WebChatWindowController
+	 */
+	private function windowController(): WebChatWindowController {
 		$this->store ??= $this->createMock(originalClassName: WebChatStore::class);
 		$urls = $this->createMock(originalClassName: IURLGenerator::class);
 		$urls->method('linkToRoute')->willReturnCallback(static fn (
@@ -92,15 +108,13 @@ class WebChatControllerTest extends TestCase {
 			}
 		);
 
-		return new WebChatController(
-			request: $request,
-			chat: $this->chat,
+		return new WebChatWindowController(
+			request: $this->createMock(originalClassName: IRequest::class),
 			frame: new WebChatFrame(store: $this->store, logger: $this->createMock(originalClassName: LoggerInterface::class)),
 			urls: $urls,
 			state: $state,
-			logger: $this->createMock(originalClassName: LoggerInterface::class),
 		);
-	}//end controller()
+	}//end windowController()
 
 	/**
 	 * Set up fresh mocks.
@@ -134,7 +148,7 @@ class WebChatControllerTest extends TestCase {
 			]
 		);
 
-		$response = $this->controller()->window(channelToken: 'abcdefghijklmnop1234');
+		$response = $this->windowController()->show(channelToken: 'abcdefghijklmnop1234');
 
 		$this->assertSame(expected: 200, actual: $response->getStatus());
 		$this->assertSame(expected: 'base', actual: $response->getRenderAs());
@@ -163,7 +177,7 @@ class WebChatControllerTest extends TestCase {
 	public function testAnUnknownChannelMayBeFramedByNobody(): void {
 		$this->store->method('activeChannel')->willReturn(null);
 
-		$response = $this->controller()->window(channelToken: 'abcdefghijklmnop1234');
+		$response = $this->windowController()->show(channelToken: 'abcdefghijklmnop1234');
 
 		$this->assertSame(expected: 404, actual: $response->getStatus());
 		$this->assertStringContainsString(needle: "frame-ancestors 'none';", haystack: $response->getContentSecurityPolicy()->buildPolicy());
@@ -179,7 +193,7 @@ class WebChatControllerTest extends TestCase {
 	public function testAFailedLookupAnswersAPageFramedByNobody(): void {
 		$this->store->method('activeChannel')->willThrowException(new RuntimeException('down'));
 
-		$response = $this->controller()->window(channelToken: 'abcdefghijklmnop1234');
+		$response = $this->windowController()->show(channelToken: 'abcdefghijklmnop1234');
 
 		$this->assertSame(expected: 404, actual: $response->getStatus());
 		$this->assertStringContainsString(needle: "frame-ancestors 'none';", haystack: $response->getContentSecurityPolicy()->buildPolicy());
@@ -235,8 +249,9 @@ class WebChatControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testEveryRouteIsPublicAndRateLimited(): void {
-		foreach (['window', 'start', 'send', 'poll'] as $method) {
-			$reflection = new ReflectionMethod(WebChatController::class, $method);
+		$routes = [[WebChatWindowController::class, 'show'], [WebChatController::class, 'start'], [WebChatController::class, 'send'], [WebChatController::class, 'poll']];
+		foreach ($routes as [$class, $method]) {
+			$reflection = new ReflectionMethod($class, $method);
 			foreach ([PublicPage::class, NoCSRFRequired::class, AnonRateLimit::class] as $attribute) {
 				$this->assertCount(expectedCount: 1, haystack: $reflection->getAttributes($attribute), message: $method . ' ' . $attribute);
 			}

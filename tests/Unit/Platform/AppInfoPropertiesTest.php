@@ -51,7 +51,7 @@ class AppInfoPropertiesTest extends TestCase {
 		'HealthController::index' => 'none: returns only the app\'s health status, no record data',
 		'WebFormController::submitBySource' => 'the registered form key, rate-limited per anonymous caller (AnonRateLimit)',
 		'WebFormController::submit' => 'the registered form key, rate-limited per anonymous caller (AnonRateLimit)',
-		'WebChatController::window' => 'an active web chat channel token; the frame-ancestors policy names only that channel\'s websites',
+		'WebChatWindowController::show' => 'an active web chat channel token; the frame-ancestors policy names only that channel\'s websites',
 		'WebChatController::start' => 'an active web chat channel token, rate-limited per anonymous caller (AnonRateLimit)',
 		'WebChatController::send' => 'the chat\'s visitor secret, checked against its stored hash; rate-limited per anonymous caller (AnonRateLimit)',
 		'WebChatController::poll' => 'the chat\'s visitor secret, checked against its stored hash; rate-limited per anonymous caller (AnonRateLimit)',

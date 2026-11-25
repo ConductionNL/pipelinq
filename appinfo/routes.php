@@ -275,7 +275,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // the secret in the body. The window may only be framed by the channel's
         // own websites. The colleague's routes check per chat that they may read it.
         [
-            'name' => 'webChat#window',
+            'name' => 'webChatWindow#show',
             'url' => '/chat/{channelToken}',
             'verb' => 'GET',
             'requirements' => ['channelToken' => '[A-Za-z0-9]{16,64}'],
