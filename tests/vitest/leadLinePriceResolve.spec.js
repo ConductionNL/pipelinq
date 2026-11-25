@@ -9,7 +9,7 @@
  * are the resolver's own shapes (ProductCatalogService::resolveEffectivePrice)
  * for a base, a tier and a variant price.
  *
- * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-1
  */
 
 import { patchFromAnswer, resolveBody, shouldResolveAgain } from '@conduction/nextcloud-vue/src/utils/childRecordResolve.js'

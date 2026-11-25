@@ -198,7 +198,7 @@ class LeadLinePricerTest extends TestCase {
 	 * price for the quantity) was not typed: it is priced for the lead's
 	 * client, price list included.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/tasks.md
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md
 	 *
 	 * @return void
 	 */
@@ -217,7 +217,7 @@ class LeadLinePricerTest extends TestCase {
 	 * The form fills in the tier price after a quantity change: that is not
 	 * typed, so a server-priced line is priced again for the new quantity.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/tasks.md
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md
 	 *
 	 * @return void
 	 */
@@ -238,7 +238,7 @@ class LeadLinePricerTest extends TestCase {
 	 * product's stored price (120), which is not typed, so the line takes the
 	 * tier price the server works out for twelve.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/tasks.md
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md
 	 *
 	 * @return void
 	 */

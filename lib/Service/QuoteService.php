@@ -18,7 +18,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/products-quote-from-lead/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ use OCA\Pipelinq\Service\LineTotals\LineTotalMath;
 /**
  * Totals per VAT rate, the quote number and the recipient of a quote.
  *
- * @spec openspec/changes/products-quote-from-lead/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-2
  */
 class QuoteService {
 
@@ -66,7 +66,7 @@ class QuoteService {
 	 *     totalInclVat: float
 	 * } The totals per rate and overall.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-the-quote-shows-vat-per-rate-req-qslice-003
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-the-quote-shows-vat-per-rate-req-qslice-003
 	 */
 	public function vatTotals(array $lines): array {
 		$groups = [];
@@ -115,7 +115,7 @@ class QuoteService {
 	 *
 	 * @return string The quote number.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-sent-quote-does-not-change-afterwards-req-qslice-004
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-sent-quote-does-not-change-afterwards-req-qslice-004
 	 */
 	public function nextNumber(): string {
 		return $this->numbers->next();
@@ -130,7 +130,7 @@ class QuoteService {
 	 *
 	 * @return array{email: string, name: string, source: string}|null The recipient.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 	 */
 	public function recipient(?array $contact, ?array $client): ?array {
 		foreach (['contact' => $contact, 'client' => $client] as $source => $party) {

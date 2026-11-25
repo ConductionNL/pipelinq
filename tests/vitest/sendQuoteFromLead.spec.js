@@ -8,7 +8,7 @@
  * the recipient, posts the template and the valid-until date, says where the
  * quote went, and refuses to send without a recipient.
  *
- * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

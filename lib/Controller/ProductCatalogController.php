@@ -141,7 +141,7 @@ class ProductCatalogController extends Controller {
 	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
 	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
-	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-1
 	 */
 	#[NoAdminRequired]
 	public function resolvePrice(): JSONResponse {
@@ -204,7 +204,7 @@ class ProductCatalogController extends Controller {
 	 *
 	 * @return array<string, mixed>|JSONResponse The product, or the refusal.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-1
 	 */
 	private function productToPrice(string $uid): array|JSONResponse {
 		$product = (array)$this->request->getParam('product', []);
@@ -236,7 +236,7 @@ class ProductCatalogController extends Controller {
 	 *
 	 * @return string The id; empty when none is given.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-1
 	 */
 	private function productIdOf(array $product): string {
 		$candidates = [

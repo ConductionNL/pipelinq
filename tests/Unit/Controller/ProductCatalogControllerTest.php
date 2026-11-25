@@ -337,7 +337,7 @@ class ProductCatalogControllerTest extends TestCase {
 	 * naming the product by id gets the STORED product priced, read with the
 	 * caller's own rights, never the payload it sent.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-1
 	 *
 	 * @return void
 	 */
@@ -360,7 +360,7 @@ class ProductCatalogControllerTest extends TestCase {
 	/**
 	 * A non-POS caller may also name the product through the id of the product object.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-1
 	 *
 	 * @return void
 	 */
@@ -380,7 +380,7 @@ class ProductCatalogControllerTest extends TestCase {
 	/**
 	 * A product the caller cannot read is not found, and nothing is priced.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-1
 	 *
 	 * @return void
 	 */
@@ -399,7 +399,7 @@ class ProductCatalogControllerTest extends TestCase {
 	/**
 	 * The till prices the product object it sends, and reads nothing.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-1
 	 *
 	 * @return void
 	 */

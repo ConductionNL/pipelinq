@@ -10,7 +10,7 @@
   - before sending. filinq renders and files the PDF; pipelinq mails it and
   - logs the contact moment.
   -
-  - @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+  - @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
   -->
 <template>
 	<CnDialog
@@ -145,7 +145,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The lead: the prop, else the route's id on a lead page.
-		 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+		 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 		 */
 		resolvedLeadId() {
 			if (this.leadId) {
@@ -157,7 +157,7 @@ export default {
 
 		/**
 		 * @return {Array<{value: string, label: string}>} The templates as select options.
-		 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+		 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 		 */
 		templateOptions() {
 			return this.templates.map((tpl) => ({ value: tpl.id, label: tpl.name }))
@@ -165,7 +165,7 @@ export default {
 
 		/**
 		 * @return {boolean} Whether a template, a date and a recipient are there.
-		 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+		 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 		 */
 		canSend() {
 			return this.available && !this.sending && !!this.templateId && !!this.validUntil && !!this.recipient
@@ -180,7 +180,7 @@ export default {
 		/**
 		 * Load the templates and the recipient.
 		 *
-		 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+		 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 		 */
 		async load() {
 			this.loading = true
@@ -206,7 +206,7 @@ export default {
 		/**
 		 * Send the quote and show where it went.
 		 *
-		 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+		 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 		 */
 		async send() {
 			if (!this.canSend) {

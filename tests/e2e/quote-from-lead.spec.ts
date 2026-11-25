@@ -23,7 +23,7 @@
  * Not run yet: it needs an instance with filinq, a quote template and a mail
  * transport. Everything it made is removed afterwards.
  *
- * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
  */
 import type { APIRequestContext, Page } from '@playwright/test'
 
