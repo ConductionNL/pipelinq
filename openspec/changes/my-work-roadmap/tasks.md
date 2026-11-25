@@ -78,5 +78,5 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 ## 13. Close
 
 - [ ] 13.1 Set `built.state` of the matching rows in `openspec/parity/capabilities.json` as each block lands.
-  - Done for the blocks built so far: `work-my-week-stats` (090), `work-quick-create` (100), `work-upcoming-meetings` (130) and `work-team-view` (180) now read built. Stays open while blocks 6 to 9, 11 and 12 are unbuilt; `work-layout`, `work-auto-refresh` and `work-filter-priority-pipeline` stay specified.
+  - Done for the blocks built so far: `work-my-week-stats` (090), `work-quick-create` (100), `work-upcoming-meetings` (130) and `work-team-view` (180) now read built; on 25 Nov 2026 `work-layout` (160, with 110's fold), `work-auto-refresh` (190) and `work-filter-priority-pipeline` (200) too. Stays open while blocks 7 (saved views, row `work-saved-view`) and 9 (phone) are unbuilt.
 - [ ] 13.2 Archive this change into `openspec/specs/my-work` once all blocks are built, or split the unbuilt rest into a new change.
