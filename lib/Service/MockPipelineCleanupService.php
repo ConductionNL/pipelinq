@@ -36,7 +36,8 @@ use RuntimeException;
 /**
  * Finds the known mock pipelines and removes each one no lead or ticket is on.
  *
- * A pipeline counts as a mock by its slug (the mock register's) or by its exact
+ * A pipeline counts as a mock by its slug (the mock register's and the register
+ * seed's default Sales pipeline) or by its exact
  * title and description (the shipped defaults and the demo seed's, which carry
  * no slug). A renamed or re-described copy is no longer a mock and is left alone.
  *
@@ -44,12 +45,19 @@ use RuntimeException;
  */
 class MockPipelineCleanupService implements MockPipelineCleanupServiceInterface {
 	/**
-	 * Slugs of the mock register's pipelines (lib/Settings/pipelinq_mock_register.json).
+	 * Slugs of the mock pipelines that carry one: the mock register's
+	 * (lib/Settings/pipelinq_mock_register.json) and the register seed's
+	 * default Sales pipeline (lib/Settings/register.d/27-default-sales-pipeline.json),
+	 * which every install gets and the drawn boards do not show. A lead without
+	 * a pipeline falls back to the remaining lead default (LeadStagePlacer).
+	 *
+	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
 	 */
 	public const MOCK_SLUGS = [
 		'pipeline-voorbeeld-title-1-1',
 		'pipeline-voorbeeld-title-2-2',
 		'pipeline-voorbeeld-title-3-3',
+		'pipelinq-default-sales-pipeline',
 	];
 
 	/**
