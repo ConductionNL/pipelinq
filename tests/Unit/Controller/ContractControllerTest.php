@@ -443,6 +443,52 @@ class ContractControllerTest extends TestCase {
 	}//end withBody()
 
 	/**
+	 * A contract made from a won lead gets its own number, starts today as a
+	 * draft, takes the lead's value per interval and names the lead.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/contract-renewal-tracking/spec.md#requirement-a-won-lead-can-be-turned-into-a-numbered-contract
+	 */
+	public function testCreateFromAWonLeadFillsTheTermAndNamesTheLead(): void {
+		$this->signIn();
+		$this->groupManager->method('isInGroup')->willReturn(true);
+		$this->objects->seed('c-1', 'salesContract', ['contractNumber' => 'CON-'.date('Y').'-0001', 'status' => 'active', 'ownerId' => 'owner-1']);
+		$this->withBody(['title' => 'Onderhoud', 'clientRef' => 'client-1', 'value' => 5200, 'sourceLeadRef' => 'lead-1', '_route' => 'x']);
+
+		$response = $this->buildController($this->objects)->create();
+
+		$this->assertSame(expected: Http::STATUS_CREATED, actual: $response->getStatus());
+		$saved = end($this->objects->saves);
+		$this->assertSame(expected: 'draft', actual: $saved['status']);
+		$this->assertSame(expected: 'client-1', actual: $saved['clientRef']);
+		$this->assertSame(expected: 5200, actual: $saved['valuePerInterval']);
+		$this->assertSame(expected: 5200, actual: $saved['value']);
+		$this->assertSame(expected: 'lead-1', actual: $saved['sourceLeadRef']);
+		$this->assertSame(expected: date('Y-m-d'), actual: $saved['startDate']);
+		$this->assertNotSame(expected: 'CON-'.date('Y').'-0001', actual: $saved['contractNumber']);
+		$this->assertArrayNotHasKey(key: '_route', array: $saved);
+	}//end testCreateFromAWonLeadFillsTheTermAndNamesTheLead()
+
+	/**
+	 * A start date and a value per interval that are given are kept.
+	 *
+	 * @return void
+	 */
+	public function testCreateKeepsAGivenTerm(): void {
+		$this->signIn();
+		$this->groupManager->method('isInGroup')->willReturn(true);
+		$this->withBody(['title' => 'Support', 'clientRef' => 'client-1', 'value' => 100, 'valuePerInterval' => 80, 'startDate' => '2027-01-01']);
+
+		$this->buildController($this->objects)->create();
+
+		$saved = end($this->objects->saves);
+		$this->assertSame(expected: '2027-01-01', actual: $saved['startDate']);
+		$this->assertSame(expected: 80, actual: $saved['valuePerInterval']);
+		$this->assertSame(expected: 80, actual: $saved['value']);
+	}//end testCreateKeepsAGivenTerm()
+
+	/**
 	 * Unauthenticated transition is refused with 401 and writes nothing.
 	 *
 	 * @return void
