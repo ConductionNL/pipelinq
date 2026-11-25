@@ -8309,6 +8309,61 @@
             "minQuantity": 1
           }
         ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webChatChannel",
+          "slug": "webchatchannel-gemeente-website"
+        },
+        "name": "Gemeentewebsite",
+        "allowedOrigins": [
+          "https://www.example.org"
+        ],
+        "greeting": "Hallo! Waar kunnen we u mee helpen?",
+        "offlineText": "Er is nu niemand beschikbaar. Laat uw e-mailadres achter, dan antwoorden we zo snel mogelijk.",
+        "assistantEnabled": false,
+        "waitSeconds": 120,
+        "showAgentFirstName": true,
+        "active": false,
+        "channelToken": "DemoChannelGemeente0001"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webChatChannel",
+          "slug": "webchatchannel-ondernemersloket"
+        },
+        "name": "Ondernemersloket",
+        "allowedOrigins": [
+          "https://ondernemen.example.org"
+        ],
+        "greeting": "Welkom bij het ondernemersloket.",
+        "offlineText": "Het loket is gesloten. Laat uw e-mailadres achter voor een antwoord.",
+        "assistantEnabled": true,
+        "waitSeconds": 180,
+        "showAgentFirstName": false,
+        "active": false,
+        "channelToken": "DemoChannelOndernemer002"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "webChatChannel",
+          "slug": "webchatchannel-werkportaal"
+        },
+        "name": "Werkportaal",
+        "allowedOrigins": [
+          "https://werk.example.org",
+          "https://werk-test.example.org"
+        ],
+        "greeting": "Stel hier uw vraag over werk en inkomen.",
+        "offlineText": "Niemand beschikbaar. We mailen u terug.",
+        "assistantEnabled": false,
+        "waitSeconds": 300,
+        "showAgentFirstName": true,
+        "active": false,
+        "channelToken": "DemoChannelWerkportaal03"
       }
     ]
   }

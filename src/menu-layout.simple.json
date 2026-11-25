@@ -571,6 +571,49 @@
 						"errorMessage": "Could not assign this ticket to you."
 					},
 					{
+						"id": "web-chat-take",
+						"group": "Status",
+						"type": "api-call",
+						"label": "Take this chat",
+						"icon": "AccountArrowLeftOutline",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/web-chat/conversations/@object.inboundThreadKey/take",
+						"successMessage": "The chat is yours. The visitor sees that a colleague answers.",
+						"errorMessage": "Could not take this chat.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "channel",
+									"op": "eq",
+									"value": "chat"
+								},
+								{
+									"field": "assignee",
+									"op": "empty"
+								}
+							]
+						}
+					},
+					{
+						"id": "web-chat-end",
+						"group": "Status",
+						"type": "api-call",
+						"label": "End chat",
+						"icon": "CloseCircleOutline",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/web-chat/conversations/@object.inboundThreadKey/end",
+						"confirm": true,
+						"confirmTitle": "End this chat?",
+						"confirmMessage": "The visitor can no longer send messages in this chat. The ticket stays as it is.",
+						"successMessage": "Chat ended.",
+						"errorMessage": "Could not end this chat.",
+						"visibleWhen": {
+							"field": "channel",
+							"op": "eq",
+							"value": "chat"
+						}
+					},
+					{
 						"id": "pass-on",
 						"type": "open-form",
 						"group": "Status",
@@ -1445,6 +1488,7 @@
 							"value": "interaction"
 						}
 					},
+					"ticket-web-chat",
 					"ticket-resident-view"
 				],
 				"layout": [
@@ -1622,6 +1666,7 @@
 					"dossier-snapshot": null,
 					"woo-conversion": null,
 					"resident-view": null,
+					"web-chat": null,
 					"routing-suggestions": {
 						"title": "Suggested colleagues",
 						"visibleWhen": {
@@ -1976,6 +2021,41 @@
 							"excludeActions": [
 								"read"
 							]
+						}
+					},
+					{
+						"id": "ticket-web-chat",
+						"type": "conversation",
+						"title": "Website chat",
+						"icon": "MessageTextOutline",
+						"_note": "requests-web-chat-and-bot D6, decision on #3943 (option 1): the library's conversation widget reads the chat from GET /api/web-chat/conversations/{threadKey} every three seconds until the chat has ended, and the reply box posts to its /reply. Take this chat and End chat are header actions.",
+						"visibleWhen": {
+							"field": "channel",
+							"op": "eq",
+							"value": "chat"
+						},
+						"content": {
+							"source": {
+								"url": "/apps/pipelinq/api/web-chat/conversations/@object.inboundThreadKey",
+								"responsePath": "messages"
+							},
+							"pollSeconds": 3,
+							"pollUntil": {
+								"path": "status",
+								"in": [
+									"closed"
+								]
+							},
+							"textField": "body",
+							"timeField": "at",
+							"authorField": "authorName",
+							"sideField": "side",
+							"usValue": "us",
+							"endpoint": "/apps/pipelinq/api/web-chat/conversations/@object.inboundThreadKey/reply",
+							"messageKey": "text",
+							"replyLabel": "Your answer",
+							"sendLabel": "Send",
+							"emptyText": "No messages in this chat yet."
 						}
 					},
 					{

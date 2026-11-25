@@ -96,7 +96,7 @@ espocrm and kiss no.
   route that serves the chat window with a per-channel `frame-ancestors`.
 - New `lib/Service/WebChat/WebChatService.php` and
   `lib/Service/WebChat/ChatAssistant.php` (the lazy hermiq resolve).
-- New section `src/components/WebChatSection.vue` on TicketDetail, an admin
+- The library's `conversation` widget on TicketDetail (in place of the planned section `WebChatSection.vue`), an admin
   Web chat settings section, and a small embed script.
 - Uses `InboundTicketService::receive()` from `requests-inbound-to-queue` for
   the handover.
