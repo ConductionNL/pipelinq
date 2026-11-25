@@ -157,6 +157,6 @@ class ZuiddrechtChangesNameTheirObjectTest extends TestCase {
 	public function testTheTicketThatLinksADossiqCaseIsOptional(): void {
 		$ticket = $this->objects()['ticket-sanne-fietspad-lindelaan'];
 		$this->assertSame(expected: 'dossiq', actual: $ticket['lookups']['case']['register']);
-		$this->assertTrue($ticket['optional'] ?? false);
+		$this->assertTrue(condition: $ticket['optional'] ?? false);
 	}//end testTheTicketThatLinksADossiqCaseIsOptional()
 }//end class
