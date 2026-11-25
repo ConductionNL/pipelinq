@@ -63,11 +63,13 @@ class ContactsSyncCommand extends Command {
 	 * Configure the command name, description and options.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
 	 */
 	protected function configure(): void {
 		$this->setName(name: 'pipelinq:contacts:sync')
 			->setDescription('Write a Contacts card for every client under the uid the client names.')
-			->addOption(name: 'user', mode: InputOption::VALUE_REQUIRED, description: 'The account whose addressbook takes new cards (default: the first admin).')
+			->addOption(name: 'user', mode: InputOption::VALUE_REQUIRED, description: 'The account whose addressbook takes new cards (default: first admin).')
 			->addOption(name: 'dry-run', mode: InputOption::VALUE_NONE, description: 'List the cards that would be written without writing them.');
 	}//end configure()
 

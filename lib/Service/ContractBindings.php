@@ -510,7 +510,6 @@ final class ContractBindings {
 		$context->registerServiceAlias(MergedAwayCardInterface::class, MergedAwayCard::class);
 		$context->registerServiceAlias(MergedAwayStampInterface::class, MergedAwayStamp::class);
 		$context->registerServiceAlias(MessagingServiceInterface::class, MessagingService::class);
-		$context->registerServiceAlias(ClientContactCardSyncInterface::class, ClientContactCardSync::class);
 		$context->registerServiceAlias(MockPipelineCleanupServiceInterface::class, MockPipelineCleanupService::class);
 		$context->registerServiceAlias(NaviServiceInterface::class, NaviService::class);
 		$context->registerServiceAlias(NoteEventServiceInterface::class, NoteEventService::class);
@@ -654,6 +653,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(ClientBusinessReaderInterface::class, ClientBusinessReader::class);
 		$context->registerServiceAlias(ClientIdentifierServiceInterface::class, ClientIdentifierService::class);
 		$context->registerServiceAlias(ClientCaseReaderInterface::class, ClientCaseReader::class);
+		$context->registerServiceAlias(ClientContactCardSyncInterface::class, ClientContactCardSync::class);
 		$context->registerServiceAlias(ClientHistorySummaryServiceInterface::class, ClientHistorySummaryService::class);
 		$context->registerServiceAlias(ClientManagementIntegrationInterface::class, ClientManagementIntegration::class);
 		$context->registerServiceAlias(ClientRiskServiceInterface::class, ClientRiskService::class);

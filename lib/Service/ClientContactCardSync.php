@@ -30,12 +30,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\ClientContactCardSyncInterface;
-use OCA\Pipelinq\Util\ResultToArray;
 use OCP\Contacts\IManager as IContactsManager;
-use OCP\IAppConfig;
 use RuntimeException;
 
 /**
@@ -44,7 +40,6 @@ use RuntimeException;
  * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
  */
 class ClientContactCardSync implements ClientContactCardSyncInterface {
-	use ResultToArray;
 
 	/**
 	 * Clients read per page.
@@ -56,18 +51,14 @@ class ClientContactCardSync implements ClientContactCardSyncInterface {
 	/**
 	 * Constructor.
 	 *
-	 * @param IContactsManager            $contactsManager  The acting user's addressbooks.
-	 * @param IAppConfig                  $appConfig        The app config (client schema).
-	 * @param RegisterResolverService     $registerResolver Resolves the contact register.
-	 * @param ObjectServiceInterface      $objectService    OpenRegister's published object service.
-	 * @param ContactVcardPropertyBuilder $propBuilder      Builds the card's properties from a client.
-	 * @param ContactVcardWriterService   $writer           Writes the card under a given uid.
+	 * @param IContactsManager            $contactsManager The acting user's addressbooks.
+	 * @param ContactObjectReader         $objects         Reads the clients page by page.
+	 * @param ContactVcardPropertyBuilder $propBuilder     Builds the card's properties from a client.
+	 * @param ContactVcardWriterService   $writer          Writes the card under a given uid.
 	 */
 	public function __construct(
 		private readonly IContactsManager $contactsManager,
-		private readonly IAppConfig $appConfig,
-		private readonly RegisterResolverService $registerResolver,
-		private readonly ObjectServiceInterface $objectService,
+		private readonly ContactObjectReader $objects,
 		private readonly ContactVcardPropertyBuilder $propBuilder,
 		private readonly ContactVcardWriterService $writer,
 	) {
@@ -148,24 +139,18 @@ class ClientContactCardSync implements ClientContactCardSyncInterface {
 	 * @throws RuntimeException When the contact register or the client schema is not configured.
 	 */
 	private function clients(): array {
-		$register = $this->registerResolver->resolve('contact');
-		$schema   = $this->appConfig->getValueString(AppIdentity::APP_ID, 'client_schema', '');
-		if ($register === '' || $schema === '') {
-			throw new RuntimeException('The contact register or the client schema is not configured.');
-		}
-
 		$clients = [];
 		$offset  = 0;
 		do {
-			$page = $this->objectService->findAll(
-				['filters' => ['register' => $register, 'schema' => $schema], 'limit' => self::PAGE, 'offset' => $offset]
-			);
-			foreach ($page as $result) {
-				$clients[] = $this->serializeResult(result: $result);
+			$page = $this->objects->page(objectType: 'client', limit: self::PAGE, offset: $offset);
+			if ($page === null) {
+				throw new RuntimeException('The contact register or the client schema is not configured.');
 			}
 
+			$clients = array_merge($clients, $page);
 			$offset += self::PAGE;
-		} while (count($page) === self::PAGE);
+			$full    = (count($page) === self::PAGE);
+		} while ($full === true);
 
 		return $clients;
 	}//end clients()
