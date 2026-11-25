@@ -30,9 +30,9 @@ use PHPUnit\Framework\TestCase;
 /**
  * The four update rules address the watchers; the two create rules do not.
  *
- * @spec openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity/spec.md#requirement-followers-of-a-ticket-or-lead-receive-its-update-notifications-req-nftl-001
- * @spec openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity/spec.md#requirement-adding-followers-keeps-every-existing-recipient-req-nftl-002
- * @spec openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity/spec.md#requirement-the-watchers-block-passes-openregisters-schema-validation-req-nftl-003
+ * @spec openspec/specs/notifications-activity/spec.md#requirement-followers-of-a-ticket-or-lead-receive-its-update-notifications-req-nftl-001
+ * @spec openspec/specs/notifications-activity/spec.md#requirement-adding-followers-keeps-every-existing-recipient-req-nftl-002
+ * @spec openspec/specs/notifications-activity/spec.md#requirement-the-watchers-block-passes-openregisters-schema-validation-req-nftl-003
  */
 class WatcherRecipientsTest extends TestCase {
 	/**

@@ -5,7 +5,8 @@
  * The ticket page's History tab (board PqTicket) tells in words who passed the
  * ticket to whom and what happened to it afterwards, from OpenRegister's audit
  * trail through the shared `audit-trail` widget: configuration, no ticket log
- * of its own.
+ * of its own. A handover's note is the `handoverNote` the Pass on action
+ * writes with the new assignee, shown under the entry by the rule's `note`.
  *
  * @spec openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#REQ-THH-001
  */
@@ -85,7 +86,7 @@ describe('ticket handover history', () => {
 		const { actionLabels, changeLabels } = full.content
 		expect(actionLabels.create).toBe('Created by {actor}')
 		expect(actionLabels.update).toBe('Updated by {actor}')
-		expect(changeLabels[0]).toEqual({ action: 'update', field: 'assignee', label: 'Passed to {to} by {actor}', values: 'user' })
+		expect(changeLabels[0]).toEqual({ action: 'update', field: 'assignee', label: 'Passed to {to} by {actor}', values: 'user', note: 'handoverNote' })
 	})
 
 	it('words every status of the ticket schema, for updates only', () => {
@@ -105,6 +106,22 @@ describe('ticket handover history', () => {
 	it('says the same in the simple structure', () => {
 		expect(lean).not.toBeNull()
 		expect(lean.content).toEqual(full.content)
+	})
+
+	it('passes a ticket on with a note, written with the assignee in one call', () => {
+		const lanes = [detail.headerActions, simple.pages.find((p) => p.id === 'TicketDetail').config.headerActions]
+		for (const actions of lanes) {
+			const passOn = actions.find((a) => a.id === 'pass-on')
+			expect(passOn.type).toBe('open-form')
+			expect(passOn.endpoint).toEqual({ url: '/apps/pipelinq/api/tickets/@objectId/pass-on', method: 'POST' })
+			expect(Object.keys(passOn.formProperties)).toEqual(['assignee', 'handoverNote'])
+			expect(passOn.formProperties.assignee).toMatchObject({ format: 'user', required: true })
+			expect(passOn.formProperties.handoverNote.maxLength).toBe(1000)
+			for (const text of [passOn.label, passOn.successMessage, passOn.errorMessage, passOn.formProperties.handoverNote.title, passOn.formProperties.handoverNote.description]) {
+				expect(nl[text], text).toBeTruthy()
+				expect(nlJs).toContain(`"${text}": "${nl[text]}"`)
+			}
+		}
 	})
 
 	it('has every word in both Dutch catalogues', () => {

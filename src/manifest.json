@@ -2625,6 +2625,15 @@
 						}
 					},
 					{
+						"id": "client-contactmoment-quick-log",
+						"type": "ContactmomentQuickLogWidget",
+						"title": "Log contactmoment",
+						"_note": "contact-moments-keep-draft: the quick log with its server draft, on top of the Contact moments tab. It was a body section below the tab strip, which the relation-board layout does not reach (live pass 17 Nov 2026); the header's Log contact stays the generic form without drafts.",
+						"content": {
+							"title": "Log contactmoment"
+						}
+					},
+					{
 						"id": "client-contactmoments",
 						"type": "object-list",
 						"title": "Contact moments",
@@ -3833,7 +3842,11 @@
 									}
 								},
 								{
-									"widgetId": "client-contactmoments",
+									"id": "client-contact-moments-tab",
+									"widgetIds": [
+										"client-contactmoment-quick-log",
+										"client-contactmoments"
+									],
 									"label": "Contact moments",
 									"countFrom": "widget"
 								},
@@ -3902,18 +3915,6 @@
 						"props": {
 							"entityId": "@objectId",
 							"entityType": "client"
-						},
-						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "contactmoment-quick-log",
-						"component": "ContactmomentQuickLog",
-						"title": "Log contactmoment",
-						"placement": "end",
-						"props": {
-							"clientId": "@objectId",
-							"inline": true
 						},
 						"colSpan": 6,
 						"card": true
@@ -4695,6 +4696,19 @@
 						"errorMessage": "Could not assign this ticket to you."
 					},
 					{
+						"id": "pass-on",
+						"type": "open-form",
+						"label": "Pass on",
+						"icon": "AccountArrowRightOutline",
+						"endpoint": { "url": "/apps/pipelinq/api/tickets/@objectId/pass-on", "method": "POST" },
+						"formProperties": {
+							"assignee": { "type": "string", "format": "user", "title": "Colleague", "required": true },
+							"handoverNote": { "type": "string", "format": "textarea", "maxLength": 1000, "title": "Note for your colleague", "description": "Shown under the handover in the ticket's History." }
+						},
+						"successMessage": "Ticket passed on.",
+						"errorMessage": "Could not pass this ticket on."
+					},
+					{
 						"id": "review-call",
 						"label": "Review this call",
 						"icon": "AccountStarOutline",
@@ -4883,7 +4897,8 @@
 									"action": "update",
 									"field": "assignee",
 									"label": "Passed to {to} by {actor}",
-									"values": "user"
+									"values": "user",
+									"note": "handoverNote"
 								},
 								{
 									"action": "update",

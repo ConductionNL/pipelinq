@@ -4,7 +4,8 @@
  *
  * A half typed contact moment survives a closed page (contact-moments-keep-draft).
  *
- * Seeds a client, types a subject and notes in the quick log on its page,
+ * Seeds a client, types a subject and notes in the quick log on its
+ * Contact moments tab,
  * waits past the two second quiet time, closes the page, opens the client in
  * a new page, restores the draft and saves the contact moment.
  *
@@ -94,6 +95,18 @@ async function contactMomentsFor(
 	return (res.body.results as Ticket[]) ?? []
 }
 
+/**
+ * Open the client page's Contact moments tab, where the quick log sits on
+ * top of the contact moment list.
+ *
+ * @param page The page on a client.
+ */
+async function openContactMomentsTab(page: Page): Promise<void> {
+	await page
+		.getByRole('tab', { name: /^(Contact moments|Contactmomenten)/ })
+		.click({ timeout: 30000 })
+}
+
 /** The client this test seeded, removed again with its contact moments. */
 let seededClient: string | null = null
 
@@ -133,6 +146,7 @@ test.describe('contact moment draft', () => {
 		seededClient = clientId
 
 		await gotoAppRoute(page, `/clients/${clientId}`)
+		await openContactMomentsTab(page)
 		const quickLog = page.getByTestId('contactmoment-quicklog')
 		await expect(quickLog).toBeVisible({ timeout: 30000 })
 		await quickLog
@@ -154,6 +168,7 @@ test.describe('contact moment draft', () => {
 
 		const second = await context.newPage()
 		await gotoAppRoute(second, `/clients/${clientId}`)
+		await openContactMomentsTab(second)
 		await expect(second.getByTestId('contactmoment-draft-offer')).toBeVisible({
 			timeout: 30000,
 		})

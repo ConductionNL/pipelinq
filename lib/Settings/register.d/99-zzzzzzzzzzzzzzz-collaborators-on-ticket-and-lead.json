@@ -1,0 +1,94 @@
+{
+    "_meta": {
+        "spdx-license": "EUPL-1.2",
+        "spdx-copyright": "2026 Conduction B.V.",
+        "description": "notify-the-followers-of-tickets-and-leads task 5.1 (REQ-NFTL-005, row work-collaborators). A colleague added to a ticket or lead may open and change it while they are on it, also when their own role would not give them that record. Who is on it lives on the record itself, in `collaborators` (Nextcloud user ids, the same shape as a campaign event's `hosts`); OpenRegister's per-object authorisation decides with `{\"collaborators\": {\"$contains\": \"$userId\"}}`, so taking a colleague off the list takes the access away again, on the list and on a single read alike. Pipelinq adds no check of its own. Only read and update are granted: create, delete and export stay with the staff. A schema's authorization lists are replaced, not merged, so this fragment restates the read and update lists of 99-zzz-register-access.json in full and sorts after every fragment that sets them; a later change to those lists must edit this fragment too. RegisterAccessSync still adds the CRM group beside `sales`."
+    },
+    "components": {
+        "schemas": {
+            "ticket": {
+                "slug": "ticket",
+                "properties": {
+                    "collaborators": {
+                        "type": "array",
+                        "title": "Colleagues",
+                        "description": "The colleagues who work on this with the assignee. They can open and change it while they are listed.",
+                        "items": {
+                            "type": "string",
+                            "format": "user"
+                        },
+                        "facetable": true
+                    }
+                },
+                "authorization": {
+                    "read": [
+                        "sales",
+                        "user:pipelinq-system",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "collaborators": {
+                                    "$contains": "$userId"
+                                }
+                            }
+                        }
+                    ],
+                    "update": [
+                        "sales",
+                        "user:pipelinq-system",
+                        "pipelinq-messaging-service",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "collaborators": {
+                                    "$contains": "$userId"
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "lead": {
+                "slug": "lead",
+                "properties": {
+                    "collaborators": {
+                        "type": "array",
+                        "title": "Colleagues",
+                        "description": "The colleagues who work on this with the assignee. They can open and change it while they are listed.",
+                        "items": {
+                            "type": "string",
+                            "format": "user"
+                        },
+                        "facetable": true
+                    }
+                },
+                "authorization": {
+                    "read": [
+                        "sales",
+                        "user:pipelinq-system",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "collaborators": {
+                                    "$contains": "$userId"
+                                }
+                            }
+                        }
+                    ],
+                    "update": [
+                        "sales",
+                        "user:pipelinq-system",
+                        {
+                            "group": "authenticated",
+                            "match": {
+                                "collaborators": {
+                                    "$contains": "$userId"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
