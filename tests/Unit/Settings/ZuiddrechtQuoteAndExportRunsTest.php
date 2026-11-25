@@ -68,7 +68,7 @@ class ZuiddrechtQuoteAndExportRunsTest extends TestCase {
 		$changes  = array_column($fragment['changes'], null, 'key');
 
 		$change = $changes['offerte-0042-contact-en-vervaldatum'];
-		$this->assertSame(expected: ['number' => 'OFF-2026-0042'], actual: $change['where']);
+		$this->assertSame(expected: 'offerte-0042', actual: $change['object']);
 		$this->assertSame(expected: '{{object:contact-kees-bakker.id}}', actual: $change['set']['contact']);
 		$this->assertSame(expected: '{{date:30}}', actual: $change['set']['expiresAt']);
 		$this->assertSame(expected: 'Eigenaar', actual: $objects['contact-kees-bakker']['data']['role']);
@@ -118,7 +118,7 @@ class ZuiddrechtQuoteAndExportRunsTest extends TestCase {
 		$jobs     = [];
 		foreach ($fragment['changes'] as $change) {
 			if ($change['schema'] === 'exportJob') {
-				$jobs[$change['where']['name']] = $change['set'];
+				$jobs[$change['object']] = $change['set'];
 			}
 		}
 
@@ -129,14 +129,14 @@ class ZuiddrechtQuoteAndExportRunsTest extends TestCase {
 			'export-job-leads'                => 'export-run-leads',
 		];
 		foreach ($runs as $jobKey => $runKey) {
-			$set = $jobs[$objects[$jobKey]['data']['name']];
+			$set = $jobs[$jobKey];
 			$run = $objects[$runKey]['data'];
 			$this->assertSame(expected: $run['status'], actual: $set['lastRunStatus'], message: $jobKey);
 			$this->assertSame(expected: $run['endedAt'], actual: $set['lastRunAt'], message: $jobKey);
 		}
 
-		$this->assertNull(actual: $jobs['Leads en waarde in de pijplijn']['nextRunAt']);
-		$this->assertSame(expected: 3, actual: $jobs['Afspraken en niet verschenen']['lastRunFilesExpected']);
+		$this->assertNull(actual: $jobs['export-job-leads']['nextRunAt']);
+		$this->assertSame(expected: 3, actual: $jobs['export-job-appointments']['lastRunFilesExpected']);
 		$this->assertSame(expected: 3, actual: $objects['export-run-appointments']['data']['fileCountExpected']);
 	}//end testTheExportJobsCarryTheirLastRun()
 
@@ -169,7 +169,7 @@ class ZuiddrechtQuoteAndExportRunsTest extends TestCase {
 		$changes = array_column($this->fragment()['changes'], null, 'key');
 		$change  = $changes['contract-sportvelden-contact'];
 
-		$this->assertSame(expected: ['contractNumber' => 'CON-2026-0031'], actual: $change['where']);
+		$this->assertSame(expected: 'contract-sportvelden-2026', actual: $change['object']);
 		$this->assertSame(expected: ['contactRef' => '{{object:contact-joke-smit.id}}'], actual: $change['set']);
 	}//end testTheSportsFieldContractNamesJokeSmit()
 }//end class

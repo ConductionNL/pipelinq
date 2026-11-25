@@ -5,9 +5,7 @@
 			"key": "kassabon-1043-in-dienst",
 			"register": "pipelinq",
 			"schema": "posTransaction",
-			"where": {
-				"reference": "POS-2026-1043"
-			},
+			"object": "kassabon-1043",
 			"set": {
 				"shift": "{{object:kassadienst-7okt-balie2.id}}"
 			}
