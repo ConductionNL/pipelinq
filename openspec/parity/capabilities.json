@@ -4743,7 +4743,7 @@
 				],
 				"change": [
 					"openspec/changes/segment-groups-its-rules",
-					"openspec/changes/segment-last-contact-signal"
+					"openspec/changes/archive/2026-11-25-segment-last-contact-signal"
 				]
 			},
 			"evidence": {

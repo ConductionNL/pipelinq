@@ -46,7 +46,8 @@
 ## 5. Board and live
 
 - [ ] 5.1 The PqSegmentBouwer capture builds the board's tree: Place equals Zuiddrecht, Add group, Match any condition, Industry horeca and detailhandel, then Last contact after a date. Then re-triage PL5-C items 2 to 7 and 12 to 17 against it
-- [ ] 5.2 Live: build the board's segment on PqSegmentBouwer and read its size (shares the open live task 1.3 of `segment-last-contact-signal`)
+- [x] 5.2 Live: build the board's segment on PqSegmentBouwer and read its size (shares the open live task 1.3 of `segment-last-contact-signal`)
+  - Done with segment-last-contact-signal 1.3 (25 Nov 2026, evidence there): the board's tree is valid live, estimatedSize 0 on the Zuiddrecht set (no Horeca/Detailhandel client), 1 without the Branche group.
 
 ## 6. Specs
 
