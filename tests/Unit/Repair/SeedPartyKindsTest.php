@@ -54,11 +54,14 @@ class SeedPartyKindsTest extends TestCase {
 	 *
 	 * @return SeedPartyKinds The step under test.
 	 */
-	private function step(): SeedPartyKinds {
+	private function step(bool $withAcceptances = false): SeedPartyKinds {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
-			static function (string $app, string $key, string $default = ''): string {
+			static function (string $app, string $key, string $default = '') use ($withAcceptances): string {
 				$values = ['register' => 'reg-1', 'partyKind_schema' => 'sch-kind'];
+				if ($withAcceptances === true) {
+					$values['partyKindAcceptance_schema'] = 'sch-acceptance';
+				}
 
 				return ($values[$key] ?? $default);
 			}
@@ -163,4 +166,36 @@ class SeedPartyKindsTest extends TestCase {
 		$this->assertSame(1, $byCode['aanvrager']['maxPerRecord']);
 		$this->assertSame(0, $byCode['belanghebbende']['maxPerRecord']);
 	}//end testCardinalityIsSeededWithTheKind()
+	/**
+	 * Citizen and business are seeded as kinds, and a client is offered them:
+	 * the acceptance is written once and left alone after that.
+	 *
+	 * @return void
+	 */
+	public function testAClientIsOfferedCitizenAndBusinessOnce(): void {
+		$output = $this->createMock(IOutput::class);
+		$this->step(withAcceptances: true)->run($output);
+		$this->step(withAcceptances: true)->run($output);
+
+		$codes = array_column($this->written, 'code');
+		$this->assertContains(needle: 'burger', haystack: $codes);
+		$this->assertContains(needle: 'bedrijf', haystack: $codes);
+
+		$acceptances = array_values(array_filter($this->written, static fn (array $row): bool => isset($row['recordType'])));
+		$this->assertSame(
+			expected: [['recordType' => SeedPartyKinds::CLIENT_KIND_RECORD_TYPE, 'kinds' => ['burger', 'bedrijf']]],
+			actual: $acceptances
+		);
+	}//end testAClientIsOfferedCitizenAndBusinessOnce()
+
+	/**
+	 * Without the acceptance schema configured nothing but the kinds is written.
+	 *
+	 * @return void
+	 */
+	public function testNoAcceptanceIsWrittenWithoutItsSchema(): void {
+		$this->step()->run($this->createMock(IOutput::class));
+
+		$this->assertSame(expected: [], actual: array_filter($this->written, static fn (array $row): bool => isset($row['recordType'])));
+	}//end testNoAcceptanceIsWrittenWithoutItsSchema()
 }//end class

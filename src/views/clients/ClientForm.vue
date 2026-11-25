@@ -148,6 +148,19 @@
 						:placeholder="t('pipelinq', 'Select a timezone')"
 						data-testid="client-timezone-select" />
 				</div>
+				<div v-if="partyKindChoices.length" class="client-form__field">
+					<label for="client-board-party-kind" class="client-form__label">{{ t('pipelinq', 'Kind of party') }}</label>
+					<NcSelect
+						v-model="partyKind"
+						inputId="client-board-party-kind"
+						:inputLabel="t('pipelinq', 'Kind of party')"
+						labelOutside
+						:options="partyKindChoices"
+						:reduce="(option) => option.id"
+						label="label"
+						:placeholder="t('pipelinq', 'Choose a kind')"
+						data-testid="client-party-kind-select" />
+				</div>
 				<ClientCustomFieldInputs
 					v-if="customFields.length"
 					:fields="customFields"
@@ -186,6 +199,19 @@
 				<p v-if="shownErrors.type" class="field-error" role="alert">
 					{{ shownErrors.type }}
 				</p>
+			</div>
+			<div v-if="partyKindChoices.length" class="form-group">
+				<label for="client-party-kind">{{ t('pipelinq', 'Kind of party') }}</label>
+				<NcSelect
+					v-model="partyKind"
+					inputId="client-party-kind"
+					:inputLabel="t('pipelinq', 'Kind of party')"
+					labelOutside
+					:options="partyKindChoices"
+					:reduce="(option) => option.id"
+					label="label"
+					:placeholder="t('pipelinq', 'Choose a kind')"
+					data-testid="client-party-kind-select" />
 			</div>
 			<div class="form-group">
 				<label for="client-email">{{ t('pipelinq', 'Email') }}</label>
@@ -348,6 +374,7 @@ import LabelSelect from '../../components/LabelSelect.vue'
 import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
 import { customClientFields, customFieldValuesOf, customFieldValuesToSave } from '../../services/clientCustomFields.js'
 import { findClientDuplicate } from '../../services/clientDuplicates.js'
+import { clientPartyKinds, partyKindsForType } from '../../services/clientPartyKinds.js'
 import {
 	clientFormFrom,
 	defaultLanguage,
@@ -529,10 +556,26 @@ export default {
 			customFields: [],
 			/** Their values in this form, by key. */
 			customValues: {},
+
+			/** The party kinds a client is offered, from the administrator's vocabulary. */
+			partyKindOptions: [],
+			/** The chosen kind of party (the kind's id), or null. */
+			partyKind: null,
 		}
 	},
 
 	computed: {
+		/**
+		 * The kinds offered for the client's type: a person is offered the
+		 * kinds a natural person can be, an organisation the others.
+		 *
+		 * @return {Array<{id: string, label: string}>} The options.
+		 * @spec openspec/changes/specify-capability-rows/specs/client-management/spec.md#requirement-a-client-records-what-kind-of-party-it-is
+		 */
+		partyKindChoices() {
+			return partyKindsForType(this.partyKindOptions, this.form.type, this.partyKind)
+		},
+
 		/** @return {string} What the duplicate check looks at. */
 		duplicateKey() {
 			return `${(this.form.email || '').trim().toLowerCase()}|${(this.form.name || '').trim().toLowerCase()}`
@@ -624,6 +667,7 @@ export default {
 	mounted() {
 		this.loadLanguages()
 		this.loadCustomFields()
+		this.loadPartyKinds()
 	},
 
 	methods: {
@@ -655,6 +699,20 @@ export default {
 		populateForm(data) {
 			this.form = clientFormFrom(data)
 			this.customValues = customFieldValuesOf(this.customFields, data)
+			this.partyKind = data?.partyKind || null
+		},
+
+		/**
+		 * Read the party kinds a client is offered.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/specify-capability-rows/specs/client-management/spec.md#requirement-a-client-records-what-kind-of-party-it-is
+		 */
+		async loadPartyKinds() {
+			this.partyKindOptions = await clientPartyKinds()
+			if (this.client?.id && this.partyKind === null) {
+				this.partyKind = this.client.partyKind || null
+			}
 		},
 
 		/**
@@ -749,6 +807,11 @@ export default {
 			const data = {
 				...this.form,
 				...customFieldValuesToSave(this.customFields, this.customValues, !!this.client?.id),
+			}
+			if (this.partyKind) {
+				data.partyKind = this.partyKind
+			} else if (this.client?.partyKind) {
+				data.partyKind = null
 			}
 			if (this.client?.id) {
 				data.id = this.client.id
