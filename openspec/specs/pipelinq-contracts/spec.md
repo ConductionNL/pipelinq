@@ -12,8 +12,6 @@ A sales contract MAY carry `contactRef`, the uuid of a contact person. It MUST N
 
 #### Scenario: Joke Smit's contract
 
-@e2e exclude Asserted in tests/Unit/Settings/SalesContractContactRefSchemaTest.php and tests/vitest/contactPersonPage.spec.js; the pixel check against board PqContactpersoon covers the card.
-
 - GIVEN contract CON-2026-0031 with `contactRef` Joke Smit
 - WHEN the user opens Joke Smit's contact page
 - THEN Gerelateerd lists "Contract CON-2026-0031", linking to the contract
@@ -23,8 +21,6 @@ A sales contract MAY carry `contactRef`, the uuid of a contact person. It MUST N
 `renewalLeadOutcome` MUST accept null as well as "", won and lost. OpenRegister stores the empty default as null, and a later edit of that contract MUST validate.
 
 #### Scenario: edit a contract that has no renewal outcome
-
-@e2e exclude Asserted in tests/Unit/Settings/SalesContractContactRefSchemaTest.php::testTheRenewalLeadOutcomeAcceptsNull.
 
 - GIVEN contract CON-2026-0031, stored with renewalLeadOutcome null
 - WHEN it is changed (an edit, or the example set adding contactRef)
