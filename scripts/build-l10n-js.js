@@ -24,6 +24,11 @@
 //   `npm run check:l10n` still asserts the two carry identical pairs — this
 //   script makes that assertion cheap to satisfy rather than replacing it.
 //
+//   One exception: en.js drops every entry whose translation equals its key
+//   (see SOURCE_LOCALE). `t()` falls back to the key, so the browser renders
+//   the same text without ~850 KB of identity pairs on every page; en.json
+//   stays complete for PHP and the coverage checks.
+//
 // EVERY locale in l10n/ is generated, not just en/nl. larpinq ships 37 locale
 // catalogues and had .js for none of them, so 35 languages' translations were
 // unreachable on top of the two this script was first written for.
@@ -56,6 +61,14 @@ const DEFAULT_PLURAL_FORM = 'nplurals=2; plural=(n != 1);'
 const L10N_DIR = path.join(REPO_ROOT, 'l10n')
 
 /**
+ * The locale the source strings are written in. Its browser catalogue drops
+ * every entry whose translation equals its key: `t()` already falls back to
+ * the key, so those entries only add bytes to every page (99% of en.js).
+ * l10n/en.json itself stays complete for PHP and the coverage checks.
+ */
+const SOURCE_LOCALE = 'en'
+
+/**
  * The app id the browser catalogue must register under. Read from
  * appinfo/info.xml rather than hard-coded: this app has already been renamed
  * once (hrmq -> humaniq), and a catalogue registered under the old id is
@@ -72,6 +85,28 @@ function appId() {
 		process.exit(1)
 	}
 	return match[1].trim()
+}
+
+// @spec PERF-HANDOFF.md (all apps: drop identity entries from the English catalogue at build time)
+/**
+ * The entries the browser catalogue of one locale carries: for the source
+ * locale only those that differ from their key, for every other locale all.
+ *
+ * @param {string} locale - the locale name
+ * @param {object} translations - key -> translation
+ * @return {object} key -> translation, as served to the browser
+ */
+function browserEntries(locale, translations) {
+	if (locale !== SOURCE_LOCALE) {
+		return translations
+	}
+	const kept = {}
+	for (const key of Object.keys(translations)) {
+		if (translations[key] !== key) {
+			kept[key] = translations[key]
+		}
+	}
+	return kept
 }
 
 /**
@@ -101,8 +136,9 @@ function renderJs(id, translations, pluralForm) {
 	].join('\n')
 }
 
+// @spec PERF-HANDOFF.md (all apps: drop identity entries from the English catalogue at build time)
 /**
- *
+ * Generate (or under --check verify) the browser catalogue of every locale.
  */
 function main() {
 	const check = process.argv.includes('--check')
@@ -139,9 +175,10 @@ function main() {
 			process.exit(1)
 		}
 
+		const served = browserEntries(locale, doc.translations)
 		const rendered = renderJs(
 			id,
-			doc.translations,
+			served,
 			doc.pluralForm || DEFAULT_PLURAL_FORM,
 		)
 		const current = fs.existsSync(jsFile)
@@ -150,7 +187,7 @@ function main() {
 
 		if (current === rendered) {
 			console.log(
-				`  ✓ l10n/${locale}.js up to date (${Object.keys(doc.translations).length} keys)`,
+				`  ✓ l10n/${locale}.js up to date (${Object.keys(served).length} keys)`,
 			)
 			continue
 		}
@@ -160,7 +197,7 @@ function main() {
 		}
 		fs.writeFileSync(jsFile, rendered)
 		console.log(
-			`  ✎ l10n/${locale}.js written (${Object.keys(doc.translations).length} keys)`,
+			`  ✎ l10n/${locale}.js written (${Object.keys(served).length} keys)`,
 		)
 	}
 
@@ -172,4 +209,8 @@ function main() {
 	}
 }
 
-main()
+if (require.main === module) {
+	main()
+}
+
+module.exports = { browserEntries, renderJs, SOURCE_LOCALE }
