@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use OCP\Calendar\IManager;
 /**
  * Upcoming meetings linked to a pipelinq record.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
  */
 class MyWorkCalendarService {
 
@@ -84,7 +84,7 @@ class MyWorkCalendarService {
 	 *
 	 * @return array<int, array<string, string>> Per meeting: id, title, startsAt, endsAt, recordKind, recordId, recordName, routeName.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/tasks.md#task-5.1
 	 */
 	public function upcoming(string $userId): array {
 		$principal = 'principals/users/' . $userId;

@@ -7,7 +7,7 @@
  * administrator also gets the organisation. The lists, the download and the
  * week tiles pass the scope on.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
  */
 
 import fs from 'fs'

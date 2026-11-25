@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -40,7 +40,7 @@ use Psr\Log\LoggerInterface;
 /**
  * My work's figures for the signed-in user.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md
  */
 class MyWorkController extends Controller {
 
@@ -70,7 +70,7 @@ class MyWorkController extends Controller {
 	 *
 	 * @return JSONResponse The figures, or an error envelope.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-kpi-summary-tiles-on-my-work-req-mw-090
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-kpi-summary-tiles-on-my-work-req-mw-090
 	 */
 	#[NoAdminRequired]
 	public function weekStats(): JSONResponse {

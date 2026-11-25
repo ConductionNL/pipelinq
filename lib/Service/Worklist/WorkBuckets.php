@@ -75,7 +75,7 @@ class WorkBuckets {
 	 * @throws \InvalidArgumentException For an unknown priority.
 	 *
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	public function listed(array $rows, array $list): array {
 		$narrow = new WorkFilters(

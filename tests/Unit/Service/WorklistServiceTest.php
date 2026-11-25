@@ -254,7 +254,7 @@ class WorklistServiceTest extends TestCase {
 	 * The team scope reads the work of every member of the manager's team,
 	 * and each member's tickets with that member as assignee (REQ-MW-180).
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */
@@ -276,7 +276,7 @@ class WorklistServiceTest extends TestCase {
 	/**
 	 * A manager narrows the team to one member; a user outside the team is refused.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */
@@ -293,7 +293,7 @@ class WorklistServiceTest extends TestCase {
 	/**
 	 * An administrator's organisation scope asks for everyone's work: no assignee filter.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */
@@ -311,7 +311,7 @@ class WorklistServiceTest extends TestCase {
 	/**
 	 * A user in no manager group cannot ask for the team's work.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */
@@ -885,7 +885,7 @@ class WorklistServiceTest extends TestCase {
 	 * high work is listed, and a pipeline drops the other pipeline's leads
 	 * while tickets and follow-ups stay.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 *
 	 * @return void
 	 */
@@ -916,7 +916,7 @@ class WorklistServiceTest extends TestCase {
 	 * The team scope of the items reads each member's leads, tickets and
 	 * follow-ups (a follow-up names its assignee `assigneeUserId`).
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */
@@ -939,7 +939,7 @@ class WorklistServiceTest extends TestCase {
 	/**
 	 * The organisation scope of the items asks for every follow-up, not only one assignee's.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */
@@ -957,7 +957,7 @@ class WorklistServiceTest extends TestCase {
 	/**
 	 * The week figures of the team scope count the tickets of every member.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */
@@ -974,7 +974,7 @@ class WorklistServiceTest extends TestCase {
 	/**
 	 * A scope the user may not choose is refused before anything is read.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */

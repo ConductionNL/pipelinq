@@ -8,7 +8,7 @@
  * this pins the page's setting, that the notifications it counts are the
  * ones pipelinq sends, and that the installed library knows the key.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-notification-summary-on-my-work-req-mw-140
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-notification-summary-on-my-work-req-mw-140
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

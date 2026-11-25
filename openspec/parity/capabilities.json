@@ -869,6 +869,7 @@
 				"marketing-integrated-campaigns",
 				"my-work",
 				"my-work-roadmap",
+				"my-work-saved-views-and-phone",
 				"notifications-activity",
 				"project-portfolio",
 				"task-background-jobs",
@@ -4292,7 +4293,7 @@
 					"nextcloud-vue:openspec/changes/saved-views-shared-by-role/specs/saved-views-ui :: Share a view with a group",
 					"nextcloud-vue:openspec/changes/saved-views-shared-by-role/specs/saved-views-ui :: Shared views listed beside own views"
 				],
-				"plan": "openspec/changes/my-work-roadmap"
+				"plan": "openspec/changes/my-work-saved-views-and-phone"
 			},
 			"note": "lead: the shared saved-views control is one manifest flag away (allowSavedViews) on Clients, Tickets, Leads and Tasks. Re-read 2026-09-28 (OpenSpec pass, wave-5 correction round 6): rating partial holds at nextcloud-vue 2.57.1; evidence refreshed from 2.56.0. Specified in ConductionNL/nextcloud-vue openspec/changes/saved-views-shared-by-role (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
@@ -4456,15 +4457,15 @@
 			"odoo-crm": "unknown",
 			"kiss": "unknown",
 			"provider": "pipelinq",
-			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/archive/2026-11-25-my-work-roadmap",
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Worklist/WeekStats.php (GET /api/my-work/week-stats), the my-week stats-block on the MyWork page in src/manifest.json",
 				"owner": "ConductionNL/pipelinq",
-				"change": "my-work-roadmap",
-				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: KPI summary tiles on My work (REQ-MW-090)"
+				"change": "openspec/changes/archive/2026-11-25-my-work-roadmap",
+				"requirement": "openspec/specs/my-work :: KPI summary tiles on My work (REQ-MW-090)"
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
@@ -4483,15 +4484,15 @@
 			"odoo-crm": "unknown",
 			"kiss": "unknown",
 			"provider": "pipelinq",
-			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/archive/2026-11-25-my-work-roadmap",
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json MyWork headerActions my-work-new-ticket and my-work-new-contact",
 				"owner": "ConductionNL/pipelinq",
-				"change": "my-work-roadmap",
-				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Quick actions on My work (REQ-MW-100)"
+				"change": "openspec/changes/archive/2026-11-25-my-work-roadmap",
+				"requirement": "openspec/specs/my-work :: Quick actions on My work (REQ-MW-100)"
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
@@ -4513,7 +4514,7 @@
 			"odoo-crm": "unknown",
 			"kiss": "unknown",
 			"provider": "pipelinq",
-			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/archive/2026-11-25-my-work-roadmap",
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
@@ -4521,10 +4522,10 @@
 				"evidence": "lib/Service/MyWork/MyWorkCalendarService.php (GET /api/my-work/meetings), the my-meetings record list on the MyWork page",
 				"owner": "ConductionNL/pipelinq",
 				"change": [
-					"my-work-roadmap",
+					"openspec/changes/archive/2026-11-25-my-work-roadmap",
 					"openspec/changes/calendar-deepening"
 				],
-				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Upcoming meetings from the calendar (REQ-MW-130)"
+				"requirement": "openspec/specs/my-work :: Upcoming meetings from the calendar (REQ-MW-130)"
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
@@ -4543,15 +4544,15 @@
 			"odoo-crm": "unknown",
 			"kiss": "unknown",
 			"provider": "pipelinq",
-			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/archive/2026-11-25-my-work-roadmap",
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json MyWork config.layoutPanel + layoutPanelLocked (nextcloud-vue layout panel, stored per user), my-activity collapsible (nextcloud-vue#2362)",
 				"owner": "ConductionNL/pipelinq",
-				"change": "my-work-roadmap",
-				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Customisable layout (REQ-MW-160)"
+				"change": "openspec/changes/archive/2026-11-25-my-work-roadmap",
+				"requirement": "openspec/specs/my-work :: Customisable layout (REQ-MW-160)"
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
@@ -4570,15 +4571,15 @@
 			"odoo-crm": "unknown",
 			"kiss": "unknown",
 			"provider": "pipelinq",
-			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/archive/2026-11-25-my-work-roadmap",
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Worklist/WorkScope.php, lib/Controller/MyWorkTeamController.php (GET /api/my-work/team), the my-scope and my-team widgets on the MyWork page",
 				"owner": "ConductionNL/pipelinq",
-				"change": "my-work-roadmap",
-				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Role-based content (REQ-MW-180)"
+				"change": "openspec/changes/archive/2026-11-25-my-work-roadmap",
+				"requirement": "openspec/specs/my-work :: Role-based content (REQ-MW-180)"
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
@@ -4597,15 +4598,15 @@
 			"odoo-crm": "unknown",
 			"kiss": "unknown",
 			"provider": "pipelinq",
-			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/archive/2026-11-25-my-work-roadmap",
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json MyWork config.autoRefresh (nextcloud-vue#2364: every 5 minutes in place, header refresh button, outdated-data warning with Retry)",
 				"owner": "ConductionNL/pipelinq",
-				"change": "my-work-roadmap",
-				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Auto-refresh and a refresh button (REQ-MW-190)"
+				"change": "openspec/changes/archive/2026-11-25-my-work-roadmap",
+				"requirement": "openspec/specs/my-work :: Auto-refresh and a refresh button (REQ-MW-190)"
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
@@ -4624,15 +4625,15 @@
 			"odoo-crm": "unknown",
 			"kiss": "unknown",
 			"provider": "pipelinq",
-			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/archive/2026-11-25-my-work-roadmap",
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Worklist/WorkFilters.php (GET /api/worklist/items ?priority= ?pipeline=), the MyWork bar's Priority (multiple) and Pipeline controls with Filters (N) and Clear filters",
 				"owner": "ConductionNL/pipelinq",
-				"change": "my-work-roadmap",
-				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Priority and pipeline filters (REQ-MW-200)"
+				"change": "openspec/changes/archive/2026-11-25-my-work-roadmap",
+				"requirement": "openspec/specs/my-work :: Priority and pipeline filters (REQ-MW-200)"
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {

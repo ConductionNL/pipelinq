@@ -14,7 +14,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ interface SharedAwareCalendar extends ICalendar, ICalendarIsShared {
 /**
  * The linked meetings of the next seven days, from the user's own calendars.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
  */
 #[CoversClass(MyWorkCalendarService::class)]
 #[CoversClass(MeetingRecordLink::class)]

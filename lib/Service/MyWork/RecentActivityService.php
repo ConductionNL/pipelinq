@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use Throwable;
  * The user's items come from the worklist, which reads them as the user, so
  * only objects the user may read are looked at.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
  */
 class RecentActivityService implements RecentActivityServiceInterface {
 
@@ -65,7 +65,7 @@ class RecentActivityService implements RecentActivityServiceInterface {
 	 *
 	 * @return array<int, array<string, string>> The entries, newest first.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	public function forUser(string $userId): array {
 		try {

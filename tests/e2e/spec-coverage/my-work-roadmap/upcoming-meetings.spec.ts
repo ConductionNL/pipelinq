@@ -15,7 +15,7 @@
  *
  * Written from the change's scenarios; not yet run (it needs a seeded instance).
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
  */
 import type { APIRequestContext } from '@playwright/test'
 
