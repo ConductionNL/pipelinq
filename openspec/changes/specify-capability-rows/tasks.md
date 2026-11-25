@@ -26,8 +26,9 @@
   - Live 25 Nov 2026 (same sandbox, Zuiddrecht set and demo seed, Playwright as daan.verbeek on `/apps/pipelinq/pipeline`): dragging the lead "Ledenportaal energiecoöperatie" from the Nieuw column to Benaderd saves it (`PUT .../pipelinq/lead/{id}` 200 with `stage: Benaderd`), and after a reload the card sits in the Benaderd column.
 - [ ] 11.1 Check row `work-recurring-task` against "A task with a repeat schedule comes back on that schedule"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/ScheduledTaskJob.php`
-- [ ] 12.1 Check row `auto-overnight` against "Slow work runs as a background job, not in the user's request"
+- [x] 12.1 Check row `auto-overnight` against "Slow work runs as a background job, not in the user's request"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/SlaDeadlineSweepJob.php`
+  - Live 25 Nov 2026 (same sandbox): `SlaDeadlineSweepJob` is in `oc_jobs` and ran from `php cron.php` (last run 20:47 UTC) with no user signed in; a forced `occ background-job:execute` of it checks the open tickets' deadlines in the background and logs "complaint past its SLA deadline" for the two complaints whose `slaDeadline` has passed. The export scheduler and worker run the same way (`ExportSchedulerJob`, `ExportWorkerJob`).
 - [ ] 13.1 Check row `meeting-link` against "A user can send a booking link that offers the free slots in their own calendar"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/AvailabilityService.php:174`
 - [ ] 14.1 Check row `contract-number` against "A won lead can be turned into a numbered contract"
