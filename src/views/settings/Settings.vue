@@ -77,6 +77,13 @@
 			appId="pipelinq"
 			@saved="onSectionSaved" />
 
+		<!-- Team manager groups for My work's team scope (my-work-roadmap REQ-MW-180). -->
+		<CnSettingsFieldsSection
+			v-if="isAdmin"
+			v-bind="sections.myWork"
+			appId="pipelinq"
+			@saved="onSectionSaved" />
+
 		<!-- Product Categories -->
 		<ProductCategoryManager v-if="isConfigured" />
 
@@ -110,6 +117,10 @@
 				{{ message }}
 			</NcNoteCard>
 		</div>
+		<!-- Accessibility: the last audit, the conformance report and the
+		     draft statement (platform-accessibility-statement). -->
+		<AccessibilitySettings v-if="isAdmin" />
+
 		<!-- The support lines, as the last card across the page. -->
 		<NcSettingsSection
 			class="cn-settings-section--wide"
@@ -137,6 +148,9 @@
 				class="cn-settings-section--wide" />
 
 			<MessagingSettings v-if="isAdmin && isConfigured" />
+			<BackgroundServiceAccountSettings v-if="isAdmin && isConfigured" />
+			<TicketMailboxSettings v-if="isAdmin && isConfigured" />
+			<RoutingRulesSettings v-if="isAdmin && isConfigured" />
 
 			<!-- xWiki Integration (xwiki-integration) -->
 			<NcSettingsSection
@@ -274,6 +288,13 @@
 			<VatRatesSettings v-if="isAdmin" :config="config" />
 			<PosRoleManager v-if="isAdmin && isConfigured" />
 			<PosStaffManager v-if="isAdmin && isConfigured" />
+			<!-- Board PqBeheerKassa: the refund limit below which a till user
+			     completes a refund without a manager (pos-refund-limit). -->
+			<CnSettingsFieldsSection
+				v-if="isAdmin"
+				v-bind="sections.posRefunds"
+				appId="pipelinq"
+				@saved="onSectionSaved" />
 
 			<!-- The till's customer lookup is a page of its own in the app. -->
 			<NcSettingsSection
@@ -377,6 +398,8 @@ import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import PortalSettings from '../../components/admin/PortalSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import PosCustomerSettings from '../admin/PosCustomerSettings.vue'
+import AccessibilitySettings from './AccessibilitySettings.vue'
+import BackgroundServiceAccountSettings from './BackgroundServiceAccountSettings.vue'
 import CtiEventLog from './CtiEventLog.vue'
 import CtiSettings from './CtiSettings.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
@@ -395,8 +418,10 @@ import PosStaffManager from './PosStaffManager.vue'
 import PosTenderTypeManager from './PosTenderTypeManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
+import RoutingRulesSettings from './RoutingRulesSettings.vue'
 import ScorecardManager from './ScorecardManager.vue'
 import TagManager from './TagManager.vue'
+import TicketMailboxSettings from './TicketMailboxSettings.vue'
 import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
 import manifest from '../../manifest.json'
@@ -500,8 +525,12 @@ function openTabFromAddress() {
 export default {
 	name: 'PipelinqAdminSettings',
 	components: {
+		AccessibilitySettings,
 		CnConnectionsPanel,
 		MessagingSettings,
+		BackgroundServiceAccountSettings,
+		TicketMailboxSettings,
+		RoutingRulesSettings,
 		DeliverabilitySettings,
 		CtiEventLog,
 		CtiSettings,

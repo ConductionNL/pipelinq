@@ -7,5 +7,6 @@
 - [x] 3.1 pipelinq: the schema forms pick from the list through `x-options-from`; the hand-written lead form, client form and article editor through LabelSelect
 - [x] 4.1 pipelinq: LabelRenameService rewrites a renamed label on the leads, clients and articles that carry it (a queued job past 200 items); the administrator check runs before anything is read or written, and every write goes through OpenRegister as the caller
 - [x] 4.2 PHPUnit for the rename pass, red first
-- [ ] 5.1 Zuiddrecht example set: the five board labels (not the product register)
+- [x] 5.1 Zuiddrecht example set: the five board labels (not the product register)
+  - Built: `lib/Settings/example-sets/zuiddrecht.d/84-shared-labels.json` holds afval, duurzaam, parkeren, ondernemers and evenementen as `itemLabel` objects in the pipelinq register; PHPUnit `tests/Unit/Settings/ZuiddrechtBoardLabelsTest.php`.
 - [ ] 5.2 Live: PqBeheerMarketing Labels card

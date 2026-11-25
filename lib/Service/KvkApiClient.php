@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\KvkApiClientInterface;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -34,7 +35,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/prospect-discovery/spec.md#requirement-kvk-api-integration
  */
-class KvkApiClient {
+class KvkApiClient implements KvkApiClientInterface {
 	/**
 	 * Default KVK API base URL when unconfigured.
 	 *

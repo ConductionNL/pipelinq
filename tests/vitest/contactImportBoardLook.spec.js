@@ -22,7 +22,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 		},
 	},
 }))
-vi.mock('@nextcloud/axios', () => ({ default: { get: vi.fn(async () => ({ data: [] })), post: vi.fn() } }))
+vi.mock('@nextcloud/axios', () => ({ default: { get: vi.fn(async () => ({ data: [] })), post: vi.fn(), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } } } }))
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))
 
 const { default: ContactImportDialog } = await import('../../src/dialogs/ContactImportDialog.vue')

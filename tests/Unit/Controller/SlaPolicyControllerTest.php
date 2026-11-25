@@ -38,6 +38,7 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
  * saved change is audited with actor, justification, before and after.
  *
  * @covers \OCA\Pipelinq\Controller\SlaPolicyController
+ * @uses \OCA\Pipelinq\Service\Sla\SlaPolicyChange
  */
 class SlaPolicyControllerTest extends TestCase {
 

@@ -60,6 +60,7 @@
 	},
 	"settingsSection": [
 		"Pipelines",
+		"Municipalities",
 		"WebsiteSubmissions",
 		"SettingsIntegrationsCaption",
 		"ExportJobs",
@@ -109,7 +110,7 @@
 		{
 			"id": "MyWork",
 			"order": 12,
-			"icon": "InboxOutline",
+			"icon": "ClipboardAccountOutline",
 			"count": {
 				"register": "pipelinq",
 				"schema": "ticket",
@@ -408,6 +409,10 @@
 				{
 					"id": "Products",
 					"order": 63
+				},
+				{
+					"id": "PriceLists",
+					"order": 64
 				}
 			]
 		},
@@ -467,7 +472,8 @@
 		"products": {
 			"label": "Products",
 			"ids": [
-				"Products"
+				"Products",
+				"PriceLists"
 			],
 			"menu": []
 		},
@@ -563,6 +569,20 @@
 						"method": "POST",
 						"successMessage": "Assigned to you. It is on your My Work now.",
 						"errorMessage": "Could not assign this ticket to you."
+					},
+					{
+						"id": "pass-on",
+						"type": "open-form",
+						"group": "Status",
+						"label": "Pass on",
+						"icon": "AccountArrowRightOutline",
+						"endpoint": { "url": "/apps/pipelinq/api/tickets/@objectId/pass-on", "method": "POST" },
+						"formProperties": {
+							"assignee": { "type": "string", "format": "user", "title": "Colleague", "required": true },
+							"handoverNote": { "type": "string", "format": "textarea", "maxLength": 1000, "title": "Note for your colleague", "description": "Shown under the handover in the ticket's History." }
+						},
+						"successMessage": "Ticket passed on.",
+						"errorMessage": "Could not pass this ticket on."
 					},
 					{
 						"id": "ticket-start",
@@ -1900,7 +1920,9 @@
 								{
 									"action": "update",
 									"field": "assignee",
-									"label": "Passed to {changed.assignee} by {actor}"
+									"label": "Passed to {to} by {actor}",
+									"values": "user",
+									"note": "handoverNote"
 								},
 								{
 									"action": "update",
@@ -3473,6 +3495,13 @@
 						}
 					},
 					{
+						"key": "municipality",
+						"label": "Municipality",
+						"labelField": "name",
+						"sortable": false,
+						"hidden": true
+					},
+					{
 						"key": "assignee",
 						"label": "Handler",
 						"widget": "avatar",
@@ -4193,6 +4222,13 @@
 						"key": "client",
 						"label": "Client",
 						"labelField": "name"
+					},
+					{
+						"key": "municipality",
+						"label": "Municipality",
+						"labelField": "name",
+						"sortable": false,
+						"hidden": true
 					}
 				],
 				"searchPlaceholder": "Filter by name, email or client",

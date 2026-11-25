@@ -50,6 +50,8 @@ use DateTimeImmutable;
 use InvalidArgumentException;
 use OCA\OpenRegister\AppHost\Service\GenericStoreService;
 use OCA\OpenRegister\AppHost\Service\StoreDescriptor;
+use OCA\OpenRegister\AppHost\Service\StoreListing;
+use OCA\OpenRegister\AppHost\Service\StoreSharing;
 use OCA\OpenRegister\AppHost\Store\StoreActionAuthorizer;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
@@ -191,21 +193,25 @@ class StoreController extends Controller {
 	 */
 	private function descriptor(): StoreDescriptor {
 		return new StoreDescriptor(
-			appId: AppIdentity::APP_ID,
-			schema: 'commercial-template',
-			defaultRegister: 'pipelinq',
-			cardFields: [
-				'slug' => 'slug',
-				'title' => 'title',
-				'description' => 'description',
-				'kind' => 'kind',
-				'category' => 'category',
-				'version' => 'version',
-				'publisher' => 'publisher',
-				'icon' => 'icon',
-			],
-			publishFields: self::PUBLISH_FIELDS,
-			publishGroups: self::PUBLISH_GROUPS
+			listing: new StoreListing(
+				appId: AppIdentity::APP_ID,
+				schema: 'commercial-template',
+				defaultRegister: 'pipelinq',
+				cardFields: [
+					'slug' => 'slug',
+					'title' => 'title',
+					'description' => 'description',
+					'kind' => 'kind',
+					'category' => 'category',
+					'version' => 'version',
+					'publisher' => 'publisher',
+					'icon' => 'icon',
+				]
+			),
+			sharing: new StoreSharing(
+				publishFields: self::PUBLISH_FIELDS,
+				publishGroups: self::PUBLISH_GROUPS
+			)
 		);
 	}//end descriptor()
 

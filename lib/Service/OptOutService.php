@@ -37,6 +37,7 @@ use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use SensitiveParameter;
 use Throwable;
 
 /**
@@ -77,7 +78,7 @@ class OptOutService implements OptOutServiceInterface {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-01
 	 */
 	public function hasOptOut(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 	): bool {
 		return $this->getOptOut(rawBsn: $rawBsn) !== null;
@@ -93,7 +94,7 @@ class OptOutService implements OptOutServiceInterface {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-01
 	 */
 	public function getOptOut(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 	): ?array {
 		try {
@@ -129,7 +130,7 @@ class OptOutService implements OptOutServiceInterface {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-01
 	 */
 	public function recordFromBrpResponse(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 		string $indicationSecret,
 	): bool {
@@ -177,7 +178,7 @@ class OptOutService implements OptOutServiceInterface {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-02
 	 */
 	public function recordLocalOptOut(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 		string $actor,
 		?string $note = null,

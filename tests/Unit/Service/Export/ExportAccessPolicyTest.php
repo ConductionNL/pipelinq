@@ -29,6 +29,8 @@ use PHPUnit\Framework\TestCase;
  * Admins always, members of the configured analyst group too, no one else.
  *
  * @covers \OCA\Pipelinq\Service\Export\ExportAccessPolicy
+ * @uses   \OCA\Pipelinq\Lifecycle\ConfiguredGroup
+ * @uses   \OCA\Pipelinq\Lifecycle\ConfiguredGroupGate
  */
 class ExportAccessPolicyTest extends TestCase {
 

@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCP\Http\Client\IClientService;
+use OCP\Http\Client\IResponse;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -96,16 +97,7 @@ final class CompanyRegistryHttp {
 	 */
 	public function leafRows(string $url, string $unavailable): ?array {
 		try {
-			$client = $this->clientService->newClient();
-			$response = $client->get(
-				$url,
-				[
-					'timeout' => 15,
-					'connect_timeout' => 3,
-					'headers' => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
-					'nextcloud' => ['allow_local_address' => true],
-				]
-			);
+			$response = $this->leafGet(url: $url, options: []);
 		} catch (Throwable $e) {
 			$this->logger->debug($unavailable, ['exception' => $e]);
 			return null;
@@ -117,6 +109,78 @@ final class CompanyRegistryHttp {
 
 		return $this->resultRows(body: (string)$response->getBody());
 	}//end leafRows()
+
+	/**
+	 * GET an OpenRegister integration leaf and say what it answered: the HTTP status
+	 * and the rows under `results`.
+	 *
+	 * Unlike leafRows() a 404 is not folded into "unusable": a check has to tell a
+	 * number the register does not know (404, or 200 without it) from a register it
+	 * cannot reach (a 5xx, or no answer at all, which reads as status 0).
+	 *
+	 * @param string $url The absolute leaf URL.
+	 *
+	 * @return array{status: int, rows: array<int, array<string, mixed>>|null} The status and the rows.
+	 *
+	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-2.2
+	 */
+	public function leafAnswer(string $url): array {
+		try {
+			$response = $this->leafGet(url: $url, options: ['http_errors' => false]);
+		} catch (Throwable $e) {
+			$this->logger->debug('Registry leaf did not answer', ['exception' => $e]);
+			return ['status' => self::statusOf(exception: $e), 'rows' => null];
+		}
+
+		return ['status' => $response->getStatusCode(), 'rows' => $this->resultRows(body: (string)$response->getBody())];
+	}//end leafAnswer()
+
+	/**
+	 * GET an OpenRegister integration leaf: internal, OCS-APIREQUEST, allow_local_address.
+	 *
+	 * @param string               $url     The absolute leaf URL.
+	 * @param array<string, mixed> $options Request options on top of the leaf's own.
+	 *
+	 * @return IResponse The answer.
+	 *
+	 * @throws Throwable When the leaf does not answer.
+	 *
+	 * @spec openspec/changes/clients-registry-numbers-and-enrichment/tasks.md#task-2.2
+	 */
+	private function leafGet(string $url, array $options): IResponse {
+		return $this->clientService->newClient()->get(
+			$url,
+			array_merge(
+				[
+					'timeout' => 15,
+					'connect_timeout' => 3,
+					'headers' => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
+					'nextcloud' => ['allow_local_address' => true],
+				],
+				$options
+			)
+		);
+	}//end leafGet()
+
+	/**
+	 * The HTTP status a transport exception carries, or 0 when it carries none.
+	 *
+	 * @param Throwable $exception The exception.
+	 *
+	 * @return int The status.
+	 */
+	private static function statusOf(Throwable $exception): int {
+		if (method_exists($exception, 'getResponse') === false) {
+			return 0;
+		}
+
+		$response = $exception->getResponse();
+		if (is_object($response) === false || method_exists($response, 'getStatusCode') === false) {
+			return 0;
+		}
+
+		return (int)$response->getStatusCode();
+	}//end statusOf()
 
 	/**
 	 * The array entries of a leaf body's `results` list, or null when it has none.

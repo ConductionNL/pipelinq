@@ -36,6 +36,6 @@ describe('unreachable POS, product and booking code', () => {
 	})
 
 	it('specifies the walk-in page again', () => {
-		expect(existsSync(resolve(root, 'openspec/changes/walk-in-queue-page/specs/appointment-booking/spec.md'))).toBe(true)
+		expect(existsSync(resolve(root, 'openspec/changes/archive/2026-11-24-walk-in-queue-page/specs/appointment-booking/spec.md'))).toBe(true)
 	})
 })

@@ -32,6 +32,7 @@ use Psr\Log\LoggerInterface;
  *
  * @covers \OCA\Pipelinq\Repair\Support\ReadsSchemaRows
  * @uses \OCA\Pipelinq\Repair\Support\SchemaWriteTarget
+ * @uses \OCA\Pipelinq\Util\SerialisedPayload
  */
 class ReadsSchemaRowsTest extends TestCase {
 
@@ -68,6 +69,55 @@ class ReadsSchemaRowsTest extends TestCase {
 		$this->assertSame([['filters' => ['register' => 'r', 'schema' => 's'], 'limit' => 7], false, false], $store->args);
 		$this->assertSame([], $host->read(new SchemaWriteTarget(objectService: $store, register: 'r', schema: 'broken', actingAdmin: null)));
 	}//end testReadAll()
+
+	/**
+	 * Entities are read through jsonSerialize; one that does not serialise to an array is dropped.
+	 *
+	 * @return void
+	 */
+	public function testEntityRowsAreSerialisedAndNonArrayPayloadsDropped(): void {
+		$entity = new class implements \JsonSerializable {
+			/**
+			 * @return array<string, string>
+			 */
+			public function jsonSerialize(): array {
+				return ['id' => 'e1'];
+			}
+		};
+		$scalar = new class implements \JsonSerializable {
+			/**
+			 * @return string
+			 */
+			public function jsonSerialize(): string {
+				return 'flat';
+			}
+		};
+		$store = new class ([$entity, $scalar, new \stdClass()]) {
+			/**
+			 * @param array<int, mixed> $rows The rows to return.
+			 */
+			public function __construct(private array $rows) {
+			}
+
+			/**
+			 * @param array<string, mixed> $config        The query.
+			 * @param bool                 $_rbac         RBAC.
+			 * @param bool                 $_multitenancy Multitenancy.
+			 * @return array<int, mixed>
+			 */
+			public function findAll(array $config, bool $_rbac, bool $_multitenancy): array {
+				return $this->rows;
+			}
+		};
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->never())->method('warning');
+		$host = new ReadsSchemaRowsHost($logger);
+
+		$this->assertSame(
+			[['id' => 'e1']],
+			$host->read(new SchemaWriteTarget(objectService: $store, register: 'r', schema: 's', actingAdmin: null))
+		);
+	}//end testEntityRowsAreSerialisedAndNonArrayPayloadsDropped()
 }//end class
 
 /**

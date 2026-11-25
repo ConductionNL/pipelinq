@@ -1,0 +1,39 @@
+{
+	"pages": [
+		{
+			"id": "Municipalities",
+			"_note": "requests-municipality-per-contact (D5). The municipalities one desk serves. A client, contact or ticket points at one of these; the portal stamps the one whose portal is the tenant a request came in through. Kept by a functional administrator, so it sits in the settings foldout (src/menu-layout.json settingsSection).",
+			"route": "/municipalities",
+			"type": "index",
+			"title": "Municipalities",
+			"config": {
+				"register": "pipelinq",
+				"schema": "servedMunicipality",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"sortKey": "name",
+				"sortOrder": "asc",
+				"addLabel": "New municipality",
+				"countText": "{total} municipalities served by this desk",
+				"columns": [
+					{ "key": "name", "label": "Name" },
+					{ "key": "code", "label": "Municipality code" },
+					{ "key": "portalTenantId", "label": "Portal" },
+					{ "key": "organisation", "label": "Organisation", "hidden": true }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		}
+	],
+	"menu": [
+		{
+			"id": "Municipalities",
+			"label": "Municipalities",
+			"icon": "City",
+			"route": "Municipalities",
+			"order": 205
+		}
+	]
+}

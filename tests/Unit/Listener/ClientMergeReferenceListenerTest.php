@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Listener;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\RegisterSchemaSlugs;
 use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\Pipelinq\Kernel\Contracts\MergedAwayCardInterface;
 use OCA\Pipelinq\Listener\ClientMergeReferenceListener;
@@ -41,6 +42,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
  * @covers \OCA\Pipelinq\Listener\ClientMergeReferenceListener
  * @covers \OCA\Pipelinq\Service\Merge\PartyReferenceMover
  * @covers \OCA\Pipelinq\Service\Merge\PartyReferences
+ * @uses   \OCA\Pipelinq\Listener\MergeMove
  */
 class ClientMergeReferenceListenerTest extends TestCase {
 
@@ -98,8 +100,9 @@ class ClientMergeReferenceListenerTest extends TestCase {
 			fn (int|string $id): ?ObjectEntityInterface => isset($this->rows[(string)$id]) === true ? $this->entity(uuid: (string)$id) : null
 		);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
-			function (string $registerSlug, string $schemaSlug, array $filters = []): array {
-				self::assertSame('pipelinq', $registerSlug);
+			function (RegisterSchemaSlugs $target, array $filters = []): array {
+				self::assertSame(expected: 'pipelinq', actual: $target->register);
+				$schemaSlug = $target->schema;
 				// Like a query layer that ignores the filter: every row of the schema comes back.
 				$found = [];
 				foreach ($this->rows as $uuid => [$schema]) {

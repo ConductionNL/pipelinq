@@ -217,6 +217,30 @@ class ProductCatalogServiceTest extends TestCase {
 	}//end testResolveEffectivePriceUsesVariantOverride()
 
 	/**
+	 * A variant without a price of its own is sold at its product's price.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/product-catalog/spec.md#requirement-a-product-keeps-attributes-and-variants-with-their-own-code-and-price
+	 */
+	public function testAVariantWithoutAPriceTakesItsProductsPrice(): void {
+		$product = [
+			'unitPrice' => 25.0,
+			'vatClass' => 'high',
+			'variants' => [
+				['sku' => 'WS-S', 'attributes' => ['Maat' => 'S'], 'status' => 'active'],
+				['sku' => 'WS-M', 'attributes' => ['Maat' => 'M'], 'unitPrice' => 27.5, 'status' => 'active'],
+			],
+		];
+
+		$small = $this->service->resolveEffectivePrice(product: $product, quantity: 1.0, variantSku: 'WS-S');
+		$medium = $this->service->resolveEffectivePrice(product: $product, quantity: 1.0, variantSku: 'WS-M');
+
+		$this->assertSame(expected: [25.0, 'base'], actual: [$small['unitPrice'], $small['source']]);
+		$this->assertSame(expected: [27.5, 'variant'], actual: [$medium['unitPrice'], $medium['source']]);
+	}//end testAVariantWithoutAPriceTakesItsProductsPrice()
+
+	/**
 	 * resolveEffectivePrice rejects an inactive variant.
 	 *
 	 * @return void

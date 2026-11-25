@@ -6,7 +6,7 @@
  * The mail template dialog driven through its rendered controls: the sender
  * and subject fields, the blocks / HTML switch and its confirmation, the
  * preview with its width buttons and the address placed in the HTML, the SMS
- * channel, the article picker, load and save refusals, and Cancel.
+ * channel, the portaliq article picker, load and save refusals, and Cancel.
  *
  * Mounted with the HTTP layer replaced and small stand-ins for the Nextcloud
  * controls, as in templateFormReplyTo.spec.js.
@@ -19,12 +19,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
 const axiosMock = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), patch: vi.fn() }))
-const articles = vi.hoisted(() => ({ list: [] }))
+const articles = vi.hoisted(() => ({ list: [], available: true }))
 
 vi.mock('@nextcloud/axios', () => ({ default: axiosMock }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => '/index.php' + path }))
 vi.mock('@nextcloud/dialogs', () => ({ showSuccess: vi.fn() }))
-vi.mock('../../src/services/articlesApi.js', () => ({ fetchArticles: () => Promise.resolve(articles.list) }))
+vi.mock('../../src/services/portaliqArticles.js', () => ({
+	fetchPortaliqArticles: () => Promise.resolve({ available: articles.available, data: articles.list }),
+	portaliqArticleUrl: (id) => '/index.php/apps/portaliq/articles/' + id,
+}))
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnDialog: {
 		name: 'CnDialog',
@@ -123,6 +126,7 @@ beforeEach(() => {
 	axiosMock.post.mockReset()
 	axiosMock.patch.mockReset()
 	articles.list = []
+	articles.available = true
 })
 
 afterEach(() => {
@@ -254,6 +258,17 @@ describe('TemplateFormDialog controls', () => {
 
 		expect(w.vm.model.articleIds).toEqual(['a1'])
 		expect(w.find('.note-warning').text()).toContain('The body has no {{articles}} marker')
+		const links = w.find('[data-testid="template-form-article-links"]').findAll('a')
+		expect(links.map((link) => [link.text(), link.attributes('href')])).toEqual([['News', '/index.php/apps/portaliq/articles/a1']])
+	})
+
+	it('says articles are written in PortaliQ and offers no picker without it', async () => {
+		articles.available = false
+		axiosMock.get.mockResolvedValue({ data: { name: 'N', bodyHtml: '<p>x</p>' } })
+		const w = await mountForm({ id: 't-1' })
+
+		expect(w.find('[data-testid="template-form-articles-unavailable"]').text()).toContain('Articles are written in PortaliQ')
+		expect(select(w, 'Articles')).toBeUndefined()
 	})
 
 	it('shows a load refusal, puts a save refusal on its field, and closes from Cancel and the dialog', async () => {

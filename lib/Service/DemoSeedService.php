@@ -93,6 +93,21 @@ class DemoSeedService implements DemoSeedServiceInterface {
 	private const RELINK_FIELDS = ['pipeline'];
 
 	/**
+	 * OpenRegister's scope in which a create keeps the lifecycle state it carries.
+	 *
+	 * The demo set holds a won and a lost lead, and a create may otherwise only
+	 * start in the schema's initial state. The scope exempts that one check and
+	 * nothing else, so permissions still apply. Named by string because
+	 * pipelinq does not hard-depend on a given OpenRegister build.
+	 *
+	 * Held in a property rather than a constant so static analysis, which
+	 * resolves the test stub, does not read the scope as always present.
+	 *
+	 * @var string
+	 */
+	private string $keepStatesScope = 'OCA\OpenRegister\Service\Lifecycle\KeepLifecycleStatesScope';
+
+	/**
 	 * Entity sections in seed order: section => [schemaConfigKey, lookupField, ticketType].
 	 *
 	 * `ticketType` is null for sections that own their own schema, and one of
@@ -271,6 +286,25 @@ class DemoSeedService implements DemoSeedServiceInterface {
 			];
 		}
 
+		$scope = [$this->keepStatesScope, 'run'];
+		if (is_callable($scope) === true) {
+			return call_user_func($scope, fn (): array => $this->seedWith(context: $context));
+		}
+
+		return $this->seedWith(context: $context);
+	}//end seed()
+
+	/**
+	 * Seed every section and the marketing set into the provisioned register.
+	 *
+	 * @param array{0: object, 1: string, 2: array<string, string>, 3: array<string, mixed>} $context The object service, register,
+	 *                                                                                                schema ids and seed definitions.
+	 *
+	 * @return array<string, mixed> The seed answer.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function seedWith(array $context): array {
 		[$objectService, $registerId, $schemaIds, $definitions] = $context;
 
 		// `uuids` maps section-local keys (e.g. clientKey "bakkerij") to saved uuids.
@@ -294,7 +328,7 @@ class DemoSeedService implements DemoSeedServiceInterface {
 			'skipped' => array_merge($run['skipped'], $marketing['skipped']),
 			'relinked' => $run['relinked'],
 		];
-	}//end seed()
+	}//end seedWith()
 
 	/**
 	 * Seed one section: one scan of its schema (value => [uuid, ...] for

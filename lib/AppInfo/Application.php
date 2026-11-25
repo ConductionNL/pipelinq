@@ -152,6 +152,7 @@ class Application extends App implements IBootstrap {
 		(new NotificationRegistrar())->register(context: $context);
 		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\PortalServiceAccountCheck::class);
 		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\MessagingServiceAccountCheck::class);
+		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\BackgroundServiceAccountCheck::class);
 
 		(new ListenerRegistrar())->register(context: $context);
 

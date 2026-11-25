@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\SetupCheck;
 
-use OCA\Pipelinq\Service\ServiceAccount;
+use OCA\Pipelinq\Kernel\Contracts\ServiceAccountInterface;
 use OCP\IL10N;
 use OCP\SetupCheck\ISetupCheck;
 use OCP\SetupCheck\SetupResult;
@@ -39,11 +39,11 @@ abstract class ServiceAccountCheck implements ISetupCheck {
 	/**
 	 * Constructor.
 	 *
-	 * @param ServiceAccount $serviceAccount The account to check.
-	 * @param IL10N          $l10n           The localisation service.
+	 * @param ServiceAccountInterface $serviceAccount The account to check.
+	 * @param IL10N                   $l10n           The localisation service.
 	 */
 	public function __construct(
-		private readonly ServiceAccount $serviceAccount,
+		private readonly ServiceAccountInterface $serviceAccount,
 		protected readonly IL10N $l10n,
 	) {
 	}//end __construct()
@@ -89,9 +89,9 @@ abstract class ServiceAccountCheck implements ISetupCheck {
 		}
 
 		$why = match ($status['reason']) {
-			ServiceAccount::REASON_UNKNOWN => $this->l10n->t('The chosen account does not exist.'),
-			ServiceAccount::REASON_DISABLED => $this->l10n->t('The chosen account is disabled.'),
-			ServiceAccount::REASON_NOT_IN_GROUP => $this->l10n->t(
+			ServiceAccountInterface::REASON_UNKNOWN => $this->l10n->t('The chosen account does not exist.'),
+			ServiceAccountInterface::REASON_DISABLED => $this->l10n->t('The chosen account is disabled.'),
+			ServiceAccountInterface::REASON_NOT_IN_GROUP => $this->l10n->t(
 				'The chosen account is not in the group %s.',
 				[$this->serviceAccount->group()]
 			),

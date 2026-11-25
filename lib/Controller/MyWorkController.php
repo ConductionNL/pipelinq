@@ -27,8 +27,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\WorklistService;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\WorklistServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -47,25 +47,26 @@ class MyWorkController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest        $request         The HTTP request.
-	 * @param WorklistService $worklistService The worklist service.
-	 * @param IUserSession    $userSession     The session.
-	 * @param LoggerInterface $logger          The logger.
+	 * @param IRequest                 $request         The HTTP request.
+	 * @param WorklistServiceInterface $worklistService The worklist service.
+	 * @param IUserSession             $userSession     The session.
+	 * @param LoggerInterface          $logger          The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly WorklistService $worklistService,
+		private readonly WorklistServiceInterface $worklistService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
 	 * GET /api/my-work/week-stats: the "Your week so far" figures of the
 	 * session user's own tickets. The user is always the session user; a
-	 * caller cannot ask for another user's week. `?scope=` other than `mine`
-	 * is refused with 400 until team scopes exist.
+	 * caller cannot ask for another user's week. `?scope=team|organisation`
+	 * counts the team's or everyone's tickets when the user may (REQ-MW-180);
+	 * a scope the user may not ask for is refused with 400.
 	 *
 	 * @return JSONResponse The figures, or an error envelope.
 	 *
@@ -78,7 +79,11 @@ class MyWorkController extends Controller {
 			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$scope = (string)$this->request->getParam('scope', 'mine');
+		$scope = (string)$this->request->getParam('scope', '');
+		if ($scope === '') {
+			$scope = 'mine';
+		}
+
 		try {
 			return new JSONResponse($this->worklistService->getWeekStats(userId: $user->getUID(), scope: $scope));
 		} catch (InvalidArgumentException $e) {

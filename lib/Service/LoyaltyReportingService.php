@@ -31,6 +31,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Search\Service\Aggregation\AggregationLayout;
 use OCA\OpenRegister\Search\Service\Aggregation\AggregationQuery;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Kernel\AppIdentity;
@@ -347,7 +348,7 @@ class LoyaltyReportingService implements LoyaltyReportingServiceInterface {
 			$query = AggregationQuery::create(
 				metric: 'count',
 				filter: ['programmeId' => $programmeId],
-				groupBy: ['field' => 'currentTierId'],
+				layout: new AggregationLayout(groupBy: ['field' => 'currentTierId']),
 			);
 			$result = $this->getAggregationRunner()->runAdhocByRef(
 				registerRef: $register,

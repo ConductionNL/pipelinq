@@ -22,7 +22,7 @@ import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 
-const api = vi.hoisted(() => ({ incomingCall: vi.fn(), screenPop: vi.fn(), submitDisposition: vi.fn(), escalationQueues: vi.fn() }))
+const api = vi.hoisted(() => ({ incomingCall: vi.fn(), screenPop: vi.fn(), customerSummary: vi.fn(), submitDisposition: vi.fn(), escalationQueues: vi.fn() }))
 const store = vi.hoisted(() => ({
 	liveLastEventAt: 0,
 	subscribe: vi.fn(),
@@ -78,7 +78,7 @@ globalThis.n = (_app, one, many, count) => (count === 1 ? one : many).replace('%
 globalThis.t = (_app, text, vars = {}) =>
 	text.replace(/\{(\w+)\}/g, (_all, key) => vars[key] ?? `{${key}}`)
 
-const { default: IncomingCallCard, POLL_MS } =
+const { default: IncomingCallCard, POLL_MS, factsFrom } =
 	await import('../../src/components/IncomingCallCard.vue')
 const { default: ScreenPopModal } =
 	await import('../../src/modals/ScreenPopModal.vue')
@@ -132,6 +132,7 @@ beforeEach(() => {
 	vi.setSystemTime(new Date('2026-10-12T14:00:08Z'))
 	api.incomingCall.mockReset()
 	api.screenPop.mockReset()
+	api.customerSummary.mockReset().mockResolvedValue(null)
 	store.subscribe.mockReset().mockResolvedValue('handle-1')
 	store.unsubscribe.mockReset()
 	store.fetchObject
@@ -258,6 +259,28 @@ describe('a call with one match', () => {
 		expect(part(wrapper, 'incoming-call-card').exists()).toBe(false)
 	})
 
+	it('opens the client of a mirrored call and writes no ticket', async () => {
+		// A call from the call mirror (kcc-agent-panel 1b) has no contact
+		// moment in Pipelinq: its id is a mirror row, never a ticket.
+		api.incomingCall.mockResolvedValue({
+			enabled: true,
+			delayMs: 0,
+			call: { ...CALL, id: 'mirror-row-1', source: 'mirror', queueName: '' },
+		})
+		const wrapper = await card()
+		expect(api.screenPop).toHaveBeenCalledWith('+31612345678')
+
+		await part(wrapper, 'incoming-call-open').trigger('click')
+		await flushPromises()
+
+		expect(store.fetchObject).not.toHaveBeenCalled()
+		expect(store.saveObject).not.toHaveBeenCalled()
+		expect(push).toHaveBeenCalledWith({
+			name: 'ClientDetail',
+			params: { id: 'client-sanne' },
+		})
+	})
+
 	it('still opens the client when the link cannot be written', async () => {
 		store.saveObject.mockRejectedValue(new Error('403'))
 		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -331,6 +354,105 @@ describe('a call with one match', () => {
 
 		await vi.advanceTimersByTimeAsync(2000)
 		expect(part(wrapper, 'incoming-call-card').exists()).toBe(true)
+	})
+})
+
+describe('the three facts under one match (task 2.3)', () => {
+	const SUMMARY = {
+		clientId: 'client-sanne',
+		openTicketCount: 5,
+		openTicketsByType: { request: 2, complaint: 1, melding: 0, interaction: 2 },
+		lastActivityAt: '2026-10-01T09:30:00Z',
+		awaitingCustomerCount: 1,
+	}
+
+	/**
+	 * Answer a call whose number matches the given records.
+	 *
+	 * @param {Array<object>} matches The matches of the screen pop.
+	 * @param {string} action The screen pop's action.
+	 */
+	function callMatching(matches, action = 'navigate') {
+		api.incomingCall.mockResolvedValue({ enabled: true, delayMs: 0, call: CALL })
+		api.screenPop.mockResolvedValue({ action, matches, e164: '+31612345678', rawNumber: '06 12 34 56 78' })
+	}
+
+	it('shows the open work, the day of the last contact and what waits for the client', async () => {
+		callMatching([SANNE])
+		api.customerSummary.mockResolvedValue(SUMMARY)
+
+		const wrapper = await card()
+
+		expect(api.customerSummary).toHaveBeenCalledTimes(1)
+		expect(api.customerSummary).toHaveBeenCalledWith('client-sanne')
+		expect(part(wrapper, 'incoming-call-fact-open').text()).toBe('3')
+		expect(part(wrapper, 'incoming-call-fact-last').text()).toBe(new Date('2026-10-01T09:30:00Z').toLocaleDateString())
+		expect(part(wrapper, 'incoming-call-fact-waiting').text()).toBe('1')
+		expect(part(wrapper, 'incoming-call-facts').text()).toContain('Last contact')
+	})
+
+	it('says there was no contact yet when the client has no activity', async () => {
+		callMatching([SANNE])
+		api.customerSummary.mockResolvedValue({ ...SUMMARY, lastActivityAt: null })
+
+		const wrapper = await card()
+
+		expect(part(wrapper, 'incoming-call-fact-last').text()).toBe('No contact yet')
+	})
+
+	it('reads the summary of the client a matched contact belongs to', async () => {
+		callMatching([{ ...HENK, client: 'client-bakkerij' }])
+		api.customerSummary.mockResolvedValue(SUMMARY)
+
+		const wrapper = await card()
+
+		expect(api.customerSummary).toHaveBeenCalledWith('client-bakkerij')
+		expect(part(wrapper, 'incoming-call-facts').exists()).toBe(true)
+	})
+
+	it('shows no facts for a contact without a client, and asks nothing', async () => {
+		callMatching([HENK])
+
+		const wrapper = await card()
+
+		expect(api.customerSummary).not.toHaveBeenCalled()
+		expect(part(wrapper, 'incoming-call-match').text()).toContain('Henk de Vries')
+		expect(part(wrapper, 'incoming-call-facts').exists()).toBe(false)
+	})
+
+	it('still names the caller when the summary is refused', async () => {
+		callMatching([SANNE])
+		api.customerSummary.mockRejectedValue(new Error('Request failed with status code 403'))
+
+		const wrapper = await card()
+
+		expect(part(wrapper, 'incoming-call-match').text()).toContain('Sanne de Vries')
+		expect(part(wrapper, 'incoming-call-facts').exists()).toBe(false)
+		expect(dialogs.showError).not.toHaveBeenCalled()
+	})
+
+	it('reads no summary for several matches', async () => {
+		callMatching([SANNE, HENK], 'chooser')
+
+		await card()
+
+		expect(api.customerSummary).not.toHaveBeenCalled()
+	})
+
+	it('drops the facts with the match when the agent says it is not this client', async () => {
+		callMatching([SANNE])
+		api.customerSummary.mockResolvedValue(SUMMARY)
+		const wrapper = await card()
+
+		await part(wrapper, 'incoming-call-reject').trigger('click')
+
+		expect(part(wrapper, 'incoming-call-facts').exists()).toBe(false)
+	})
+
+	it('counts no contact moments as open work and reads missing counts as zero', () => {
+		expect(factsFrom({ openTicketsByType: { interaction: 4, request: '2' } })).toEqual({ open: 2, lastContactAt: '', waiting: 0 })
+		expect(factsFrom(null)).toBe(null)
+		expect(factsFrom({})).toEqual({ open: 0, lastContactAt: '', waiting: 0 })
 	})
 })
 

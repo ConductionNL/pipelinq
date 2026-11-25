@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Service\Merge;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\RegisterSchemaSlugs;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Pipelinq\Kernel\Contracts\PartyReferenceMoverInterface;
@@ -179,12 +180,13 @@ class PartyReferenceMover implements PartyReferenceMoverInterface {
 	 * @param string                      $uuid      The referenced record.
 	 *
 	 * @return list<string>
+	 *
+	 * @spec openspec/specs/client-reversible-merge/spec.md
 	 */
 	private function rowsReferring(array $reference, string $uuid): array {
 		[$schema, $property] = $reference;
 		$rows = $this->objects->searchObjectsBySlug(
-			registerSlug: self::REGISTER,
-			schemaSlug: $schema,
+			target: new RegisterSchemaSlugs(register: self::REGISTER, schema: $schema),
 			filters: [$property => $uuid],
 			_rbac: false,
 			_multitenancy: false

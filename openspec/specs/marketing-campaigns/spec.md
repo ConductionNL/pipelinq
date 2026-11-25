@@ -194,3 +194,45 @@ show the registrations in a tab, and the sign-up form, the location and the hist
 - **GIVEN** an event with 80 places, 64 confirmed and 9 waiting registrations
 - **WHEN** the marketer opens it
 - **THEN** the page reads Registered 64 of 80 places and Waiting list 9
+
+### Requirement: A campaign names how much it holds
+
+The campaign page's "In this campaign" card SHALL list the campaign's newsletters, social posts and leads, each
+counted for that campaign and named in its line, and the page's article.
+
+#### Scenario: Two newsletters
+
+- **GIVEN** a campaign with two newsletters
+- **WHEN** a user opens the campaign in Dutch
+- **THEN** the card SHALL read "2 nieuwsbrieven" as a link to the newsletters
+
+### Requirement: The campaign page cards read as the board
+
+On a campaign's page the details card SHALL write the status as a pill in the campaigns list tones, the start and end
+dates with day, short month and year, and the budget in whole euros. The landing page SHALL be a titled card whether or
+not the campaign has a landing page. The report card SHALL keep its five tiles in one row where they fit, name the
+attribution model beside its picker, write its period in short dates with the year once, and frame the channel table
+at 8px.
+
+#### Scenario: A running campaign
+
+- **GIVEN** a running campaign from 28 September to 11 October 2026 with a budget of 2500
+- **WHEN** the reader opens the campaign
+- **THEN** the details card SHALL show a green "Bezig" pill, "28 sep 2026", "11 okt 2026" and "€ 2.500"
+
+#### Scenario: A campaign without a landing page
+
+- **GIVEN** a campaign without a landing page
+- **WHEN** the reader opens the campaign
+- **THEN** the landing page block SHALL sit in a card titled "Landingspagina"
+
+### Requirement: The campaign page draws its report as a card
+
+On a campaign's page the campaign report SHALL render as a card of its own, with the tiles and the channel table inside
+its padding. A tile SHALL widen to fit its figure rather than clip it.
+
+#### Scenario: A campaign without recorded costs
+
+- **GIVEN** a campaign with no recorded costs
+- **WHEN** the reader opens the campaign
+- **THEN** the report card SHALL show the Kosten tile reading "Niet vastgelegd" in full

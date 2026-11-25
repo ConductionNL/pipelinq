@@ -76,6 +76,7 @@ use Throwable;
  * @covers \OCA\Pipelinq\Controller\TicketWooRequestController
  * @covers \OCA\Pipelinq\Controller\WeeklyReviewController
  * @covers \OCA\Pipelinq\Lifecycle\CrmPrivilegeCheck
+ * @uses \OCA\Pipelinq\Service\Messaging\ConsentChange
  * @uses \OCA\Pipelinq\Controller\CtiDialRules
  * @uses \OCA\Pipelinq\Controller\KvkSearchController
  */
@@ -109,6 +110,7 @@ class CrmPrivilegeRefusalGoldenTest extends TestCase {
 		'ProspectController' => ['index'],
 		'RapportageController' => ['getPipelineStats'],
 		'ReportingController' => ['getKpis', 'getChannels', 'getAgents', 'getSla', 'exportCsv'],
+		'ContactReportController' => ['topSubjects', 'occupancy', 'forecast'],
 		'RoutingController' => ['getSuggestions'],
 		'SearchConsoleController' => ['index'],
 		'SemanticHandoffController' => ['requestAvailability', 'convertRequestToCase'],

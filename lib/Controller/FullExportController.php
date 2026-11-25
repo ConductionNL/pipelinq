@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\BackgroundJob\FullExportJob;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\Export\FullExportState;
+use OCA\Pipelinq\Kernel\Contracts\FullExportStateInterface;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -55,7 +55,7 @@ class FullExportController extends Controller {
 	 * @param IUserSession  $userSession The caller.
 	 * @param IGroupManager $groups      Whether the caller is an administrator.
 	 * @param IJobList      $jobs        The background job queue.
-	 * @param FullExportState|null $state The state of the last export, for the page.
+	 * @param FullExportStateInterface|null $state The state of the last export, for the page.
 	 *
 	 * @spec openspec/changes/data-portability-full-export/specs/data-portability/spec.md#REQ-DPE-002
 	 */
@@ -64,7 +64,7 @@ class FullExportController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groups,
 		private readonly IJobList $jobs,
-		private readonly ?FullExportState $state = null,
+		private readonly ?FullExportStateInterface $state = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

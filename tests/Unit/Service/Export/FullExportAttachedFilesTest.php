@@ -33,6 +33,7 @@ use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use RuntimeException;
 use ZipArchive;
 
@@ -153,11 +154,14 @@ class FullExportAttachedFilesTest extends TestCase {
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getDateTime')->willReturn(new DateTime('2026-11-14T10:00:00+00:00'));
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('has')->willReturnCallback(static fn (string $id): bool => $id === self::READER && $reader !== null);
+		// Like Nextcloud's app container: has() is false for another app's
+		// alias, and get() resolves it or throws a not-found exception.
+		$container->method('has')->willReturn(false);
 		$container->method('get')->willReturnCallback(
 			static function (string $id) use ($reader): object {
 				if ($id !== self::READER || $reader === null) {
-					throw new RuntimeException('not in the container: ' . $id);
+					throw new class ('not in the container: ' . $id) extends RuntimeException implements NotFoundExceptionInterface {
+					};
 				}
 
 				return $reader;

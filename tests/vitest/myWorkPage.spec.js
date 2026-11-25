@@ -51,11 +51,14 @@ describe('the My work page', () => {
 	it('has a bar with the lens chips, the completed switch and the sort select', () => {
 		const bar = widget('my-lens').content
 		expect(bar.layout).toBe('bar')
-		expect(bar.controls.map((c) => c.style)).toEqual([
-			'chips',
-			'toggle',
-			'select',
+		expect(bar.controls.map((c) => c.writes)).toEqual([
+			'@workspace.lens',
+			'@workspace.showDone',
+			'@workspace.priority',
+			'@workspace.pipeline',
+			'@workspace.sort',
 		])
+		expect(bar.controls.map((c) => c.style)).toEqual(['chips', 'toggle', 'select', undefined, 'select'])
 		const chips = bar.controls[0].options.map((o) => o.value)
 		expect(chips).toEqual(['all', 'tickets', 'leads', 'tasks'])
 	})
@@ -111,7 +114,7 @@ describe('the My work page', () => {
 
 	it('offers sorting by priority', () => {
 		const select = widget('my-lens').content.controls.find(
-			(c) => c.style === 'select',
+			(c) => c.writes === '@workspace.sort',
 		)
 		expect(select.options.map((o) => o.value)).toContain('priority')
 		expect(widget('my-leads').content.pageControls.sort.map.priority.rank).toEqual(['urgent', 'high', 'normal', 'low'])
@@ -132,10 +135,12 @@ describe('the My work page', () => {
 		const week = widget('my-week')
 		expect(week.type).toBe('stats-block')
 		expect(week.content.layout).toBe('grid')
+		// REQ-MW-090: the four figures come from the server, scoped to the
+		// user (or the team they chose), not from per-tile list counts.
 		for (const stat of week.content.stats) {
-			expect(stat.source.filter.assignee, stat.label).toBe('@me')
+			expect(stat.endpointSource.url, stat.label).toBe('/apps/pipelinq/api/my-work/week-stats?scope=@workspace.scope')
 		}
-		expect(week.content.stats.map((s) => s.source.kind)).toContain('elapsed')
+		expect(week.content.stats.map((s) => s.valueField)).toEqual(['answered', 'withinDeadline', 'averageAnswerDays', 'converted'])
 	})
 
 	it('says what each list shows when it is empty, and labels the channel', () => {
@@ -169,7 +174,7 @@ describe('the My work page', () => {
 		const lens = widget('my-lens')
 		expect(lens.borderless).toBe('narrow')
 		expect(lens.content.controls.find((c) => c.style === 'chips').chipsOnPhone).toBe('pills')
-		expect(lens.content.controls.map((c) => c.style)).toEqual(['chips', 'toggle', 'select'])
+		expect(lens.content.controls.map((c) => c.style)).toEqual(['chips', 'toggle', 'select', undefined, 'select'])
 		const phone = widget('my-items-phone')
 		expect(phone.content.groupLook).toBe('cards')
 		expect(phone.content.groupTones).toEqual({ late: 'error' })
@@ -182,7 +187,7 @@ describe('the My work page', () => {
 	})
 
 	it('downloads what the page shows', () => {
-		expect(page.config.headerActions[0]).toMatchObject({ label: 'Download', href: expect.stringContaining('/api/worklist/items?format=csv') })
+		expect(page.config.headerActions.find((a) => a.id === 'my-work-download')).toMatchObject({ label: 'Download', href: expect.stringContaining('/api/worklist/items?format=csv') })
 	})
 
 	it('carries the start-here banner and the saved views', () => {

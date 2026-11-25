@@ -240,33 +240,28 @@ class ProductCatalogService implements ProductCatalogServiceInterface {
 		?array $client = null,
 		?string $currency = null
 	): array {
-		$quantity = max(0.0, $quantity);
+		$line = new QuoteLine(product: $product, quantity: max(0.0, $quantity), variantSku: $variantSku, currency: $currency);
 		if ($client !== null) {
-			return $this->resolveForClient(
-				product: $product,
-				quantity: $quantity,
-				variantSku: $variantSku,
-				client: $client,
-				currency: $currency
-			);
+			return $this->resolveForClient(line: $line, client: $client);
 		}
 
-		return $this->resolveOwnPrice(product: $product, quantity: $quantity, variantSku: $variantSku);
+		return $this->resolveOwnPrice(line: $line);
 	}//end resolveEffectivePrice()
 
 	/**
 	 * The product's own price: its variant's or base price, a quantity tier
 	 * when no variant is asked for, and its VAT.
 	 *
-	 * @param array<string, mixed> $product    The product object.
-	 * @param float                $quantity   The ordered quantity, at least 0.
-	 * @param string|null          $variantSku Optional variant SKU.
+	 * @param QuoteLine $line The product, the ordered quantity (at least 0) and the optional variant SKU.
 	 *
 	 * @return array<string, mixed> The resolution.
 	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
 	 */
-	private function resolveOwnPrice(array $product, float $quantity, ?string $variantSku): array {
+	private function resolveOwnPrice(QuoteLine $line): array {
+		$product = $line->product;
+		$quantity = $line->quantity;
+		$variantSku = $line->variantSku;
 		$price = $this->variantOrBasePrice(product: $product, variantSku: $variantSku);
 		// Quantity tier override (tiers price the line, not the variant).
 		if ($variantSku === null) {
@@ -286,36 +281,34 @@ class ProductCatalogService implements ProductCatalogServiceInterface {
 	 * The price for a client: a price list's when one prices the product,
 	 * else the product's own price, with the list it came from.
 	 *
-	 * @param array<string, mixed> $product    The product object.
-	 * @param float                $quantity   The ordered quantity, at least 0.
-	 * @param string|null          $variantSku Optional variant SKU.
-	 * @param array<string, mixed> $client     The client.
-	 * @param string|null          $currency   The quote's currency.
+	 * @param QuoteLine            $line   The product, the ordered quantity (at least 0), the optional variant SKU and the quote's currency.
+	 * @param array<string, mixed> $client The client.
 	 *
 	 * @return array<string, mixed> The resolution.
 	 *
 	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
 	 */
-	private function resolveForClient(array $product, float $quantity, ?string $variantSku, array $client, ?string $currency): array {
+	private function resolveForClient(QuoteLine $line, array $client): array {
+		$product = $line->product;
 		$match = (new PriceListResolver())->select(
 			lists: $this->fetchPriceLists(),
 			client: $client,
 			productId: (string)($product['id'] ?? ($product['@self']['id'] ?? ($product['uuid'] ?? ''))),
-			variantSku: $variantSku,
-			quantity: $quantity,
-			currency: self::currencyCode(currency: $currency),
+			variantSku: $line->variantSku,
+			quantity: $line->quantity,
+			currency: self::currencyCode(currency: $line->currency),
 			day: new DateTimeImmutable('today')
 		);
 
 		if ($match === null) {
 			return [
-				...$this->resolveOwnPrice(product: $product, quantity: $quantity, variantSku: $variantSku),
+				...$this->resolveOwnPrice(line: $line),
 				'priceListId' => null,
 				'priceListTitle' => '',
 			];
 		}
 
-		return $this->priceListAnswer(product: $product, quantity: $quantity, variantSku: $variantSku, match: $match);
+		return $this->priceListAnswer(line: $line, match: $match);
 	}//end resolveForClient()
 
 	/**
@@ -337,16 +330,16 @@ class ProductCatalogService implements ProductCatalogServiceInterface {
 	/**
 	 * The resolution for a line a price list prices.
 	 *
-	 * @param array<string, mixed> $product    The product object.
-	 * @param float                $quantity   The ordered quantity, at least 0.
-	 * @param string|null          $variantSku Optional variant SKU.
-	 * @param array<string, mixed> $match      The list's price, id and title.
+	 * @param QuoteLine            $line  The product, the ordered quantity (at least 0) and the optional variant SKU.
+	 * @param array<string, mixed> $match The list's price, id and title.
 	 *
 	 * @return array<string, mixed> The resolution.
 	 *
 	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
 	 */
-	private function priceListAnswer(array $product, float $quantity, ?string $variantSku, array $match): array {
+	private function priceListAnswer(QuoteLine $line, array $match): array {
+		$product = $line->product;
+		$variantSku = $line->variantSku;
 		if ($variantSku !== null && $variantSku !== '') {
 			// The variant must still exist and be active, as without a list.
 			$this->resolveVariantPrice(product: $product, sku: $variantSku, basePrice: 0.0);
@@ -356,7 +349,7 @@ class ProductCatalogService implements ProductCatalogServiceInterface {
 			'unitPrice' => $match['unitPrice'],
 			'source' => 'price-list',
 			'tierLabel' => '',
-			'quantity' => $quantity,
+			'quantity' => $line->quantity,
 			...$this->vatOf(product: $product),
 			'priceListId' => $match['priceListId'],
 			'priceListTitle' => $match['priceListTitle'],

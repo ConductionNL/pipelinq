@@ -767,3 +767,178 @@ column MUST show the label from the schema's `x-enum-labels` ("Active", not
 - **GIVEN** a service with `bookableOnline` false
 - **WHEN** a user opens the services list
 - **THEN** the Online column MUST read "No"
+
+### Requirement: Services and resources share one page with tabs (REQ-SRG-001)
+
+The app SHALL show services and resources on one page with the tabs Services and Resources, each carrying its count. The routes `/services` and `/resources` SHALL open that page on the matching tab. The services tab SHALL offer the views All, Bookable online, Draft and Archived with counts, and the columns Service (name with the description beneath), Duration, Buffer before / after, Price ("No price set" when empty), Online, Booked on (the required resource types) and Status, and SHALL show the footnote that a service is booked on the resources whose type and skills it asks for and that changing a duration clears the cached free slots.
+
+#### Scenario: Opening resources from the menu
+- GIVEN an administrator in the Set up the app menu
+- WHEN they click Resources
+- THEN the Services and resources page opens on the Resources tab at `/resources`
+
+#### Scenario: Views with counts
+- GIVEN seven services, five bookable online, one draft
+- WHEN the services tab loads
+- THEN the views read All 7, Bookable online 5, Draft 1, Archived 0
+
+### Requirement: Each service shows the resources that match it (REQ-SRG-002)
+
+The system SHALL compute, with the same eligibility rule the booking path uses, which active and bookable resources can do a service, and SHALL show per service in the list a line naming its required skills and resource types followed by the number of matching resources, and on the service page a list Resources that can do this with each resource's name, type and maximum concurrent bookings or skills. A service that no resource matches SHALL show "No resource matches" as a warning.
+
+#### Scenario: A passport service with four matching resources
+- GIVEN the service "Passport or ID card application" asks for skill civil affairs and a room
+- AND four active, bookable resources meet that
+- WHEN the services list loads
+- THEN its line reads "Skill civil affairs, a desk · 4 resources match"
+
+#### Scenario: Nothing matches
+- GIVEN a draft service that asks for skill registrar and no resource has it
+- WHEN the service page opens
+- THEN Resources that can do this shows "No resource matches" as a warning
+
+### Requirement: A service page shows how busy the service is (REQ-SRG-003)
+
+The service page SHALL show a Bookings figure with the number of bookings for the service that start in the current week and the number of no-shows in the current month, and a list Appointments for this service with its upcoming bookings (date and time, customer, resource, status), each linking to its booking.
+
+#### Scenario: Bookings this week
+- GIVEN 38 bookings for "Passport application" this week and 4 no-shows this month
+- WHEN the service page opens
+- THEN the figure reads 38 with "this week, 4 no-shows this month"
+
+### Requirement: A resource page shows how much of its bookable time is booked (REQ-SRG-004)
+
+The resource page SHALL show a This week figure with the number of bookings assigned to the resource in the current week and the share of its bookable time they fill, where bookable time is its working hours this week minus its vacations. A resource with no bookable time this week SHALL show the count without a share.
+
+#### Scenario: A desk clerk's week
+- GIVEN Fatma Yildiz works 33 hours this week and her 22 bookings fill 24.4 of them
+- WHEN her resource page opens
+- THEN the figure reads 22 with "bookings, 74% of the bookable time"
+
+#### Scenario: On holiday all week
+- GIVEN a resource on vacation for the whole week
+- WHEN its page opens
+- THEN the figure shows the count and no percentage
+
+### Requirement: A service's composition is edited in place and can name products (REQ-BSP-001)
+
+ServiceDetail SHALL let an administrator edit the multi-step composition in
+its own card, with Save and Cancel, without opening the general Edit dialog.
+A step SHALL be able to name a product from the catalogue, with a quantity
+and a unit (hour, day, month, year or piece). Saving SHALL expire the cached
+availability as every service save does. Service information and Policies
+SHALL sit side by side on a wide screen.
+
+#### Scenario: An administrator composes the OpenWoo app service
+
+- GIVEN products "Implementation", "Hosting" and "SLA" in the catalogue
+- WHEN the administrator chooses Edit steps on the OpenWoo app service and adds three steps: Implementation 8 hours, Hosting 1 month, SLA 1 year
+- AND saves the steps
+- THEN the composition shows the three products with "8 hours", "1 months" and "1 years"
+
+#### Scenario: Cancel leaves the composition as it was
+
+- GIVEN a service with two steps
+- WHEN the administrator edits the steps and chooses Cancel
+- THEN the service still has its two steps
+
+### Requirement: The booking page works in tabs and keeps no audit table (REQ-BSP-002)
+
+BookingDetail SHALL show its timeline, resource assignments, notes and
+documents as tabs inside the page grid. Notes SHALL use the notes leaf. The
+page SHALL NOT render its own audit table; the timeline SHALL list the
+booking's status changes.
+
+#### Scenario: A front desk employee adds a note to a booking
+
+- GIVEN a confirmed booking
+- WHEN the employee opens the Notes tab and adds a note
+- THEN the note is stored through the notes leaf, as on a lead
+
+#### Scenario: The timeline shows a status change
+
+- GIVEN a booking whose status went from pending deposit to confirmed
+- WHEN the employee opens the Timeline tab
+- THEN it lists "Status: Confirmed" at the moment of the change
+
+### Requirement: A walk-in operator works the queue on a manifest page
+
+The app SHALL offer a walk-in queue page, declared in the manifest over the `walkInTicket` schema, that lists today's
+waiting tickets in arrival order and lets the operator call the next ticket, serve it, or mark it abandoned. The page
+SHALL use library widgets and declared actions; it SHALL NOT be a pipelinq component.
+
+#### Scenario: The operator calls the next walk-in
+
+- GIVEN three walk-in tickets waiting today
+- WHEN the operator chooses Call next
+- THEN the oldest waiting ticket is called and leaves the waiting list
+
+### Requirement: A booking can name its request
+
+An appointment booking SHALL be able to reference one ticket (`ticket`, optional). The booking page SHALL show that
+ticket's title, reference, status and handler in a "Linked request" card that opens the ticket, and SHALL say "Not
+linked to a request" when there is none.
+
+#### Scenario: Sanne's site visit
+
+- **GIVEN** a booking whose `ticket` is request PQ-2026-0417
+- **WHEN** a user opens the booking
+- **THEN** the Gekoppeld verzoek card SHALL show PQ-2026-0417 and open its ticket page
+
+### Requirement: A desk works the walk-in queue from one page (REQ-APT-BOARD-004)
+The app MUST offer a walk-in queue page listing today's walk-in tickets oldest first, with Call next calling the customer who has waited longest, and per row Call in for a waiting customer, Help for a called one and Left for either.
+
+#### Scenario: Call next
+@e2e exclude Handler behaviour asserted in tests/vitest/walkInQueue.spec.js; the e2e instance has no walk-in tickets.
+- **GIVEN** two waiting customers
+- **WHEN** the employee picks Call next
+- **THEN** the customer who arrived first MUST become called
+
+#### Scenario: Help a called customer
+@e2e exclude Handler behaviour asserted in tests/vitest/walkInQueue.spec.js.
+- **GIVEN** a called customer
+- **WHEN** the employee picks Help
+- **THEN** the ticket MUST be served with the time it was served
+
+### Requirement: The resource page reads as its board (REQ-APT-BOARD-005)
+The resource page MUST show the resource type and status as labelled pills, a breadcrumb to Resources, and working hours and vacations side by side.
+
+#### Scenario: A staff resource
+@e2e exclude Presentational; verified on the PqResource pixel check.
+- **GIVEN** an active staff resource
+- **WHEN** an employee opens it
+- **THEN** the pills MUST read Staff and Active in the reader's language
+
+### Requirement: The appointments list reads as its board (REQ-APT-BOARD-001)
+The appointments list MUST be titled Appointments and MUST show a count line, the chips Today, This week, Mine and Unconfirmed with their counts, and the columns When (the start and end time of day), With whom (the customer's name), About (the subject over how it was booked), Location or desk, Handler and Status (the status label).
+
+#### Scenario: The list shows what an appointment is about
+@e2e exclude The formatter is asserted in tests/vitest/bookingTime.spec.js; the e2e instance has no bookings with a subject until the register is imported again.
+- **GIVEN** a booking from 14:00 to 15:00 with a subject and a handler
+- **WHEN** an employee opens the appointments list
+- **THEN** the When cell MUST read "14:00 to 15:00" in the reader's language
+- **AND** the About cell MUST show the subject with how it was booked beneath it
+
+#### Scenario: Mine narrows to the reader's own appointments
+@e2e exclude Declarative quick filter on the assignee field, asserted on the built manifest; no e2e user owns a booking.
+- **GIVEN** bookings handled by several employees
+- **WHEN** the employee picks the Mine chip
+- **THEN** the list MUST show only the bookings whose handler is that employee
+
+### Requirement: The appointment page keeps its actions in view (REQ-APT-BOARD-002)
+The appointment page MUST show Confirm deposit, Mark completed, Mark no-show, Reschedule and Cancel as a row of buttons under the title, each disabled while it does not apply to the booking. Send reminder MUST be on the When and where card, beside the reminder line, when a reminder can be sent.
+
+#### Scenario: A finished booking keeps the row
+@e2e exclude Component behaviour of BookingHeaderActions; the time-window rules are the ones the booking endpoints enforce.
+- **GIVEN** a booking whose status is completed
+- **WHEN** an employee opens it
+- **THEN** the five status actions MUST be shown and disabled
+
+### Requirement: The reschedule and cancel dialogs say what happens (REQ-APT-BOARD-003)
+The reschedule dialog MUST show the current slot and the new slot, just as long, and say the customer gets a new confirmation. The cancel dialog MUST name the appointment, the cancellation charge rule, the refunded deposit when one was paid, and that the booking stays in the list as cancelled.
+
+#### Scenario: Rescheduling keeps the length
+@e2e exclude Slot text is asserted in tests/vitest/bookingTime.spec.js.
+- **GIVEN** a booking from 14:00 to 15:00
+- **WHEN** the employee picks 10:00 on another day
+- **THEN** the dialog MUST show the new slot as 10:00 to 11:00, same length

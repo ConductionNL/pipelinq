@@ -79,6 +79,7 @@ import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import CheckCircleOutline from 'vue-material-design-icons/CheckCircleOutline.vue'
 import CheckDecagramOutline from 'vue-material-design-icons/CheckDecagramOutline.vue'
 import ChevronDoubleRight from 'vue-material-design-icons/ChevronDoubleRight.vue'
+import City from 'vue-material-design-icons/City.vue'
 import ClipboardAccountOutline from 'vue-material-design-icons/ClipboardAccountOutline.vue'
 import ClipboardCheck from 'vue-material-design-icons/ClipboardCheck.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
@@ -100,6 +101,7 @@ import DatabaseExport from 'vue-material-design-icons/DatabaseExport.vue'
 import DatabaseExportOutline from 'vue-material-design-icons/DatabaseExportOutline.vue'
 import DatabaseImportOutline from 'vue-material-design-icons/DatabaseImportOutline.vue'
 import DatabaseSearchOutline from 'vue-material-design-icons/DatabaseSearchOutline.vue'
+import DatabaseSyncOutline from 'vue-material-design-icons/DatabaseSyncOutline.vue'
 import DeleteClockOutline from 'vue-material-design-icons/DeleteClockOutline.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
 import Download from 'vue-material-design-icons/Download.vue'
@@ -123,6 +125,7 @@ import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FileOutline from 'vue-material-design-icons/FileOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
+import FileSendOutline from 'vue-material-design-icons/FileSendOutline.vue'
 import FileSign from 'vue-material-design-icons/FileSign.vue'
 import FilterVariant from 'vue-material-design-icons/FilterVariant.vue'
 import FolderAccountOutline from 'vue-material-design-icons/FolderAccountOutline.vue'
@@ -172,6 +175,7 @@ import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import Percent from 'vue-material-design-icons/Percent.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
 import PhoneInTalk from 'vue-material-design-icons/PhoneInTalk.vue'
+import PhoneLog from 'vue-material-design-icons/PhoneLog.vue'
 import PhoneLogOutline from 'vue-material-design-icons/PhoneLogOutline.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
@@ -294,6 +298,7 @@ export default {
 	ChartTimelineVariantShimmer,
 	Check,
 	CheckCircle,
+	City,
 	CheckCircleOutline,
 	CheckboxMarkedCircleOutline,
 	CheckboxMarkedOutline,
@@ -319,6 +324,7 @@ export default {
 	DatabaseExportOutline,
 	DatabaseImportOutline,
 	DatabaseSearchOutline,
+	DatabaseSyncOutline,
 	DeleteClockOutline,
 	Domain,
 	Download,
@@ -342,6 +348,7 @@ export default {
 	FileDocumentOutline,
 	FileOutline,
 	FilePdfBox,
+	FileSendOutline,
 	FileSign,
 	FilterVariant,
 	FolderAccountOutline,
@@ -403,6 +410,7 @@ export default {
 	PencilOutline,
 	Phone,
 	PhoneInTalk,
+	PhoneLog,
 	PhoneMessage,
 	PhoneOutline,
 	PhoneReturnOutline,

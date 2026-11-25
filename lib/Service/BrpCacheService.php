@@ -38,6 +38,7 @@ use OCA\Pipelinq\Util\SerialisedToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use SensitiveParameter;
 use Throwable;
 
 /**
@@ -80,7 +81,7 @@ class BrpCacheService implements BrpCacheServiceInterface {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-004-02
 	 */
 	public function get(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 	): ?array {
 		try {
@@ -202,7 +203,7 @@ class BrpCacheService implements BrpCacheServiceInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */
 	public function invalidate(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 	): int {
 		try {

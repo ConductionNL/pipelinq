@@ -39,7 +39,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Kernel\Contracts\ListObjectStoreInterface;
+use OCA\Pipelinq\Kernel\Contracts\ConfiguredListObjectStoreInterface;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCA\Pipelinq\Util\SavedPayloadId;
 use OCP\IAppConfig;
@@ -52,7 +52,7 @@ use Throwable;
  *
  * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
  */
-class ListObjectStore implements ListObjectStoreInterface {
+class ListObjectStore implements ConfiguredListObjectStoreInterface {
 	use PayloadToArray;
 	use SavedPayloadId;
 

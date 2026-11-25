@@ -812,7 +812,7 @@
 			"specs": [
 				"marketing-blast",
 				"marketing-blast-delivery",
-				"marketing-block-editor",
+				"mail-block-editor",
 				"marketing-compliance",
 				"marketing-email-tracking",
 				"marketing-integrated-campaigns",
@@ -869,7 +869,7 @@
 				"marketing-integrated-campaigns",
 				"my-work",
 				"my-work-roadmap",
-				"notify-the-followers-of-tickets-and-leads",
+				"notifications-activity",
 				"project-portfolio",
 				"task-background-jobs",
 				"work-letter-from-filinq-template"
@@ -2151,29 +2151,28 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": "PqLead"
 			},
-			"note": "Decision 411 (13 Nov 2026): the commit reason for deals above the threshold (default EUR 50K) is built; the reason asked when a deal slips out of its forecast period is a separate row, forecast-slip-reason, not built."
+			"note": "Decision 411 (13 Nov 2026): the commit reason for deals above the threshold (default EUR 50K) is built; the reason asked when a deal slips out of its forecast period is the separate row forecast-slip-reason, built by forecast-slip-reason (lib/Service/ForecastDealService.php:257, REQ-FRC-012 in openspec/specs/forecast-roll-up-and-categories)."
 		},
 		{
 			"id": "forecast-slip-reason",
 			"area": "pipeline",
 			"name": "Say why when a committed or best-case deal slips out of its forecast period",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "no",
 			"pipedrive": "unknown",
 			"espocrm": "no",
 			"odoo-crm": "no",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "looked in lib/Service/ForecastDealService.php validateTransition(): it checks closed-deal locks and the commit justification, nothing on a moved close date; grep -i slip over lib and src finds nothing",
+			"providerHow": "read in lib/Service/ForecastDealService.php:257 (validateTransition() returns forecast.error.slip_reason_required through ForecastSlipRule), the reason dialog src/modals/SlipReasonModal.vue opened by src/dialogs/LeadEditDialog.vue, and the slipped-deals card in ForecastTrend.vue",
 			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "Not built: moving a deal's expectedCloseDate past its forecast period asks for nothing and stores no reason (ForecastDealService::validateTransition() has no close-date rule; grep -i slip over lib and src: no hits). Planned in openspec/changes/forecast-slip-reason (decision 411, 13 Nov 2026).",
+				"state": "built",
+				"evidence": "lib/Service/ForecastDealService.php:257",
 				"owner": "ConductionNL/pipelinq",
-				"change": "forecast-slip-reason",
-				"plan": "openspec/changes/forecast-slip-reason",
-				"requirement": "openspec/changes/forecast-slip-reason/specs/forecast-roll-up-and-categories :: A deal that slips out of its forecast period needs a slip reason (REQ-FRC-012)"
+				"spec": "openspec/specs/forecast-roll-up-and-categories",
+				"requirement": "openspec/specs/forecast-roll-up-and-categories :: A deal that slips out of its forecast period needs a slip reason (REQ-FRC-012)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/set-up-the-forecast-tool categories \"Pipeline\", \"Best case\" and \"Commit: deals that have a high likelihood of closing\", set per deal; https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite shows \"Forecast Moved Backward\" and \"Close Date Pushed\". Sales Hub Professional, Enterprise. No slip reason field is documented; a custom property would carry the why.",
@@ -2186,7 +2185,7 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": "PqLead"
 			},
-			"note": "Split from forecast-category by decision 411 (13 Nov 2026): the slip reason is specified, not built."
+			"note": "Split from forecast-category by decision 411 (13 Nov 2026). Built by forecast-slip-reason (archived 2026-11-21): a commit or best-case deal whose close date moves past its quarter needs a reason of at least ten characters, slipped_from and slipped_at are recorded, and the forecast trend lists the slipped deals with their reasons."
 		},
 		{
 			"id": "forecast-trend",
@@ -2462,8 +2461,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "lead create and edit form; Leads list currency column; admin Forecast settings, Exchange rates",
 				"readOn": "2026-09-27",
-				"change": "pipeline-live-exchange-rates",
-				"requirement": "openspec/changes/pipeline-live-exchange-rates/specs/deal-exchange-rates :: Rates come from the fleet's rate store before the hand-kept table (REQ-DXR-001)"
+				"spec": "openspec/specs/deal-exchange-rates",
+				"requirement": "openspec/specs/deal-exchange-rates :: Rates come from the fleet's rate store before the hand-kept table (REQ-DXR-001)"
 			},
 			"note": "lead: since pipelinq#2040 a deal carries its currency and the forecast converts it; the rate table is maintained by hand in Forecast settings, not fetched live, hence partial. The forecast and the setup wizard now share one reporting currency (app config 'currency'). Specified 2026-09-28 in openspec/changes/pipeline-live-exchange-rates (OpenSpec pass).",
 			"evidence": {
@@ -2503,8 +2502,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "LeadDetail Suggested agents (colleagues ranked by skill, availability and workload, capped per person)",
 				"readOn": "2026-09-27",
-				"change": "pipeline-lead-rotation",
-				"requirement": "openspec/changes/pipeline-lead-rotation/specs/lead-rotation :: New unassigned leads are assigned in turn (REQ-LRT-001)"
+				"spec": "openspec/specs/lead-rotation",
+				"requirement": "openspec/specs/lead-rotation :: New unassigned leads are assigned in turn (REQ-LRT-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/assign-and-rotate-record-owners-using-workflows \"Rotate record to owner\" with \"load balanced, round robin, and random\" options for tickets and leads (Sales or Service Hub Professional, Enterprise); a cap per person applies to help desk tickets (https://knowledge.hubspot.com/help-desk/set-ticket-capacity-limits-for-users-in-help-desk), not described for leads.",
@@ -2541,10 +2540,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "pipeline-stage-limit",
+				"spec": "openspec/specs/pipeline-stage-limits",
 				"requirement": [
-					"openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits :: A stage can carry a limit (REQ-PSL-001)",
-					"openspec/changes/pipeline-stage-limit/specs/pipeline-stage-limits :: No write puts an item into a full stage (REQ-PSL-002)"
+					"openspec/specs/pipeline-stage-limits :: A stage can carry a limit (REQ-PSL-001)",
+					"openspec/specs/pipeline-stage-limits :: No write puts an item into a full stage (REQ-PSL-002)"
 				]
 			},
 			"evidence": {
@@ -2607,7 +2606,7 @@
 			"id": "lead-win-probability",
 			"area": "pipeline",
 			"name": "See how likely you are to win a lead, judged by how recently it moved",
-			"pipelinq": "partial",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -2618,11 +2617,10 @@
 			"feature": "pipeline",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Settings/pipelinq_register.json:658 declares winProbability on lead and lib/Service/LeadService.php derives it; no page shows it (grep of src for winProbability is empty). The Win chance column on Leads shows qualificationScore, the lead score",
+				"state": "built",
+				"evidence": "src/views/leads/LeadList.vue reads extend ['client', 'calculations'] and shows winProbability in the Win chance column; LeadDetail extend ['calculations'] shows it in Deal data; PipelineBoard.fetchSchemaItems asks _extend[]=calculations and PipelineCard shows it; tests/vitest/leadWinProbabilitySurfaces.spec.js, leadWinProbabilityBands.spec.js; e2e tests/e2e/spec-coverage/lead-scoring-win-probability.spec.ts written, runs in nightly (archived change lead-win-probability-recency, 2026-11-24)",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/lead-scoring-win-probability",
-				"change": "openspec/changes/lead-win-probability-recency",
 				"requirement": "openspec/specs/lead-scoring-win-probability :: Win probability is surfaced on the pipeline list and deal detail"
 			},
 			"source": "spec-round-2026-10-07",
@@ -3646,10 +3644,9 @@
 				"requirement": [
 					"openspec/specs/appointment-booking :: REQ-APT-012 Walk-In Queue",
 					"openspec/changes/specify-capability-rows/specs/appointment-booking :: A walk-in visitor gets a queue number",
-					"openspec/changes/walk-in-queue-page/specs/appointment-booking :: A walk-in operator works the queue on a manifest page"
+					"openspec/specs/appointment-booking :: A walk-in operator works the queue on a manifest page"
 				],
-				"plan": "openspec/changes/specify-capability-rows",
-				"change": "openspec/changes/walk-in-queue-page"
+				"plan": "openspec/changes/specify-capability-rows"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no queue ticket or counter calling feature in the HubSpot knowledge base (searched the KB sitemap for queue, walk-in, counter, kiosk and check-in, 2026-09-26); the marketplace was not searched for a queue management app; the docs do not state an absence. Note: Was no without a source.",
@@ -4367,10 +4364,10 @@
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "TicketDetail, LeadDetail sidebar Tasks tab",
 				"readOn": "2026-10-07",
-				"change": "notify-the-followers-of-tickets-and-leads",
+				"change": "openspec/changes/archive/2026-11-24-notify-the-followers-of-tickets-and-leads",
 				"requirement": [
-					"openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity :: A user adds a colleague to a ticket or lead as a follower (REQ-NFTL-004)",
-					"openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity :: A colleague added to a ticket or lead can work on it (REQ-NFTL-005)"
+					"openspec/specs/notifications-activity :: A user adds a colleague to a ticket or lead as a follower (REQ-NFTL-004)",
+					"openspec/specs/notifications-activity :: A colleague added to a ticket or lead can work on it (REQ-NFTL-005)"
 				]
 			},
 			"evidence": {
@@ -4452,7 +4449,7 @@
 			"id": "work-my-week-stats",
 			"area": "work",
 			"name": "See how your own week is going: answered, within the deadline, answer time",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -4463,8 +4460,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/views/MyWork.vue has no tiles; REQ-MW-090",
+				"state": "built",
+				"evidence": "lib/Service/Worklist/WeekStats.php (GET /api/my-work/week-stats), the my-week stats-block on the MyWork page in src/manifest.json",
 				"owner": "ConductionNL/pipelinq",
 				"change": "my-work-roadmap",
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: KPI summary tiles on My work (REQ-MW-090)"
@@ -4479,7 +4476,7 @@
 			"id": "work-quick-create",
 			"area": "work",
 			"name": "Create a ticket or contact from your work list without leaving it; New lead is not offered there",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -4490,8 +4487,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/views/MyWork.vue has no create buttons; REQ-MW-100",
+				"state": "built",
+				"evidence": "src/manifest.json MyWork headerActions my-work-new-ticket and my-work-new-contact",
 				"owner": "ConductionNL/pipelinq",
 				"change": "my-work-roadmap",
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Quick actions on My work (REQ-MW-100)"
@@ -4509,7 +4506,7 @@
 			"id": "work-upcoming-meetings",
 			"area": "work",
 			"name": "See your meetings with clients this week next to your work",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -4520,8 +4517,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "no calendar read in src/views/MyWork.vue or lib/Service/WorklistService.php; REQ-MW-130",
+				"state": "built",
+				"evidence": "lib/Service/MyWork/MyWorkCalendarService.php (GET /api/my-work/meetings), the my-meetings record list on the MyWork page",
 				"owner": "ConductionNL/pipelinq",
 				"change": [
 					"my-work-roadmap",
@@ -4566,7 +4563,7 @@
 			"id": "work-team-view",
 			"area": "work",
 			"name": "Look at your team's open work as a manager, and at one member's",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "unknown",
@@ -4577,8 +4574,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Service/WorklistService.php:209 getMine() reads one user only; REQ-MW-180",
+				"state": "built",
+				"evidence": "lib/Service/Worklist/WorkScope.php, lib/Controller/MyWorkTeamController.php (GET /api/my-work/team), the my-scope and my-team widgets on the MyWork page",
 				"owner": "ConductionNL/pipelinq",
 				"change": "my-work-roadmap",
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Role-based content (REQ-MW-180)"
@@ -5183,8 +5180,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Marketing/DeliverabilityCheckService.php:92",
 				"owner": "ConductionNL/pipelinq",
-				"change": "marketing-mail-transports",
-				"requirement": "openspec/changes/marketing-mail-transports/specs/marketing-mail-transports :: The deliverability panel shows SPF, DKIM and DMARC status per sender domain"
+				"spec": "openspec/specs/marketing-mail-transports",
+				"requirement": "openspec/specs/marketing-mail-transports :: The deliverability panel shows SPF, DKIM and DMARC status per sender domain"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/domains-and-urls/connect-your-email-sending-domain \"Manage your email authentication\" with DKIM, SPF and DMARC status per sending domain. Marketing, Sales, Service or Content Hub Starter and up.",
@@ -5334,10 +5331,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Campaigns, CampaignNew, CampaignDetail (src/manifest.d/78-marketing-campaigns.json)",
 				"readOn": "2026-09-26",
-				"change": "marketing-events",
+				"spec": "openspec/specs/marketing-events-and-attendees",
 				"requirement": [
-					"openspec/changes/marketing-events/specs/marketing-events-and-attendees :: A campaign can have an event (REQ-MEV-001)",
-					"openspec/changes/marketing-events/specs/marketing-events-and-attendees :: A landing page sign-up registers for the event (REQ-MEV-002)"
+					"openspec/specs/marketing-events-and-attendees :: A campaign can have an event (REQ-MEV-001)",
+					"openspec/specs/marketing-events-and-attendees :: A landing page sign-up registers for the event (REQ-MEV-002)"
 				]
 			},
 			"note": "an event can be run as a campaign whose landing-page form turns each sign-up into a lead; registrations are not kept as attendees of an event. Specified 2026-09-28 in openspec/changes/marketing-events (OpenSpec pass).",
@@ -5363,24 +5360,24 @@
 			"id": "mkt-block-editor",
 			"area": "marketing",
 			"name": "Design a mailing by dragging blocks instead of writing HTML",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "yes",
 			"pipedrive": "partial",
 			"espocrm": "no",
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "read in src/views/templates/TemplateForm.vue:93-140",
+			"providerHow": "read in src/components/templates/MailBlockEditor.vue and src/dialogs/TemplateFormDialog.vue",
 			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/views/templates/TemplateForm.vue:100 \"<textarea id=\\\"template-form-body-html\\\"\": a mailing template is written as HTML in a textarea; articles can be dropped in as an {{articles}} block (lib/Service/ArticleService.php), but there is no drag and drop block designer",
+				"state": "built",
+				"evidence": "src/components/templates/MailBlockEditor.vue, mounted in src/dialogs/TemplateFormDialog.vue:201; lib/Service/Marketing/MailBlockRenderer.php renders the blocks to mail-safe HTML on save and on POST /api/templates/render",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "nothing",
-				"readOn": "2026-09-26",
-				"change": "marketing-block-editor",
-				"requirement": "openspec/changes/marketing-block-editor/specs/mail-block-editor :: A marketer builds an email template from blocks (REQ-MBE-001)"
+				"reachedOn": "TemplateFormDialog (Marketing, Templates, New template)",
+				"readOn": "2026-11-24",
+				"spec": "openspec/specs/mail-block-editor",
+				"requirement": "openspec/specs/mail-block-editor :: A marketer builds an email template from blocks (REQ-MBE-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/create-and-send-marketing-emails \"In the marketing email editor ... you can edit its content, appearance, and module locations\" from templates, without HTML. All products and plans.",
@@ -5882,9 +5879,9 @@
 					"openspec/specs/appointment-booking :: REQ-APT-001 Service Entity Schema",
 					"openspec/specs/appointment-booking :: REQ-APT-003 Availability Computation",
 					"openspec/specs/appointment-booking :: REQ-APT-009 Cancellation with Policy Enforcement",
-					"openspec/specs/appointment-booking :: REQ-APT-015 Admin Booking Management"
-				],
-				"change": "openspec/changes/booking-and-service-pages"
+					"openspec/specs/appointment-booking :: REQ-APT-015 Admin Booking Management",
+					"openspec/specs/appointment-booking :: A service's composition is edited in place and can name products (REQ-BSP-001)"
+				]
 			},
 			"note": "Decision 99 (8 Oct): boards PqServices and PqService draw it and no row had it. Built; the board details still missing (buffer and Booked on columns, matching resources, bookings figure) are in services-and-resources-at-a-glance under portal-booking-capacity.",
 			"source": "spec-round-2026-10-08",
@@ -6737,12 +6734,11 @@
 			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "Not built: PosRefundManagerGuard requires a manager for every refund, with no limit below which a till user may refund (decision 390). Was: lib/Lifecycle/PosRefundManagerGuard.php",
+				"state": "built",
+				"evidence": "lib/Lifecycle/PosRefundManagerGuard.php:127",
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/pos-lifecycle-guard-adoption",
-				"requirement": "openspec/changes/pos-refund-limit/specs/pos-lifecycle-guard-adoption :: A refund up to the configured limit SHALL need no manager (REQ-PLG-007)",
-				"plan": "openspec/changes/pos-refund-limit"
+				"requirement": "openspec/specs/pos-lifecycle-guard-adoption :: A refund up to the configured limit SHALL need no manager (REQ-PLG-007)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: https://knowledge.hubspot.com/payments/issue-payment-receipts-and-refunds-for-your-buyers names permissions for branding but no refund limit or manager approval above an amount (read 2026-09-26). Note: Was no without a source.",
@@ -7681,7 +7677,7 @@
 				"state": "built",
 				"evidence": "lib/Service/Marketing/Transport/ConnectorSourceTransport.php",
 				"owner": "ConductionNL/integriq",
-				"change": "marketing-mail-transports",
+				"spec": "openspec/specs/marketing-blast",
 				"requirement": "openspec/specs/marketing-blast :: Send Via OpenConnector with Per-Tenant Provider"
 			},
 			"evidence": {
@@ -8721,8 +8717,7 @@
 				"requirement": [
 					"openspec/specs/berichtenbox :: Encryption Key Management (REQ-KEYVAULT-015)",
 					"openspec/specs/pos-payment-provider-adapter :: Provider Credential Storage & Encryption (REQ-PAY-002)"
-				],
-				"change": "openspec/changes/pos-psp-keys-via-broker"
+				]
 			},
 			"evidence": {
 				"hubspot-crm": "https://legal.hubspot.com/security \"The physical and virtualized hard drives used by HubSpot product server instances as well as long-term storage solutions like AWS S3 use AES-256 encryption\"; connected app tokens are held by HubSpot in that store.",
@@ -9147,8 +9142,8 @@
 				"state": "specified",
 				"evidence": "no extension or plugin directory in the repo",
 				"owner": "ConductionNL/pipelinq",
-				"change": "contact-moments-mail-add-in",
-				"requirement": "openspec/changes/contact-moments-mail-add-in/specs/mail-add-in :: The pane shows the sender's record or adds it (REQ-MAI-002)"
+				"spec": "openspec/specs/mail-add-in",
+				"requirement": "openspec/specs/mail-add-in :: The pane shows the sender's record or adds it (REQ-MAI-002)"
 			},
 			"note": "Ours files mail afterwards by matching the address. Theirs works while you read the mail. Specified 2026-09-28 in openspec/changes/contact-moments-mail-add-in (OpenSpec pass).",
 			"evidence": {
@@ -9181,8 +9176,8 @@
 				"state": "specified",
 				"evidence": "no bulk edit in src/views/clients/ or src/components/",
 				"owner": "ConductionNL/pipelinq",
-				"change": "clients-bulk-edit-and-undo",
-				"requirement": "openspec/changes/clients-bulk-edit-and-undo/specs/client-bulk-changes :: Clients and contacts can be changed in bulk (REQ-CBE-001)"
+				"spec": "openspec/specs/client-bulk-changes",
+				"requirement": "openspec/specs/client-bulk-changes :: Clients and contacts can be changed in bulk (REQ-CBE-001)"
 			},
 			"note": "Attio and Pipedrive make this the centre of the product. We edit one record at a time. Specified 2026-09-28 in openspec/changes/clients-bulk-edit-and-undo (OpenSpec pass).",
 			"evidence": {
@@ -9351,8 +9346,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-contact-capture",
-				"requirement": "openspec/changes/clients-contact-capture/specs/client-contact-capture :: Pasted text becomes proposed contact fields (REQ-CCC-001)"
+				"spec": "openspec/specs/client-contact-capture",
+				"requirement": "openspec/specs/client-contact-capture :: Pasted text becomes proposed contact fields (REQ-CCC-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the knowledge base list for signature parsing and smart paste; enrichment fills fields from HubSpot's dataset (https://knowledge.hubspot.com/records/enrich-your-contact-and-company-data), not from pasted text (read 2026-09-26).",
@@ -9389,10 +9384,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-registry-numbers-and-enrichment",
+				"spec": "openspec/specs/client-registry-numbers",
 				"requirement": [
-					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: An organisation client holds its official numbers (REQ-CRN-001)",
-					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: A number can be checked against its register (REQ-CRN-002)"
+					"openspec/specs/client-registry-numbers :: An organisation client holds its official numbers (REQ-CRN-001)",
+					"openspec/specs/client-registry-numbers :: A number can be checked against its register (REQ-CRN-002)"
 				]
 			},
 			"note": "a custom field could hold a number, but nothing checks it. Specified 2026-09-28 in openspec/changes/clients-registry-numbers-and-enrichment (OpenSpec pass).",
@@ -9509,8 +9504,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-bulk-edit-and-undo",
-				"requirement": "openspec/changes/clients-bulk-edit-and-undo/specs/client-bulk-changes :: A user can undo their own bulk change (REQ-CBE-002)"
+				"spec": "openspec/specs/client-bulk-changes",
+				"requirement": "openspec/specs/client-bulk-changes :: A user can undo their own bulk change (REQ-CBE-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/restore-crm-changes \"Restore CRM changes by rolling records back to a previous point within the last 14 days. This allows you to undo updates made by workflows, imports, or manual edits\". Marketing, Sales, Service or Data Hub Starter and up.",
@@ -9549,8 +9544,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-contact-capture",
-				"requirement": "openspec/changes/clients-contact-capture/specs/client-contact-capture :: A business card photo is read into the same fields (REQ-CCC-002)"
+				"spec": "openspec/specs/client-contact-capture",
+				"requirement": "openspec/specs/client-contact-capture :: A business card photo is read into the same fields (REQ-CCC-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the knowledge base list for business card and scanner; https://knowledge.hubspot.com/account-mangagement/how-to-install-the-hubspot-mobile-application names records, calls and email but no card scanner (read 2026-09-26).",
@@ -9587,10 +9582,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "clients-registry-numbers-and-enrichment",
+				"spec": "openspec/specs/client-registry-numbers",
 				"requirement": [
-					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: Empty person details can be filled from a public source in bulk (REQ-CRN-004)",
-					"openspec/changes/clients-registry-numbers-and-enrichment/specs/client-registry-numbers :: Empty company details can be filled from KvK in bulk (REQ-CRN-003)"
+					"openspec/specs/client-registry-numbers :: Empty person details can be filled from a public source in bulk (REQ-CRN-004)",
+					"openspec/specs/client-registry-numbers :: Empty company details can be filled from KvK in bulk (REQ-CRN-003)"
 				]
 			},
 			"evidence": {
@@ -9739,10 +9734,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "products-price-lists",
+				"spec": "openspec/specs/product-price-lists",
 				"requirement": [
-					"openspec/changes/products-price-lists/specs/product-price-lists :: A price list holds prices for a segment, a country or one client (REQ-PPL-001)",
-					"openspec/changes/products-price-lists/specs/product-price-lists :: A quote line is priced from the matching list (REQ-PPL-002)"
+					"openspec/specs/product-price-lists :: A price list holds prices for a segment, a country or one client (REQ-PPL-001)",
+					"openspec/specs/product-price-lists :: A quote line is priced from the matching list (REQ-PPL-002)"
 				]
 			},
 			"note": "quantity tiers only; a price list per group or country is missing. Specified 2026-09-28 in openspec/changes/products-price-lists (OpenSpec pass).",
@@ -9867,8 +9862,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "portal per tenant domain; back office pages scoped by the active OpenRegister organisation",
 				"readOn": "2026-09-26",
-				"change": "requests-municipality-per-contact",
-				"requirement": "openspec/changes/requests-municipality-per-contact/specs/served-municipality :: Clients, contacts and tickets name their municipality (REQ-RMC-001)"
+				"spec": "openspec/specs/served-municipality",
+				"requirement": "openspec/specs/served-municipality :: Clients, contacts and tickets name their municipality (REQ-RMC-001)"
 			},
 			"note": "several municipalities can be kept apart, but one desk cannot see them side by side with the municipality shown on each contact. Specified 2026-09-28 in openspec/changes/requests-municipality-per-contact (OpenSpec pass).",
 			"evidence": {
@@ -9954,8 +9949,8 @@
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "TicketDetail sidebar, History / Audit trail tab",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/ticket-handover-history",
-				"requirement": "openspec/changes/ticket-handover-history/specs/ticket-handover-history :: The ticket page has a History tab in words (REQ-THH-001)"
+				"change": "openspec/changes/archive/2026-11-25-ticket-handover-history",
+				"requirement": "openspec/specs/ticket-handover-history :: The ticket page has a History tab in words (REQ-THH-001)"
 			},
 			"note": "no list of 'requests I passed on'; you open each ticket to see its history",
 			"evidence": {
@@ -10024,8 +10019,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "CTI screen pop; Tickets list search (literal)",
 				"readOn": "2026-09-26",
-				"change": "contact-moments-phone-lookup",
-				"requirement": "openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone :: A ticket is found by phone number however it was typed (REQ-CHP-002)"
+				"spec": "openspec/specs/contact-history-by-phone",
+				"requirement": "openspec/specs/contact-history-by-phone :: A ticket is found by phone number however it was typed (REQ-CHP-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/format-phone-numbers-using-workflows normalises phone number formats with a workflow action (Professional hubs), which makes later searches match; search tolerance for any typed format is not described.",
@@ -10650,8 +10645,8 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Tickets list (from_number on each record); CTI screen pop for known callers",
 				"readOn": "2026-09-26",
-				"change": "contact-moments-phone-lookup",
-				"requirement": "openspec/changes/contact-moments-phone-lookup/specs/contact-history-by-phone :: An unknown caller's earlier contacts are shown (REQ-CHP-001)"
+				"spec": "openspec/specs/contact-history-by-phone",
+				"requirement": "openspec/specs/contact-history-by-phone :: An unknown caller's earlier contacts are shown (REQ-CHP-001)"
 			},
 			"note": "the data is there, the view for an unknown caller is not. Specified 2026-09-28 in openspec/changes/contact-moments-phone-lookup (OpenSpec pass).",
 			"evidence": {
@@ -10849,10 +10844,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "background jobs (no page needed); tickets and tasks are the Tickets, Queue and Tasks pages",
 				"readOn": "2026-09-26",
-				"change": "platform-client-retention",
+				"spec": "openspec/specs/client-retention",
 				"requirement": [
-					"openspec/changes/platform-client-retention/specs/client-retention :: A records officer approves each destruction (REQ-PCR-003)",
-					"openspec/changes/platform-client-retention/specs/client-retention :: Client and contact schemas declare their personal data (REQ-PCR-004)"
+					"openspec/specs/client-retention :: A records officer approves each destruction (REQ-PCR-003)",
+					"openspec/specs/client-retention :: Client and contact schemas declare their personal data (REQ-PCR-004)"
 				]
 			},
 			"note": "contact moments, tasks and BRP data expire by themselves; client and contact records have no retention term, and request/complaint tickets are set to P100Y. Specified 2026-09-28 in openspec/changes/platform-client-retention (OpenSpec pass).",
@@ -11084,10 +11079,10 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ContractDetail, PosTransactionDetail, TicketDetail (implicit)",
 				"readOn": "2026-09-26",
-				"change": "platform-record-lock",
+				"spec": "openspec/specs/record-locking",
 				"requirement": [
-					"openspec/changes/platform-record-lock/specs/record-locking :: A user can lock a client, a finished lead or a finished ticket (REQ-PRL-001)",
-					"openspec/changes/platform-record-lock/specs/record-locking :: A locked record cannot be deleted (REQ-PRL-003)"
+					"openspec/specs/record-locking :: A user can lock a client, a finished lead or a finished ticket (REQ-PRL-001)",
+					"openspec/specs/record-locking :: A locked record cannot be deleted (REQ-PRL-003)"
 				]
 			},
 			"note": "no general 'lock this record' for users. Specified 2026-09-28 in openspec/changes/platform-record-lock (OpenSpec pass).",

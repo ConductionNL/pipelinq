@@ -91,10 +91,12 @@ describe('the declared admin sections', () => {
 		const guards = {
 			callReview: 'isAdmin',
 			leadManagement: 'isAdmin',
+			myWork: 'isAdmin',
 			provisionData: 'isAdmin',
 			exportConfiguration: 'isAdmin',
 			shillinq: 'isAdmin && shillinqInstalled',
 			marketingIntel: 'isAdmin',
+			posRefunds: 'isAdmin',
 		}
 		expect(Object.keys(guards).sort()).toEqual(Object.keys(sections).sort())
 		for (const [id, guard] of Object.entries(guards)) {

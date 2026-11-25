@@ -44,7 +44,8 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
  *
  * @covers \OCA\Pipelinq\Listener\TimeApprovalListener
  * @covers \OCA\Pipelinq\Event\TimeEntryApprovedEvent
- * @uses \OCA\Pipelinq\Util\ConfiguredSchemaObjectWrite
+ * @uses \OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectSave
  */
 class TimeApprovalListenerTest extends TestCase {
 

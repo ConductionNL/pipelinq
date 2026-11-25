@@ -29,6 +29,7 @@ use Psr\Log\LoggerInterface;
  * Saves by uuid against the configured register and the host's schema key.
  *
  * @covers \OCA\Pipelinq\Listener\Support\ConfiguredSchemaObjectWrite
+ * @uses   \OCA\Pipelinq\Util\ContainerObjectSave
  */
 class ConfiguredSchemaObjectWriteTest extends TestCase {
 

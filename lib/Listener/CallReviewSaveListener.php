@@ -31,7 +31,7 @@ use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
-use OCA\Pipelinq\Service\CallReview\CallReviewTotal;
+use OCA\Pipelinq\Kernel\Contracts\CallReviewTotalInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -50,17 +50,17 @@ class CallReviewSaveListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ObjectServiceInterface $objectService OpenRegister's object service, to read the scorecard.
-	 * @param IAppConfig             $appConfig     The app configuration.
-	 * @param CallReviewTotal        $rules         The total and status rules.
-	 * @param LoggerInterface        $logger        The logger.
+	 * @param ObjectServiceInterface   $objectService OpenRegister's object service, to read the scorecard.
+	 * @param IAppConfig               $appConfig     The app configuration.
+	 * @param CallReviewTotalInterface $rules         The total and status rules.
+	 * @param LoggerInterface          $logger        The logger.
 	 *
 	 * @spec openspec/changes/contact-moments-call-review/specs/call-review/spec.md#requirement-a-reviewer-scores-a-call-and-writes-coaching-points-req-crv-002
 	 */
 	public function __construct(
 		private readonly ObjectServiceInterface $objectService,
 		private readonly IAppConfig $appConfig,
-		private readonly CallReviewTotal $rules,
+		private readonly CallReviewTotalInterface $rules,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

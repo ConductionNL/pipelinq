@@ -29,6 +29,7 @@ use PHPUnit\Framework\TestCase;
  * Arrays, serialisable entities, plain objects, scalars and result lists.
  *
  * @covers \OCA\Pipelinq\Service\Support\CastingSerialisedToArray
+ * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  */
 class CastingSerialisedToArrayTest extends TestCase {
 

@@ -1,0 +1,39 @@
+# Tasks: clients-registry-numbers-and-enrichment
+
+## 1. Schema
+
+- [x] 1.1 Add `lib/Settings/register.d/19-client-identifiers.json` giving `client` an `identifiers` array (`scheme`, `value`, `checkStatus`, `checkedAt`, `checkSource`, `validUntil`) with the scheme enum and the per-scheme patterns JSON schema can hold
+  - Verify: `composer check:strict` exit 0; a register import on a dev instance logs no `PARTIAL IMPORT`; an OpenRegister save with KvK `1234` is refused
+- [x] 1.2 English schema titles in `l10n/` (`check:schema-l10n`)
+  - Verify: `npm run check:schema-l10n` exit 0
+
+## 2. Checks
+
+- [x] 2.1 `lib/Service/ClientIdentifierService.php::validateFormat()` with the RSIN eleven test and the EU VAT country patterns
+  - Verify: PHPUnit `tests/Unit/Service/ClientIdentifierServiceTest.php` with valid and invalid numbers per scheme
+- [x] 2.2 `checkKvk()` through the OpenRegister KvK leaf, writing `checkStatus`, `checkedAt`, `checkSource`; `unavailable` on a 503
+  - Verify: PHPUnit with a mocked HTTP client for 200, 404 and 503
+- [x] 2.3 `checkVat()` resolving shillinq `ViesService` lazily; `unchecked` with source `shillinq not installed` without it
+  - Verify: PHPUnit with the container returning the service and returning nothing
+- [x] 2.4 Route `POST /api/clients/{id}/identifiers/check` with `#[NoAdminRequired]` and an object authorisation check on the client
+  - Verify: hydra gates route-auth, no-admin-idor and route-reachability pass on the diff
+
+## 3. ClientDetail
+
+- [x] 3.1 Identifiers section on ClientDetail (manifest body widget) with Add and Check
+  - Verify: Playwright `tests/e2e/client-identifiers.spec.ts` adds a KvK number and sees status valid after Check against a mocked leaf
+  - Built: `ClientIdentifiersSection` (body widget `client-identifiers`), unit-tested in `tests/vitest/clientIdentifiersSection.spec.js`. The Playwright check needs a running instance and is not done here.
+
+## 4. Enrichment
+
+- [x] 4.1 `lib/BulkAction/FillFromKvkAction.php` implementing `ReversibleBulkActionInterface`, empty fields only, skip reasons "no KvK number" and "KvK unavailable"; register it on `BulkActionRegistrationEvent` in `lib/AppInfo/Application.php`
+  - Verify: PHPUnit on `apply()` with commit false and true, and on the prior values it records
+  - Built: registered through `FillFromKvkRegistrationListener` in `ListenerRegistrar` (where pipelinq registers its listeners; by class name, so pipelinq boots without OpenRegister). It fills `place`, `legalForm` and `industry`, not `address`: `address` is the read-only mirror of the linked Nextcloud contact, which OpenRegister refuses to change on update. A client's KvK identifier is used, else its older `kvkNumber` field.
+- [x] 4.2 Clients list bulk action Fill in from KvK, using the preview dialog of `clients-bulk-edit-and-undo`
+  - Verify: Playwright fills the address of two clients, then undoes it from Bulk changes
+  - Built: bulk action `fill-from-kvk` opening `BulkFillFromKvkModal` (the Change a field preview and confirm, with the action id swapped), unit-tested in `tests/vitest/bulkFillFromKvkModal.spec.js`. It fills place, legal form and industry (see 4.1 on `address`). The Playwright run needs a live instance and is not done here.
+
+## 5. Docs
+
+- [x] 5.1 `docs/Features/client-identifiers.md`: the schemes, what Check does, what enrichment fills and what it never overwrites
+  - Verify: docs build exit 0

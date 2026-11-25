@@ -26,6 +26,7 @@ use OCA\OpenRegister\Event\ObjectDeletingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
+use OCA\Pipelinq\BulkAction\FillFromKvkRegistrationListener;
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
 use OCA\Pipelinq\Kernel\Contracts\BrpMutationWebhookListenerInterface;
@@ -73,6 +74,7 @@ class ListenerRegistrar {
 		// installed, and with portaliq absent the listener simply never fires.
 		$context->registerEventListener(event: LandingPageFormSubmittedEvent::class, listener: LandingPageFormSubmittedListener::class);
 		$this->registerMergeListeners(context: $context);
+		$this->registerArticleUsageListener(context: $context);
 		$context->registerEventListener(event: SchemaUpdatedEvent::class, listener: SchemaChangeListener::class);
 	}//end register()
 
@@ -121,6 +123,10 @@ class ListenerRegistrar {
 		// (pipeline-stage-limit).
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: StageLimitGuard::class);
 		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: StageLimitGuard::class);
+		// Two variants of one product never share their values or their code,
+		// from any screen (specify-capability-rows 29.1).
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: ProductVariantGuard::class);
+		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: ProductVariantGuard::class);
 		// A template a scheduled mailing uses cannot be deleted, from any screen
 		// (marketing-mail-templates REQ-MMT-001).
 		$context->registerEventListener(event: ObjectDeletingEvent::class, listener: TemplateInUseGuard::class);
@@ -129,6 +135,12 @@ class ListenerRegistrar {
 		// keeps an instance without Forms from registering anything.
 		if (class_exists(FormsSubmissionListener::EVENT) === true) {
 			$context->registerEventListener(event: FormsSubmissionListener::EVENT, listener: FormsSubmissionListener::class);
+		}
+		// A call that integriq's telephony adapter reports is mirrored (kcc-agent-panel).
+		// Integriq is optional; the guard keeps an instance without it from
+		// registering anything.
+		if (class_exists(CallEventListener::EVENT) === true) {
+			$context->registerEventListener(event: CallEventListener::EVENT, listener: CallEventListener::class);
 		}
 		// A new task records who created it (round3-review-points).
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: TaskCreatedByCreatingListener::class);
@@ -236,6 +248,11 @@ class ListenerRegistrar {
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: TicketPhoneE164Listener::class);
 		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: TicketPhoneE164Listener::class);
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: QuoteNumberCreatingListener::class);
+		// A client's identifiers keep their schemes' formats on every write (clients-registry-numbers-and-enrichment D2).
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: ClientIdentifierFormatGuard::class);
+		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: ClientIdentifierFormatGuard::class);
+		// The Fill in from KvK bulk action (clients-registry-numbers-and-enrichment D4); by name, so pipelinq boots without OpenRegister.
+		$context->registerEventListener(event: 'OCA\\OpenRegister\\Event\\BulkActionRegistrationEvent', listener: FillFromKvkRegistrationListener::class);
 		// A quote's totals and a lead's value follow their lines (line-totals-roll-up).
 		foreach ([ObjectCreatedEvent::class, ObjectUpdatedEvent::class, ObjectDeletedEvent::class] as $lineEvent) {
 			$context->registerEventListener(event: $lineEvent, listener: LineTotalsListener::class);
@@ -244,6 +261,8 @@ class ListenerRegistrar {
 		// A till line gets its VAT and total from the server before it is stored (till-server-priced-lines).
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $lineEvent) {
 			$context->registerEventListener(event: $lineEvent, listener: PosLinePricingListener::class);
+			// A lead line takes its price from the client's price lists unless it was typed (products-price-lists D3, D4).
+			$context->registerEventListener(event: $lineEvent, listener: LeadLinePricingListener::class);
 		}
 	}//end registerNumberListeners()
 
@@ -264,4 +283,18 @@ class ListenerRegistrar {
 		$context->registerEventListener(event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class, listener: MergedAwayRecordListener::class);
 		$context->registerEventListener(event: ObjectUpdatingEvent::class, listener: MergedAwayRecordGuard::class);
 	}//end registerMergeListeners()
+
+	/**
+	 * Portaliq asks where a marketing article is used; pipelinq answers for its
+	 * templates, blasts and social posts (marketing-articles-move-to-portaliq).
+	 * Registered by name: portaliq's autoloader does not exist yet when
+	 * pipelinq registers, so the listener checks the class at dispatch.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function registerArticleUsageListener(IRegistrationContext $context): void {
+		$context->registerEventListener(event: ArticleUsageListener::EVENT, listener: ArticleUsageListener::class);
+	}//end registerArticleUsageListener()
 }//end class

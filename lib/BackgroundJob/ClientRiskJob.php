@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\ClientRiskService;
+use OCA\Pipelinq\Kernel\Contracts\ClientRiskServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -44,13 +44,13 @@ class ClientRiskJob extends TimedJob {
 	/**
 	 * Constructor.
 	 *
-	 * @param ITimeFactory      $time   Time factory.
-	 * @param ClientRiskService $risk   Scores and stores a client's risk.
-	 * @param LoggerInterface   $logger PSR logger.
+	 * @param ITimeFactory               $time   Time factory.
+	 * @param ClientRiskServiceInterface $risk   Scores and stores a client's risk.
+	 * @param LoggerInterface            $logger PSR logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly ClientRiskService $risk,
+		private readonly ClientRiskServiceInterface $risk,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);

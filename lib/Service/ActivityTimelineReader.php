@@ -33,6 +33,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
+use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -310,12 +311,16 @@ class ActivityTimelineReader {
 	 * @spec openspec/specs/activity-timeline/spec.md#requirement-the-timeline-lists-bookings-and-linked-mail
 	 */
 	public function linkedEmails(string $entityId): array {
-		if ($this->container->has(self::EMAIL_LINK_READER) === false) {
+		// Asked with get(), not has(): an app container answers has() false
+		// for another app's registered alias while get() resolves it.
+		try {
+			$reader = $this->container->get(self::EMAIL_LINK_READER);
+		} catch (ContainerExceptionInterface) {
 			return [];
 		}
 
 		try {
-			$page = $this->container->get(self::EMAIL_LINK_READER)->getLinkedEmails(objectUuid: $entityId, limit: 200);
+			$page = $reader->getLinkedEmails(objectUuid: $entityId, limit: 200);
 		} catch (Throwable $e) {
 			$this->logger->error('ActivityTimelineReader: failed to read linked emails', ['exception' => $e->getMessage()]);
 			return [];

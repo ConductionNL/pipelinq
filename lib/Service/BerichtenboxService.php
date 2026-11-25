@@ -50,6 +50,7 @@ use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use SensitiveParameter;
 
 /**
  * Berichtenbox message lifecycle service.
@@ -560,7 +561,7 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 	 * @spec openspec/specs/berichtenbox/spec.md#REQ-OUTBOUND-001
 	 */
 	public function cryptoShred(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsn,
 		string $tenantId,
 	): int {
@@ -671,7 +672,7 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 	private function dispatchToBerichtenbox(
 		array $message,
 		string $messageId,
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsnPlain,
 		string $bodyHash,
 	): void {
@@ -965,7 +966,7 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 	 * @return bool
 	 */
 	private function isUnread(array $data): bool {
-		return ($data['readAt'] ?? '') === '' || $data['readAt'] === null;
+		return ($data['readAt'] ?? '') === '';
 	}//end isUnread()
 
 	/**

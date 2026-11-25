@@ -27,8 +27,6 @@ vi.mock('../../src/services/exportApi.js', () => ({ exportApi }))
 const mailing = vi.hoisted(() => ({ fetchPreferenceLink: vi.fn(), unsubscribeContact: vi.fn() }))
 vi.mock('../../src/services/mailingListApi.js', () => mailing)
 const customers = vi.hoisted(() => ({ searchCustomers: vi.fn() }))
-const articles = vi.hoisted(() => ({ createArticle: vi.fn(), updateArticle: vi.fn() }))
-vi.mock('../../src/services/articlesApi.js', () => articles)
 const picker = vi.hoisted(() => ({ pickNodes: vi.fn() }))
 vi.mock('@nextcloud/dialogs', () => {
 	class FilePickerClosed extends Error {}
@@ -123,7 +121,6 @@ const { default: ExportTestRunModal } = await import('../../src/modals/ExportTes
 const { default: SubscriptionManageModal } = await import('../../src/modals/SubscriptionManageModal.vue')
 const { default: CustomerLookupModal } = await import('../../src/modals/CustomerLookupModal.vue')
 const { default: NewContactIntakeModal } = await import('../../src/modals/NewContactIntakeModal.vue')
-const { default: ArticleEditModal } = await import('../../src/modals/ArticleEditModal.vue')
 const { default: SendMessageModal } = await import('../../src/modals/SendMessageModal.vue')
 const { default: CtiDispositionModal } = await import('../../src/modals/CtiDispositionModal.vue')
 
@@ -150,7 +147,7 @@ function button(wrapper, label) {
 }
 
 beforeEach(() => {
-	for (const fn of [forecast.createOverride, exportApi.testRun, mailing.fetchPreferenceLink, mailing.unsubscribeContact, customers.searchCustomers, articles.createArticle, articles.updateArticle, picker.pickNodes, http.post]) {
+	for (const fn of [forecast.createOverride, exportApi.testRun, mailing.fetchPreferenceLink, mailing.unsubscribeContact, customers.searchCustomers, picker.pickNodes, http.post]) {
 		fn.mockReset()
 	}
 })
@@ -410,68 +407,6 @@ describe('NewContactIntakeModal', () => {
 
 		await wrapper.find('[data-testid="cti-intake-cancel"]').trigger('click')
 		expect(wrapper.emitted('close')).toHaveLength(1)
-	})
-})
-
-describe('ArticleEditModal', () => {
-	it('creates an article once it has a title, with the tags and links', async () => {
-		const wrapper = open(ArticleEditModal, {})
-		expect(wrapper.find('h2').text()).toBe('New article')
-		expect(wrapper.find('[data-testid="article-edit-save"]').attributes('disabled')).toBeDefined()
-		expect(wrapper.find('.select').text()).toBe('nl')
-
-		await wrapper.find('#article-edit-title input').setValue('Waste collection')
-		await wrapper.find('.markdown').setValue('## Body')
-		articles.createArticle.mockResolvedValueOnce({ id: 'a-1' })
-		await wrapper.find('[data-testid="article-edit-save"]').trigger('click')
-		await flushPromises()
-
-		expect(articles.createArticle).toHaveBeenCalledWith(expect.objectContaining({ title: 'Waste collection', body: '## Body', language: 'nl', tags: [], links: [] }))
-		expect(wrapper.emitted('saved')).toEqual([[{ id: 'a-1' }]])
-	})
-
-	it('edits an existing article by its id and shows a refusal', async () => {
-		const article = { '@self': { id: 'a-9' }, title: 'Old', language: 'en', tags: ['news'], links: [{ url: 'https://x.test' }] }
-		const wrapper = open(ArticleEditModal, { article })
-		expect(wrapper.find('h2').text()).toBe('Edit article')
-		expect(wrapper.find('.labels').text()).toBe('news')
-		expect(wrapper.find('[data-testid="article-edit-save"]').text()).toBe('Save changes')
-
-		articles.updateArticle.mockRejectedValueOnce({ response: { data: { error: 'Slug taken' } } })
-		await wrapper.find('[data-testid="article-edit-save"]').trigger('click')
-		await flushPromises()
-		expect(articles.updateArticle).toHaveBeenCalledWith('a-9', expect.objectContaining({ title: 'Old', language: 'en', links: [{ url: 'https://x.test' }] }))
-		expect(wrapper.find('.note--error').text()).toBe('Slug taken')
-
-		articles.updateArticle.mockRejectedValueOnce(new Error('offline'))
-		await wrapper.find('[data-testid="article-edit-save"]').trigger('click')
-		await flushPromises()
-		expect(wrapper.find('.note--error').text()).toBe('This article could not be saved.')
-
-		wrapper.vm.languageOption = null
-		expect(wrapper.vm.model.language).toBe('nl')
-		await button(wrapper, 'Cancel').trigger('click')
-		expect(wrapper.emitted('close')).toHaveLength(1)
-	})
-
-	it('takes the hero image from the file picker, and ignores a closed picker', async () => {
-		const wrapper = open(ArticleEditModal, {})
-		picker.pickNodes.mockResolvedValueOnce([{ path: '/Photos/hero.jpg' }])
-		await button(wrapper, 'Browse…').trigger('click')
-		await flushPromises()
-		expect(wrapper.vm.model.heroImage).toBe('/Photos/hero.jpg')
-
-		const { FilePickerClosed } = await import('@nextcloud/dialogs')
-		picker.pickNodes.mockRejectedValueOnce(new FilePickerClosed())
-		await wrapper.vm.openHeroPicker()
-		expect(wrapper.vm.error).toBe('')
-
-		const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
-		picker.pickNodes.mockRejectedValueOnce(new Error('no files app'))
-		await wrapper.vm.openHeroPicker()
-		await flushPromises()
-		expect(wrapper.find('.note--error').text()).toBe('The file picker could not be opened.')
-		spy.mockRestore()
 	})
 })
 

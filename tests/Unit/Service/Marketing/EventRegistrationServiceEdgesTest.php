@@ -87,6 +87,39 @@ class EventRegistrationServiceEdgesTest extends TestCase {
 	}//end testARefusedWriteRegistersNobody()
 
 	/**
+	 * A registration the store does not list back yet (its index lags the write)
+	 * keeps the place it was given rather than being moved to the waiting list.
+	 *
+	 * @return void
+	 */
+	public function testARegistrationTheStoreDoesNotListYetKeepsItsPlace(): void {
+		$this->store = new class (['campaignEvent' => [['uuid' => 'ev-1', 'signupStatus' => 'open', 'capacity' => 1]]]) extends InMemoryListObjectStore {
+			/**
+			 * List no registrations at all; everything else as stored.
+			 *
+			 * @param string               $schemaSlug The schema.
+			 * @param array<string, mixed> $filters    The filters.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(string $schemaSlug, array $filters = []): array {
+				if ($schemaSlug === 'eventRegistration') {
+					return [];
+				}
+
+				return parent::findAll($schemaSlug, $filters);
+			}//end findAll()
+		};
+
+		$outcome = $this->service()->register(event: $this->store->rows['campaignEvent']['ev-1'], person: ['email' => 'a@example.nl']);
+
+		$this->assertSame(EventRegistrationOutcome::REGISTERED, $outcome->status);
+		$this->assertSame('confirmed', $outcome->registration['status']);
+		$this->assertArrayNotHasKey('waitlistPosition', $outcome->registration);
+		$this->assertSame(1, $this->store->writes['eventRegistration']);
+	}//end testARegistrationTheStoreDoesNotListYetKeepsItsPlace()
+
+	/**
 	 * A nameless person is named by their address; optional fields are
 	 * trimmed and copied only when present; party size is at least one.
 	 *

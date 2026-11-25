@@ -215,9 +215,10 @@ class NormalisePartyFormFields implements IRepairStep {
 			return [];
 		}
 
+		$pass = ['objectService' => $objectService, 'register' => $register, 'schema' => $schema, 'actingAdmin' => $actingAdmin];
 		$outcomes = [];
 		foreach ($this->readAll(objectService: $objectService, register: $register, schema: $schema) as $row) {
-			$outcomes[] = $this->repairRow(objectService: $objectService, register: $register, schema: $schema, row: $row, actingAdmin: $actingAdmin);
+			$outcomes[] = $this->repairRow(pass: $pass, row: $row);
 		}
 
 		return $outcomes;
@@ -247,20 +248,22 @@ class NormalisePartyFormFields implements IRepairStep {
 	/**
 	 * Save one party's patch.
 	 *
-	 * @param object $objectService OpenRegister's ObjectService.
-	 * @param string $register The register id.
-	 * @param string $schema The schema id.
+	 * @param array{objectService: object, register: string, schema: string, actingAdmin: IUser|null} $pass Where and as whom rows are saved.
 	 * @param array<string,mixed> $row The stored party.
-	 * @param IUser|null $actingAdmin The admin to save as.
 	 *
 	 * @return string `fixed`, `skipped` or `stuck`.
 	 */
-	private function repairRow(object $objectService, string $register, string $schema, array $row, ?IUser $actingAdmin): string {
+	private function repairRow(array $pass, array $row): string {
 		$uuid = (string)($row['id'] ?? '');
 		$patch = self::patchFor(row: $row);
 		if ($uuid === '' || $patch === []) {
 			return 'skipped';
 		}
+
+		$objectService = $pass['objectService'];
+		$register = $pass['register'];
+		$schema = $pass['schema'];
+		$actingAdmin = $pass['actingAdmin'];
 
 		try {
 			$objectService->saveObject(

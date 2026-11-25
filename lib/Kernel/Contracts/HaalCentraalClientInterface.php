@@ -22,8 +22,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Kernel\Contracts;
 
-use DateTimeImmutable;
 use OCA\Pipelinq\Service\HaalCentraalException;
+use SensitiveParameter;
 
 /**
  * Contract of HaalCentraalClient.
@@ -39,34 +39,25 @@ use OCA\Pipelinq\Service\HaalCentraalException;
 interface HaalCentraalClientInterface {
 
 	/**
-	 * Health-check: returns the certificate expiry (UTC) or null when unknown.
+	 * The status a lookup without a working integriq source fails with.
 	 *
-	 * Reads the configured client certificate file and inspects its notAfter field.
-	 *
-	 * @return DateTimeImmutable|null
-	 *
-	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-02
-	 *
-	 * @SuppressWarnings(PHPMD.ErrorControlOperator) The @ mutes fs/OpenSSL warnings on unreadable certs; failures handled via false checks.
+	 * @var int
 	 */
-	public function getCertificateExpiry(): ?DateTimeImmutable;
+	public const NO_SOURCE_STATUS = 503;
+
+	/**
+	 * The message a lookup without a working integriq source fails with.
+	 *
+	 * @var string
+	 */
+	public const NO_SOURCE_MESSAGE = 'BRP lookups go through integriq. Ask your administrator to set up the BRP connection there.';
 
 	/**
 	 * Lookup a person by BSN. Returns a BrpPersoon-shaped array or null when not found.
 	 *
-	 * Throws HaalCentraalException on transport / auth / server errors so the caller
-	 * can decide how to surface the failure.
-	 *
-	 * OR-first (ADR-022, safe-partial): the lookup tries the OpenRegister BRP leaf
-	 * first. On HTTP 200 the leaf returns the raw HAL+JSON person under `results`
-	 * plus the Wet-BRP audit metadata under `meta` ({ correlationId, durationMs,
-	 * status }); the person is mapped through the EXACT SAME {@see normalisePerson()}
-	 * as the legacy path, and the meta is attached as `_correlationId` /
-	 * `_responseDurationMs` / `_responseStatus` so the caller persists a
-	 * byte-identical `brpLookupVerzoek` audit record regardless of source. On a
-	 * 503 (source unconfigured/down) / non-200 / OR-absent the method falls back
-	 * to the legacy OAuth2 + mTLS direct HaalCentraal path below, unchanged, so
-	 * configured envs keep working until an operator enables the OR source.
+	 * The lookup goes through integriq's `brp-haalcentraal` source; there is
+	 * no direct path to Haal Centraal. Without a working source it throws a
+	 * HaalCentraalException whose message names integriq.
 	 *
 	 * @param string $bsn Raw 9-digit BSN.
 	 * @param string|null $requestIdContext Optional context UUID for correlation logging.
@@ -77,12 +68,12 @@ interface HaalCentraalClientInterface {
 	 *
 	 * @spec openspec/specs/brp-lookup/spec.md
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-01
-	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003-03
+	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#requirement-brp-person-lookup-goes-through-integriq-only
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess)          BsnValidationService::mask is a pure stateless helper.
 	 */
 	public function lookupPersoon(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsn,
 		?string $requestIdContext = null,
 	): ?array;

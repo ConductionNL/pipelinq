@@ -62,6 +62,7 @@ use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
+use SensitiveParameter;
 use Throwable;
 
 /**
@@ -129,6 +130,32 @@ class BrpController extends Controller {
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
+
+	/**
+	 * GET /api/brp/access — whether the session user may look a person up in the BRP.
+	 *
+	 * The same two checks POST /api/brp/lookup runs before it asks the BRP: the
+	 * CRM privilege and membership of a group `brp.allowed_groups` allows (or
+	 * admin). Nothing is looked up, so nothing is audited; the lookup endpoint
+	 * keeps checking both on every call.
+	 *
+	 * @return JSONResponse JSON shape: { allowed: bool }.
+	 *
+	 * @spec openspec/changes/request-dialog-client-lookups/specs/request-management/spec.md#requirement-the-new-request-dialog-finds-the-client-or-looks-them-up
+	 */
+	#[NoAdminRequired]
+	public function access(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$actor = $user->getUID();
+		$allowed = $this->accessPolicy->isPrivileged(uid: $actor) === true
+			&& $this->resolveActorRole(actor: $actor) !== null;
+
+		return new JSONResponse(['allowed' => $allowed]);
+	}//end access()
 
 	/**
 	 * POST /api/brp/lookup — execute a BRP lookup with doelbinding.
@@ -559,6 +586,8 @@ class BrpController extends Controller {
 	 * @param string      $requestUuid The saved verzoek's id, or ''.
 	 *
 	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#scenario-without-integriq-a-lookup-fails-and-says-why
 	 */
 	private function lookupResponse(PersonFetch $fetch, string $requestUuid): JSONResponse {
 		$outcome = $fetch->result->outcome;
@@ -575,10 +604,17 @@ class BrpController extends Controller {
 		}
 
 		if ($outcome === 'error' || $outcome === 'timeout') {
+			// Without a working integriq source the message names integriq
+			// (brp-monitor-moves-to-integriq); otherwise the BRP is down.
+			$message = $this->l10n->t('BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.');
+			if ($fetch->result->responseCode === HaalCentraalClientInterface::NO_SOURCE_STATUS) {
+				$message = $this->l10n->t('BRP lookups go through integriq. Ask your administrator to set up the BRP connection there.');
+			}
+
 			return new JSONResponse(
 				[
 					'errorCode' => 'brp-unavailable',
-					'errorMessage' => $this->l10n->t('BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.'),
+					'errorMessage' => $message,
 					'responseInCache' => false,
 					'lookupRequestId' => $requestUuid,
 				],
@@ -782,7 +818,7 @@ class BrpController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function recordOptOut(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 		string $actor,
 		mixed $note,

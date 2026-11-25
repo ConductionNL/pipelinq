@@ -59,6 +59,7 @@ pipeline and stage stay one click away under More details.
 <script>
 import { CnDialog } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { emit } from '@nextcloud/event-bus'
 import { NcButton, NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import RequestForm from '../views/requests/RequestForm.vue'
@@ -86,13 +87,22 @@ export default {
 			type: String,
 			default: '',
 		},
+
+		/**
+		 * Start with "Open after creating" unticked. My work's New ticket
+		 * sets it, so the agent stays on the list the new ticket lands on.
+		 */
+		stayAfterCreate: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
 	emits: ['created', 'close'],
 
 	data() {
 		return {
-			openAfter: true,
+			openAfter: !this.stayAfterCreate,
 		}
 	},
 
@@ -114,8 +124,13 @@ export default {
 		},
 
 		/**
+		 * Save the ticket; then open it, or stay and ask the page's lists to
+		 * read again (`cn:page:refresh`) so the new ticket shows without a
+		 * page reload.
+		 *
 		 * @param {object} formData The raw create-form fields.
 		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-requests-ui/tasks.md#task-2
+		 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-quick-actions-on-my-work-req-mw-100
 		 */
 		async onSave(formData) {
 			this.saving = true
@@ -132,6 +147,7 @@ export default {
 						this.goToDetail('TicketDetail', result.id)
 					} else {
 						showSuccess(t('pipelinq', 'The ticket is created.'))
+						emit('cn:page:refresh', {})
 						this.$emit('close')
 					}
 				} else {

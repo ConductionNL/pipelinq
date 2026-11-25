@@ -40,7 +40,8 @@
   - Files: lib/Controller/SegmentController.php
   - Test: tests/Unit/Controller/SegmentControllerTest.php (testCreateRefusesNonPrivilegedUser, testUpdateAllowsAnyPrivilegedUser)
   - done: already on development: `create()` goes through `crmGate()->privilegedUserId()`; `SegmentControllerTest::testCreateRefusesANonPrivilegedCaller` covers it.
-- [ ] 4.2 Newman: a non-privileged user gets 403 on `POST /api/segments` and nothing is stored
+- [x] 4.2 Newman: a non-privileged user gets 403 on `POST /api/segments` and nothing is stored
+  - Written, runs in nightly (24 Nov 2026): the folder "Segments: access" in `tests/newman/pipelinq-api.postman_collection.json` reads the stored total as admin, checks that the next caller really is the non-admin, posts a segment as that user and expects 403 with no segment in the body, then checks as admin that the total is unchanged. The CI non-admin has no group (`tests/newman/ci-seed.sh`), so `ObjectOwnerAccessPolicy::isPrivileged()` is false. Not run here: no live instance.
 
 ## 5. Board and live
 

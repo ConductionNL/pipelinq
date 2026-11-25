@@ -36,6 +36,8 @@ use RuntimeException;
  * Refuses before running, runs for an export admin, logs failures under the host's short name.
  *
  * @covers \OCA\Pipelinq\Controller\Support\ExportAdminAction
+ * @uses \OCA\Pipelinq\Controller\ExportActionResponse
+ * @uses \OCA\Pipelinq\Controller\ExportAdminGate
  */
 class ExportAdminActionTest extends TestCase {
 

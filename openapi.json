@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Pipelinq",
-        "version": "0.5.7-unstable.20261014170000",
+        "version": "0.5.39-unstable.20261124175940",
         "description": "The JSON API of Pipelinq, the customer relations app for Nextcloud: contacts and organisations, contact moments, tickets and callbacks, campaigns and mailings, the point of sale, loyalty, social publishing and the settings behind them. The records themselves are stored in OpenRegister and read and written through its API; this document covers the endpoints Pipelinq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here.",
         "contact": {
             "name": "Conduction B.V.",
@@ -98,6 +98,10 @@
         {
             "name": "client-business",
             "description": "The client's business for the side card."
+        },
+        {
+            "name": "client-identifier",
+            "description": "Checks of a client's official numbers."
         },
         {
             "name": "client-history-summary",
@@ -514,6 +518,18 @@
         {
             "name": "callReview",
             "description": "The agent agrees the coaching points of a review of their call."
+        },
+        {
+            "name": "background-service-account",
+            "description": "Reads and picks the background service account."
+        },
+        {
+            "name": "quote",
+            "description": "Controller that sends a quote from a lead's lines: filinq renders the PDF, pipelinq mails it and logs the contact moment."
+        },
+        {
+            "name": "booking-link",
+            "description": "A user's personal booking link and the free slots behind it."
         }
     ],
     "paths": {
@@ -1063,334 +1079,6 @@
                                 "schema": {}
                             }
                         }
-                    }
-                }
-            }
-        },
-        "/articles": {
-            "get": {
-                "operationId": "article-index",
-                "summary": "GET /api/articles — paginated list, newest first",
-                "description": "GET /api/articles — paginated list, newest first. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "required": false,
-                        "description": "1-based page number.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "limit",
-                        "in": "query",
-                        "required": false,
-                        "description": "Page size.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "article-create",
-                "summary": "POST /api/articles — create an article as a draft",
-                "description": "POST /api/articles — create an article as a draft. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "responses": {
-                    "201": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "400": {
-                        "$ref": "#/components/responses/Problem400"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            }
-        },
-        "/articles/{id}": {
-            "get": {
-                "operationId": "article-show",
-                "summary": "GET /api/articles/{id} — one article",
-                "description": "GET /api/articles/{id} — one article. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "description": "Article UUID or slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/Problem404"
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "article-update",
-                "summary": "PATCH /api/articles/{id} — change an article's editable fields",
-                "description": "PATCH /api/articles/{id} — change an article's editable fields. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "description": "Article UUID or slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            }
-        },
-        "/articles/{id}/archive": {
-            "post": {
-                "operationId": "article-archive",
-                "summary": "POST /api/articles/{id}/archive — take the article out of use",
-                "description": "POST /api/articles/{id}/archive — take the article out of use. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "description": "Article UUID or slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            }
-        },
-        "/articles/{id}/publish": {
-            "post": {
-                "operationId": "article-publish",
-                "summary": "POST /api/articles/{id}/publish — publish, stamping the moment once",
-                "description": "POST /api/articles/{id}/publish — publish, stamping the moment once. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "description": "Article UUID or slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            }
-        },
-        "/articles/{id}/transition": {
-            "post": {
-                "operationId": "article-transition",
-                "summary": "POST /api/articles/{id}/transition — apply one declared transition",
-                "description": "POST /api/articles/{id}/transition — apply one declared transition. Publish and archive have their own routes because they are what the interface offers; this one carries the rest of the declared lifecycle (submit for review, return to draft, restore) without a route each. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "description": "Article UUID or slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": false,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "transition": {
-                                        "description": "The transition."
-                                    }
-                                },
-                                "additionalProperties": false
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
-                    }
-                }
-            }
-        },
-        "/articles/{id}/usages": {
-            "get": {
-                "operationId": "article-usages",
-                "summary": "GET /api/articles/{id}/usages — where the article has been used",
-                "description": "GET /api/articles/{id}/usages — where the article has been used. Needs a signed-in Nextcloud user.",
-                "tags": [
-                    "article"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "description": "Article UUID or slug.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The request succeeded.",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/Problem401"
                     }
                 }
             }
@@ -2395,6 +2083,34 @@
                 }
             }
         },
+        "/brp/access": {
+            "get": {
+                "operationId": "brp-access",
+                "summary": "GET /api/brp/access — whether the session user may look a person up in the BRP",
+                "description": "GET /api/brp/access — whether the session user may look a person up in the BRP. The same privilege and group checks POST /api/brp/lookup runs; nothing is looked up or audited. Answers `{ allowed: bool }`. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "brp"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
         "/brp/lookup": {
             "post": {
                 "operationId": "brp-lookup",
@@ -3098,6 +2814,100 @@
                 }
             }
         },
+        "/campaigns/{id}/events": {
+            "post": {
+                "operationId": "campaign-event-create",
+                "summary": "Create the event of a campaign",
+                "description": "Create the event of a campaign from the campaign page's Create event dialog. A time without a zone is read in the caller's own time zone; an online event takes a join link, an event on site a venue. The event is written as the caller, so OpenRegister's access rules decide whether the write may happen. Needs a signed-in Nextcloud user who can read the campaign.",
+                "tags": [
+                    "campaign"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The campaign id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "title",
+                                    "startAt"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "description": "The event's title."
+                                    },
+                                    "startAt": {
+                                        "type": "string",
+                                        "description": "When it starts: an ISO 8601 date and time, with or without a zone."
+                                    },
+                                    "endAt": {
+                                        "type": "string",
+                                        "description": "When it ends, after the start; optional."
+                                    },
+                                    "online": {
+                                        "type": "boolean",
+                                        "description": "True for an online event."
+                                    },
+                                    "joinUrl": {
+                                        "type": "string",
+                                        "description": "The join link of an online event, starting with https://."
+                                    },
+                                    "venue": {
+                                        "type": "string",
+                                        "description": "The venue of an event on site."
+                                    },
+                                    "capacity": {
+                                        "type": "string",
+                                        "description": "The number of seats, a whole number from 1; empty for no limit."
+                                    },
+                                    "openNow": {
+                                        "type": "boolean",
+                                        "description": "True (the default) opens registration at once; false keeps the event a draft."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
         "/campaigns/{id}/report": {
             "get": {
                 "operationId": "campaign-report",
@@ -3177,6 +2987,74 @@
                         }
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/clients/{id}/identifiers/check": {
+            "post": {
+                "operationId": "client-identifier-check",
+                "summary": "POST /api/clients/{id}/identifiers/check: check one of the client's official numbers against its register",
+                "description": "POST /api/clients/{id}/identifiers/check: check one of the client's official numbers against its register. Body: `scheme` (`kvk` or `vat`) and `value`, the number as it is on the client. A KvK number is checked through OpenRegister's KvK leaf, a VAT number through shillinq's VIES service when shillinq is installed. The outcome (`checkStatus`, `checkedAt`, `checkSource`) is stored on the identifier and returned. The client is read and written with the caller's rights, so a client the caller may not read or change answers 403; an unknown client or number answers 404; another scheme answers 400. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "client-identifier"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The client id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "scheme": {
+                                        "type": "string",
+                                        "enum": [
+                                            "kvk",
+                                            "vat"
+                                        ],
+                                        "description": "The scheme of the number to check."
+                                    },
+                                    "value": {
+                                        "type": "string",
+                                        "description": "The number to check."
+                                    }
+                                },
+                                "required": [
+                                    "scheme",
+                                    "value"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "The request succeeded.",
@@ -4835,6 +4713,34 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/cti/dial-line": {
+            "get": {
+                "operationId": "incoming-call-dial-line",
+                "summary": "The signed-in agent's dial line",
+                "description": "Whether the signed-in agent can place a call through the telephony platform, from which extension, and whether that extension is busy. The uid comes from the session, never from the request, so an agent only ever learns their own extension. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "incoming-call"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
                     }
                 }
             }
@@ -9415,11 +9321,154 @@
                 }
             }
         },
+        "/admin/mail-intake/accounts": {
+            "get": {
+                "operationId": "mail-intake-admin-accounts",
+                "summary": "Every Mail account with its address and owner, and which are ticket mailboxes",
+                "description": "Every Mail account with its address and owner, and which are ticket mailboxes. Needs a Nextcloud administrator.",
+                "tags": [
+                    "mail-intake-admin"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "mail-intake-admin-save-accounts",
+                "summary": "Store which Mail accounts are ticket mailboxes",
+                "description": "Store which Mail accounts are ticket mailboxes. Ids that name no Mail account are dropped. Needs a Nextcloud administrator.",
+                "tags": [
+                    "mail-intake-admin"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "accounts": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "description": "The Mail account ids."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/my-work/meetings": {
+            "get": {
+                "operationId": "my-work-meetings",
+                "summary": "The signed-in user's meetings of the next seven days that link a client, contact or lead",
+                "description": "The signed-in user's calendar events of the next seven days whose description or location links a pipelinq client, contact or lead page, soonest first, as `{ items: [...] }` with id, title, startsAt, endsAt, recordKind, recordId, recordName and routeName. Only the user's own calendars are read. A calendar that cannot be read answers an empty list. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "my-work"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/my-work/recent-activity": {
+            "get": {
+                "operationId": "my-work-recent-activity",
+                "summary": "The latest audit-trail entries of the work assigned to the signed-in user",
+                "description": "The 10 latest audit-trail entries of the tickets, leads and follow-ups assigned to the signed-in user, newest first, as `{ items: [...] }` with id, action, changes, user, userName, created, title, kind, routeName and recordId. The items are read as the user, so only objects the user may read are looked at. Work that cannot be read answers an empty list. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "my-work"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
         "/my-work/week-stats": {
             "get": {
                 "operationId": "my-work-week-stats",
                 "summary": "This week's figures for the signed-in user's work",
-                "description": "This week's figures for the signed-in user's work, for the My Work page. Only the `mine` scope exists; any other scope is refused. Needs a signed-in Nextcloud user.",
+                "description": "This week's figures for the signed-in user's work, for the My Work page. `team` counts the team of a manager, `organisation` everyone's work for an administrator; a scope the user may not ask for is refused. Needs a signed-in Nextcloud user.",
                 "tags": [
                     "my-work"
                 ],
@@ -9428,11 +9477,13 @@
                         "name": "scope",
                         "in": "query",
                         "required": false,
-                        "description": "The scope of the figures; only `mine`.",
+                        "description": "Whose tickets count: mine (default), team or organisation.",
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "mine"
+                                "mine",
+                                "team",
+                                "organisation"
                             ],
                             "default": "mine"
                         }
@@ -9456,6 +9507,40 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/my-work/team": {
+            "get": {
+                "operationId": "my-work-team",
+                "summary": "The scopes and the team of the signed-in user",
+                "description": "The scopes My work can switch between for the signed-in user (empty when they have only their own work) and, for a team manager, the members of their team with their open items. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "my-work"
+                ],
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
@@ -13392,8 +13477,8 @@
         "/rapportage/export": {
             "get": {
                 "operationId": "reporting-export-csv",
-                "summary": "Export reporting data as CSV",
-                "description": "Export reporting data as CSV. Needs a signed-in Nextcloud user.",
+                "summary": "Export reporting data as CSV, Excel or PDF",
+                "description": "Export reporting data as CSV, or the contact report as an Excel workbook or a PDF document. Needs a signed-in Nextcloud user.",
                 "tags": [
                     "reporting"
                 ],
@@ -13422,6 +13507,112 @@
                     },
                     "501": {
                         "$ref": "#/components/responses/Problem501"
+                    },
+                    "400": {
+                        "description": "The period or the format is missing or invalid."
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "required": false,
+                        "description": "csv (default), xlsx or pdf; any other value is refused with a 400.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "csv",
+                                "xlsx",
+                                "pdf"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "team",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments of members of this team (Nextcloud group id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "channel",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments on this channel.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "employee",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments handled by this employee (Nextcloud user id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/rapportage/forecast": {
+            "get": {
+                "operationId": "contact-report-forecast",
+                "summary": "Expected contacts for the next seven days",
+                "description": "The expected contact moments for each of the next seven days from the daily average of past weeks, closed days at zero, with the total beside that of a normal week; with too little history it holds no figures. Needs a signed-in Nextcloud user with the CRM privilege.",
+                "tags": [
+                    "reporting"
+                ],
+                "parameters": [
+                    {
+                        "name": "team",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments of members of this team (Nextcloud group id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "channel",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments on this channel.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "employee",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments handled by this employee (Nextcloud user id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "description": "The signed-in user lacks the CRM privilege."
                     }
                 }
             }
@@ -13450,6 +13641,87 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/rapportage/occupancy": {
+            "get": {
+                "operationId": "contact-report-occupancy",
+                "summary": "Occupancy per employee and hour",
+                "description": "Per employee and working hour, the share of that hour spent on contact moments in a period; an hour without contact moments reads 0. Needs a signed-in Nextcloud user with the CRM privilege.",
+                "tags": [
+                    "reporting"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "description": "First day of the period (ISO 8601).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "description": "Last day of the period (ISO 8601).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "team",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments of members of this team (Nextcloud group id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "channel",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments on this channel.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "employee",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments handled by this employee (Nextcloud user id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "400": {
+                        "description": "The period or a parameter is missing or invalid."
+                    },
+                    "403": {
+                        "description": "The signed-in user lacks the CRM privilege."
                     }
                 }
             }
@@ -13560,6 +13832,87 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/rapportage/top-subjects": {
+            "get": {
+                "operationId": "contact-report-top-subjects",
+                "summary": "The ten subjects with the most contact moments",
+                "description": "The ten subjects with the most contact moments in a period, most first, each with its count. Needs a signed-in Nextcloud user with the CRM privilege.",
+                "tags": [
+                    "reporting"
+                ],
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "description": "First day of the period (ISO 8601).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "description": "Last day of the period (ISO 8601).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "team",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments of members of this team (Nextcloud group id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "channel",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments on this channel.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "employee",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only contact moments handled by this employee (Nextcloud user id).",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "400": {
+                        "description": "The period or a parameter is missing or invalid."
+                    },
+                    "403": {
+                        "description": "The signed-in user lacks the CRM privilege."
                     }
                 }
             }
@@ -16960,6 +17313,50 @@
                 }
             }
         },
+        "/templates/articles": {
+            "get": {
+                "operationId": "template-articles",
+                "summary": "GET /api/templates/articles: the articles a template may embed",
+                "description": "GET /api/templates/articles: the published marketing articles a template may embed. Marketing articles live in portaliq; without portaliq `available` is false and the list is empty. Needs a signed-in Nextcloud user with CRM rights.",
+                "tags": [
+                    "template"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "available": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
         "/templates/{id}": {
             "get": {
                 "operationId": "template-show",
@@ -17050,6 +17447,63 @@
                         "in": "path",
                         "required": true,
                         "description": "Template UUID or slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/templates/{id}/empty-variables": {
+            "get": {
+                "operationId": "templateVariable-emptyVariables",
+                "summary": "GET /api/templates/:id/empty-variables — recipients without a value, per variable",
+                "description": "For a template and an audience (segmentId or listId), how many of the recipients the send would queue get no value for each variable the template uses. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "template"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "Template UUID or slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "segmentId",
+                        "in": "query",
+                        "required": false,
+                        "description": "Segment UUID or slug.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "listId",
+                        "in": "query",
+                        "required": false,
+                        "description": "Mailing list UUID or slug.",
                         "schema": {
                             "type": "string"
                         }
@@ -17236,6 +17690,82 @@
                     },
                     "503": {
                         "$ref": "#/components/responses/Problem503"
+                    }
+                }
+            }
+        },
+        "/tickets/{id}/pass-on": {
+            "post": {
+                "operationId": "ticket-assign-pass-on",
+                "summary": "Pass a ticket to a colleague with a note",
+                "description": "Pass a ticket to a colleague, with a note for them. The new assignee and the note are written in one save, so the ticket's audit trail records them in the same entry and its History tab shows the note under the handover. An empty note clears the previous one. Read and written under the user's own OpenRegister RBAC: a ticket they may not read answers 404, one they may not change answers 403. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "ticket-assign"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The ticket id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "assignee"
+                                ],
+                                "properties": {
+                                    "assignee": {
+                                        "type": "string",
+                                        "maxLength": 64,
+                                        "description": "The colleague's user id."
+                                    },
+                                    "handoverNote": {
+                                        "type": "string",
+                                        "maxLength": 1000,
+                                        "description": "What the colleague should know; may be empty."
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -17742,6 +18272,47 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "required": false,
+                        "description": "Whose work: mine (default), team (a member of a team manager group) or organisation (an administrator).",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "mine",
+                                "team",
+                                "organisation"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "member",
+                        "in": "query",
+                        "required": false,
+                        "description": "With scope team: one member of the team.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "priority",
+                        "in": "query",
+                        "required": false,
+                        "description": "Keep only these priorities, comma separated (urgent, high, normal, low); an unknown priority answers 400.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "pipeline",
+                        "in": "query",
+                        "required": false,
+                        "description": "Keep only the leads of this pipeline id; tickets and follow-ups stay in the list.",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -17790,6 +18361,29 @@
                         "in": "query",
                         "required": false,
                         "description": "The limit.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "scope",
+                        "in": "query",
+                        "required": false,
+                        "description": "Whose work: mine (default), team (a member of a team manager group) or organisation (an administrator).",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "mine",
+                                "team",
+                                "organisation"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "member",
+                        "in": "query",
+                        "required": false,
+                        "description": "With scope team: one member of the team.",
                         "schema": {
                             "type": "string"
                         }
@@ -18252,6 +18846,390 @@
                     },
                     "409": {
                         "$ref": "#/components/responses/Problem409"
+                    }
+                }
+            }
+        },
+        "/background/service-account": {
+            "get": {
+                "operationId": "background-service-account-show",
+                "summary": "Which account background work writes as, and whether it can be used",
+                "description": "Which account background work writes as, and whether it can be used. Needs a Nextcloud administrator.",
+                "tags": [
+                    "background-service-account"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "background-service-account-save",
+                "summary": "Pick the account background work writes as. It must exist and be enabled; it joins the background service group",
+                "description": "Pick the account background work writes as. It must exist and be enabled; it joins the background service group. Needs a Nextcloud administrator.",
+                "tags": [
+                    "background-service-account"
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "userId": {
+                                        "description": "The user id."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/leads/{id}/quotes": {
+            "post": {
+                "operationId": "quote-send",
+                "summary": "POST /api/leads/{id}/quotes: send a quote from this lead's lines",
+                "description": "POST /api/leads/{id}/quotes: send a quote from this lead's lines. Body: `templateId`, and optionally `validUntil` (Y-m-d, today or later; thirty days from today when absent). filinq renders the PDF and files a copy in the caller's Files, pipelinq mails it to the lead's contact (else the client) and logs an outbound contact moment on the lead. Refuses, in this order: no user (401), no template id or a bad date (400), no filinq (503), a lead the caller may not read (404), an unknown template (404), no recipient (422), a render or mail that failed (502). Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "quote"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The lead id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "templateId"
+                                ],
+                                "properties": {
+                                    "templateId": {
+                                        "type": "string",
+                                        "description": "The filinq template id."
+                                    },
+                                    "validUntil": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "description": "The last day the quote holds."
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "502": {
+                        "$ref": "#/components/responses/Problem502"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                }
+            }
+        },
+        "/leads/{id}/quotes/recipient": {
+            "get": {
+                "operationId": "quote-recipient",
+                "summary": "GET /api/leads/{id}/quotes/recipient: who a quote for this lead would go to",
+                "description": "GET /api/leads/{id}/quotes/recipient: who a quote for this lead would go to. The dialog shows it before sending. `recipient` is null when neither the contact nor the client has an email address. A lead the caller may not read answers 404. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "quote"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The lead id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/booking-link": {
+            "get": {
+                "operationId": "booking-link-show",
+                "summary": "The signed-in user's personal booking link",
+                "description": "The token of the signed-in user's personal booking link, made on first read, and `slotsUrl`, the public address that lists the free slots of a day. The uid comes from the session, so a user only sees their own link. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "booking-link"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "booking-link-revoke",
+                "summary": "Switch the signed-in user's booking link off",
+                "description": "Forgets the token, so the old link stops working; the next read makes a new link. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "booking-link"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/booking-links/{token}/slots": {
+            "get": {
+                "operationId": "public-booking-link-slots",
+                "summary": "The free slots of one day behind a booking link",
+                "description": "The 30-minute slots between 09:00 and 17:00 on a working day, in the owner's time zone, that no event of the owner's own calendars overlaps and that are not in the past, up to 60 days ahead. Names free times only, never what the calendar holds. Public: the token is the authorisation; a link nobody holds answers 404.",
+                "tags": [
+                    "booking-link"
+                ],
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "description": "The token of the personal booking link.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": true,
+                        "description": "The day, `YYYY-MM-DD`.",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/booking-links/{token}/bookings": {
+            "post": {
+                "operationId": "public-booking-link-book",
+                "summary": "Book a free slot behind a booking link",
+                "description": "Writes the slot into the owner's first own writable calendar, with the booker's name and email address, after checking again that it is free. Public: the token is the authorisation.",
+                "tags": [
+                    "booking-link"
+                ],
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "description": "The token of the personal booking link.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "start",
+                                    "name",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "start": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "description": "The slot's start, as the slots list gave it."
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "The booker's name, at most 120 characters."
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "description": "The booker's email address."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The slot is booked.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
                     }
                 }
             }

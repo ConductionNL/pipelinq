@@ -549,6 +549,28 @@ class RegisterAnnotationsTest extends TestCase {
 	}//end testIsFinishedNamesExactlyTheFinalStates()
 
 	/**
+	 * Picking up and rejecting a ticket is open to its assignee as well as
+	 * the sales group: both transitions name the assignee guard, and neither
+	 * keeps a group-only `authorization` list that would refuse an assignee
+	 * outside the sales group before the guard runs.
+	 *
+	 * @return void
+	 */
+	public function testTicketStartAndRejectAdmitTheAssignee(): void {
+		$transitions = self::ticketSchema()['configuration']['x-openregister-lifecycle']['transitions'];
+
+		foreach (['start', 'reject'] as $action) {
+			$this->assertSame(
+				expected: 'OCA\\Pipelinq\\Lifecycle\\TicketAssigneeGuard',
+				actual: ($transitions[$action]['requires'] ?? null),
+				message: "ticket.{$action} must run the assignee guard."
+			);
+			$this->assertArrayNotHasKey(key: 'authorization', array: $transitions[$action], message: "ticket.{$action} must not be sales-only.");
+			$this->assertTrue(condition: class_exists($transitions[$action]['requires']), message: "ticket.{$action} guard class must exist.");
+		}
+	}//end testTicketStartAndRejectAdmitTheAssignee()
+
+	/**
 	 * The ticket schema, which the register.d overlay declares.
 	 *
 	 * @return array<string, mixed> The ticket schema.

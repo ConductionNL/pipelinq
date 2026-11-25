@@ -26,12 +26,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\CallReview;
 
+use OCA\Pipelinq\Kernel\Contracts\CallReviewTotalInterface;
+
 /**
  * Pure rules of a call review (design D3): the total is the weighted mean of
  * the scores on the scorecard's criteria, and a shared review whose coaching
  * points all carry an agreed date is agreed.
  */
-final class CallReviewTotal {
+final class CallReviewTotal implements CallReviewTotalInterface {
 
 	/**
 	 * The weighted mean of the scores, rounded to one decimal, or null when no

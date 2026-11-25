@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test fake for the website form suite: OpenRegister FormSubmitService::submitAll, recording every call.
+ * Test fake for the website form suite: OpenRegister FormSubmitService::submit, recording every call.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes
@@ -20,10 +20,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\WebForm\Fakes;
 
+use OCA\OpenRegister\Service\Form\FormSubmission;
 use Throwable;
 
 /**
- * Records submitAll() calls and answers as OpenRegister does, or throws what it is told.
+ * Records submit() calls and answers as OpenRegister does, or throws what it is told.
  */
 class FakeFormSubmitService {
 
@@ -45,18 +46,22 @@ class FakeFormSubmitService {
 	}//end __construct()
 
 	/**
-	 * Submit into the writes' destinations.
+	 * Submit into the submission's destinations, with OpenRegister's signature.
 	 *
-	 * @param array<int, array<string, mixed>> $writes         The writes.
-	 * @param array<string, mixed>             $payload        The payload.
-	 * @param mixed                            $subject        The subject.
-	 * @param string|null                      $idempotencyKey The key.
-	 * @param string                           $scope          The scope.
+	 * @param FormSubmission $submission     The writes, the answers and who submits.
+	 * @param string|null    $idempotencyKey The key.
 	 *
 	 * @return array<string, mixed> The answer.
 	 */
-	public function submitAll(array $writes, array $payload, mixed $subject = null, ?string $idempotencyKey = null, string $scope = ''): array {
-		$this->calls[] = ['writes' => $writes, 'payload' => $payload, 'subject' => $subject, 'idempotencyKey' => $idempotencyKey, 'scope' => $scope];
+	public function submit(FormSubmission $submission, ?string $idempotencyKey = null): array {
+		$writes = $submission->writes;
+		$this->calls[] = [
+			'writes' => $writes,
+			'payload' => $submission->payload,
+			'subject' => $submission->subject,
+			'idempotencyKey' => $idempotencyKey,
+			'scope' => $submission->scope,
+		];
 		if ($this->throw !== null) {
 			throw $this->throw;
 		}
@@ -70,5 +75,5 @@ class FakeFormSubmitService {
 			'confirmation' => [],
 			'objects' => [],
 		];
-	}//end submitAll()
+	}//end submit()
 }//end class

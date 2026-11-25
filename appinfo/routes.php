@@ -65,6 +65,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'mailAddIn#lookup', 'url' => '/api/mail-add-in/lookup', 'verb' => 'POST'],
         ['name' => 'mailAddIn#contact', 'url' => '/api/mail-add-in/contact', 'verb' => 'POST'],
         ['name' => 'mailAddIn#log', 'url' => '/api/mail-add-in/log', 'verb' => 'POST'],
+        // The Outlook add-in itself: its manifest and the pane Outlook frames.
+        ['name' => 'mailAddIn#manifest', 'url' => '/mail-add-in/manifest.xml', 'verb' => 'GET'],
+        ['name' => 'mailAddIn#taskpane', 'url' => '/mail-add-in/taskpane', 'verb' => 'GET'],
 
         // Email matching (leaf-first email-calendar-sync) — per-user settings + trigger + status.
         // The matching job links Nextcloud Mail messages to CRM entities via the OR `email` leaf.
@@ -118,6 +121,14 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'leadRelatedSummary#show', 'url' => '/api/leads/{id}/related-summary', 'verb' => 'GET'],
         ['name' => 'worklist#summary', 'url' => '/api/worklist/summary', 'verb' => 'GET'],
         ['name' => 'myWork#weekStats', 'url' => '/api/my-work/week-stats', 'verb' => 'GET'],
+        ['name' => 'myWorkTeam#show', 'url' => '/api/my-work/team', 'verb' => 'GET'],
+        ['name' => 'myWorkMeetings#upcoming', 'url' => '/api/my-work/meetings', 'verb' => 'GET'],
+        // Personal booking link (specify-capability-rows task 34.1): the signed-in user's own link, and its public side.
+        ['name' => 'bookingLink#show', 'url' => '/api/booking-link', 'verb' => 'GET'],
+        ['name' => 'bookingLink#revoke', 'url' => '/api/booking-link', 'verb' => 'DELETE'],
+        ['name' => 'publicBookingLink#slots', 'url' => '/api/booking-links/{token}/slots', 'verb' => 'GET'],
+        ['name' => 'publicBookingLink#book', 'url' => '/api/booking-links/{token}/bookings', 'verb' => 'POST'],
+        ['name' => 'myWorkActivity#index', 'url' => '/api/my-work/recent-activity', 'verb' => 'GET'],
         ['name' => 'firstTicket#show', 'url' => '/api/worklist/first', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
@@ -131,6 +142,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'reporting#getSla',      'url' => '/api/rapportage/sla',      'verb' => 'GET'],
         ['name' => 'reporting#updateSla',   'url' => '/api/rapportage/sla',      'verb' => 'PUT'],
         ['name' => 'reporting#exportCsv',   'url' => '/api/rapportage/export',   'verb' => 'GET'],
+        ['name' => 'contactReport#topSubjects', 'url' => '/api/rapportage/top-subjects', 'verb' => 'GET'],
+        ['name' => 'contactReport#occupancy',   'url' => '/api/rapportage/occupancy',    'verb' => 'GET'],
+        ['name' => 'contactReport#forecast',    'url' => '/api/rapportage/forecast',     'verb' => 'GET'],
         // Lead-management analytics endpoint (REQ-LM-006). Non-admin accessible.
         ['name' => 'rapportage#getPipelineStats', 'url' => '/api/rapportage/pipeline-stats', 'verb' => 'GET'],
         // Customer 360 consolidated summary (klantbeeld-360-activation) — cross-ticketType/status
@@ -139,6 +153,8 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // The client's cases from dossiq's case leaf, by the client's master entity (PqKlant / PqOrganisatie Zaken).
         ['name' => 'clientCase#index', 'url' => '/api/clients/{id}/cases', 'verb' => 'GET'],
         ['name' => 'clientBusiness#index', 'url' => '/api/clients/{id}/business', 'verb' => 'GET'],
+        // Check one of a client's official numbers against its register (clients-registry-numbers-and-enrichment REQ-CRN-002).
+        ['name' => 'clientIdentifier#check', 'url' => '/api/clients/{id}/identifiers/check', 'verb' => 'POST'],
         ['name' => 'clientHistorySummary#show', 'url' => '/api/clients/{id}/history-summary', 'verb' => 'GET'],
         // Letters from a filinq template (work-letter-from-filinq-template).
         // An event's reminder to everyone with a confirmed place (event-reminder-and-check-in).
@@ -153,6 +169,9 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'record_document#document', 'url' => '/api/records/{schema}/{id}/document', 'verb' => 'GET'],
         ['name' => 'letter#create', 'url' => '/api/clients/{id}/letters', 'verb' => 'POST'],
         ['name' => 'letter#preview', 'url' => '/api/clients/{id}/letters/preview', 'verb' => 'POST'],
+        // Send a quote from a lead's lines (filinq renders, pipelinq mails and logs).
+        ['name' => 'quote#send', 'url' => '/api/leads/{id}/quotes', 'verb' => 'POST'],
+        ['name' => 'quote#recipient', 'url' => '/api/leads/{id}/quotes/recipient', 'verb' => 'GET'],
         // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
         // see openspec/changes/migrate-forms-to-forms-leaf.
 
@@ -221,6 +240,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'cti#screenPop',        'url' => '/api/cti/screen-pop',                 'verb' => 'POST'],
         ['name' => 'incomingCall#show',    'url' => '/api/cti/incoming-call',              'verb' => 'GET'],
         ['name' => 'cti#clickToDial',      'url' => '/api/cti/click-to-dial',              'verb' => 'POST'],
+        ['name' => 'incomingCall#dialLine', 'url' => '/api/cti/dial-line',                  'verb' => 'GET'],
         ['name' => 'cti#disposition',      'url' => '/api/cti/contactmoment/{id}/disposition', 'verb' => 'POST'],
         ['name' => 'ctiEscalationQueue#index', 'url' => '/api/cti/escalation-queues',      'verb' => 'GET'],
         ['name' => 'cti#attachRecording',  'url' => '/api/cti/contactmoment/{id}/recording',   'verb' => 'POST'],
@@ -619,6 +639,12 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // The account the SMS and WhatsApp webhooks write as (admin only).
         ['name' => 'messagingAdmin#getServiceAccount',  'url' => '/api/messaging/service-account', 'verb' => 'GET'],
         ['name' => 'messagingAdmin#saveServiceAccount', 'url' => '/api/messaging/service-account', 'verb' => 'PUT'],
+        // The ticket mailboxes: Mail accounts whose inbox opens tickets in the Queue (admin only).
+        ['name' => 'mailIntakeAdmin#accounts',     'url' => '/api/admin/mail-intake/accounts', 'verb' => 'GET'],
+        ['name' => 'mailIntakeAdmin#saveAccounts', 'url' => '/api/admin/mail-intake/accounts', 'verb' => 'PUT'],
+        // The account background work (the call mirror) writes as (admin only).
+        ['name' => 'backgroundServiceAccount#show', 'url' => '/api/background/service-account', 'verb' => 'GET'],
+        ['name' => 'backgroundServiceAccount#save', 'url' => '/api/background/service-account', 'verb' => 'PUT'],
         // Semantic object handoff emit (ADR-051 / semantic-handoff-emit):
         // request -> ns#Case, active contract -> ns#Invoice. Kind-addressed via
         // OpenRegister's handoff engine; actions hide when no app implements the kind.
@@ -640,6 +666,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'ticketPhone#byPhone',             'url' => '/api/tickets/by-phone',                     'verb' => 'GET'],
         ['name' => 'ticketAssign#assignOldest',       'url' => '/api/tickets/assign-oldest',                 'verb' => 'POST'],
         ['name' => 'ticketAssign#assignToMe',         'url' => '/api/tickets/{id}/assign-to-me',             'verb' => 'POST'],
+        ['name' => 'ticketAssign#passOn',             'url' => '/api/tickets/{id}/pass-on',                  'verb' => 'POST'],
         // What the resident reads of a ticket, for the preview on TicketDetail (portal-resident-view-preview).
         ['name' => 'residentView#show',               'url' => '/api/tickets/{id}/resident-view',            'verb' => 'GET'],
 
@@ -690,25 +717,16 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'template#create',  'url' => '/api/templates',          'verb' => 'POST'],
         // The Blocks editor's preview of unsaved blocks (marketing-block-editor).
         ['name' => 'template#render',  'url' => '/api/templates/render',   'verb' => 'POST'],
+        ['name' => 'template#articles', 'url' => '/api/templates/articles', 'verb' => 'GET'],
         ['name' => 'template#preview', 'url' => '/api/templates/{id}/preview', 'verb' => 'GET'],
         ['name' => 'template#validate', 'url' => '/api/templates/{id}/validate', 'verb' => 'POST'],
+        // How many recipients of an audience a template's variables leave empty (marketing-mail-templates).
+        ['name' => 'templateVariable#emptyVariables', 'url' => '/api/templates/{id}/empty-variables', 'verb' => 'GET'],
         ['name' => 'template#show',    'url' => '/api/templates/{id}',     'verb' => 'GET'],
         ['name' => 'template#update',  'url' => '/api/templates/{id}',     'verb' => 'PATCH'],
 
-        // Marketing — Articles (marketing-article-hub). Articles are the
-        // content hub for both mailings and posts. Literal-suffixed routes
-        // (publish, archive, transition, usages) precede the bare {id}
-        // routes (ADR-016), matching the Blast block below.
-        ['name' => 'article#index',      'url' => '/api/articles',                'verb' => 'GET'],
-        ['name' => 'article#create',     'url' => '/api/articles',                'verb' => 'POST'],
-        ['name' => 'article#publish',    'url' => '/api/articles/{id}/publish',   'verb' => 'POST'],
-        ['name' => 'article#archive',    'url' => '/api/articles/{id}/archive',   'verb' => 'POST'],
-        ['name' => 'article#transition', 'url' => '/api/articles/{id}/transition', 'verb' => 'POST'],
         // Shared label list: a rename also rewrites the items that carry the label.
         ['name' => 'label#rename', 'url' => '/api/labels/{id}/rename', 'verb' => 'POST'],
-        ['name' => 'article#usages',     'url' => '/api/articles/{id}/usages',    'verb' => 'GET'],
-        ['name' => 'article#show',       'url' => '/api/articles/{id}',           'verb' => 'GET'],
-        ['name' => 'article#update',     'url' => '/api/articles/{id}',           'verb' => 'PATCH'],
 
         // Marketing — Social publishing (social-publishing, phase 3). Three
         // objects, three controllers. Literal-suffixed routes (connect,
@@ -765,6 +783,8 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'campaign#create',            'url' => '/api/campaigns',                   'verb' => 'POST'],
         ['name' => 'campaign#report',            'url' => '/api/campaigns/{id}/report',       'verb' => 'GET'],
         ['name' => 'campaign#createLandingPage', 'url' => '/api/campaigns/{id}/landing-page', 'verb' => 'POST'],
+        // marketing-events REQ-MEV-001: the campaign page's Create event.
+        ['name' => 'campaignEvent#create',       'url' => '/api/campaigns/{id}/events',       'verb' => 'POST'],
         ['name' => 'campaign#update',            'url' => '/api/campaigns/{id}',              'verb' => 'PATCH'],
 
         // Marketing — Journeys (marketing-integrated-campaigns). A journey is
@@ -801,6 +821,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // BRP / BSN — Haalcentraal Personen integration (bsn-validatie-en-brp-lookup).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'brp#lookup',           'url' => '/api/brp/lookup',                    'verb' => 'POST'],
+        ['name' => 'brp#access',           'url' => '/api/brp/access',                    'verb' => 'GET'],
         ['name' => 'brp#revealAddress',    'url' => '/api/brp/contact/{id}/reveal-address', 'verb' => 'POST'],
         ['name' => 'brp#optOutCreate',     'url' => '/api/brp/opt-out',                   'verb' => 'POST'],
         ['name' => 'brp#mutationWebhook',  'url' => '/api/brp/mutations',                 'verb' => 'POST'],

@@ -74,6 +74,23 @@
 							}}</span>
 						</span>
 					</div>
+					<dl
+						v-if="facts"
+						class="incoming-call__facts"
+						data-testid="incoming-call-facts">
+						<div class="incoming-call__fact">
+							<dt>{{ t('pipelinq', 'Open') }}</dt>
+							<dd data-testid="incoming-call-fact-open">{{ facts.open }}</dd>
+						</div>
+						<div class="incoming-call__fact">
+							<dt>{{ t('pipelinq', 'Last contact') }}</dt>
+							<dd data-testid="incoming-call-fact-last">{{ lastContactLabel }}</dd>
+						</div>
+						<div class="incoming-call__fact">
+							<dt>{{ t('pipelinq', 'Waiting') }}</dt>
+							<dd data-testid="incoming-call-fact-waiting">{{ facts.waiting }}</dd>
+						</div>
+					</dl>
 				</template>
 				<span
 					v-else-if="manyMatches"
@@ -176,7 +193,7 @@ import PhoneIncoming from 'vue-material-design-icons/PhoneIncoming.vue'
 import CtiDispositionModal from '../modals/CtiDispositionModal.vue'
 import NewContactIntakeModal from '../modals/NewContactIntakeModal.vue'
 import ScreenPopModal from '../modals/ScreenPopModal.vue'
-import { escalationQueues, incomingCall, screenPop, submitDisposition } from '../services/ctiApi.js'
+import { customerSummary, escalationQueues, incomingCall, screenPop, submitDisposition } from '../services/ctiApi.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 /** How often the card asks again when no live event arrives. */
@@ -198,6 +215,46 @@ function popFrom(result) {
 		e164: found.e164 || '',
 		rawNumber: found.rawNumber || '',
 	}
+}
+
+/**
+ * The three facts the card draws under one match, from the client's 360
+ * summary: its open requests, complaints and meldingen (contact moments are
+ * logged interactions, not open work), when it was last in contact, and how
+ * many of its tickets wait for the client.
+ *
+ * @param {object|null} summary The answer of `GET /api/customer-360/summary`.
+ * @return {{open: number, lastContactAt: string, waiting: number}|null} The facts, or null without a summary.
+ * @spec openspec/changes/screen-pop-incoming-call/tasks.md#task-2.3
+ */
+export function factsFrom(summary) {
+	if (!summary || typeof summary !== 'object') {
+		return null
+	}
+	const byType = summary.openTicketsByType && typeof summary.openTicketsByType === 'object' ? summary.openTicketsByType : {}
+	const open = Object.entries(byType)
+		.filter(([type]) => type !== 'interaction')
+		.reduce((total, [, count]) => total + (Number(count) || 0), 0)
+	return {
+		open,
+		lastContactAt: typeof summary.lastActivityAt === 'string' ? summary.lastActivityAt : '',
+		waiting: Number(summary.awaitingCustomerCount) || 0,
+	}
+}
+
+/**
+ * The client whose summary the card reads for a match: a client match is
+ * that client, a contact match is the client it belongs to.
+ *
+ * @param {object} match The matched record.
+ * @return {string} The client id, or '' when the match has none.
+ * @spec openspec/changes/screen-pop-incoming-call/tasks.md#task-2.3
+ */
+export function summaryClientId(match) {
+	if (match._matchType === 'client') {
+		return match.id || match.uuid || ''
+	}
+	return typeof match.client === 'string' ? match.client : ''
 }
 
 /**
@@ -276,6 +333,8 @@ export default {
 			/** The screen pop's answer for that call's number, or null. */
 			pop: null,
 			looking: false,
+			/** Open, last contact and waiting for the one match, or null. */
+			facts: null,
 			/** The agent said the single match is not the caller. */
 			rejected: false,
 			/** The call the agent closed or opened: its card stays away. */
@@ -389,6 +448,18 @@ export default {
 				? 0
 				: Math.max(0, Math.floor((this.now - started) / 1000))
 			return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+		},
+
+		/**
+		 * @return {string} The day of the match's last contact, or that there was none.
+		 * @spec openspec/changes/screen-pop-incoming-call/tasks.md#task-2.3
+		 */
+		lastContactLabel() {
+			const date = new Date(this.facts.lastContactAt)
+			if (this.facts.lastContactAt === '' || Number.isNaN(date.getTime())) {
+				return this.t('pipelinq', 'No contact yet')
+			}
+			return date.toLocaleDateString()
 		},
 
 		/**
@@ -554,6 +625,31 @@ export default {
 			this.pop = popFrom(result)
 			this.looking = false
 			this.openPreview(call)
+			if (this.pop.action === 'navigate' && this.pop.matches.length === 1) {
+				await this.loadFacts(call, this.pop.matches[0])
+			}
+		},
+
+		/**
+		 * Read the match's open work, last contact and waiting tickets. A
+		 * match without a client, a refusal or a failed read shows no facts:
+		 * the card still names the caller.
+		 *
+		 * @param {object} call The call the match belongs to.
+		 * @param {object} match The one matched record.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/screen-pop-incoming-call/tasks.md#task-2.3
+		 */
+		async loadFacts(call, match) {
+			const clientId = summaryClientId(match)
+			if (clientId === '') {
+				return
+			}
+			const summary = await customerSummary(clientId).catch(() => null)
+			if (this.call === null || this.call.id !== call.id) {
+				return
+			}
+			this.facts = factsFrom(summary)
 		},
 
 		/**
@@ -651,6 +747,7 @@ export default {
 			this.revealTimer = null
 			this.call = null
 			this.pop = null
+			this.facts = null
 			this.looking = false
 			this.rejected = false
 			this.chooserOpen = false
@@ -805,6 +902,11 @@ export default {
 		 * @spec openspec/changes/screen-pop-incoming-call/specs/cti-screenpop-adapter/spec.md#requirement-the-incoming-call-card-opens-the-screen-pop-req-cti-012
 		 */
 		async linkCall(callId, fields) {
+			// A call from the call mirror has no contact moment in Pipelinq,
+			// so there is nothing to write the record onto.
+			if (this.call && this.call.source === 'mirror') {
+				return false
+			}
 			try {
 				const current = await this.objectStore.fetchObject('ticket', callId)
 				if (!current) {
@@ -957,6 +1059,31 @@ export default {
 	display: flex;
 	gap: 12px;
 	align-items: center;
+}
+
+.incoming-call__facts {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+	margin: 0;
+}
+
+.incoming-call__fact {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.incoming-call__fact dt {
+	color: var(--color-text-maxcontrast);
+	font-size: var(--font-size-small, 13px);
+}
+
+.incoming-call__fact dd {
+	margin: 0;
+	font-weight: bold;
+	overflow-wrap: anywhere;
 }
 
 .incoming-call__initials {

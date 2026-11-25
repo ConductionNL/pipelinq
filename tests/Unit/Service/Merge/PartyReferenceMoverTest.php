@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Merge;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\RegisterSchemaSlugs;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\Merge\PartyReferenceMover;
 use PHPUnit\Framework\TestCase;
@@ -54,7 +55,7 @@ class PartyReferenceMoverTest extends TestCase {
 	private function mover(array $search=[], array $found=[]): PartyReferenceMover {
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
-			static fn (string $registerSlug, string $schemaSlug): array|int => $search[$schemaSlug] ?? []
+			static fn (RegisterSchemaSlugs $target): array|int => $search[$target->schema] ?? []
 		);
 		$objects->method('find')->willReturnCallback(
 			static function (int|string $id) use ($found): ?ObjectEntity {

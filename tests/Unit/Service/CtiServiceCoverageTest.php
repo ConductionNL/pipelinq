@@ -55,6 +55,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
  * @uses   \OCA\Pipelinq\Util\PayloadToArray
  * @uses   \OCA\Pipelinq\Util\EntityPayload
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
+ * @uses   \OCA\Pipelinq\Service\Cti\EventLogPurge
  */
 class CtiServiceCoverageTest extends TestCase {
 

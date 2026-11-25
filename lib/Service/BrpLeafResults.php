@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use SensitiveParameter;
+
 /**
  * The shape checks and the audit stamps of an OpenRegister BRP leaf answer
  * (`{ results: [<raw HAL+JSON person, 0..n>], total, meta }`).
@@ -58,7 +60,7 @@ final class BrpLeafResults {
 	 */
 	public function askedPerson(
 		array $results,
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsn,
 	): mixed {
 		foreach ($results as $candidate) {

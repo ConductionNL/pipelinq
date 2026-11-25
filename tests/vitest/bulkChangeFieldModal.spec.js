@@ -71,8 +71,10 @@ function vm(props = {}) {
 	for (const [name, getter] of Object.entries(modal.computed)) {
 		Object.defineProperty(ctx, name, { get: () => getter.call(ctx) })
 	}
-	for (const [name, method] of Object.entries(modal.methods)) {
-		ctx[name] = method.bind(ctx)
+	for (const source of [...(modal.mixins ?? []), modal]) {
+		for (const [name, method] of Object.entries(source.methods ?? {})) {
+			ctx[name] = method.bind(ctx)
+		}
 	}
 	return ctx
 }
@@ -134,6 +136,19 @@ describe('the value input', () => {
 		form.onPropertyPick({ id: 'age' })
 		form.value = '42'
 		expect(form.typedValue()).toBe(42)
+	})
+
+	it('types a list value as a list, so Healthcare on Industry becomes ["Healthcare"]', async () => {
+		const form = vm({ schemaObject: { properties: { industry: { type: 'array', items: { type: 'string' }, title: 'Industry' } } } })
+		await form.loadSchema()
+		form.onPropertyPick({ id: 'industry' })
+		expect(form.valueKind).toBe('list')
+		form.value = 'Healthcare'
+		expect(form.typedValue()).toEqual(['Healthcare'])
+		form.value = ' Healthcare , Retail,, '
+		expect(form.typedValue()).toEqual(['Healthcare', 'Retail'])
+		form.value = ''
+		expect(form.typedValue()).toEqual([])
 	})
 })
 

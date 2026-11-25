@@ -52,6 +52,13 @@
                 "cat-1"
             ],
             [
+                "findAll",
+                "servedMunicipality",
+                {
+                    "portalTenantId": "t-1"
+                }
+            ],
+            [
                 "save",
                 "ticket",
                 {
@@ -178,6 +185,13 @@
                 "requestCategory"
             ],
             [
+                "findAll",
+                "servedMunicipality",
+                {
+                    "portalTenantId": "t-1"
+                }
+            ],
+            [
                 "save",
                 "ticket",
                 {
@@ -242,6 +256,13 @@
                 "cat-1"
             ],
             [
+                "findAll",
+                "servedMunicipality",
+                {
+                    "portalTenantId": "t-1"
+                }
+            ],
+            [
                 "save",
                 "ticket",
                 {
@@ -302,6 +323,13 @@
                 "find",
                 "requestCategory",
                 "cat-1"
+            ],
+            [
+                "findAll",
+                "servedMunicipality",
+                {
+                    "portalTenantId": "t-1"
+                }
             ],
             [
                 "save",
@@ -366,6 +394,13 @@
                 "cat-1"
             ],
             [
+                "findAll",
+                "servedMunicipality",
+                {
+                    "portalTenantId": "t-2"
+                }
+            ],
+            [
                 "save",
                 "ticket",
                 {
@@ -426,6 +461,13 @@
                 "find",
                 "requestCategory",
                 "cat-1"
+            ],
+            [
+                "findAll",
+                "servedMunicipality",
+                {
+                    "portalTenantId": "t-1"
+                }
             ],
             [
                 "save",

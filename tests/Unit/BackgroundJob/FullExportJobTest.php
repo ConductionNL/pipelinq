@@ -38,6 +38,7 @@ use RuntimeException;
  * The export runs for the administrator who asked and tells them how it went.
  *
  * @covers \OCA\Pipelinq\BackgroundJob\FullExportJob
+ * @uses   \OCA\Pipelinq\Service\UserNotice
  */
 class FullExportJobTest extends TestCase {
 

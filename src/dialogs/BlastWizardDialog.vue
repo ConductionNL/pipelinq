@@ -49,6 +49,16 @@
 							{{ option.label }}
 						</NcCheckboxRadioSwitch>
 					</fieldset>
+					<NcSelect
+						:modelValue="selectedTemplate"
+						:options="templates"
+						:inputLabel="t('pipelinq', 'Start from a template')"
+						:placeholder="t('pipelinq', 'Optional')"
+						label="name"
+						:loading="templatesLoading"
+						class="blast-wizard__select"
+						data-testid="blast-start-template"
+						@update:modelValue="startFromTemplate($event)" />
 				</section>
 
 				<!-- Audience: a segment the tenant queries, or a list someone joined. -->
@@ -137,6 +147,33 @@
 						type="error"
 						class="blast-wizard__note">
 						{{ templateValidationError }}
+					</NcNoteCard>
+
+					<div
+						v-if="selectedTemplate"
+						class="blast-wizard__save-template"
+						data-testid="blast-save-template">
+						<NcTextField
+							v-model="saveTemplateName"
+							:label="t('pipelinq', 'Template name')"
+							:error="!!saveTemplateError"
+							:helperText="saveTemplateError" />
+						<NcButton
+							variant="secondary"
+							:disabled="savingTemplate"
+							@click="saveContentAsTemplate()">
+							{{ t('pipelinq', 'Save as template') }}
+						</NcButton>
+					</div>
+
+					<NcNoteCard
+						v-if="emptyVariableGaps.length"
+						type="warning"
+						class="blast-wizard__note"
+						data-testid="blast-empty-variables">
+						<p v-for="gap in emptyVariableGaps" :key="gap.variable">
+							{{ n('pipelinq', '%n recipient has no value for {variable}', '%n recipients have no value for {variable}', gap.count, { variable: gap.variable }) }}
+						</p>
 					</NcNoteCard>
 
 					<NcLoadingIcon v-if="previewLoading" :size="24" />
@@ -409,7 +446,7 @@
 <script>
 import { CnDialog, CnStepper } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
-import { showInfo } from '@nextcloud/dialogs'
+import { showInfo, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
@@ -428,8 +465,9 @@ import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import Send from 'vue-material-design-icons/Send.vue'
 import MissingConsentModal from '../modals/MissingConsentModal.vue'
-import { previewTemplate } from '../services/articlesApi.js'
 import { mailPreviewDocument } from '../services/mailPreview.js'
+import { saveAsTemplate } from '../services/templateFromWizard.js'
+import { emptyVariables, previewTemplate } from '../services/templatePreviewApi.js'
 
 const STEPS = [
 	{ key: 'basics', label: 'Basics' },
@@ -533,8 +571,14 @@ export default {
 			transportsLoading: false,
 			templateValidating: false,
 			templateValidationError: '',
+			/** The name typed for "Save as template" on the content step. */
+			saveTemplateName: '',
+			saveTemplateError: '',
+			savingTemplate: false,
 			preview: null,
 			previewLoading: false,
+			/** Per used variable, how many recipients of the audience get no value for it. */
+			emptyVariableGaps: [],
 			showConsentModal: false,
 			missingConsentContacts: [],
 			consentDecision: null,
@@ -728,6 +772,9 @@ export default {
 			if (value === 'review') {
 				this.loadReviewConsent()
 			}
+			if (value === 'content') {
+				this.loadEmptyVariables()
+			}
 		},
 
 		show: {
@@ -790,6 +837,7 @@ export default {
 			this.model.templateId = option?.id || ''
 			this.validateTemplate()
 			this.loadPreview()
+			this.loadEmptyVariables()
 		},
 
 		/**
@@ -1052,6 +1100,45 @@ export default {
 		},
 
 		/**
+		 * Start the newsletter from a template on the first step: its channel
+		 * becomes the wizard's channel and it is the content step's template.
+		 *
+		 * @param {object|null} template The template picked, or null to clear it.
+		 *
+		 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-003
+		 */
+		startFromTemplate(template) {
+			if (template?.channel) {
+				this.selectedChannel = template.channel
+			}
+			this.selectedTemplate = template || null
+		},
+
+		/**
+		 * Save the content step's template under a new name, then use the copy.
+		 *
+		 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-003
+		 */
+		async saveContentAsTemplate() {
+			this.saveTemplateError = ''
+			this.savingTemplate = true
+			try {
+				const created = await saveAsTemplate(this.selectedTemplate, this.saveTemplateName)
+				const stored = { ...created, name: created?.name || this.saveTemplateName.trim() }
+				this.templates = [...this.templates, stored]
+				this.selectedTemplate = stored
+				this.saveTemplateName = ''
+				showSuccess(this.t('pipelinq', 'Saved as template "{name}"', { name: stored.name }))
+			} catch (error) {
+				this.saveTemplateError = error?.response?.data?.message
+					|| error?.message
+					|| this.t('pipelinq', 'The template could not be saved')
+			} finally {
+				this.savingTemplate = false
+			}
+		},
+
+		/**
 		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-wizard-offers-a-transport-step
 		 */
 		reset() {
@@ -1249,6 +1336,29 @@ export default {
 				this.preview = null
 			} finally {
 				this.previewLoading = false
+			}
+		},
+
+		/**
+		 * Count, for the chosen template and audience, the recipients that a
+		 * used variable leaves empty, so the marketer reads it before sending.
+		 * A failed count shows nothing rather than a wrong number.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+		 */
+		async loadEmptyVariables() {
+			this.emptyVariableGaps = []
+			if (!this.selectedTemplate) {
+				return
+			}
+			try {
+				this.emptyVariableGaps = await emptyVariables(this.selectedTemplate.id, {
+					segmentId: this.model.segmentId,
+					listId: this.model.listId,
+				})
+			} catch {
+				this.emptyVariableGaps = []
 			}
 		},
 
@@ -1463,6 +1573,12 @@ export default {
 
 .blast-wizard__note {
 	margin: 0;
+}
+
+.blast-wizard__save-template {
+	display: flex;
+	align-items: flex-end;
+	gap: calc(var(--default-grid-baseline) * 2);
 }
 
 .blast-wizard__consent {

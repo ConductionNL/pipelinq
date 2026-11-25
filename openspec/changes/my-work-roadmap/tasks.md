@@ -10,22 +10,28 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 2. Quick actions (REQ-MW-100)
 
-- [ ] 2.1 Header buttons "New ticket" and "New contact" (no "New lead", as on `PqMijnWerk`) in `src/views/MyWork.vue`, each opening the entity's existing create modal from `src/modals/` with the assignee preset.
-- [ ] 2.2 Refresh the list after a ticket is saved.
+- [x] 2.1 Header buttons "New ticket" and "New contact" (no "New lead", as on `PqMijnWerk`) in `src/views/MyWork.vue`, each opening the entity's existing create modal from `src/modals/` with the assignee preset.
+  - Built as manifest config: My work is a dashboard page, so the buttons are its `headerActions` (`my-work-new-ticket`, `my-work-new-contact`), `open-modal` on the registered `RequestCreateDialog` (whose board layout presets the agent as handler) and `ContactCreateDialog` (a contact has no assignee). Vitest `tests/vitest/myWorkQuickActions.spec.js`
+- [x] 2.2 Refresh the list after a ticket is saved.
+  - `RequestCreateDialog` takes `stayAfterCreate` (My work sets it, so Open after creating starts unticked) and emits `cn:page:refresh` after a create that stays, which the record lists read again on. Vitest `tests/vitest/myWorkQuickActions.spec.js`; Playwright `tests/e2e/spec-coverage/my-work-quick-actions.spec.ts` is written, not yet run (needs a seeded instance)
 
 ## 3. Recent activity (REQ-MW-110)
 
-- [ ] 3.1 `src/components/myWork/RecentActivity.vue`: the 10 latest audit-trail entries of the user's assigned objects through OpenRegister's audit trail API.
+- [x] 3.1 `src/components/myWork/RecentActivity.vue`: the 10 latest audit-trail entries of the user's assigned objects through OpenRegister's audit trail API.
+  - Built as a manifest record list, not a Vue file: `my-activity` on the MyWork page (side column) reads `GET /api/my-work/recent-activity` (`MyWorkActivityController`), which `RecentActivityService` and `ActivityTrail` answer from OpenRegister's audit trail (`ObjectServiceInterface::getLogs()`) of the 20 most recently changed items the worklist reads as the user, newest 10 first, with kind, title, who, when and the changed fields. PHPUnit `RecentActivityServiceTest`, `MyWorkActivityControllerTest`; Vitest `tests/vitest/myWorkRecentActivity.spec.js`.
 - [ ] 3.2 Collapsed state per user through `/api/settings/user`; empty text "No recent activity on your items".
 
 ## 4. Follow-up rows (REQ-MW-120)
 
-- [ ] 4.1 In `MyWork.vue` (task rows): "planned HH:MM" for today, "Tomorrow" or "In N days" otherwise, "Follow-up today" marker. Put the date logic in `src/services/myWorkGroups.js` with Vitest cases.
+- [x] 4.1 In `MyWork.vue` (task rows): "planned HH:MM" for today, "Tomorrow" or "In N days" otherwise, "Follow-up today" marker. Put the date logic in `src/services/myWorkGroups.js` with Vitest cases.
+  - Built as manifest config, not a Vue file: My work is a manifest page. The `my-follow-ups` record list reads `meta.cases` (a deadline from `@today` to `@today+1d` adds "planned {deadline|time}") and its `due` config (`todayLabel` "Follow-up today", `upcomingLabel` "Tomorrow" / "In {count} days", the library's "{count} days overdue" in the danger tone). The date logic is the library's own, so no `myWorkGroups.js`. Vitest `tests/vitest/myWorkFollowUpRows.spec.js` reads the config through the library's due text, row condition and template.
 
 ## 5. Meetings (REQ-MW-130)
 
-- [ ] 5.1 `lib/Service/MyWorkCalendarService.php`: events of the next 7 days from the user's calendars through `OCP\Calendar\IManager`, kept when the description or location links a Pipelinq client, contact or lead; empty when the Calendar app is absent.
-- [ ] 5.2 Route `GET /api/my-work/meetings`; `src/components/myWork/UpcomingMeetings.vue`, hidden when empty.
+- [x] 5.1 `lib/Service/MyWorkCalendarService.php`: events of the next 7 days from the user's calendars through `OCP\Calendar\IManager`, kept when the description or location links a Pipelinq client, contact or lead; empty when the Calendar app is absent.
+  - Built as `lib/Service/MyWork/MyWorkCalendarService.php` with `MeetingRecordLink` (the first `/apps/pipelinq/{clients|contacts|leads}/<uuid>` link in the description, then the location). Shared calendars are skipped; the linked record is read through OpenRegister and an unreadable one lists nothing. PHPUnit `tests/Unit/Service/MyWork/MyWorkCalendarServiceTest.php`
+- [x] 5.2 Route `GET /api/my-work/meetings`; `src/components/myWork/UpcomingMeetings.vue`, hidden when empty.
+  - Built as `MyWorkMeetingsController::index()` (a failed calendar read answers an empty list) and, as manifest configuration rather than a hand-built component, the `my-meetings` record-list on My work, hidden by `visibleWhen` when the route has no meetings. PHPUnit `MyWorkMeetingsControllerTest`, Vitest `tests/vitest/myWorkMeetings.spec.js`; Playwright `tests/e2e/spec-coverage/my-work-roadmap/upcoming-meetings.spec.ts` is written, not yet run (needs a seeded instance)
 
 ## 6. Notification summary (REQ-MW-140)
 
@@ -46,9 +52,12 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 10. Scope (REQ-MW-180)
 
-- [ ] 10.1 Admin setting for the team manager groups in Pipelinq settings.
-- [ ] 10.2 `WorklistService::getMine()` gains a scope (`mine`, `team`, `organisation`); team members resolved from the manager's group through `IGroupManager`; OpenRegister RBAC unchanged.
-- [ ] 10.3 Scope switch, member list with open counts, "Back to team".
+- [x] 10.1 Admin setting for the team manager groups in Pipelinq settings.
+  - Built: app setting `my_work_manager_groups` (group ids, comma separated, empty by default) in the declared `myWork` section of `src/views/settings/adminSections.json`, mounted for administrators on the admin page. Vitest `tests/vitest/myWorkManagerGroups.spec.js` and `adminSections.spec.js`.
+- [x] 10.2 `WorklistService::getMine()` gains a scope (`mine`, `team`, `organisation`); team members resolved from the manager's group through `IGroupManager`; OpenRegister RBAC unchanged.
+  - Built: `lib/Service/Worklist/WorkScope.php` says which scopes a user has (`team` for a member of a configured manager group, its team being every member of those groups; `organisation` for a Nextcloud administrator) and whose work each lists. `getMine(userId, limit, scope, member)` asks OpenRegister once per listed user (no assignee filter for the organisation), so every read stays under the user's own permissions. `GET /api/worklist/mine?scope=&member=` answers 400 for a scope or member the user may not ask for. PHPUnit `tests/Unit/Service/Worklist/WorkScopeTest.php`, `WorklistServiceTest` (team, one member, organisation, refused), `WorklistControllerTest`. The page's `/api/worklist/items` and the week tiles keep the user's own work until the scope switch (10.3) lands.
+- [x] 10.3 Scope switch, member list with open counts, "Back to team".
+  - Built as manifest configuration: `my-scope` (Whose work: My items, Team, Organisation, as `GET /api/my-work/team` lists them for the user, hidden when the user has only their own work) and `my-team` (on Team, every member with their open items and Back to team) at the top of the side column. The ticket lists, the phone list, the download and the week tiles pass `scope` and `member` on: `WorklistService::items()` takes one view array (bucket, lens, sort, done, scope, member) and `getWeekStats()` counts the scope's tickets. PHPUnit `MyWorkTeamControllerTest`, `WorkScopeTest`, `WorklistServiceTest`, `WorklistControllerItemsTest`, `WorkBucketsTest`; Vitest `tests/vitest/myWorkScopeSwitch.spec.js`. Not yet: the lens chip counts and the My leads and My follow-ups lists still read the user's own work, and the live check of the switch needs a browser.
 
 ## 11. Refresh (REQ-MW-190)
 
@@ -56,9 +65,11 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 12. Filters (REQ-MW-200)
 
-- [ ] 12.1 Priority multi-select and pipeline select next to the type buttons; "Filters (N)" and "Clear filters"; pipeline filter leaves tickets and follow-ups alone.
+- [x] 12.1 Priority multi-select and pipeline select next to the type buttons; "Filters (N)" and "Clear filters"; pipeline filter leaves tickets and follow-ups alone.
+  - Partly built (24 Nov 2026): `GET /api/worklist/items` takes `?priority=urgent,high` (an unknown priority answers 400) and `?pipeline=<id>`. `lib/Service/Worklist/WorkFilters.php` keeps the chosen priorities, counts a missing priority as normal, and narrows only leads to the pipeline, so tickets and follow-ups stay. My work's bar has a Priority select ("All priorities") and a Pipeline picker over the pipeline objects ("All pipelines"), and every list and the download pass both values on. Tests: PHPUnit `WorkFiltersTest`, `WorklistServiceTest::testItemsHonourThePriorityAndPipelineFilters`, `WorklistControllerItemsTest`; Vitest `tests/vitest/myWorkPriorityPipelineFilters.spec.js`. Completed (24 Nov 2026): the Priority select takes several priorities (`multiple: true`), the type, priority and pipeline controls are `filter: true`, and the bar's `clear` shows "Filters (N)" and "Clear filters" (nextcloud-vue 2.209.0, ConductionNL/nextcloud-vue#2313). Clearing returns to all types, all priorities and all pipelines; the sorting and Show completed stay. Vitest `tests/vitest/myWorkPriorityPipelineFilters.spec.js`; the library's own behaviour is tested in `tests/components/CnWorkspaceFilterMultiAndClear.spec.js` there.
 
 ## 13. Close
 
 - [ ] 13.1 Set `built.state` of the matching rows in `openspec/parity/capabilities.json` as each block lands.
+  - Done for the blocks built so far: `work-my-week-stats` (090), `work-quick-create` (100), `work-upcoming-meetings` (130) and `work-team-view` (180) now read built. Stays open while blocks 6 to 9, 11 and 12 are unbuilt; `work-layout`, `work-auto-refresh` and `work-filter-priority-pipeline` stay specified.
 - [ ] 13.2 Archive this change into `openspec/specs/my-work` once all blocks are built, or split the unbuilt rest into a new change.

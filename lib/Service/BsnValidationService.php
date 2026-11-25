@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use SensitiveParameter;
+
 /**
  * Stateless BSN validator.
  *
@@ -64,7 +66,7 @@ class BsnValidationService {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001-03
 	 */
 	public function validate(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsnInput,
 	): array {
 		// 1. Length / character check (REQ-BSN-001-03 — short-circuits 11-proef).
@@ -107,7 +109,7 @@ class BsnValidationService {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-001-02
 	 */
 	private static function elevenTestModulo(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsnInput,
 	): int {
 		// 2. 11-proef: sum(digit[i] * (9-i)) for i=0..7, plus digit[8] * -1; sum mod 11 == 0.
@@ -135,7 +137,7 @@ class BsnValidationService {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-009-01
 	 */
 	public static function mask(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsnInput,
 	): string {
 		$length = strlen($bsnInput);
@@ -167,7 +169,7 @@ class BsnValidationService {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-009-01
 	 */
 	public static function hash(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsnInput,
 	): string {
 		return hash('sha256', $bsnInput);

@@ -131,6 +131,9 @@ class SettingsLoadService {
 		'ctiAdapterConfig',
 		'ctiEventLog',
 		'ctiAgentPresence',
+		// The call mirror (kcc-agent-panel): without this slug the
+		// `mirroredCall_schema` key is never set and CallMirror writes nothing.
+		'mirroredCall',
 		// SLA engine (sla-engine-and-escalation) — separate sla register.
 		'slaPolicy',
 		'slaBreachEvent',
@@ -237,6 +240,9 @@ class SettingsLoadService {
 		// Quotes: the quote number listener and the line roll-up read these keys.
 		'salesQuote',
 		'salesQuoteLine',
+		// Served municipalities: the portal reads this key to stamp a request
+		// (requests-municipality-per-contact).
+		'servedMunicipality',
 		// Price lists: the price resolver reads this key (products-price-lists).
 		'priceList',
 		// Campaign events: the reminder and check-in read these two keys.
