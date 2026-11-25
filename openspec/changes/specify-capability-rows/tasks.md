@@ -18,10 +18,12 @@
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/OpenCorporatesApiClient.php:96`
 - [ ] 8.1 Check row `req-complaint` against "A complaint is held to the legal answer term by default"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/ComplaintSlaService.php:112`
-- [ ] 9.1 Check row `auto-setup-wizard` against "The setup wizard opens by itself on the first visit"
+- [x] 9.1 Check row `auto-setup-wizard` against "The setup wizard opens by itself on the first visit"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/SetupController.php`
-- [ ] 10.1 Check row `pipeline-kanban` against "A lead dragged to another stage column moves to that stage"
+  - Live 25 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main 119f4810, pipelinq development 3db8eb51, Playwright): with `setup_completed_version` and `setup_dismissed_version` removed from the app config (never completed or dismissed), the admin opening `/apps/pipelinq/` gets the dialog "Welcome to Pipelinq / Set up Pipelinq, step 1 of 7" without asking for it, steps Welcome, Load example data?, Reporting currency, Organisation, Till, Integrations, All set.
+- [x] 10.1 Check row `pipeline-kanban` against "A lead dragged to another stage column moves to that stage"
   - Verify: the scenarios hold on a live instance; evidence on the row: `src/views/pipeline/PipelineBoard.vue`
+  - Live 25 Nov 2026 (same sandbox, Zuiddrecht set and demo seed, Playwright as daan.verbeek on `/apps/pipelinq/pipeline`): dragging the lead "Ledenportaal energiecoöperatie" from the Nieuw column to Benaderd saves it (`PUT .../pipelinq/lead/{id}` 200 with `stage: Benaderd`), and after a reload the card sits in the Benaderd column.
 - [ ] 11.1 Check row `work-recurring-task` against "A task with a repeat schedule comes back on that schedule"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/ScheduledTaskJob.php`
 - [ ] 12.1 Check row `auto-overnight` against "Slow work runs as a background job, not in the user's request"
