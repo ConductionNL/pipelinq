@@ -101,12 +101,14 @@ class SalesContractContactRefSchemaTest extends TestCase {
 	}//end testTheRenewalLeadOutcomeAcceptsNull()
 
 	/**
-	 * Adding the field bumps the schema to 1.3.0 (1.2.0 is the invoiced-by fragment), so OpenRegister re-imports it.
+	 * Adding the field bumps the schema to at least 1.3.0 (1.2.0 is the invoiced-by fragment), so OpenRegister
+	 * re-imports it; a later fragment (1.4.0, the source lead) may raise it further.
 	 *
 	 * @return void
 	 */
 	public function testTheSchemaVersionIsBumped(): void {
-		$this->assertSame('1.3.0', ($this->schema()['version'] ?? null));
+		$version = (string) ($this->schema()['version'] ?? '');
+		$this->assertTrue(condition: version_compare($version, '1.3.0', '>='), message: 'salesContract version '.$version.' is below 1.3.0');
 
 	}//end testTheSchemaVersionIsBumped()
 }//end class
