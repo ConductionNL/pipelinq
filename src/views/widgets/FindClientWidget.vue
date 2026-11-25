@@ -195,8 +195,8 @@ import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import { fetchRegisteredObjects } from '../../services/objectFetch.js'
 import { resolveObjectType } from '../../services/pipelineUtils.js'
 import { initializeStores } from '../../store/store.js'
-import { toText } from '../../utils/widgetText.js'
 import { looksLikePhoneNumber } from '../../utils/ticketPhoneSearch.js'
+import { toText } from '../../utils/widgetText.js'
 
 const RESULT_LIMIT = 20
 const SEARCH_DEBOUNCE_MS = 300
