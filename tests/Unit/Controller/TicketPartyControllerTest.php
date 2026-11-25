@@ -12,7 +12,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * @version GIT: <git_id>
  * @link https://pipelinq.nl
- * @spec openspec/changes/tickets-list-by-party/specs/ticket-leaf/spec.md#requirement-a-host-app-can-link-to-one-partys-ticket-list
+ * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-host-app-can-link-to-one-partys-ticket-list
  */
 
 declare(strict_types=1);

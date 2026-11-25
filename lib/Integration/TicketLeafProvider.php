@@ -261,7 +261,7 @@ class TicketLeafProvider implements TicketLeafProviderInterface {
 	 *
 	 * @return array<int, string> The client ids.
 	 *
-	 * @spec openspec/changes/tickets-list-by-party/specs/ticket-leaf/spec.md#requirement-a-host-app-can-link-to-one-partys-ticket-list
+	 * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-host-app-can-link-to-one-partys-ticket-list
 	 */
 	public function clientIdsOf(string $ref): array {
 		$ref = trim($ref);
