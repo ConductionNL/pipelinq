@@ -965,7 +965,7 @@ class BerichtenboxService implements BerichtenboxServiceInterface {
 	 * @return bool
 	 */
 	private function isUnread(array $data): bool {
-		return ($data['readAt'] ?? '') === '' || $data['readAt'] === null;
+		return ($data['readAt'] ?? '') === '';
 	}//end isUnread()
 
 	/**
