@@ -75,7 +75,13 @@ class ExportWorkerJobTest extends TestCase {
 	 * @return void
 	 */
 	private function pass(): void {
-		$job = new ExportWorkerJob($this->createMock(ITimeFactory::class), $this->runs, $this->execution, $this->logger, $this->signedInAccount());
+		$job = new ExportWorkerJob(
+			time: $this->createMock(originalClassName: ITimeFactory::class),
+			runs: $this->runs,
+			execution: $this->execution,
+			logger: $this->logger,
+			systemAccount: $this->signedInAccount()
+		);
 		$run = new \ReflectionMethod($job, 'run');
 		$run->setAccessible(true);
 		$run->invoke($job, null);

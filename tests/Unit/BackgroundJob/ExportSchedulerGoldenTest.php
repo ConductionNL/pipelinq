@@ -88,7 +88,14 @@ class ExportSchedulerGoldenTest extends TestCase {
 		}
 
 		try {
-			$job = new ExportSchedulerJob(time: $time, jobs: $list, runs: $runs, cron: new CronExpressionHelper(), logger: $logger, systemAccount: $this->signedInAccount());
+			$job = new ExportSchedulerJob(
+				time: $time,
+				jobs: $list,
+				runs: $runs,
+				cron: new CronExpressionHelper(),
+				logger: $logger,
+				systemAccount: $this->signedInAccount()
+			);
 			$job->setLastRun((int)strtotime('2026-11-03 12:03:20 UTC'));
 			(new ReflectionMethod($job, 'run'))->invoke($job, null);
 		} finally {

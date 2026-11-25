@@ -123,11 +123,11 @@ class ExportJobsActAsSystemAccountTest extends TestCase {
 		);
 
 		$job = new ExportWorkerJob(
-			$this->createMock(originalClassName: ITimeFactory::class),
-			$runs,
-			$execution,
-			$this->createMock(originalClassName: LoggerInterface::class),
-			$this->anonymousSession()
+			time: $this->createMock(originalClassName: ITimeFactory::class),
+			runs: $runs,
+			execution: $execution,
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			systemAccount: $this->anonymousSession()
 		);
 		(new ReflectionMethod($job, 'run'))->invoke($job, null);
 

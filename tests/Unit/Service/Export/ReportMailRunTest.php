@@ -406,8 +406,8 @@ class ReportMailRunTest extends TestCase {
 		$this->assertSame(2, $outcome['fileCount']);
 		$this->assertSame(strlen('rows for anna') + strlen('rows for bram'), $outcome['byteCount']);
 		$this->assertNull($outcome['errorMessage']);
-		$this->assertTrue(array_is_list($outcome['manifest']));
-		$this->assertSame(['anna', 'bram'], array_column($outcome['manifest'], 'userId'));
+		$this->assertTrue(condition: array_is_list($outcome['manifest']));
+		$this->assertSame(expected: ['anna', 'bram'], actual: array_column($outcome['manifest'], 'userId'));
 		$this->assertSame([], $this->notified);
 	}//end testEachRecipientGetsTheRowsTheyMayRead()
 
@@ -424,7 +424,7 @@ class ReportMailRunTest extends TestCase {
 
 		$this->assertSame('partial', $outcome['status']);
 		$this->assertSame('bram: The mail server refused the recipient.', $outcome['errorMessage']);
-		$this->assertSame(['delivered', 'failed'], array_column($outcome['manifest'], 'status'));
+		$this->assertSame(expected: ['delivered', 'failed'], actual: array_column($outcome['manifest'], 'status'));
 		$this->assertSame(
 			[['owner', 'export_mail_delivery_failed', ['title' => 'Open tickets', 'failed' => 1, 'error' => 'bram: The mail server refused the recipient.']]],
 			$this->notified
