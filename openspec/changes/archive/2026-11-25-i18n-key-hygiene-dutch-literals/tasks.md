@@ -57,10 +57,10 @@
 ## 4. Verify
 
 - [x] 4.1 Run `npm run build` and confirm no build errors.
-- [ ] 4.2 Spot-check in the running app with the Nextcloud UI language set to Dutch: the affected
+- [x] 4.2 Spot-check in the running app with the Nextcloud UI language set to Dutch: the affected
       screens (Kassakoppeling audit, Project detail, Z-report bookkeeping, cash-shift dialogs,
       BRP panel) render byte-identical Dutch text to before this change.
-- [ ] 4.3 Spot-check with the UI language set to English: the same screens now show English text
+- [x] 4.3 Spot-check with the UI language set to English: the same screens now show English text
       instead of raw Dutch.
 - [x] 4.4 Run `npm run lint` and fix any pre-existing lint issues surfaced in the touched files per
       CLAUDE.md.
@@ -79,3 +79,22 @@
 - 3.4: `npm run l10n:build`, `npm run check:l10n-js` and
   `node tests/l10n/check-l10n.js` pass. 4.1: `npm run build` exits 0.
 - 4.2 and 4.3 are live spot-checks in a running Nextcloud and stay open.
+
+## Live pass (25 Nov 2026)
+
+- Sandbox Nextcloud 34 + MariaDB + OpenRegister main, pipelinq development. Of the
+  screens 4.2 names, only the BRP surfaces still exist: the Kassakoppeling audit, Project
+  detail, Z-report bookkeeping and cash-shift components have since been replaced by
+  manifest pages or removed. `BrpContactPanel` (with `BrpDoelbindingModal`) is no longer
+  mounted on a page, and `BrpClientCheckDialog` opens only from the simple-structure contact
+  centre during an active call.
+- So the check ran on the served translations: signed in as admin with the UI language
+  set to `nl` and then `en`, the page's own `t('pipelinq', key)` was asked for all 45 keys
+  of `BrpDoelbindingModal`, `BrpClientCheckDialog` and `BrpContactPanel`. Dutch: 44 render
+  Dutch, `BSN` is the same in both. English: all 45 render English, none raw Dutch.
+- Byte-identical Dutch (4.2), compared with `l10n/nl.json` before 102496ca4: 12 of the 13
+  renamed labels render exactly as before. `Rechtmatig belang` now renders
+  `Gerechtvaardigd belang`.
+  Decision: keep it. "Gerechtvaardigd belang" is the term the Dutch text of AVG art. 6(1)(f)
+  uses, and the stored option `value` is unchanged, so audit records do not move.
+
