@@ -18,7 +18,8 @@ The ClientDetail manifest page SHALL render the calendar leaf's integration widg
 
 - **GIVEN** the Nextcloud Calendar app is not installed
 - **WHEN** an agent opens a client detail page
-- **THEN** the ClientDetail page SHALL render normally with the calendar widget in its integration-unavailable state
+- **THEN** the ClientDetail page SHALL render normally with the Meetings widget present
+- **AND** the widget SHALL show its empty state ("No meetings"), because the calendar leaf reads Nextcloud's own CalDAV and answers without the Calendar app; only when the leaf answers 503 SHALL it read "Calendar is currently unavailable."
 - **AND** no error SHALL be raised by pipelinq code
 
 ---

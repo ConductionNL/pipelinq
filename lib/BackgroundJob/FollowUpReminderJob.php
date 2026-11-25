@@ -52,7 +52,7 @@ use Throwable;
  * Time-based dispatch needs a job: the notification dialect of OpenRegister
  * triggers on object lifecycle events, not on proximity to a date.
  *
- * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+ * @spec openspec/specs/email-calendar-sync/spec.md#requirement-follow-up-reminders-driven-by-the-calendar-leaf
  */
 class FollowUpReminderJob extends TimedJob {
 	use CastingPayloadToArray;
@@ -149,7 +149,7 @@ class FollowUpReminderJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+	 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-follow-up-reminders-driven-by-the-calendar-leaf
 	 */
 	protected function run(mixed $argument): void {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
@@ -178,7 +178,7 @@ class FollowUpReminderJob extends TimedJob {
 	 *
 	 * @return int The window in hours.
 	 *
-	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+	 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-follow-up-reminders-driven-by-the-calendar-leaf
 	 */
 	public function windowHours(): int {
 		$hours = (int)$this->appConfig->getValueString(AppIdentity::APP_ID, self::WINDOW_KEY, (string)self::DEFAULT_WINDOW_HOURS);
@@ -198,7 +198,7 @@ class FollowUpReminderJob extends TimedJob {
 	 *
 	 * @return bool True when the moment is inside the window.
 	 *
-	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+	 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-follow-up-reminders-driven-by-the-calendar-leaf
 	 */
 	public function inWindow(mixed $moment, int $now, int $windowEnd): bool {
 		$timestamp = self::timestampOf(moment: $moment);
@@ -232,7 +232,7 @@ class FollowUpReminderJob extends TimedJob {
 	 *
 	 * @return bool True when a marker exists.
 	 *
-	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+	 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-follow-up-reminders-driven-by-the-calendar-leaf
 	 */
 	public function wasRecentlyNotified(string $occurrence): bool {
 		return $this->appConfig->getValueString(AppIdentity::APP_ID, $this->markerKey(occurrence: $occurrence), '') !== '';
@@ -245,7 +245,7 @@ class FollowUpReminderJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+	 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-follow-up-reminders-driven-by-the-calendar-leaf
 	 */
 	public function markNotified(string $occurrence): void {
 		$this->appConfig->setValueString(
@@ -436,7 +436,7 @@ class FollowUpReminderJob extends TimedJob {
 	 *
 	 * @return array<int, string> The user ids.
 	 *
-	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+	 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-follow-up-reminders-driven-by-the-calendar-leaf
 	 */
 	public function assignees(array $task): array {
 		$userId = (string)($task['assigneeUserId'] ?? '');
