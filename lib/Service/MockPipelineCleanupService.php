@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
+ * @spec openspec/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use RuntimeException;
  * title and description (the shipped defaults and the demo seed's, which carry
  * no slug). A renamed or re-described copy is no longer a mock and is left alone.
  *
- * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
+ * @spec openspec/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
  */
 class MockPipelineCleanupService implements MockPipelineCleanupServiceInterface {
 	/**
@@ -51,7 +51,7 @@ class MockPipelineCleanupService implements MockPipelineCleanupServiceInterface 
 	 * which every install gets and the drawn boards do not show. A lead without
 	 * a pipeline falls back to the remaining lead default (LeadStagePlacer).
 	 *
-	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
+	 * @spec openspec/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
 	 */
 	public const MOCK_SLUGS = [
 		'pipeline-voorbeeld-title-1-1',
@@ -112,7 +112,7 @@ class MockPipelineCleanupService implements MockPipelineCleanupServiceInterface 
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $dryRun is the command's --dry-run option.
 	 *
-	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
+	 * @spec openspec/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
 	 */
 	public function run(bool $dryRun=false): array {
 		return $this->systemAccount->runAsCurrentOrSystem(fn (): array => $this->runAsCaller(dryRun: $dryRun));
@@ -125,7 +125,7 @@ class MockPipelineCleanupService implements MockPipelineCleanupServiceInterface 
 	 *
 	 * @return bool True for a known mock pipeline.
 	 *
-	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
+	 * @spec openspec/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
 	 */
 	public function isMock(array $pipeline): bool {
 		$slug = (string) ($pipeline['@self']['slug'] ?? $pipeline['slug'] ?? '');

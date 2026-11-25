@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
+ * @spec openspec/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Console entrypoint for removing the mock pipelines.
  *
- * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
+ * @spec openspec/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
  */
 class RemoveMockPipelinesCommand extends Command {
 	/**
