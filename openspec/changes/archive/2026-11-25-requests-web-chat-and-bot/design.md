@@ -106,8 +106,10 @@ assistant is not asked again in this chat.
 
 ### D6. The colleague answers on the ticket
 
-`WebChatSection` (`kind: 'section'`) mounts on TicketDetail when the ticket's
-channel is chat. It shows the transcript with who said what (visitor,
+The library's `conversation` widget shows the chat on TicketDetail when the
+ticket's channel is chat (amended on #3943: built-in first, ADR-049; the
+planned `WebChatSection` was dropped). Take this chat and End chat are header
+actions. It shows the transcript with who said what (visitor,
 assistant, colleague), a Take this chat button that assigns the ticket to the
 current user (which takes it out of the Queue), a reply box with the saved
 reply picker for channel `chat` from `messaging-saved-replies-and-resend` when

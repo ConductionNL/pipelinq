@@ -4696,6 +4696,47 @@
 						"errorMessage": "Could not assign this ticket to you."
 					},
 					{
+						"id": "web-chat-take",
+						"type": "api-call",
+						"label": "Take this chat",
+						"icon": "AccountArrowLeftOutline",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/web-chat/conversations/@object.inboundThreadKey/take",
+						"successMessage": "The chat is yours. The visitor sees that a colleague answers.",
+						"errorMessage": "Could not take this chat.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "channel",
+									"op": "eq",
+									"value": "chat"
+								},
+								{
+									"field": "assignee",
+									"op": "empty"
+								}
+							]
+						}
+					},
+					{
+						"id": "web-chat-end",
+						"type": "api-call",
+						"label": "End chat",
+						"icon": "CloseCircleOutline",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/web-chat/conversations/@object.inboundThreadKey/end",
+						"confirm": true,
+						"confirmTitle": "End this chat?",
+						"confirmMessage": "The visitor can no longer send messages in this chat. The ticket stays as it is.",
+						"successMessage": "Chat ended.",
+						"errorMessage": "Could not end this chat.",
+						"visibleWhen": {
+							"field": "channel",
+							"op": "eq",
+							"value": "chat"
+						}
+					},
+					{
 						"id": "pass-on",
 						"type": "open-form",
 						"label": "Pass on",
@@ -5010,6 +5051,41 @@
 						}
 					},
 					{
+						"id": "ticket-web-chat",
+						"type": "conversation",
+						"title": "Website chat",
+						"icon": "MessageTextOutline",
+						"_note": "requests-web-chat-and-bot D6, decision on #3943 (option 1): the library's conversation widget reads the chat from GET /api/web-chat/conversations/{threadKey} every three seconds until the chat has ended, and the reply box posts to its /reply. Take this chat and End chat are header actions.",
+						"visibleWhen": {
+							"field": "channel",
+							"op": "eq",
+							"value": "chat"
+						},
+						"content": {
+							"source": {
+								"url": "/apps/pipelinq/api/web-chat/conversations/@object.inboundThreadKey",
+								"responsePath": "messages"
+							},
+							"pollSeconds": 3,
+							"pollUntil": {
+								"path": "status",
+								"in": [
+									"closed"
+								]
+							},
+							"textField": "body",
+							"timeField": "at",
+							"authorField": "authorName",
+							"sideField": "side",
+							"usValue": "us",
+							"endpoint": "/apps/pipelinq/api/web-chat/conversations/@object.inboundThreadKey/reply",
+							"messageKey": "text",
+							"replyLabel": "Your answer",
+							"sendLabel": "Send",
+							"emptyText": "No messages in this chat yet."
+						}
+					},
+					{
 						"id": "ticket-panels",
 						"type": "tabs",
 						"title": "Ticket panels",
@@ -5042,6 +5118,15 @@
 									"visibleWhen": {
 										"field": "recording_url",
 										"op": "notEmpty"
+									}
+								},
+								{
+									"widgetId": "ticket-web-chat",
+									"label": "Website chat",
+									"visibleWhen": {
+										"field": "channel",
+										"op": "eq",
+										"value": "chat"
 									}
 								},
 								{
@@ -10845,6 +10930,9 @@
 			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. The \"Your week so far\" tiles read GET /api/my-work/week-stats (REQ-MW-090). Not here: the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
 			"config": {
 				"showRefresh": true,
+				"layoutPanel": true,
+				"_layoutPanelNote": "Arrange page (REQ-MW-160, board PqMijnWerkIndelen): the user hides and reorders My work's sections in the library's layout panel, stored per user (nextcloud-vue user layout). The work list (the three ticket lists, My leads, My follow-ups and the phone list) is locked: it can be moved, never hidden. Back to default returns to this layout.",
+				"layoutPanelLocked": ["my-answer-today", "my-waiting-on-me", "my-waiting-on-customer", "my-leads", "my-follow-ups", "my-items-phone"],
 				"showWidgetActions": false,
 				"headerActionsViewport": "wide",
 				"gridFloat": false,

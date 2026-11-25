@@ -88,6 +88,17 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'portal.js'),
 		filename: appId + '-portal.js',
 	},
+	// requests-web-chat-and-bot: the line a website pastes, and the chat window
+	// it frames. Both stand alone (no shared chunks, see splitChunks below): the
+	// embed runs on somebody else's page, the window in a frame of it.
+	webChat: {
+		import: path.join(__dirname, 'src', 'webChat', 'embed.js'),
+		filename: appId + '-web-chat.js',
+	},
+	webChatWindow: {
+		import: path.join(__dirname, 'src', 'webChat', 'window.js'),
+		filename: appId + '-web-chat-window.js',
+	},
 	// The Outlook add-in's task pane (contact-moments-mail-add-in). Plain DOM,
 	// no Vue: it runs inside Outlook, outside the Nextcloud shell.
 	mailAddIn: {
@@ -240,7 +251,8 @@ webpackConfig.optimization = {
 	...(webpackConfig.optimization || {}),
 	splitChunks: {
 		...(webpackConfig.optimization?.splitChunks || {}),
-		chunks: 'all',
+		// The web chat entries stand alone: their pages load no shared chunk.
+		chunks: (chunk) => !['webChat', 'webChatWindow'].includes(chunk.name),
 		cacheGroups: {
 			default: false,
 			defaultVendors: false,

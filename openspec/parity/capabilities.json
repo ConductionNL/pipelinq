@@ -9019,14 +9019,14 @@
 			"feature": "omnichannel-registratie",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "specified",
-				"evidence": "no live chat found anywhere in lib/ or src/",
+				"state": "built",
+				"evidence": "lib/Controller/WebChatController.php (start, send, poll; public, rate limited) and WebChatWindowController.php (the framed window), lib/Service/WebChat/*, the embed script src/webChat/; the ticket shows the chat in the conversation widget (src/manifest.json ticket-web-chat) with Take this chat and End chat (#3943)",
 				"owner": "ConductionNL/pipelinq",
-				"change": "requests-web-chat-and-bot",
+				"change": "openspec/changes/archive/2026-11-25-requests-web-chat-and-bot",
 				"requirement": [
-					"openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover :: An administrator puts a chat on the website (REQ-WCH-001)",
-					"openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover :: A visitor chats without an account (REQ-WCH-002)",
-					"openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover :: The chat goes to a colleague through the Queue (REQ-WCH-004)"
+					"openspec/specs/web-chat-and-handover :: An administrator puts a chat on the website (REQ-WCH-001)",
+					"openspec/specs/web-chat-and-handover :: A visitor chats without an account (REQ-WCH-002)",
+					"openspec/specs/web-chat-and-handover :: The chat goes to a colleague through the Queue (REQ-WCH-004)"
 				]
 			},
 			"note": "HubSpot's free tier includes live chat and a chatbot. This is a real gap, not a rating we missed. Specified 2026-09-28 in openspec/changes/requests-web-chat-and-bot (OpenSpec pass).",
@@ -10403,15 +10403,15 @@
 			"feature": "omnichannel-registratie",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "specified",
-				"evidence": "no chatbot in lib/ or src/portal/; lib/Service/NaviService.php is an analytics assistant for colleagues (\"Conversational analytics orchestrator\"), not a client-facing bot with handover",
+				"state": "built",
+				"evidence": "lib/Service/WebChat/ChatAssistant.php asks hermiq's public chat entry point first, WebChatAssistantTurn stores its answer with sources and hands over after two unsourced answers (#3943); every chat goes to a person while hermiq is absent",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "nothing",
+				"reachedOn": "Website chat window, assistant answers before the handover",
 				"readOn": "2026-09-26",
-				"change": "requests-web-chat-and-bot",
+				"change": "openspec/changes/archive/2026-11-25-requests-web-chat-and-bot",
 				"requirement": [
-					"openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover :: The assistant answers first when switched on (REQ-WCH-003)",
-					"openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover :: The chat goes to a colleague through the Queue (REQ-WCH-004)"
+					"openspec/specs/web-chat-and-handover :: The assistant answers first when switched on (REQ-WCH-003)",
+					"openspec/specs/web-chat-and-handover :: The chat goes to a colleague through the Queue (REQ-WCH-004)"
 				]
 			},
 			"evidence": {

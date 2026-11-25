@@ -138,7 +138,7 @@ class CreateSalesGroupTest extends TestCase {
 		// call and email rules, really address a group. A fragment may restate a
 		// rule's recipients, so a rule can appear twice.
 		$this->assertEqualsCanonicalizing(
-			['newContact', 'newLead', 'leadWon', 'newEnquiry', 'newTicket', 'incomingCall', 'incomingEmail'],
+			['newContact', 'newLead', 'leadWon', 'newEnquiry', 'newTicket', 'incomingCall', 'incomingEmail', 'chatWaiting'],
 			array_values(array_unique(($addressed['sales'] ?? [])))
 		);
 		$this->assertSame([CreateSalesGroup::GROUP_ID], array_keys($addressed));
