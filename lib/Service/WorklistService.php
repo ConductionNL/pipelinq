@@ -446,24 +446,29 @@ class WorklistService implements WorklistServiceInterface {
 	 *   - done:   true to list finished work too (the page's "Toon afgerond").
 	 *   - scope:  whose work, `mine` (default), `team` or `organisation` ({@see WorkScope}, REQ-MW-180).
 	 *   - member: with `team`, one member of the team; '' for the whole team.
+	 *   - priority: comma-separated priorities to keep (`urgent,high`); '' for all (REQ-MW-200).
+	 *   - pipeline: keep only the leads of this pipeline id; tickets and follow-ups stay; '' for every pipeline.
 	 *
 	 * @param string $userId The Nextcloud UID asking.
-	 * @param array{bucket?: string, lens?: string, sort?: string, done?: bool, scope?: string, member?: string} $view The view.
+	 * @param array<string, mixed> $view The view (the keys above).
 	 *
 	 * @return array{items: array<int, array<string, mixed>>, total: int}
 	 *
 	 * @throws RuntimeException When OpenRegister is unreachable.
-	 * @throws InvalidArgumentException For a scope the user may not choose, or a member outside their team.
+	 * @throws InvalidArgumentException For a scope the user may not choose, a member outside their team, or an unknown priority.
 	 *
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
 	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	public function items(string $userId, array $view=[]): array {
 		$list = [
-			'now'    => new DateTimeImmutable(),
-			'bucket' => (string)($view['bucket'] ?? ''),
-			'lens'   => (string)($view['lens'] ?? ''),
-			'sort'   => (string)($view['sort'] ?? 'deadline'),
+			'now'      => new DateTimeImmutable(),
+			'bucket'   => (string)($view['bucket'] ?? ''),
+			'lens'     => (string)($view['lens'] ?? ''),
+			'sort'     => (string)($view['sort'] ?? 'deadline'),
+			'priority' => (string)($view['priority'] ?? ''),
+			'pipeline' => (string)($view['pipeline'] ?? ''),
 		];
 		$filters = $this->workScope->assigneeFilters(
 			userId: $userId,

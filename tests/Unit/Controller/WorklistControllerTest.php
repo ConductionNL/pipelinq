@@ -314,7 +314,19 @@ class WorklistControllerTest extends TestCase {
 		);
 		$item = ['kind' => 'lead', 'id' => 'l1', 'title' => 'Catering', 'priority' => 'normal', 'dueAt' => '2026-10-09', 'bucket' => 'answer-today'];
 		$this->service->expects($this->exactly(2))->method('items')
-			->with('pieter', ['bucket' => 'answer-today', 'lens' => 'leads', 'sort' => 'priority', 'done' => true, 'scope' => 'mine', 'member' => ''])
+			->with(
+				'pieter',
+				[
+					'bucket'   => 'answer-today',
+					'lens'     => 'leads',
+					'sort'     => 'priority',
+					'done'     => true,
+					'scope'    => 'mine',
+					'member'   => '',
+					'priority' => '',
+					'pipeline' => '',
+				]
+			)
 			->willReturn(['items' => [$item], 'total' => 1]);
 
 		$json = $this->buildController()->items();

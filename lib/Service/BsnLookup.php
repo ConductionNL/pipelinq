@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use SensitiveParameter;
+
 /**
  * The BSN a BRP lookup asks for, and the masked form that is the only one
  * ever logged.
@@ -37,7 +39,7 @@ final class BsnLookup {
 	 * @param string $maskedBsn The masked BSN used for any logging.
 	 */
 	public function __construct(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		public readonly string $bsn,
 		public readonly string $maskedBsn,
 	) {

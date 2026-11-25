@@ -881,6 +881,38 @@ class WorklistServiceTest extends TestCase {
 	}//end testWeekStatsCountTheUsersAnswersOfThisWeek()
 
 	/**
+	 * The priority and pipeline filters narrow the items: only urgent and
+	 * high work is listed, and a pipeline drops the other pipeline's leads
+	 * while tickets and follow-ups stay.
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 *
+	 * @return void
+	 */
+	public function testItemsHonourThePriorityAndPipelineFilters(): void {
+		$service = $this->buildService(byCollection: [
+			'lead_schema' => [
+				['id' => 'l1', 'title' => 'Catering', 'priority' => 'urgent', 'pipeline' => 'sales', 'stage' => 'Offerte'],
+				['id' => 'l2', 'title' => 'Beurs', 'priority' => 'low', 'pipeline' => 'events', 'stage' => 'Offerte'],
+			],
+			'ticket_schema:request' => [
+				['id' => 't1', 'title' => 'Afvalpas', 'ticketType' => 'request', 'status' => 'in_progress', 'priority' => 'high'],
+			],
+			'task_schema' => [['id' => 'k1', 'subject' => 'Terugbellen', 'status' => 'open']],
+		]);
+
+		$ids = static fn (array $result): array => array_column($result['items'], 'id');
+
+		$urgentHigh = $ids($service->items(userId: 'pieter', view: ['priority' => 'urgent,high', 'sort' => 'newest']));
+		sort($urgentHigh);
+		self::assertSame(expected: ['l1', 't1'], actual: $urgentHigh);
+
+		$sales = $ids($service->items(userId: 'pieter', view: ['pipeline' => 'sales']));
+		sort($sales);
+		self::assertSame(expected: ['k1', 'l1', 't1'], actual: $sales);
+	}//end testItemsHonourThePriorityAndPipelineFilters()
+
+	/**
 	 * The team scope of the items reads each member's leads, tickets and
 	 * follow-ups (a follow-up names its assignee `assigneeUserId`).
 	 *

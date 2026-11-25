@@ -56,6 +56,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\External\Berichtenbox;
 
 use Psr\Log\LoggerInterface;
+use SensitiveParameter;
 
 /**
  * Dormant log-backed Pipelinq Berichtenbox / Logius BBK 1.7 adapter.
@@ -214,7 +215,7 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 	 * @spec openspec/specs/berichtenbox/spec.md
 	 */
 	public function checkMailbox(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsn,
 	): BerichtenboxResult {
 		$reference = 'bbk-mbox-log-' . bin2hex(random_bytes(6));

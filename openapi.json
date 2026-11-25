@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Pipelinq",
-        "version": "0.5.35-unstable.20261123200113",
+        "version": "0.5.39-unstable.20261124175940",
         "description": "The JSON API of Pipelinq, the customer relations app for Nextcloud: contacts and organisations, contact moments, tickets and callbacks, campaigns and mailings, the point of sale, loyalty, social publishing and the settings behind them. The records themselves are stored in OpenRegister and read and written through its API; this document covers the endpoints Pipelinq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here.",
         "contact": {
             "name": "Conduction B.V.",
@@ -17698,6 +17698,82 @@
                 }
             }
         },
+        "/tickets/{id}/pass-on": {
+            "post": {
+                "operationId": "ticket-assign-pass-on",
+                "summary": "Pass a ticket to a colleague with a note",
+                "description": "Pass a ticket to a colleague, with a note for them. The new assignee and the note are written in one save, so the ticket's audit trail records them in the same entry and its History tab shows the note under the handover. An empty note clears the previous one. Read and written under the user's own OpenRegister RBAC: a ticket they may not read answers 404, one they may not change answers 403. Needs a signed-in Nextcloud user.",
+                "tags": [
+                    "ticket-assign"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The ticket id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The request succeeded.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "assignee"
+                                ],
+                                "properties": {
+                                    "assignee": {
+                                        "type": "string",
+                                        "maxLength": 64,
+                                        "description": "The colleague's user id."
+                                    },
+                                    "handoverNote": {
+                                        "type": "string",
+                                        "maxLength": 1000,
+                                        "description": "What the colleague should know; may be empty."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/tickets/{id}/resident-view": {
             "get": {
                 "operationId": "resident-view-show",
@@ -18220,6 +18296,24 @@
                         "in": "query",
                         "required": false,
                         "description": "With scope team: one member of the team.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "priority",
+                        "in": "query",
+                        "required": false,
+                        "description": "Keep only these priorities, comma separated (urgent, high, normal, low); an unknown priority answers 400.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "pipeline",
+                        "in": "query",
+                        "required": false,
+                        "description": "Keep only the leads of this pipeline id; tickets and follow-ups stay in the list.",
                         "schema": {
                             "type": "string"
                         }

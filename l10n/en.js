@@ -10221,7 +10221,20 @@ OC.L10N.register(
         "Save as template": "Save as template",
         "Saved as template \"{name}\"": "Saved as template \"{name}\"",
         "The template could not be saved": "The template could not be saved",
-        "Give the template a name": "Give the template a name"
+        "Give the template a name": "Give the template a name",
+        "All priorities": "All priorities",
+        "All pipelines": "All pipelines",
+        "A call comes in for me or my sales team": "A call comes in for me or my sales team",
+        "An email comes in for me or my sales team": "An email comes in for me or my sales team",
+        "Colleagues": "Colleagues",
+        "The colleagues who work on this with the assignee. They can open and change it while they are listed.": "The colleagues who work on this with the assignee. They can open and change it while they are listed.",
+        "Pass on": "Pass on",
+        "Note for your colleague": "Note for your colleague",
+        "Shown under the handover in the ticket's History.": "Shown under the handover in the ticket's History.",
+        "Ticket passed on.": "Ticket passed on.",
+        "Could not pass this ticket on.": "Could not pass this ticket on.",
+        "Handover note": "Handover note",
+        "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note.": "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note."
     },
     "nplurals=2; plural=(n != 1);"
 )

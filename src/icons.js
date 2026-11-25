@@ -175,6 +175,7 @@ import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import Percent from 'vue-material-design-icons/Percent.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
 import PhoneInTalk from 'vue-material-design-icons/PhoneInTalk.vue'
+import PhoneLog from 'vue-material-design-icons/PhoneLog.vue'
 import PhoneLogOutline from 'vue-material-design-icons/PhoneLogOutline.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
@@ -409,6 +410,7 @@ export default {
 	PencilOutline,
 	Phone,
 	PhoneInTalk,
+	PhoneLog,
 	PhoneMessage,
 	PhoneOutline,
 	PhoneReturnOutline,

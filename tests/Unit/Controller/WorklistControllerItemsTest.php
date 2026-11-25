@@ -96,7 +96,10 @@ class WorklistControllerItemsTest extends TestCase {
 	 */
 	public function testItemsUseTheDefaults(): void {
 		$this->worklist->expects($this->once())->method('items')
-			->with(userId: 'agent', view: ['bucket' => '', 'lens' => '', 'sort' => 'deadline', 'done' => false, 'scope' => 'mine', 'member' => ''])
+			->with(
+				userId: 'agent',
+				view: ['bucket' => '', 'lens' => '', 'sort' => 'deadline', 'done' => false, 'scope' => 'mine', 'member' => '', 'priority' => '', 'pipeline' => '']
+			)
 			->willReturn(['items' => [], 'counts' => []]);
 
 		$response = $this->controller()->items();
@@ -246,4 +249,48 @@ class WorklistControllerItemsTest extends TestCase {
 		$this->assertSame(401, $this->controller(signed: false)->items()->getStatus());
 		$this->assertSame(401, $this->controller(signed: false)->summary()->getStatus());
 	}//end testWithoutASessionTheAnswerIs401()
+	/**
+	 * The priority and pipeline filters are passed on as the page sends them.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 */
+	public function testItemsPassThePriorityAndPipelineFilters(): void {
+		$this->worklist->expects($this->once())->method('items')
+			->with(
+				userId: 'agent',
+				view: [
+					'bucket'   => '',
+					'lens'     => '',
+					'sort'     => 'deadline',
+					'done'     => false,
+					'scope'    => 'mine',
+					'member'   => '',
+					'priority' => 'urgent,high',
+					'pipeline' => 'pipe-sales',
+				]
+			)
+			->willReturn(['items' => []]);
+
+		$response = $this->controller(params: ['priority' => 'urgent,high', 'pipeline' => 'pipe-sales'])->items();
+
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+	}//end testItemsPassThePriorityAndPipelineFilters()
+
+	/**
+	 * An unknown priority is refused before the worklist is read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 */
+	public function testAnUnknownPriorityIs400(): void {
+		$this->worklist->expects($this->never())->method('items');
+
+		$refused = $this->controller(params: ['priority' => 'urgent,critical'])->items();
+
+		$this->assertSame(expected: 400, actual: $refused->getStatus());
+		$this->assertSame(expected: ['message' => 'Invalid priority'], actual: $refused->getData());
+	}//end testAnUnknownPriorityIs400()
 }//end class

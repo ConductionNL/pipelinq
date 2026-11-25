@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Kernel\Contracts;
 
+use SensitiveParameter;
+
 /**
  * Contract of OptOutService.
  *
@@ -48,7 +50,7 @@ interface OptOutServiceInterface {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-01
 	 */
 	public function recordFromBrpResponse(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 		string $indicationSecret,
 	): bool;
@@ -65,7 +67,7 @@ interface OptOutServiceInterface {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-006-02
 	 */
 	public function recordLocalOptOut(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 		string $actor,
 		?string $note = null,

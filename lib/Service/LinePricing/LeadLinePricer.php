@@ -80,7 +80,7 @@ class LeadLinePricer {
 		}
 
 		if ($old === null) {
-			if (self::filled(value: $line['unitPrice'] ?? null) === true) {
+			if (self::filled(value: $line['unitPrice'] ?? null) === true && $this->isOwnPrice(line: $line) === false) {
 				return self::byHand();
 			}
 
@@ -100,7 +100,8 @@ class LeadLinePricer {
 	 */
 	private function changed(array $line, array $old): array {
 		$typed = self::filled(value: $line['unitPrice'] ?? null) === true
-			&& self::sameNumber(left: $line['unitPrice'], right: $old['unitPrice'] ?? null) === false;
+			&& self::sameNumber(left: $line['unitPrice'], right: $old['unitPrice'] ?? null) === false
+			&& $this->isOwnPrice(line: $line) === false;
 		if ($typed === true) {
 			return self::byHand();
 		}
@@ -117,6 +118,40 @@ class LeadLinePricer {
 
 		return [];
 	}//end changed()
+
+	/**
+	 * Whether the line's price is the product's own price: the price stored
+	 * on the product, which the line form copies when a product is picked,
+	 * or the product's price for the line's quantity and variant. Such a
+	 * price was not typed, so the line is priced as the server would, quantity
+	 * tier and client price list included (products-quote-from-lead task 1).
+	 *
+	 * @param array<string, mixed> $line The line.
+	 *
+	 * @return bool True when the price equals the product's own price.
+	 *
+	 * @spec openspec/changes/products-quote-from-lead/tasks.md
+	 */
+	private function isOwnPrice(array $line): bool {
+		$product = $this->reader->read(id: (string)$line['product'], schemaKey: 'product_schema');
+		if ($product === null) {
+			return false;
+		}
+
+		if (self::sameNumber(left: $line['unitPrice'] ?? null, right: $product['unitPrice'] ?? null) === true) {
+			return true;
+		}
+
+		$own = $this->catalog->resolveEffectivePrice(
+			product: $product,
+			quantity: self::quantityOf(line: $line),
+			variantSku: self::textOrNull(value: $line['variantSku'] ?? null),
+			client: null,
+			currency: null
+		);
+
+		return self::sameNumber(left: $line['unitPrice'] ?? null, right: $own['unitPrice'] ?? null);
+	}//end isOwnPrice()
 
 	/**
 	 * Ask the resolver for the line's price.

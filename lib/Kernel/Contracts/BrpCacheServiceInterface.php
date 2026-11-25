@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Kernel\Contracts;
 
+use SensitiveParameter;
+
 /**
  * Contract of BrpCacheService.
  *
@@ -48,7 +50,7 @@ interface BrpCacheServiceInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */
 	public function get(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 	): ?array;
 
@@ -66,7 +68,7 @@ interface BrpCacheServiceInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */
 	public function invalidate(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 	): int;
 

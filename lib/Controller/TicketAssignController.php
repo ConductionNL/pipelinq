@@ -63,6 +63,20 @@ class TicketAssignController extends Controller {
 	private const QUEUE_SCAN = 200;
 
 	/**
+	 * The longest user id a handover accepts.
+	 *
+	 * @var integer
+	 */
+	private const MAX_ASSIGNEE = 64;
+
+	/**
+	 * The longest handover note, as the schema's maxLength.
+	 *
+	 * @var integer
+	 */
+	private const MAX_NOTE = 1000;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest      $request     The request.
@@ -98,26 +112,93 @@ class TicketAssignController extends Controller {
 			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
 
+		return $this->reassign(id: $id, changes: ['assignee' => $user->getUID()]);
+	}//end assignToMe()
+
+	/**
+	 * Pass a ticket to a colleague, with a note for them.
+	 *
+	 * The new assignee and the note are written in ONE save, so OpenRegister's
+	 * audit trail records them in the same entry and the History tab shows the
+	 * note under "Passed to <assignee> by <actor>". An empty note clears the
+	 * previous one, so an old note never reads as this handover's. Read and
+	 * written under the user's own OpenRegister RBAC, as {@see assignToMe()}.
+	 *
+	 * @param string $id           The ticket id.
+	 * @param string $assignee     The colleague's user id.
+	 * @param string $handoverNote What the colleague should know; may be empty.
+	 *
+	 * @return JSONResponse The ticket's id and new assignee, or an error.
+	 *
+	 * @spec openspec/specs/ticket-handover-history/spec.md#REQ-THH-001
+	 */
+	#[NoAdminRequired]
+	public function passOn(string $id='', string $assignee='', string $handoverNote=''): JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		$assignee = trim($assignee);
+		$note = trim($handoverNote);
+		if ($assignee === '' || mb_strlen($assignee) > self::MAX_ASSIGNEE || mb_strlen($note) > self::MAX_NOTE) {
+			return new JSONResponse(['error' => 'Choose a colleague, and keep the note under 1000 characters'], Http::STATUS_BAD_REQUEST);
+		}
+
+		return $this->reassign(id: $id, changes: ['assignee' => $assignee, 'handoverNote' => $note]);
+	}//end passOn()
+
+	/**
+	 * Read a ticket and save it with the given fields changed.
+	 *
+	 * @param string               $id      The ticket id.
+	 * @param array<string, mixed> $changes The fields to set, carrying the new `assignee`.
+	 *
+	 * @return JSONResponse The ticket's id and new assignee, or an error.
+	 *
+	 * @spec openspec/specs/ticket-handover-history/spec.md#REQ-THH-001
+	 */
+	private function reassign(string $id, array $changes): JSONResponse {
 		if ($this->tickets->isConfigured() === false) {
 			return new JSONResponse(['error' => 'Tickets are not configured'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
-		$register = $this->tickets->getRegisterId();
-		$schema = $this->tickets->getSchemaId();
-		$objectService = $this->tickets->getObjectService();
-
-		try {
-			$ticket = $objectService->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
-		} catch (Throwable) {
-			$ticket = null;
-		}
-
-		if ($id === '' || $ticket === null) {
+		$ticket = $this->findTicket(id: $id);
+		if ($ticket === null) {
 			return new JSONResponse(['error' => 'Ticket not found'], Http::STATUS_NOT_FOUND);
 		}
 
-		return $this->assign(ticket: array_replace($ticket->getObject(), ['assignee' => $user->getUID()]), id: $id);
-	}//end assignToMe()
+		return $this->assign(ticket: array_replace($ticket, $changes), id: $id);
+	}//end reassign()
+
+	/**
+	 * A ticket's data, read under the user's RBAC; null when absent or unreadable.
+	 *
+	 * @param string $id The ticket id.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/specs/ticket-handover-history/spec.md#REQ-THH-001
+	 */
+	private function findTicket(string $id): array|null {
+		if ($id === '') {
+			return null;
+		}
+
+		try {
+			$ticket = $this->tickets->getObjectService()->find(
+				id: $id,
+				options: new ObjectFindOptions(register: $this->tickets->getRegisterId(), schema: $this->tickets->getSchemaId())
+			);
+		} catch (Throwable) {
+			return null;
+		}
+
+		if ($ticket === null) {
+			return null;
+		}
+
+		return $ticket->getObject();
+	}//end findTicket()
 
 	/**
 	 * Make the signed-in user the assignee of the oldest ticket in the queue.

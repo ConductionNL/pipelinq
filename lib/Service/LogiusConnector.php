@@ -45,6 +45,7 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use SensitiveParameter;
 
 /**
  * Berichtenbox-koppelvlak BBK 1.7 API client.
@@ -513,7 +514,7 @@ class LogiusConnector implements LogiusConnectorInterface {
 	 *   exercised through the features that call it
 	 */
 	public function checkMailboxExists(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsn,
 	): bool {
 		$baseUrl = $this->appConfig->getValueString(

@@ -248,7 +248,6 @@ import CampaignReportView from './views/marketing/CampaignReport.vue'
 //     four derivations over those same rows, the competitor watches, and
 //     the follow audit. Each is a computed read, not a row list. ---
 import CompetitorWatchesView from './views/marketing/CompetitorWatches.vue'
-import ConnectionAuditView from './views/marketing/ConnectionAudit.vue'
 import KeywordIntelligenceView from './views/marketing/KeywordIntelligence.vue'
 // --- Search Console top queries (marketing-campaign-attribution): an
 //     aggregation over searchQueryDaily rows, not a row list. ---
@@ -675,6 +674,18 @@ const registry = {
 		kind: 'section',
 		component: ContactmomentQuickLog,
 		_note: 'Inline contactmoment quick-log form pre-bound to the client (clientId, inline mode). On save it emits @saved; in declarative mode the page is refreshed via the CnDetailPage Refresh action rather than an imperative re-fetch.',
+	},
+	// @custom-widget-ratchet exclude replaces the ContactmomentQuickLog body section (same host code, now a card in the Contact moments tab); no built-in widget autosaves a server draft of a form
+	ContactmomentQuickLogWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ContactmomentQuickLogWidget',
+			ContactmomentQuickLog,
+			({ objectId }) => ({ clientId: objectId, inline: true }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'The quick log with its server draft as a grid widget, so ClientDetail mounts it on top of the Contact moments tab (contact-moments-keep-draft): the relation-board layout does not reach a body section below the tab strip.',
 	},
 	ContactLinks: {
 		kind: 'section',
@@ -1154,11 +1165,6 @@ const registry = {
 		kind: 'page',
 		component: CompetitorWatchesView,
 		_note: 'Competitor watches and their events (marketing-search-intelligence). Custom rather than a declarative index over watchEvent because the page joins three schemas in one read and shows each watch\'s LAST OUTCOME next to it, which is what tells "they published nothing" apart from "we could not read it"; a plain event list renders both as an empty table. It also carries a per-watch run action, and renders an unscored event as "not scored" rather than as a zero.',
-	},
-	ConnectionAuditView: {
-		kind: 'page',
-		component: ConnectionAuditView,
-		_note: 'The follow audit (marketing-search-intelligence): per client and network, whether we follow them and whether they follow us. Custom rather than a declarative index over socialConnection because the REASON an answer is unknown has to render next to the answer. Only Mastodon and Bluesky publish a follower list an audit can read, so most rows are unknown, and a declarative index would show a bare enum label with the reason dropped.',
 	},
 	SearchQueriesView: {
 		kind: 'page',

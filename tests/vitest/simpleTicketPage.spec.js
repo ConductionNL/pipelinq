@@ -123,7 +123,9 @@ describe('the full structure', () => {
 		// (website-submissions-link-to-client, shown while the ticket has no
 		// client), Make a letter (work-letter-from-filinq-template, shown only
 		// with filinq) and Assign to me (detail-pages-read-at-a-glance), which
-		// sets the assignee and changes no status. Review this call
+		// sets the assignee and changes no status, and Pass on
+		// (ticket-handover-history), which passes it to a colleague with a
+		// note for the History tab. Review this call
 		// (contact-moments-call-review) shows for the call review group on a
 		// ticket with a recording. Then Lock and Unlock (platform-record-lock),
 		// one of which shows at a time.
@@ -131,6 +133,7 @@ describe('the full structure', () => {
 			'link-to-client',
 			'make-letter',
 			'assign-to-me',
+			'pass-on',
 			'review-call',
 			'lock-record',
 			'unlock-record',

@@ -38,6 +38,7 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use SensitiveParameter;
 use Throwable;
 
 /**
@@ -201,7 +202,7 @@ class BsnAuditService implements BsnAuditServiceInterface {
 	 * justification recordLookup() already carries for the call this was extracted from.
 	 */
 	private function resolveSubjectHash(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 		?string $bsnHash,
 	): string {
@@ -228,7 +229,7 @@ class BsnAuditService implements BsnAuditServiceInterface {
 	 * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-008-02
 	 */
 	public function pseudonymise(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 	): int {
 		try {
@@ -256,7 +257,7 @@ class BsnAuditService implements BsnAuditServiceInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
 	 */
 	private function pseudonymiseRecords(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 	): int {
 		[$register, $schema] = $this->config();

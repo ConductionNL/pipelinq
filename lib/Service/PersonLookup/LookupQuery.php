@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\PersonLookup;
 
 use OCA\Pipelinq\Service\BsnAudit\LookupReason;
+use SensitiveParameter;
 
 /**
  * The BSN, the compliance grounds and the links of one person lookup.
@@ -45,7 +46,7 @@ class LookupQuery {
 	 * @return void
 	 */
 	public function __construct(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		public readonly string $rawBsn,
 		public readonly LookupReason $reason,
 		public readonly string $basis,

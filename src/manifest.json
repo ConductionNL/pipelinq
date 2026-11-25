@@ -561,7 +561,7 @@
 		{
 			"id": "MyWork",
 			"label": "My Work",
-			"icon": "InboxOutline",
+			"icon": "ClipboardAccountOutline",
 			"route": "MyWork",
 			"order": 20
 		},
@@ -2625,6 +2625,15 @@
 						}
 					},
 					{
+						"id": "client-contactmoment-quick-log",
+						"type": "ContactmomentQuickLogWidget",
+						"title": "Log contactmoment",
+						"_note": "contact-moments-keep-draft: the quick log with its server draft, on top of the Contact moments tab. It was a body section below the tab strip, which the relation-board layout does not reach (live pass 17 Nov 2026); the header's Log contact stays the generic form without drafts.",
+						"content": {
+							"title": "Log contactmoment"
+						}
+					},
+					{
 						"id": "client-contactmoments",
 						"type": "object-list",
 						"title": "Contact moments",
@@ -3833,7 +3842,11 @@
 									}
 								},
 								{
-									"widgetId": "client-contactmoments",
+									"id": "client-contact-moments-tab",
+									"widgetIds": [
+										"client-contactmoment-quick-log",
+										"client-contactmoments"
+									],
 									"label": "Contact moments",
 									"countFrom": "widget"
 								},
@@ -3902,18 +3915,6 @@
 						"props": {
 							"entityId": "@objectId",
 							"entityType": "client"
-						},
-						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "contactmoment-quick-log",
-						"component": "ContactmomentQuickLog",
-						"title": "Log contactmoment",
-						"placement": "end",
-						"props": {
-							"clientId": "@objectId",
-							"inline": true
 						},
 						"colSpan": 6,
 						"card": true
@@ -4695,6 +4696,19 @@
 						"errorMessage": "Could not assign this ticket to you."
 					},
 					{
+						"id": "pass-on",
+						"type": "open-form",
+						"label": "Pass on",
+						"icon": "AccountArrowRightOutline",
+						"endpoint": { "url": "/apps/pipelinq/api/tickets/@objectId/pass-on", "method": "POST" },
+						"formProperties": {
+							"assignee": { "type": "string", "format": "user", "title": "Colleague", "required": true },
+							"handoverNote": { "type": "string", "format": "textarea", "maxLength": 1000, "title": "Note for your colleague", "description": "Shown under the handover in the ticket's History." }
+						},
+						"successMessage": "Ticket passed on.",
+						"errorMessage": "Could not pass this ticket on."
+					},
+					{
 						"id": "review-call",
 						"label": "Review this call",
 						"icon": "AccountStarOutline",
@@ -4799,6 +4813,9 @@
 							"overrides": {
 								"assignee": {
 									"formatter": "userDisplayName"
+								},
+								"collaborators": {
+									"formatter": "userDisplayName"
 								}
 							}
 						}
@@ -4871,7 +4888,7 @@
 						"type": "audit-trail",
 						"title": "History",
 						"icon": "History",
-						"_note": "Board PqTicket History tab (change ticket-handover-history, spec_ref openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#REQ-THH-001): OpenRegister's audit trail of the ticket in words, newest first. A handover reads \"Passed to <assignee> by <actor>\", a status change the state it reached; any other update reads \"Updated by <actor>\" with the fields it changed. The change rules are limited to updates, so the creation entry keeps \"Created by <actor>\". The ticket schema has no team field, so there is no team rule.",
+						"_note": "Board PqTicket History tab (change ticket-handover-history, spec_ref openspec/specs/ticket-handover-history/spec.md#REQ-THH-001): OpenRegister's audit trail of the ticket in words, newest first. A handover reads \"Passed to <assignee> by <actor>\", a status change the state it reached; any other update reads \"Updated by <actor>\" with the fields it changed. The change rules are limited to updates, so the creation entry keeps \"Created by <actor>\". The ticket schema has no team field, so there is no team rule.",
 						"content": {
 							"layout": "stacked",
 							"actionLabels": {
@@ -4883,7 +4900,8 @@
 									"action": "update",
 									"field": "assignee",
 									"label": "Passed to {to} by {actor}",
-									"values": "user"
+									"values": "user",
+									"note": "handoverNote"
 								},
 								{
 									"action": "update",
@@ -10867,7 +10885,7 @@
 						"id": "my-work-download",
 						"label": "Download",
 						"icon": "Download",
-						"href": "/apps/pipelinq/api/worklist/items?format=csv&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member"
+						"href": "/apps/pipelinq/api/worklist/items?format=csv&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member&priority=@workspace.priority&pipeline=@workspace.pipeline"
 					}
 				],
 				"gridSideColumn": {
@@ -10887,6 +10905,7 @@
 						"showTitle": false,
 						"content": {
 							"layout": "bar",
+							"clear": {},
 							"controls": [
 								{
 									"style": "chips",
@@ -10895,6 +10914,7 @@
 									"writes": "@workspace.lens",
 									"urlKey": "lens",
 									"default": "all",
+									"filter": true,
 									"options": [
 										{
 											"value": "all",
@@ -10990,6 +11010,30 @@
 								},
 								{
 									"style": "select",
+									"label": "Priority",
+									"_note": "my-work-roadmap REQ-MW-200: several priorities at once, written comma-joined (urgent,high) and counted in Filters (N).",
+									"multiple": true,
+									"filter": true,
+									"writes": "@workspace.priority",
+									"urlKey": "priority",
+									"options": [
+										{ "value": "urgent", "label": "Urgent" },
+										{ "value": "high", "label": "High" },
+										{ "value": "normal", "label": "Normal" },
+										{ "value": "low", "label": "Low" }
+									]
+								},
+								{
+									"label": "Pipeline",
+									"_note": "my-work-roadmap REQ-MW-200: narrows the leads to one pipeline; tickets and follow-ups stay in the list.",
+									"filter": true,
+									"writes": "@workspace.pipeline",
+									"urlKey": "pipeline",
+									"allLabel": "All pipelines",
+									"objectSource": { "register": "pipelinq", "schema": "pipeline", "labelField": "title", "placeholder": "All pipelines", "ariaLabel": "Pipeline", "preload": true }
+								},
+								{
+									"style": "select",
 									"label": "Sorting",
 									"writes": "@workspace.sort",
 									"urlKey": "sort",
@@ -11024,7 +11068,7 @@
 						"viewport": "narrow",
 						"content": {
 							"endpointSource": {
-								"url": "/apps/pipelinq/api/worklist/items?lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member",
+								"url": "/apps/pipelinq/api/worklist/items?lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member&priority=@workspace.priority&pipeline=@workspace.pipeline",
 								"responsePath": "items"
 							},
 							"presentation": "rows",
@@ -11241,7 +11285,7 @@
 							"chevron": true,
 							"headerNote": "deadline is today or has passed",
 							"endpointSource": {
-								"url": "/apps/pipelinq/api/worklist/items?bucket=answer-today&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member",
+								"url": "/apps/pipelinq/api/worklist/items?bucket=answer-today&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member&priority=@workspace.priority&pipeline=@workspace.pipeline",
 								"responsePath": "items"
 							},
 							"limit": 5,
@@ -11329,7 +11373,7 @@
 							"chevron": true,
 							"headerNote": "the customer has replied",
 							"endpointSource": {
-								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member",
+								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-me&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member&priority=@workspace.priority&pipeline=@workspace.pipeline",
 								"responsePath": "items"
 							},
 							"limit": 5,
@@ -11417,7 +11461,7 @@
 							"chevron": true,
 							"headerNote": "nothing to do until they reply",
 							"endpointSource": {
-								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member",
+								"url": "/apps/pipelinq/api/worklist/items?bucket=waiting-on-customer&lens=@workspace.lens&sort=@workspace.sort&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member&priority=@workspace.priority&pipeline=@workspace.pipeline",
 								"responsePath": "items"
 							},
 							"limit": 5,
@@ -11785,7 +11829,7 @@
 						"id": "8",
 						"widgetId": "my-items-phone",
 						"gridX": 0,
-						"gridY": 24,
+						"gridY": 27,
 						"gridWidth": 12,
 						"gridHeight": 4,
 						"sizeToContent": true,
@@ -11875,7 +11919,7 @@
 						"id": "6",
 						"widgetId": "my-leads",
 						"gridX": 0,
-						"gridY": 17,
+						"gridY": 20,
 						"gridWidth": 6,
 						"gridHeight": 4,
 						"sizeToContent": true
@@ -11884,7 +11928,7 @@
 						"id": "7",
 						"widgetId": "my-follow-ups",
 						"gridX": 6,
-						"gridY": 17,
+						"gridY": 20,
 						"gridWidth": 6,
 						"gridHeight": 4,
 						"sizeToContent": true
@@ -11903,7 +11947,7 @@
 						"id": "10",
 						"widgetId": "my-meetings",
 						"gridX": 0,
-						"gridY": 21,
+						"gridY": 24,
 						"gridWidth": 12,
 						"gridHeight": 3,
 						"sizeToContent": true
