@@ -243,6 +243,8 @@ class ListenerRegistrar {
 	 */
 	private function registerNumberListeners(IRegistrationContext $context): void {
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: TicketReferenceCreatingListener::class);
+		// A new complaint is held to its answer term (the legal six weeks by default).
+		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: ComplaintAnswerTermCreatingListener::class);
 		// A ticket carries the number it is about in E.164, whoever wrote it
 		// (contact-moments-phone-lookup D2).
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: TicketPhoneE164Listener::class);

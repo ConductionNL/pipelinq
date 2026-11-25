@@ -15,8 +15,9 @@
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/PartyKindRegistryService.php:112`
 - [ ] 7.1 Check row `clients-opencorporates` against "An organisation abroad can be looked up in an international company register"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/OpenCorporatesApiClient.php:96`
-- [ ] 8.1 Check row `req-complaint` against "A complaint is held to the legal answer term by default"
+- [x] 8.1 Check row `req-complaint` against "A complaint is held to the legal answer term by default"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/ComplaintSlaService.php:112`
+  - Live 25 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main 119f4810, Zuiddrecht set and demo seed; no `complaint_sla_*` term and no SLA policy configured). Found red first: nothing gave a new complaint a deadline (`ComplaintSlaService::calculateDeadline` answers null without a category term and had no caller; the eight seeded complaints had no `slaDeadline`). Built: `ComplaintAnswerTermCreatingListener` (ObjectCreatingEvent on the ticket schema) stamps `slaDeadline` on a new complaint that has none, from `ComplaintSlaService::answerDeadline()`: the category's configured term when shorter, else six weeks (Awb 9:11) from `occurredAt`, else from now. Then, as daan.verbeek through the API: a service complaint received now got `slaDeadline` 2027-01-06 (six weeks on); one with `occurredAt` 2026-10-07 got 2026-11-18, and the Tickets "Past the deadline" filter (`slaDeadline[lt]=now`) lists it and not the new one. Test: tests/Unit/Listener/ComplaintAnswerTermCreatingListenerTest.php.
 - [ ] 9.1 Check row `auto-setup-wizard` against "The setup wizard opens by itself on the first visit"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/SetupController.php`
 - [ ] 10.1 Check row `pipeline-kanban` against "A lead dragged to another stage column moves to that stage"
