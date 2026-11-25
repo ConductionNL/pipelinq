@@ -129,7 +129,6 @@ import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdo
 //     read, and the Answer dialog that wraps CustomerReplySection. ---
 import TicketConversationSection from './components/TicketConversationSection.vue'
 import TicketDecisionRoutes from './components/tickets/TicketDecisionRoutes.vue'
-import WebChatSection from './components/WebChatSection.vue'
 import WooConversionSection from './components/WooConversionSection.vue'
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
@@ -832,19 +831,6 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'RequestConversionSection (Convert to case) as a tab widget.',
 	},
-	WebChatWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'WebChatWidget',
-			WebChatSection,
-			({ objectData }) => ({
-				channel: objectData.channel || '',
-				threadKey: objectData.inboundThreadKey || '',
-			}),
-		),
-		...PANEL_WIDGET_META,
-		_note: 'WebChatSection as a tab widget.',
-	},
 	ResidentViewWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -1005,11 +991,6 @@ const registry = {
 		kind: 'section',
 		component: WooConversionSection,
 		_note: '"Convert to Woo request" on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-008, hydra woo-citizen-journey C5): self-fetches GET /api/tickets/{id}/woo-request/availability and renders only when dossiq\'s WooRequestIntake answers and the ticket is an unconverted question about a dossier.',
-	},
-	WebChatSection: {
-		kind: 'section',
-		component: WebChatSection,
-		_note: 'The website chat on its ticket (requests-web-chat-and-bot D6): transcript with who said what, Take this chat (assigns the ticket, which takes it out of the Queue), a reply the visitor sees in their window, and End chat. Reads /api/web-chat/conversations/{id}, the id taken from the ticket\'s inbound thread key; polls every three seconds while the chat is open. Renders nothing on a ticket that is not a website chat.',
 	},
 	ResidentViewSection: {
 		kind: 'section',

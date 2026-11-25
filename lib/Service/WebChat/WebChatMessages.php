@@ -38,6 +38,13 @@ class WebChatMessages {
 	public const IDLE_SECONDS = 1800;
 
 	/**
+	 * Who said a message, by its author.
+	 *
+	 * @var array<string, string>
+	 */
+	public const AUTHOR_NAMES = ['visitor' => 'Visitor', 'assistant' => 'Assistant', 'agent' => 'Colleague'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param WebChatStore $store Where the chat is kept (the id of a row).
@@ -128,6 +135,32 @@ class WebChatMessages {
 	}//end firstQuestion()
 
 	/**
+	 * A message as the colleague's thread draws it: the view, its side (`us` for the
+	 * assistant and colleagues, `them` for the visitor) and who said it.
+	 *
+	 * @param array<string, mixed> $message The stored message.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 */
+	public function threadLine(array $message): array {
+		$view = $this->view(message: $message, showAgentName: true);
+		$name = self::AUTHOR_NAMES[$view['author']] ?? self::AUTHOR_NAMES['visitor'];
+		if ($view['author'] === 'agent' && ($view['agentName'] ?? '') !== '') {
+			$name = (string)$view['agentName'];
+		}
+
+		$view['side'] = 'us';
+		if ($view['author'] === 'visitor') {
+			$view['side'] = 'them';
+		}
+
+		$view['authorName'] = $name;
+		return $view;
+	}//end threadLine()
+
+	/**
 	 * The chat so far, one line per message, saying who said it.
 	 *
 	 * @param list<array<string, mixed>> $messages The chat's messages.
@@ -137,7 +170,7 @@ class WebChatMessages {
 	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.1
 	 */
 	public function transcript(array $messages): string {
-		$names = ['visitor' => 'Visitor', 'assistant' => 'Assistant', 'agent' => 'Colleague'];
+		$names = self::AUTHOR_NAMES;
 		$lines = [];
 		foreach ($messages as $message) {
 			$author  = $this->view(message: $message, showAgentName: false)['author'];

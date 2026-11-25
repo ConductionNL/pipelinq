@@ -42,6 +42,13 @@ use Throwable;
 class WebChatAgentController extends Controller {
 
 	/**
+	 * How a website chat ticket's thread key starts.
+	 *
+	 * @var string
+	 */
+	public const THREAD_PREFIX = 'conversation:';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest        $request     The request.
@@ -69,6 +76,7 @@ class WebChatAgentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
+		$id = self::conversationIdOf(id: $id);
 		return $this->answer(
 			call: function () use ($id): array {
 				$this->chat->requireReadableChat(conversationId: $id);
@@ -88,6 +96,7 @@ class WebChatAgentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function take(string $id): JSONResponse {
+		$id = self::conversationIdOf(id: $id);
 		return $this->answer(
 			call: function () use ($id): array {
 				$this->chat->requireReadableChat(conversationId: $id);
@@ -107,6 +116,7 @@ class WebChatAgentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function reply(string $id): JSONResponse {
+		$id   = self::conversationIdOf(id: $id);
 		$text = $this->request->getParam('text', '');
 		if (is_string($text) === false) {
 			$text = '';
@@ -137,6 +147,7 @@ class WebChatAgentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function end(string $id): JSONResponse {
+		$id = self::conversationIdOf(id: $id);
 		return $this->answer(
 			call: function () use ($id): array {
 				$this->chat->requireReadableChat(conversationId: $id);
@@ -144,6 +155,24 @@ class WebChatAgentController extends Controller {
 			}
 		);
 	}//end end()
+
+	/**
+	 * The conversation id from a route id: the id itself, or the ticket's thread key
+	 * (`conversation:<id>`), which the ticket page's widget and actions pass.
+	 *
+	 * @param string $id The id in the route.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 */
+	public static function conversationIdOf(string $id): string {
+		if (str_starts_with($id, self::THREAD_PREFIX) === true) {
+			return substr($id, strlen(self::THREAD_PREFIX));
+		}
+
+		return $id;
+	}//end conversationIdOf()
 
 	/**
 	 * The colleague's user id.

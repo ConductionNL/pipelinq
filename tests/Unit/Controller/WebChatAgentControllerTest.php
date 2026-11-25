@@ -59,6 +59,31 @@ class WebChatAgentControllerTest extends TestCase {
 	}//end controller()
 
 	/**
+	 * The ticket page passes the ticket's thread key; every route reads the chat it names.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 */
+	public function testTheTicketsThreadKeyNamesTheChat(): void {
+		$view = ['conversation' => 'c-1', 'status' => 'open', 'assignedTo' => '', 'ticket' => 't-1', 'messages' => []];
+		$chat = $this->createMock(WebChatService::class);
+		$chat->expects($this->exactly(4))->method('requireReadableChat')->with('c-1');
+		$chat->expects($this->once())->method('agentView')->with('c-1')->willReturn($view);
+		$chat->expects($this->once())->method('take')->with('c-1', 'anna')->willReturn($view);
+		$chat->expects($this->once())->method('reply')->with('c-1', 'anna', 'Anna de Vries', 'Hoi')->willReturn($view);
+		$chat->expects($this->once())->method('end')->with('c-1')->willReturn($view);
+		$controller = $this->controller(chat: $chat, params: ['text' => 'Hoi']);
+
+		foreach (['show', 'take', 'reply', 'end'] as $route) {
+			$this->assertSame(200, $controller->$route(id: 'conversation:c-1')->getStatus(), $route);
+		}
+
+		$this->assertSame('c-1', WebChatAgentController::conversationIdOf(id: 'c-1'));
+		$this->assertSame('c-1', WebChatAgentController::conversationIdOf(id: 'conversation:c-1'));
+	}//end testTheTicketsThreadKeyNamesTheChat()
+
+	/**
 	 * A chat the colleague may not read answers 404, and nothing else is called.
 	 *
 	 * @return void

@@ -502,6 +502,29 @@ class WebChatServiceTest extends TestCase {
 	}//end testAPollAnswersOnlyNewerMessages()
 
 	/**
+	 * The colleague's thread says per message which side it is on and who said it,
+	 * for the conversation widget on the ticket.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 */
+	public function testTheColleaguesThreadNamesTheSideAndWhoSaidIt(): void {
+		$service = $this->service();
+		$id      = $this->started(service: $service);
+		$service->send(token: self::TOKEN, conversationId: $id, secret: 'the-visitor-secret', turn: ['text' => 'Eerste']);
+		$this->now += 5;
+		$this->store->readable = [$id];
+		$service->reply(conversationId: $id, userId: 'anna', displayName: 'Anna de Vries', text: 'Ik kijk het na');
+
+		$lines = $service->agentView(conversationId: $id)['messages'];
+
+		$this->assertSame(['them', 'us'], array_column($lines, 'side'));
+		$this->assertSame(['Visitor', 'Anna'], array_column($lines, 'authorName'));
+		$this->assertSame(['Eerste', 'Ik kijk het na'], array_column($lines, 'body'));
+	}//end testTheColleaguesThreadNamesTheSideAndWhoSaidIt()
+
+	/**
 	 * Taking a chat assigns it and its ticket to the colleague, which takes the ticket out of the Queue.
 	 *
 	 * @return void

@@ -98,7 +98,7 @@ class WebChatWindow {
 			'assignedTo'   => (string)($conversation['assignedTo'] ?? ''),
 			'ticket'       => (string)($conversation['ticket'] ?? ''),
 			'messages'     => array_map(
-				fn (array $message): array => $this->messages->view(message: $message, showAgentName: true),
+				fn (array $message): array => $this->messages->threadLine(message: $message),
 				$this->store->messages(conversationId: $conversationId)
 			),
 		];

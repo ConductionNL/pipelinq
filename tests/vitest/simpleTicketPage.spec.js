@@ -128,11 +128,14 @@ describe('the full structure', () => {
 		// note for the History tab. Review this call
 		// (contact-moments-call-review) shows for the call review group on a
 		// ticket with a recording. Then Lock and Unlock (platform-record-lock),
-		// one of which shows at a time.
+		// one of which shows at a time. Take this chat and End chat
+		// (requests-web-chat-and-bot) show on a website chat ticket only.
 		expect(full.config.headerActions.map((action) => action.id)).toEqual([
 			'link-to-client',
 			'make-letter',
 			'assign-to-me',
+			'web-chat-take',
+			'web-chat-end',
 			'pass-on',
 			'review-call',
 			'lock-record',
@@ -440,7 +443,12 @@ describe('the body', () => {
 		)
 		// The strip itself is the page's own, given the board's four tabs.
 		// A banner the simple layout places above the strip is not a tab.
-		const placed = simple.layout.map((cell) => cell.widgetId)
+		// A card the simple layout puts in the side column (the website chat)
+		// is not a tab either.
+		const placed = [
+			...simple.layout.map((cell) => cell.widgetId),
+			...simple.sideColumn.map((card) => (typeof card === 'string' ? card : card.id)),
+		]
 		const children = full.config.widgets.filter(
 			(widget) => widget.id !== 'ticket-panels' && !placed.includes(widget.id),
 		)
@@ -539,11 +547,6 @@ describe('the body', () => {
 				'ticket-resident-view',
 				'ResidentViewWidget',
 				'ResidentViewSection',
-			],
-			'web-chat': [
-				'ticket-web-chat',
-				'WebChatWidget',
-				'WebChatSection',
 			],
 		}
 		for (const section of full.config.bodyWidgets) {
