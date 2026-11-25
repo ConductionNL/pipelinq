@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * The simple structure, in a browser: eight entries under three captions, the
+ * The simple structure, in a browser: eight entries under two captions, the
  * contact centre dashboard as the start page, and the pages that left the
  * menu one card away.
  *
@@ -29,6 +29,8 @@
 import type { Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
+import { readFileSync } from 'fs'
+import path from 'path'
 import { dismissSupportDialog, dismissWalkthrough } from './helpers/pipelinq.ts'
 
 const LOAD_TIMEOUT = 45_000
@@ -45,7 +47,7 @@ const ENTRIES = [
 	'OrganisationsMenu',
 ]
 
-const CAPTIONS = ['StartCaption', 'ContactCaption', 'RelationsCaption']
+const CAPTIONS = ['ContactCaption', 'RelationsCaption']
 
 /**
  * Serve this page the given structure settings, whatever the instance stores.
@@ -80,7 +82,18 @@ async function withStructure(
 	})
 }
 
-/** What sits below the main list: the footer and the settings foldout. */
+/**
+ * What sits below the main list: the footer, the settings foldout and the
+ * library's own My views block. The settings foldout is read from the layout
+ * file's `settingsSection`, so an entry a later change files there does not
+ * read as a main menu entry here.
+ */
+const simpleLayout = JSON.parse(
+	readFileSync(
+		path.join(__dirname, '..', '..', 'src', 'menu-layout.simple.json'),
+		'utf8',
+	),
+) as { settingsSection?: string[] }
 const BELOW_MAIN = [
 	'Documentation',
 	'ModulesMenu',
@@ -88,11 +101,9 @@ const BELOW_MAIN = [
 	'FeaturesRoadmapMenu',
 	'ReportsMenu',
 	'FlowsMenu',
-	'Pipelines',
-	'ConnectionsMenu',
-	'ExportJobs',
-	'Services',
-	'Resources',
+	'saved-views-caption',
+	'edit-saved-views-caption',
+	...(simpleLayout.settingsSection ?? []),
 ]
 
 /**
@@ -108,7 +119,7 @@ const BELOW_MAIN = [
 async function mainMenuIds(page: Page): Promise<string[]> {
 	const nav = page.getByTestId('cn-nav')
 	await expect(nav).toBeVisible({ timeout: LOAD_TIMEOUT })
-	await expect(nav.getByTestId('cn-nav-caption-StartCaption')).toBeVisible({
+	await expect(nav.getByTestId('cn-nav-caption-ContactCaption')).toBeVisible({
 		timeout: LOAD_TIMEOUT,
 	})
 	const ids = await nav.evaluate((root) =>
@@ -128,7 +139,7 @@ async function mainMenuIds(page: Page): Promise<string[]> {
 
 test.describe('The simple structure', () => {
 	// @e2e navigation-ia::a-contact-centre-agent-opens-pipelinq-on-a-new-instance
-	test('the menu shows eight entries under three captions, and the app opens on the contact centre dashboard', async ({
+	test('the menu shows eight entries under two captions, and the app opens on the contact centre dashboard', async ({
 		page,
 	}) => {
 		await withStructure(page, { menu_structure: 'simple', menu_modules: '' })
@@ -156,17 +167,18 @@ test.describe('The simple structure', () => {
 
 		const ids = await mainMenuIds(page)
 		expect(ids).not.toContain('Leads')
+		// Modules and more sits in the Advanced foldout, so open it first.
+		await page.getByTestId('cn-nav').getByTestId('cn-nav-settings').click()
 		await expect(
 			page.getByTestId('cn-nav').getByTestId('cn-nav-entry-ModulesMenu'),
 		).toBeVisible()
 
-		const card = page
-			.getByTestId('cn-reports-grid')
-			.locator('a[href$="/leads"]')
-			.first()
+		// The Modules page draws each module as a card with a link per page.
+		const card = page.getByTestId('cn-page').locator('a[href$="/leads"]').first()
 		await expect(card).toBeVisible({ timeout: LOAD_TIMEOUT })
 		await card.click()
-		await expect(page).toHaveURL(/\/leads$/, { timeout: LOAD_TIMEOUT })
+		// The list writes its default sort into the query on arrival.
+		await expect(page).toHaveURL(/\/leads(\?|$)/, { timeout: LOAD_TIMEOUT })
 	})
 
 	// @e2e navigation-ia::an-administrator-switches-the-sales-module-on
@@ -179,12 +191,15 @@ test.describe('The simple structure', () => {
 		})
 		await page.goto('/apps/pipelinq/werkplek', { timeout: LOAD_TIMEOUT })
 
+		// The board (#2391) gives the sales module its own caption with Leads
+		// and Pipeline under it; the sales overview and Prospects left the menu.
 		const ids = await mainMenuIds(page)
 		const at = (id: string) => ids.indexOf(id)
-		expect(at('ModulesCaption')).toBeGreaterThan(at('OrganisationsMenu'))
-		for (const id of ['Dashboard', 'Leads', 'Prospects', 'Pipeline']) {
-			expect(at(id), id).toBeGreaterThan(at('ModulesCaption'))
+		expect(at('SalesCaption')).toBeGreaterThan(at('OrganisationsMenu'))
+		for (const id of ['Leads', 'Pipeline']) {
+			expect(at(id), id).toBeGreaterThan(at('SalesCaption'))
 		}
+		expect(ids).not.toContain('Prospects')
 		// The other modules stay out.
 		expect(ids).not.toContain('Products')
 		expect(ids).not.toContain('MarketingGroup')
