@@ -20,7 +20,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+ * @spec openspec/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -48,7 +48,7 @@ use Throwable;
 /**
  * Renames a label and rewrites it on its items.
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+ * @spec openspec/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
  */
 class LabelRenameService implements LabelRenameServiceInterface {
 	use SerialisedToArray;
@@ -109,7 +109,7 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	 * @param IJobList           $jobList      Queues the rest of a large rename.
 	 * @param LoggerInterface    $logger       Logger.
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+	 * @spec openspec/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -133,7 +133,7 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	 *                              empty or too long (400), the label is unknown (404), another
 	 *                              label already has the name (409) or OpenRegister is missing (503).
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	public function rename(string $labelId, string $name): array {
 		$userId = $this->requireAdmin();
@@ -162,7 +162,7 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	 *
 	 * @throws LabelRenameException When the caller is not an administrator (403).
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	private function requireAdmin(): string {
 		$userId = $this->userSession->getUser()?->getUID();
@@ -182,7 +182,7 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	 *
 	 * @throws LabelRenameException When the name is empty or too long (400).
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	private function validName(string $name): string {
 		$name = trim($name);
@@ -203,7 +203,7 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	 *
 	 * @throws LabelRenameException When the label does not exist (404).
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	private function existingLabel(object $objects, string $labelId): array {
 		$label = $this->toArray(value: $this->findLabel(objects: $objects, labelId: $labelId));
@@ -224,7 +224,7 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	private function saveName(object $objects, array $label, string $labelId, string $name): void {
 		$label['name'] = $name;
@@ -244,7 +244,7 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	 *
 	 * @return bool Whether a job was queued.
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	private function queueRemainder(object $objects, string $from, string $to, string $userId): bool {
 		if ($this->anyCarries(objects: $objects, name: $from) === true) {
@@ -267,7 +267,7 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	 *
 	 * @return integer How many items were rewritten; 0 when the user is no longer an administrator.
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	public function rewriteAll(string $from, string $to, string $userId): int {
 		if ($from === '' || $to === '' || $this->groupManager->isAdmin($userId) === false) {
@@ -329,7 +329,7 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	 *
 	 * @return integer How many items were rewritten, including the earlier ones.
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	private function rewriteTarget(array $rename, array $scan, int $budget, int $done): int {
 		$seen = [];
@@ -356,7 +356,7 @@ class LabelRenameService implements LabelRenameServiceInterface {
 	 *
 	 * @return array{0: int, 1: int, 2: array<string, bool>} The new items, the items rewritten, and the ids seen.
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	private function rewritePage(array $rename, array $scan, array $rows, array $seen): array {
 		$fresh = 0;

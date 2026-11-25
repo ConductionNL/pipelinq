@@ -12,7 +12,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md
+ * @spec openspec/specs/shared-labels/spec.md
  */
 
 declare(strict_types=1);

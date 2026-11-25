@@ -18,7 +18,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+ * @spec openspec/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use Throwable;
 /**
  * POST /api/labels/{id}/rename.
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+ * @spec openspec/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
  */
 class LabelController extends Controller {
 	/**
@@ -53,7 +53,7 @@ class LabelController extends Controller {
 	 * @param LabelRenameServiceInterface $service The rename pass.
 	 * @param LoggerInterface    $logger  Logger.
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+	 * @spec openspec/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
 	 */
 	public function __construct(
 		IRequest $request,
@@ -73,7 +73,7 @@ class LabelController extends Controller {
 	 *
 	 * @return JSONResponse {id, name, rewritten, queued}, or {error} with 400, 403, 404, 409 or 500.
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	#[AuthorizedAdminSetting(settings: AdminSettings::class)]
 	public function rename(string $id): JSONResponse {
