@@ -80,17 +80,11 @@ class SystemServiceAccount {
 	 * @spec openspec/specs/pipeline/spec.md
 	 */
 	public function runAsCurrentOrSystem(callable $operation): mixed {
-		$previous = $this->userSession->getUser();
-		if ($previous !== null) {
+		if ($this->userSession->getUser() !== null) {
 			return $operation();
 		}
 
-		$this->userSession->setVolatileActiveUser($this->account());
-		try {
-			return $operation();
-		} finally {
-			$this->userSession->setVolatileActiveUser($previous);
-		}
+		return $this->runAsSystem(operation: $operation);
 	}//end runAsCurrentOrSystem()
 
 	/**

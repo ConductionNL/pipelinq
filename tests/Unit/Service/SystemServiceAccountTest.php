@@ -110,13 +110,13 @@ class SystemServiceAccountTest extends TestCase {
 	 * @spec openspec/changes/website-forms-submit-into-tickets/tasks.md#task-1.3
 	 */
 	public function testRunAsSystemReplacesTheSignedInUserAndRestoresThem(): void {
-		$system   = $this->createMock(IUser::class);
-		$visitor  = $this->createMock(IUser::class);
-		$users    = $this->createMock(IUserManager::class);
+		$system   = $this->createMock(originalClassName: IUser::class);
+		$visitor  = $this->createMock(originalClassName: IUser::class);
+		$users    = $this->createMock(originalClassName: IUserManager::class);
 		$users->method('get')->willReturn($system);
 
 		$active  = $visitor;
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$session->method('getUser')->willReturnCallback(function () use (&$active) {
 			return $active;
 		});
@@ -124,12 +124,12 @@ class SystemServiceAccountTest extends TestCase {
 			$active = $user;
 		});
 
-		$account = new SystemServiceAccount(userManager: $users, userSession: $session, random: $this->createMock(ISecureRandom::class));
+		$account = new SystemServiceAccount(userManager: $users, userSession: $session, random: $this->createMock(originalClassName: ISecureRandom::class));
 		$seen    = $account->runAsSystem(function () use (&$active) {
 			return $active;
 		});
 
-		$this->assertSame($system, $seen);
-		$this->assertSame($visitor, $active);
+		$this->assertSame(expected: $system, actual: $seen);
+		$this->assertSame(expected: $visitor, actual: $active);
 	}//end testRunAsSystemReplacesTheSignedInUserAndRestoresThem()
 }//end class

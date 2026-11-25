@@ -68,7 +68,7 @@ class FakeFormSubmitService {
 			'subject' => $submission->subject,
 			'idempotencyKey' => $idempotencyKey,
 			'scope' => $submission->scope,
-			'activeUser' => ($this->activeUser !== null) ? ($this->activeUser)() : null,
+			'activeUser' => $this->activeUserNow(),
 		];
 		if ($this->throw !== null) {
 			throw $this->throw;
@@ -84,4 +84,17 @@ class FakeFormSubmitService {
 			'objects' => [],
 		];
 	}//end submit()
+
+	/**
+	 * The session's active user at this moment, or null when nothing reads it.
+	 *
+	 * @return mixed The active user.
+	 */
+	private function activeUserNow(): mixed {
+		if ($this->activeUser === null) {
+			return null;
+		}
+
+		return ($this->activeUser)();
+	}//end activeUserNow()
 }//end class
