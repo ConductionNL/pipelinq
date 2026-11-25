@@ -4547,8 +4547,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/views/MyWork.vue has a fixed layout; REQ-MW-160",
+				"state": "built",
+				"evidence": "src/manifest.json MyWork config.layoutPanel + layoutPanelLocked (nextcloud-vue layout panel, stored per user), my-activity collapsible (nextcloud-vue#2362)",
 				"owner": "ConductionNL/pipelinq",
 				"change": "my-work-roadmap",
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Customisable layout (REQ-MW-160)"
@@ -4601,8 +4601,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/views/MyWork.vue fetches once on load and has no refresh button; REQ-MW-190",
+				"state": "built",
+				"evidence": "src/manifest.json MyWork config.autoRefresh (nextcloud-vue#2364: every 5 minutes in place, header refresh button, outdated-data warning with Retry)",
 				"owner": "ConductionNL/pipelinq",
 				"change": "my-work-roadmap",
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Auto-refresh and a refresh button (REQ-MW-190)"
@@ -4628,8 +4628,8 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/views/MyWork.vue filters by type only; REQ-MW-200",
+				"state": "built",
+				"evidence": "lib/Service/Worklist/WorkFilters.php (GET /api/worklist/items ?priority= ?pipeline=), the MyWork bar's Priority (multiple) and Pipeline controls with Filters (N) and Clear filters",
 				"owner": "ConductionNL/pipelinq",
 				"change": "my-work-roadmap",
 				"requirement": "openspec/changes/my-work-roadmap/specs/my-work :: Priority and pipeline filters (REQ-MW-200)"

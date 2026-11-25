@@ -37,8 +37,10 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 6. Notification summary (REQ-MW-140)
 
-- [ ] 6.1 Header badge with the unread Pipelinq notification count through the Nextcloud notifications OCS API; list with icon, summary, relative time, link.
-- [ ] 6.2 Mark read on open; no badge at 0.
+- [x] 6.1 Header badge with the unread Pipelinq notification count through the Nextcloud notifications OCS API; list with icon, summary, relative time, link.
+  - Built (25 Nov 2026) as manifest configuration: My work sets `config.notificationsBadge: true`. The library's `CnNotificationsBadge` (ConductionNL/nextcloud-vue#2373, `dashboard-notifications-badge`, schema 2.203.0) reads the notifications OCS API, keeps the `pipelinq` entries (what `lib/Notification/Notifier.php` prepares), shows their count in the header and lists them newest first with icon, summary, relative time and link; it reads again on every page refresh, so `autoRefresh` keeps the count current. Vitest `tests/vitest/myWorkNotificationsBadge.spec.js`; the library's behaviour in `tests/components/CnNotificationsBadge.spec.js` there.
+- [x] 6.2 Mark read on open; no badge at 0.
+  - Built with 6.1: opening a notification dismisses it through the OCS API (the notifications app's read), lowers the count and opens its link; with nothing unread, or without the notifications app, no badge shows. The live check (assign two tickets, read 2, open one, read 1) runs in the nightly.
 
 ## 7. Saved views (REQ-MW-150)
 
@@ -76,5 +78,5 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 ## 13. Close
 
 - [ ] 13.1 Set `built.state` of the matching rows in `openspec/parity/capabilities.json` as each block lands.
-  - Done for the blocks built so far: `work-my-week-stats` (090), `work-quick-create` (100), `work-upcoming-meetings` (130) and `work-team-view` (180) now read built. Stays open while blocks 6 to 9, 11 and 12 are unbuilt; `work-layout`, `work-auto-refresh` and `work-filter-priority-pipeline` stay specified.
+  - Done for the blocks built so far: `work-my-week-stats` (090), `work-quick-create` (100), `work-upcoming-meetings` (130) and `work-team-view` (180) now read built; on 25 Nov 2026 `work-layout` (160, with 110's fold), `work-auto-refresh` (190) and `work-filter-priority-pipeline` (200) too. Stays open while blocks 7 (saved views, row `work-saved-view`) and 9 (phone) are unbuilt.
 - [ ] 13.2 Archive this change into `openspec/specs/my-work` once all blocks are built, or split the unbuilt rest into a new change.
