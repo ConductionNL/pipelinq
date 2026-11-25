@@ -1,0 +1,3360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<files psalm-version="7.16.0@708bf98874d359acbdcedb84f8624e9ec215867d">
+  <file src="lib/Activity/Filter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function allowedApps(): array {]]></code>
+      <code><![CDATA[public function filterTypes(array $types): array {]]></code>
+      <code><![CDATA[public function getIcon(): string {]]></code>
+      <code><![CDATA[public function getIdentifier(): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function getPriority(): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Activity/Provider.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function parse($language, IEvent $event, ?IEvent $previousEvent = null): IEvent {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Activity/Setting/AssignmentSetting.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function l10n(): IL10N {]]></code>
+      <code><![CDATA[public function getIdentifier(): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function getPriority(): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Activity/Setting/DealSetting.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function l10n(): IL10N {]]></code>
+      <code><![CDATA[public function getIdentifier(): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function getPriority(): int {]]></code>
+      <code><![CDATA[public function isDefaultEnabledMail(): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Activity/Setting/NoteSetting.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function l10n(): IL10N {]]></code>
+      <code><![CDATA[public function getIdentifier(): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function getPriority(): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Activity/Setting/PipelinqActivitySetting.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function canChangeMail(): bool {]]></code>
+      <code><![CDATA[public function canChangeStream(): bool {]]></code>
+      <code><![CDATA[public function getGroupIdentifier(): string {]]></code>
+      <code><![CDATA[public function getGroupName(): string {]]></code>
+      <code><![CDATA[public function isDefaultEnabledMail(): bool {]]></code>
+      <code><![CDATA[public function isDefaultEnabledStream(): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Activity/Setting/StageStatusSetting.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function l10n(): IL10N {]]></code>
+      <code><![CDATA[public function getIdentifier(): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function getPriority(): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Adapter/AbstractOpenConnectorSink.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[abstract public function getType(): string;]]></code>
+      <code><![CDATA[public function testConnection(array $credentials, array $destination): bool {]]></code>
+      <code><![CDATA[public function upload(array $credentials, array $destination, string $remotePath, string $contents): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Adapter/AzureDataLakeExportAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function acknowledge(array $result): string {]]></code>
+      <code><![CDATA[public function getType(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Adapter/BigQueryExportAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function acknowledge(array $result): string {]]></code>
+      <code><![CDATA[public function getType(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Adapter/ExportSinkRegistry.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function get(string $type): ExportSinkInterface {]]></code>
+      <code><![CDATA[public function register(ExportSinkInterface $sink): void {]]></code>
+      <code><![CDATA[public function supports(string $type): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Adapter/GcsExportAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function acknowledge(array $result): string {]]></code>
+      <code><![CDATA[public function getType(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Adapter/PostgresExportAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function acknowledge(array $result): string {]]></code>
+      <code><![CDATA[public function getType(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Adapter/S3ExportAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function acknowledge(array $result): string {]]></code>
+      <code><![CDATA[public function getType(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Adapter/SftpExportAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function acknowledge(array $result): string {]]></code>
+      <code><![CDATA[public function getType(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Adapter/SnowflakeExportAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function acknowledge(array $result): string {]]></code>
+      <code><![CDATA[public function getType(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/AppInfo/Application.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function boot(IBootContext $context): void {]]></code>
+      <code><![CDATA[public function register(IRegistrationContext $context): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/AppointmentDepositTimeoutJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/AvailabilityCacheRefreshJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/BillingHandoffRetryJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/BlastSendJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+      <code><![CDATA[public function enqueueWebhookEvent(string $provider, array $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/BrpRetentionJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/BudgetPeriodResetJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/CallMirrorRetentionJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/CallTranscriptionJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/CallbackOverdueJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/ClientRiskJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/CostReconciliationJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/CtiEventLogCleanupJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/DeferredObjectListenerJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function runDeferred(DeferredListenerContext $context): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/DispatchQueuedMessagesJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/EmailMatchJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/EmailSyncJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/EventReminderJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/ExportSchedulerJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/ExportWorkerJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/FallbackEmailJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/FollowUpReminderJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/ForecastSnapshotJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/FullExportJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/GenerateZReportJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/LabelRenameJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/MailIntakeJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/PointsExpiryBatchJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/PortalCleanupJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/PosRetryBackoffJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/ReminderDispatchJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/RenewalWindowJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/ReplayConsentToIntegriqJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/ScheduledTaskJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/SearchConsoleImportJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/SlaDeadlineSweepJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/SocialInboxJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/SocialMetricsPullJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/SocialPublishJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/SurveyInvitationDispatchJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/SyncRegisterAccessJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/TemplateApprovalSyncJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/TenderPostedRetryJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/TierDowngradeJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/WalkInQueueRebalanceJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run(mixed $argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BackgroundJob/WebhookProcessorJob.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function run($argument): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BulkAction/FillFromKvkAction.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function apply(BulkStep $step): BulkActionResult {]]></code>
+      <code><![CDATA[public function getDescription(): string {]]></code>
+      <code><![CDATA[public function getGuards(): array {]]></code>
+      <code><![CDATA[public function getId(): string {]]></code>
+      <code><![CDATA[public function getLabel(): string {]]></code>
+      <code><![CDATA[public function getReversalWindow(): int {]]></code>
+      <code><![CDATA[public function requiresJustification(): bool {]]></code>
+      <code><![CDATA[public function reversalPlanFor(ObjectEntity $object, array $parameters): array {]]></code>
+      <code><![CDATA[public function validateParameters(array $parameters): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/BulkAction/FillFromKvkRegistrationListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Command/CompetitorWatchRunCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configure(): void {]]></code>
+      <code><![CDATA[protected function execute(InputInterface $input, OutputInterface $output): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Command/ConnectionAuditCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configure(): void {]]></code>
+      <code><![CDATA[protected function execute(InputInterface $input, OutputInterface $output): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Command/ConsentMigrateCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configure(): void {]]></code>
+      <code><![CDATA[protected function execute(InputInterface $input, OutputInterface $output): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Command/EnquiryDrainCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configure(): void {]]></code>
+      <code><![CDATA[protected function execute(InputInterface $input, OutputInterface $output): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Command/PortalCleanupCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configure(): void {]]></code>
+      <code><![CDATA[protected function execute(InputInterface $input, OutputInterface $output): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Command/ReferencesAuditCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configure(): void {]]></code>
+      <code><![CDATA[protected function execute(InputInterface $input, OutputInterface $output): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Command/RemoveMockPipelinesCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configure(): void {]]></code>
+      <code><![CDATA[protected function execute(InputInterface $input, OutputInterface $output): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Command/SearchConsoleImportCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configure(): void {]]></code>
+      <code><![CDATA[protected function execute(InputInterface $input, OutputInterface $output): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Command/SeedDemoDataCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configure(): void {]]></code>
+      <code><![CDATA[protected function execute(InputInterface $input, OutputInterface $output): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Command/UplImportCommand.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configure(): void {]]></code>
+      <code><![CDATA[protected function execute(InputInterface $input, OutputInterface $output): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Controller/ListPublicController.php">
+    <TaintedUrlScheme>
+      <code><![CDATA[$action]]></code>
+    </TaintedUrlScheme>
+  </file>
+  <file src="lib/Controller/PortalController.php">
+    <InvalidOperand>
+      <code><![CDATA[$depositAmount * 100]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Dashboard/AbstractPipelinqWidget.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getIconClass(): string {]]></code>
+      <code><![CDATA[public function getUrl(): ?string {]]></code>
+      <code><![CDATA[public function load(): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Dashboard/CreateLeadWidget.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function scriptEntry(): string {]]></code>
+      <code><![CDATA[public function getId(): string {]]></code>
+      <code><![CDATA[public function getOrder(): int {]]></code>
+      <code><![CDATA[public function getTitle(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Dashboard/DealsOverviewWidget.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function scriptEntry(): string {]]></code>
+      <code><![CDATA[public function getId(): string {]]></code>
+      <code><![CDATA[public function getOrder(): int {]]></code>
+      <code><![CDATA[public function getTitle(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Dashboard/FindClientWidget.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function scriptEntry(): string {]]></code>
+      <code><![CDATA[public function getId(): string {]]></code>
+      <code><![CDATA[public function getOrder(): int {]]></code>
+      <code><![CDATA[public function getTitle(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Dashboard/MyLeadsWidget.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function scriptEntry(): string {]]></code>
+      <code><![CDATA[public function getId(): string {]]></code>
+      <code><![CDATA[public function getOrder(): int {]]></code>
+      <code><![CDATA[public function getTitle(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Dashboard/RecentActivitiesWidget.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function scriptEntry(): string {]]></code>
+      <code><![CDATA[public function getId(): string {]]></code>
+      <code><![CDATA[public function getOrder(): int {]]></code>
+      <code><![CDATA[public function getTitle(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Dashboard/StartRequestWidget.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function scriptEntry(): string {]]></code>
+      <code><![CDATA[public function getId(): string {]]></code>
+      <code><![CDATA[public function getOrder(): int {]]></code>
+      <code><![CDATA[public function getTitle(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Flow/CompetitorWatchRunNode.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function execute(FlowNodeCall $call): array {]]></code>
+      <code><![CDATA[public function getDescription(): string {]]></code>
+      <code><![CDATA[public function getDisplayName(): string {]]></code>
+      <code><![CDATA[public function getIcon(): string {]]></code>
+      <code><![CDATA[public function getId(): string {]]></code>
+      <code><![CDATA[public function isAvailableForScope(int $scope): bool {]]></code>
+      <code><![CDATA[public function validateConfig(array $config): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Flow/JourneyActionNode.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function configKeys(): array {]]></code>
+      <code><![CDATA[public function execute(FlowNodeCall $call): array {]]></code>
+      <code><![CDATA[public function getDescription(): string {]]></code>
+      <code><![CDATA[public function getDisplayName(): string {]]></code>
+      <code><![CDATA[public function getIcon(): string {]]></code>
+      <code><![CDATA[public function getId(): string {]]></code>
+      <code><![CDATA[public function isAvailableForScope(int $scope): bool {]]></code>
+      <code><![CDATA[public function validateConfig(array $config): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Flow/PipelinqFlowNodeListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Flow/ProvisionContactIdentityNode.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function configKeys(): array {]]></code>
+      <code><![CDATA[public function execute(FlowNodeCall $call): array {]]></code>
+      <code><![CDATA[public function getDescription(): string {]]></code>
+      <code><![CDATA[public function getDisplayName(): string {]]></code>
+      <code><![CDATA[public function getIcon(): string {]]></code>
+      <code><![CDATA[public function getId(): string {]]></code>
+      <code><![CDATA[public function isAvailableForScope(int $scope): bool {]]></code>
+      <code><![CDATA[public function validateConfig(array $config): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Integration/ContactMomentLeafProvider.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function create(string $hostId, array $payload): array {]]></code>
+      <code><![CDATA[public function list(string $hostId, int $limit = self::DEFAULT_LIMIT, string $partyId = ''): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Integration/PartyLeafProvider.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function describe(string $partyId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Integration/TicketLeafProvider.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function clientIdsOf(string $ref): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Lifecycle/BillingHandoffAccessPolicy.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function isManager(string $userId): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Lifecycle/ForecastAccess.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function actingUserId(): string {]]></code>
+      <code><![CDATA[public function mayDeleteOverride(string $uid, array $override): bool {]]></code>
+      <code><![CDATA[public function mayOverride(string $uid, string $level): bool {]]></code>
+      <code><![CDATA[public function mayRead(string $uid, ForecastSnapshotQuery $query): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Lifecycle/ForecastAccessPolicy.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function canOverride(string $userId, string $level): bool {]]></code>
+      <code><![CDATA[public function canRead(string $userId, string $level, ?string $ownerId): bool {]]></code>
+      <code><![CDATA[public function canSetQuota(string $userId, string $level): bool {]]></code>
+      <code><![CDATA[public function isManager(string $userId): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Lifecycle/PosAccessPolicy.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function canAccessTransaction(array $object, string $userId): bool {]]></code>
+      <code><![CDATA[public function isManager(string $userId): bool {]]></code>
+      <code><![CDATA[public function isPosUser(string $userId): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Lifecycle/PosRefundManagerGuard.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function check(array $object, string $action, string $userId): GuardResult {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Lifecycle/PosTransactionAccessGuard.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function check(array $object, string $action, string $userId): GuardResult {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Lifecycle/PosTransactionConfirmGuard.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function check(array $object, string $action, string $userId): GuardResult {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Lifecycle/PosTransactionRefundGuard.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function check(array $object, string $action, string $userId): GuardResult {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Lifecycle/SessionUser.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function isAdmin(string $uid): bool {]]></code>
+      <code><![CDATA[public function uid(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Lifecycle/TicketAssigneeGuard.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function check(array $object, string $action, string $userId): GuardResult {]]></code>
+      <code><![CDATA[public function checkTransition(LifecycleGuardContext $context): GuardResult {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/ArticleUsageListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/AvailabilityCacheInvalidationListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+      <code><![CDATA[public function runDeferredWork(array $entry): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/BerichtenboxZaakStatusListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/BrpMutationWebhookListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(string $rawBody, string $signature): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/CallEventListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/CallReviewSaveListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/ClientIdentifierFormatGuard.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/ClientMergeReferenceListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/ClientRiskChangeListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/ContactErasedListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/DealCreatedListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+      <code><![CDATA[public function runDeferredWork(array $entry): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/DealUpdatedListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+      <code><![CDATA[public function runDeferredWork(array $entry): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/EventCancelledListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+      <code><![CDATA[public function runDeferredWork(array $entry): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/ExpenseApprovalListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+      <code><![CDATA[public function runDeferredWork(array $entry): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/FormsSubmissionListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/LandingPageFormSubmittedListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/LeadLinePricingListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/LeadStageCreatingListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/LineTotalsListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/MergedAwayRecordGuard.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/MergedAwayRecordListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/NrcNotificationListener.php">
+    <InvalidOperand>
+      <code><![CDATA[(microtime(true) - $start) * 1000]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function dispatch(array $abonnement, array $notification): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/ObjectEventListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/ObjectsMergedSyncListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/PosLinePricingListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/PosTransactionCompletedListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/ProductVariantGuard.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/QuestionAnsweredListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/QuoteNumberCreatingListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/SchemaChangeListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/SlaObjectCreatedListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+      <code><![CDATA[public function runDeferredWork(array $entry): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/SlaObjectUpdatedListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+      <code><![CDATA[public function runDeferredWork(array $entry): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/StageLimitGuard.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/SubmittedLeadListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/SurveyDispatchListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+      <code><![CDATA[public function runDeferredWork(array $entry): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/TaskCreatedByCreatingListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/TemplateInUseGuard.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/TicketPhoneE164Listener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/TicketReferenceCreatingListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/TimeApprovalListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Listener/WebFormBindingListener.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handle(Event $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Mcp/McpTransition.php">
+    <TaintedCallable>
+      <code><![CDATA[$error]]></code>
+    </TaintedCallable>
+  </file>
+  <file src="lib/Mcp/PipelinqScannableServices.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getScannableServiceClasses(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Middleware/ApiContractMiddleware.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function afterController($controller, $methodName, Response $response): Response {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Notification/Notifier.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getID(): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function prepare(INotification $notification, string $languageCode): INotification {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Portal/PortalAssertionVerifier.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function verify(string $jwt): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Portal/PortalContribution.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getContribution(array $subject): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/BackfillClientRetention.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/BackfillContactChannelArrays.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/BackfillLeadRelations.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/BackfillTaskNames.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/BackfillTicketMunicipality.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/BackfillTicketPhoneE164.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/CreateBackgroundServiceGroup.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function noAccountWarning(): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/CreateMessagingServiceGroup.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function noAccountWarning(): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/CreatePortalServiceGroup.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function noAccountWarning(): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/CreateSalesGroup.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/CreateServiceGroup.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/DrainMdmSyncQueue.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/IngestProductVendorMaster.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/InitSlaStatus.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/InitializeSettings.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/MigrateAvgVerzoekenToOrDsar.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/MigrateConsentToIntegriq.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/MigrateContactMomentDirection.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/MigratePosBookkeepingToShillinq.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/MoveBrpConnectionToIntegriq.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/MoveMarketingArticlesToPortaliq.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/NameFormDestinations.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/NormaliseCtiPhoneNumbers.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/NormalisePartyFormFields.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/NormaliseTicketTitle.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/RelinkOrphanedLeads.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/RemoveBrpMonitorState.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/RemoveLegacyPspKeys.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/RemoveRetiredAvgJobs.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/RenameCollidingSchemaSlugs.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/RenameDutchColumns.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/RenameDutchPipelinqValues.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/RenameLoyaltyAccountSchemaSlug.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/RenameTimeEntrySchemaSlug.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/SeedPartyKinds.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/SeedTrustConfigurationRows.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/SeedWeeklyReviewAgentTemplate.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/UnifyClientContactIdentity.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Repair/WidenContactMomentCaseReference.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function run(IOutput $output): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Sections/SettingsSection.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getID(): string {]]></code>
+      <code><![CDATA[public function getIcon(): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function getPriority(): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Access/RegisterAccessSync.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function sync(bool $force=false): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ActivityTimelineService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function createWorklog(string $entityType, string $entityId, array $data): array {]]></code>
+      <code><![CDATA[public function getTimeline(string $entityType, string $entityId, array $params): array {]]></code>
+      <code><![CDATA[public function getWorklog(string $entityType, string $entityId, array $params): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/AnalyticsService.php">
+    <InvalidOperand>
+      <code><![CDATA[$buckets[$key] += (float)($lead['value'] ?? 0)]]></code>
+      <code><![CDATA[$buckets[$key] += 1]]></code>
+      <code><![CDATA[$closed['wonCount'] * 100.0]]></code>
+      <code><![CDATA[$closed['wonValue'] / $closed['wonCount']]]></code>
+      <code><![CDATA[$part * 100.0]]></code>
+      <code><![CDATA[($closed['wonCount'] * 100.0) / $closedCount]]></code>
+      <code><![CDATA[($completedTs - $requestedTs) / 3600.0]]></code>
+      <code><![CDATA[($part * 100.0) / $total]]></code>
+      <code><![CDATA[(count(array_keys($statuses, 'won', true)) * 100.0) / count($statuses)]]></code>
+      <code><![CDATA[array_sum($values) / count($values)]]></code>
+      <code><![CDATA[count(array_keys($statuses, 'won', true)) * 100.0]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getCommercialOverview(string $period = self::DEFAULT_PERIOD, array $leadFilter = []): array {]]></code>
+      <code><![CDATA[public function getFunnels(): array {]]></code>
+      <code><![CDATA[public function getOverview(string $period = self::DEFAULT_PERIOD): array {]]></code>
+      <code><![CDATA[public function getTrends(string $metric, string $period = self::DEFAULT_PERIOD): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ApSyncNotifier.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function notifyFailure(string $expenseTitle, string $uuid): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/AppointmentDepositService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function createDepositSession(]]></code>
+      <code><![CDATA[public function handlePaymentCallback(string $bookingId, string $status): string {]]></code>
+      <code><![CDATA[public function isDepositExpired(string $createdAtIso, ?int $nowEpoch = null): bool {]]></code>
+      <code><![CDATA[public function releaseExpiredDeposit(string $bookingId): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/AppointmentEmailService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function lastRefusal(): ?array {]]></code>
+      <code><![CDATA[public function sendReminder(string $bookingId): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/AppointmentPaymentProvider.php">
+    <InvalidOperand>
+      <code><![CDATA[$amount * 100]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/ArticleService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function expandArticlesMarker(string $body, array $articles, string $format): string {]]></code>
+      <code><![CDATA[public function loadArticlesByIds(array $articleIds): array {]]></code>
+      <code><![CDATA[public function publishedArticles(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/AttributionService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getBlastAttributionSummary(string $blastId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/AvailabilityService.php">
+    <InvalidOperand>
+      <code><![CDATA[ceil($start / $intervalMinutes) * $intervalMinutes]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function invalidateCache(string $resourceId, string $date): void {]]></code>
+      <code><![CDATA[public function invalidateForResourceTypes(array $resourceTypes): int {]]></code>
+      <code><![CDATA[public function invalidateResource(string $resourceId): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/BackgroundServiceAccount.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configKey(): string {]]></code>
+      <code><![CDATA[protected function refuse(string $userId, string $reason): never {]]></code>
+      <code><![CDATA[public function group(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/BerichtenboxService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function dispatchQueuedMessages(int $limit = 100): int {]]></code>
+      <code><![CDATA[public function handleInboundReply(]]></code>
+      <code><![CDATA[public function handleReadReceipt(string $logiusMessageId, string $readAtIso): bool {]]></code>
+      <code><![CDATA[public function processFallbackQueue(): int {]]></code>
+      <code><![CDATA[public function queueOutboundMessage(CaseStatusMessage $message, MessageOptions $options = new MessageOptions()): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/BlastService.php">
+    <InvalidOperand>
+      <code><![CDATA[$expectedDuration - $elapsed]]></code>
+      <code><![CDATA[$seconds * 1_000_000]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function audienceRecipients(string $segmentId, string $listId, string $channel): array {]]></code>
+      <code><![CDATA[public function cancelBlast(string $blastId): array {]]></code>
+      <code><![CDATA[public function createDraftBlast(array $payload, string $createdByUid): array {]]></code>
+      <code><![CDATA[public function dispatchBlastDeliveries(string $blastId, int $maxPerSecond = 100): int {]]></code>
+      <code><![CDATA[public function getBlastById(string $blastId): ?array {]]></code>
+      <code><![CDATA[public function listBlasts(?string $status, int $page, int $limit): array {]]></code>
+      <code><![CDATA[public function listDeliveriesForBlast(string $blastId, int $page, int $limit): array {]]></code>
+      <code><![CDATA[public function patchBlastName(string $blastId, string $name): ?array {]]></code>
+      <code><![CDATA[public function sendBlast(string $blastId, bool $isDraft = false): array {]]></code>
+      <code><![CDATA[public function updateBlastTotals(string $blastId): void {]]></code>
+    </MissingOverrideAttribute>
+    <UnusedReturnValue>
+      <code><![CDATA[array<string, mixed>|null]]></code>
+    </UnusedReturnValue>
+  </file>
+  <file src="lib/Service/BookingFiguresService.php">
+    <InvalidOperand>
+      <code><![CDATA[($booked / $bookable) * 100]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function resourceFigures(string $resourceId): array {]]></code>
+      <code><![CDATA[public function serviceFigures(string $serviceId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/BookingService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function cancelBooking(string $bookingId, string $reason, string $cancelledBy): void {]]></code>
+      <code><![CDATA[public function completeBooking(string $bookingId): void {]]></code>
+      <code><![CDATA[public function confirmBooking(string $bookingId, string $reason): void {]]></code>
+      <code><![CDATA[public function createBooking(array $data, string $source): string {]]></code>
+      <code><![CDATA[public function getAvailableSlots(string $serviceId, string $date): array {]]></code>
+      <code><![CDATA[public function markNoShow(string $bookingId, string $staffUserId): void {]]></code>
+      <code><![CDATA[public function rescheduleBooking(string $bookingId, string $newStartAt): string {]]></code>
+    </MissingOverrideAttribute>
+    <UnusedReturnValue>
+      <code><![CDATA[array<string, mixed>|object]]></code>
+    </UnusedReturnValue>
+  </file>
+  <file src="lib/Service/BrpCacheService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function get(]]></code>
+      <code><![CDATA[public function invalidate(]]></code>
+      <code><![CDATA[public function set(array $person, ?int $ttlHours = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/BsnAuditService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function recordLookup(string $actor, LookupAudit $lookup): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/BudgetService.php">
+    <InvalidOperand>
+      <code><![CDATA[$maxMessages * $thresholdPct]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function resetPeriods(): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CallReview/CallReviewTotal.php">
+    <InvalidOperand>
+      <code><![CDATA[$weight * $score]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function statusOf(string $status, array $coachingPoints): string {]]></code>
+      <code><![CDATA[public function totalOf(array $criteria, array $scores): ?float {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CallReview/CallTranscriptionService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function transcribe(string $ticketId, ?DateTimeImmutable $now = null): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CallReview/CoachingPointAgreement.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function agree(array $points, int $index, string $now): array {]]></code>
+      <code><![CDATA[public function refusal(array $review, int $index, string $userId): ?string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CallbackService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function addAttempt(array $taskData, string $result, string $notes = ''): array {]]></code>
+      <code><![CDATA[public function applyClaim(array $taskData): array {]]></code>
+      <code><![CDATA[public function applyCompletion(array $taskData, string $resultText): array {]]></code>
+      <code><![CDATA[public function applyReassignment(array $taskData, string $assignee, string $assigneeType): array {]]></code>
+      <code><![CDATA[public function isAttemptThresholdReached(array $taskData): bool {]]></code>
+      <code><![CDATA[public function validateClaim(array $taskData): array {]]></code>
+      <code><![CDATA[public function validateStatusTransition(string $currentStatus, string $targetStatus): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CallerObjectReader.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function read(string $id, string $schemaKey): ?array]]></code>
+      <code><![CDATA[public function readFromSchema(string $id, string $schema): ?array]]></code>
+      <code><![CDATA[public function register(): string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Calls/CallMirror.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function mirror(array $call, ?int $now = null): ?string {]]></code>
+      <code><![CDATA[public function purgeExpired(?int $now = null): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CampaignAttributionService.php">
+    <InvalidOperand>
+      <code><![CDATA[$value / count($ids)]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/CampaignPerformanceService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function forBlast(string $blastId, ?string $from=null, ?string $to=null): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CampaignReportService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function forCampaign(string $campaignId, ?string $from = null, ?string $to = null): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CampaignService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function all(array $filters = []): array {]]></code>
+      <code><![CDATA[public function find(string $id): ?array {]]></code>
+      <code><![CDATA[public function idOf(?array $campaign): string {]]></code>
+      <code><![CDATA[public function save(array $payload, ?string $id = null, string $uid = ''): array {]]></code>
+      <code><![CDATA[public function vocabularies(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CashShiftService.php">
+    <InvalidOperand>
+      <code><![CDATA[($diff / $expected) * 100]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function approveDiff(string $diffId, string $userId): array {]]></code>
+      <code><![CDATA[public function openShift(]]></code>
+      <code><![CDATA[public function pendingDiffId(string $shiftId): string {]]></code>
+      <code><![CDATA[public function recordCount(string $shiftId, float $amount, string $userId, string $notes = ''): array {]]></code>
+      <code><![CDATA[public function recordDrop(string $shiftId, float $amount, string $reason, string $userId): array {]]></code>
+      <code><![CDATA[public function rejectDiff(string $diffId, string $reason, string $userId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CashShiftSummaryService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function shiftSummary(string $shiftId): array {]]></code>
+      <code><![CDATA[public function summarise(array $shiftIds): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ChannelProviderRepository.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function findById(string $id): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ClientBusinessReader.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function businessOf(string $clientId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ClientCaseReader.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function casesOf(string $clientId, string $status, int $limit): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ClientHistorySummaryService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function available(): bool {]]></code>
+      <code><![CDATA[public function summarise(string $clientId, string $viewer, ?DateTimeImmutable $now = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ClientIdentifierService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function canAccessClient(string $clientId): bool {]]></code>
+      <code><![CDATA[public function check(string $clientId, string $scheme, string $value): array {]]></code>
+      <code><![CDATA[public function checkKvk(string $value): array {]]></code>
+      <code><![CDATA[public function checkVat(string $value): array {]]></code>
+      <code><![CDATA[public function kvkFacts(string $value): array {]]></code>
+      <code><![CDATA[public function problemsIn(mixed $identifiers): array {]]></code>
+      <code><![CDATA[public function validateFormat(string $scheme, string $value): ?string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ClientManagementIntegration.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function onContactDeleted(string $contactId): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ClientRiskService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function recompute(string $clientId, ?DateTimeImmutable $now = null): bool {]]></code>
+      <code><![CDATA[public function recomputeAll(?DateTimeImmutable $now = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Competitor/CompetitorWatchService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function competitors(): array {]]></code>
+      <code><![CDATA[public function runDue(int $limit = self::DEFAULT_LIMIT, ?string $actingUserId = null): array {]]></code>
+      <code><![CDATA[public function runOne(array $watch, ?string $actingUserId = null): array {]]></code>
+      <code><![CDATA[public function watch(string $id): ?array {]]></code>
+      <code><![CDATA[public function watches(array $filters = []): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Competitor/WatchEventStore.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function all(array $filters = []): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ComplianceService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function checkSegmentCompliance(string $segmentId, string $channel, string $intent = self::INTENT_PROMOTIONAL): array {]]></code>
+      <code><![CDATA[public function createTemplate(array $payload, string $createdByUid): array {]]></code>
+      <code><![CDATA[public function getTemplateById(string $templateId): ?array {]]></code>
+      <code><![CDATA[public function listTemplates(int $page, int $limit): array {]]></code>
+      <code><![CDATA[public function patchTemplate(string $templateId, array $patch): array {]]></code>
+      <code><![CDATA[public function validateTemplate(array $templateData, string $channel): ?string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ConnectionReportService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function reportCtiCheck(array $outcome): bool {]]></code>
+      <code><![CDATA[public function reportSocialReadiness(array $readiness): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ConsentMigrationService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function run(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ConsentService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function latestState(string $contactId, string $channel): string {]]></code>
+      <code><![CDATA[public function recordOptIn(]]></code>
+      <code><![CDATA[public function recordOptOut(]]></code>
+      <code><![CDATA[public function replayPending(string $contactId = ''): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ContactCaptureService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function parse(string $text, ?string $userId = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ContactMomentFilingService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function fileOnAlsoCase(string $momentId, string $caseId): array {]]></code>
+      <code><![CDATA[public function primaryOf(array $moment): string {]]></code>
+      <code><![CDATA[public function sharedMarker(array $moment, string $hostId, callable $mayRead): array {]]></code>
+      <code><![CDATA[public function unfileFromCase(string $momentId, string $caseId, ?string $newPrimary = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ContactPhotoReader.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function isAvailable(?string $userId): bool {]]></code>
+      <code><![CDATA[public function read(string $bytes, string $userId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ContactReportService.php">
+    <InvalidOperand>
+      <code><![CDATA[($resolved / count($moments)) * 100]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function document(string $from, string $to, ContactReportFilter $filter): string {]]></code>
+      <code><![CDATA[public function forecast(ContactReportFilter $filter): array {]]></code>
+      <code><![CDATA[public function occupancy(string $from, string $to, ContactReportFilter $filter): array {]]></code>
+      <code><![CDATA[public function topSubjects(string $from, string $to, ContactReportFilter $filter): array {]]></code>
+      <code><![CDATA[public function workbook(string $from, string $to, ContactReportFilter $filter): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ContactSyncService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function cardStatus(string $uid): array {]]></code>
+      <code><![CDATA[public function createWithContact(string $objectType, array $form): array {]]></code>
+      <code><![CDATA[public function importContact(string $uid, string $addressBookKey, string $type = 'client', ?string $clientId = null): array {]]></code>
+      <code><![CDATA[public function searchContacts(string $query): array {]]></code>
+      <code><![CDATA[public function syncToContacts(string $objectType, string $objectId): ?string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ContactSyncSettingsService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function run(string $userId, string $now): array {]]></code>
+      <code><![CDATA[public function saveWriteBack(string $userId, bool $writeBack): void {]]></code>
+      <code><![CDATA[public function status(string $userId): array {]]></code>
+      <code><![CDATA[public function writesBack(string $userId): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ContactVcardService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function provisionContactFromForm(array $form, string $objectType): ?array {]]></code>
+      <code><![CDATA[public function syncToContacts(string $objectType, string $objectId): ?string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ContactmomentService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function delete(string $id, string $currentUserId): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ContractFiguresService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function figures(array $contract, DateTimeImmutable $today): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ContractService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function assertTransitionAllowed(array $contract, string $newStatus, bool $byEngine = false): void {]]></code>
+      <code><![CDATA[public function buildSuccessorDraft(array $predecessor): array {]]></code>
+      <code><![CDATA[public function generateContractNumber(array $existing, ?int $year = null): string {]]></code>
+      <code><![CDATA[public function getRegisterAndSchema(): array {]]></code>
+      <code><![CDATA[public function loadAll(): array {]]></code>
+      <code><![CDATA[public function save(array $data, ?string $uuid = null): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CorrespondenceLanguageService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function available(): array {]]></code>
+      <code><![CDATA[public function instanceDefault(): string {]]></code>
+      <code><![CDATA[public function resolve(string $partyId): array {]]></code>
+      <code><![CDATA[public function setPreference(string $partyId, string $tag): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CostReconciliationService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function reconcile(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Cti/Adapter/AsteriskAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getPlatform(): string {]]></code>
+      <code><![CDATA[public function handleInboundWebhook(array $payload): CtiWebhookResult {]]></code>
+      <code><![CDATA[public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult {]]></code>
+      <code><![CDATA[public function verifyWebhookSignature(string $payload, string $signature): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Cti/Adapter/CallVoipAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getPlatform(): string {]]></code>
+      <code><![CDATA[public function handleInboundWebhook(array $payload): CtiWebhookResult {]]></code>
+      <code><![CDATA[public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult {]]></code>
+      <code><![CDATA[public function verifyWebhookSignature(string $payload, string $signature): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Cti/Adapter/RingCentralAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getPlatform(): string {]]></code>
+      <code><![CDATA[public function handleInboundWebhook(array $payload): CtiWebhookResult {]]></code>
+      <code><![CDATA[public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult {]]></code>
+      <code><![CDATA[public function subscribeToPresence(string $userId, string $extension): void {]]></code>
+      <code><![CDATA[public function verifyWebhookSignature(string $payload, string $signature): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Cti/DialLineReader.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function forAgent(string $userId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Cti/IncomingCallFinder.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function forAgent(string $userId, ?int $now = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CtiContactMatcher.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function normaliseStoredPhoneNumbers(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/CtiService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function attachRecording(string $interactionId, string $recordingUrl, string $expiresAt): bool {]]></code>
+      <code><![CDATA[public function escalationQueues(): array {]]></code>
+      <code><![CDATA[public function handleWebhook(]]></code>
+      <code><![CDATA[public function initiateScreenPop(string $fromNumber, ?string $orgId = null): ScreenPopResult {]]></code>
+      <code><![CDATA[public function listEventLog(array $filters = [], int $limit = 50, int $offset = 0): array {]]></code>
+      <code><![CDATA[public function loadConfig(): array {]]></code>
+      <code><![CDATA[public function originateCall(string $userId, string $extension, string $targetNumber): OriginateResult {]]></code>
+      <code><![CDATA[public function processDisposition(string $interactionId, string $subject, string $outcome, string $notes, string $queue=''): array {]]></code>
+      <code><![CDATA[public function purgeOldEventLog(): int {]]></code>
+      <code><![CDATA[public function saveConfig(array $config): array {]]></code>
+      <code><![CDATA[public function testConnection(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Customer360SummaryService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getSummary(string $clientId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Demo/DemoRegisterImporter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function import(): array {]]></code>
+      <code><![CDATA[public function remove(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/DemoSeedService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function listChoices(): array {]]></code>
+      <code><![CDATA[public function remove(): array {]]></code>
+      <code><![CDATA[public function seed(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Document/XlsxWorkbook.php">
+    <InvalidOperand>
+      <code><![CDATA[$value]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/DossierQuestionService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function ask(string $subjectRef, string $collectionId, string $question, string $title = ''): ?array {]]></code>
+      <code><![CDATA[public function reply(string $subjectRef, string $ticketId, string $message): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Egress/ConnectorEgress.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function isConfigured(string $configKey): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/EligibilityService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getMatchingResources(string $serviceId): array {]]></code>
+      <code><![CDATA[public function matchingResourceCounts(array $serviceIds = []): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/EmailMatchService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getSettings(string $userId): array {]]></code>
+      <code><![CDATA[public function getStatus(string $userId): array {]]></code>
+      <code><![CDATA[public function listAccounts(string $userId): array {]]></code>
+      <code><![CDATA[public function ownsAccount(string $userId, int $accountId): bool {]]></code>
+      <code><![CDATA[public function runForUser(string $userId): array {]]></code>
+      <code><![CDATA[public function writeSettings(string $userId, array $settings): void {]]></code>
+      <code><![CDATA[public function writeStatus(string $userId, int $linked, int $scanned, ?string $error = null): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/EmailSyncService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getSyncAccounts(string $userId): array {]]></code>
+      <code><![CDATA[public function isSyncEnabled(string $userId): bool {]]></code>
+      <code><![CDATA[public function updateLastSyncTime(string $userId): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/EntityActivityService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getActivity(]]></code>
+      <code><![CDATA[public function isAllowedEntityType(string $entityType): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Event/EventReminderService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function send(string $eventId): array]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ExchangeRateService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function convert(float $amount, ?string $currency): array {]]></code>
+      <code><![CDATA[public function describeRates(array $extra = []): array {]]></code>
+      <code><![CDATA[public function getMaxRateAgeDays(): int {]]></code>
+      <code><![CDATA[public function getRates(): array {]]></code>
+      <code><![CDATA[public function getReportingCurrency(): string {]]></code>
+      <code><![CDATA[public function normaliseRates(array $input): array {]]></code>
+      <code><![CDATA[public function overrideStore(): RateOverrideStore {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Export/CronExpressionHelper.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function isDue(string $expression, \DateTimeInterface $when): bool {]]></code>
+      <code><![CDATA[public function nextRunAfter(string $expression, \DateTimeInterface $from, int $horizonDays=400): ?DateTimeImmutable {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Export/ExportAccessPolicy.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function isExportAdmin(string $userId): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Export/ExportDestinationService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function createDestination(array $data): array {]]></code>
+      <code><![CDATA[public function deleteDestination(string $id): void {]]></code>
+      <code><![CDATA[public function listDestinations(): array {]]></code>
+      <code><![CDATA[public function testConnection(string $id): bool {]]></code>
+      <code><![CDATA[public function updateDestination(string $id, array $data): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Export/ExportExecutionService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function executeRun(array $run): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Export/ExportJobService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function createJob(array $data, string $userId): array {]]></code>
+      <code><![CDATA[public function deleteJob(string $id): void {]]></code>
+      <code><![CDATA[public function describeSchedule(string $expression, string $locale = 'en'): string {]]></code>
+      <code><![CDATA[public function disableJob(string $id): array {]]></code>
+      <code><![CDATA[public function enableJob(string $id): array {]]></code>
+      <code><![CDATA[public function getJob(string $id): array {]]></code>
+      <code><![CDATA[public function listJobs(): array {]]></code>
+      <code><![CDATA[public function testRun(array $job): array {]]></code>
+      <code><![CDATA[public function updateJob(string $id, array $data): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Export/ExportRunService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function createPendingRun(array $job, ?string $watermarkFrom = null): array {]]></code>
+      <code><![CDATA[public function getRun(string $runId): array {]]></code>
+      <code><![CDATA[public function lastSucceededRun(string $jobId): ?array {]]></code>
+      <code><![CDATA[public function listRuns(array $filters = []): array {]]></code>
+      <code><![CDATA[public function listSnapshots(string $runId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Export/FullExportService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function exportFor(string $userId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Export/FullExportState.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function failed(string $userId): void {]]></code>
+      <code><![CDATA[public function queued(string $userId): void {]]></code>
+      <code><![CDATA[public function read(): array {]]></code>
+      <code><![CDATA[public function ready(string $userId, string $name, string|int $fileId): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Export/SchemaEvolutionService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function compareColumns(array $current, array $previous): array {]]></code>
+    </MissingOverrideAttribute>
+    <NullableReturnStatement>
+      <code><![CDATA[$known]]></code>
+    </NullableReturnStatement>
+  </file>
+  <file src="lib/Service/External/Berichtenbox/LogBerichtenboxAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function checkMailbox(]]></code>
+      <code><![CDATA[public function dispatchMessage(array $message): BerichtenboxResult {]]></code>
+      <code><![CDATA[public function isDormant(): bool {]]></code>
+      <code><![CDATA[public function verifyDeliveryWebhook(string $rawBody, array $headers): BerichtenboxResult {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/FirstTicketService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function firstFor(string $userId, ?DateTimeImmutable $now = null): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ForecastDealService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function applyDefaultCategory(array $data): ?array {]]></code>
+      <code><![CDATA[public function applyReopenReset(array $oldData, array $newData): ?array {]]></code>
+      <code><![CDATA[public function applySlip(array $oldData, array $newData, ?DateTimeInterface $now = null): ?array {]]></code>
+      <code><![CDATA[public function slips(array $oldData, array $newData): bool {]]></code>
+      <code><![CDATA[public function validateTransition(array $oldData, array $newData): ?string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ForecastExportService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function exportSnapshots(string $periodId, string $level, ?string $ownerId, int $limit, int $offset): array {]]></code>
+      <code><![CDATA[public function toCsv(array $snapshots): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ForecastOverrideDesk.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function create(array $payload, string $managerId): ?array {]]></code>
+      <code><![CDATA[public function delete(string $id): bool {]]></code>
+      <code><![CDATA[public function invalidity(array $payload): ?string {]]></code>
+      <code><![CDATA[public function payloadOf(IRequest $request): array {]]></code>
+      <code><![CDATA[public function stored(string $id): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ForecastService.php">
+    <InvalidOperand>
+      <code><![CDATA[array_sum($values) / count($values)]]></code>
+      <code><![CDATA[array_sum($window) / 4]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/Gdpr/PipelinqApRegulatorEscalateProvider.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function escalate(string $caseUuid, array $case): RegulatorEscalateResult {]]></code>
+      <code><![CDATA[public function getProviderId(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Gdpr/PipelinqBsnIdentityVerifyProvider.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getProviderId(): string {]]></code>
+      <code><![CDATA[public function verify(string $caseUuid, array $case): IdentityVerifyResult {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/GiftCardService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function activateGiftCard(string $giftCardId, ?string $posTransactionId = null): ?array {]]></code>
+      <code><![CDATA[public function issueGiftCard(]]></code>
+      <code><![CDATA[public function redeemGiftCard(]]></code>
+      <code><![CDATA[public function validateBySerial(string $serial, string $pin): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/HaalCentraalClient.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function lookupPersoon(]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/IcpConfigService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getSettings(): array {]]></code>
+      <code><![CDATA[public function saveSettings(array $data): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/IntegrationDetector.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function all(): array {]]></code>
+      <code><![CDATA[public function shillinq(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/KassakoppelingAuditService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function createEntry(array $data): array {]]></code>
+      <code><![CDATA[public function exportForBelastingdienst(string $fromDate, string $toDate, string $format = 'xml'): array {]]></code>
+      <code><![CDATA[public function getEntry(string $id): array {]]></code>
+      <code><![CDATA[public function listEntries(array $filters = []): array {]]></code>
+      <code><![CDATA[public function verifyEntry(string $id): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/KccWerkplekService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getWorkspaceState(string $userId): array {]]></code>
+      <code><![CDATA[public function setAvailability(string $userId, bool $available): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/KvkApiClient.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function companyByNumber(string $kvkNumber): array {]]></code>
+      <code><![CDATA[public function searchByName(string $name): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Labels/LabelRenameService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function rename(string $labelId, string $name): array {]]></code>
+      <code><![CDATA[public function rewriteAll(string $from, string $to, string $userId): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/LandingPageProvisioningService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function createFor(string $campaignId, string $portal = '', string $route = ''): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Lead/LeadRelatedSummary.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function forLead(array $lead): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/LeadRotationService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function assign(array $lead): ?array {]]></code>
+      <code><![CDATA[public function isEnabled(): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Letter/FilinqLetterAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function findTemplate(string $templateId): ?array]]></code>
+      <code><![CDATA[public function listTemplates(): array]]></code>
+      <code><![CDATA[public function preview(string $templateId, array $dataRefs): array]]></code>
+      <code><![CDATA[public function render(]]></code>
+      <code><![CDATA[public function unavailableReason(): ?string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Letter/LetterLog.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function log(string $clientId, ?string $contactId, ?string $ticketId, string $templateName, ?string $path): ?string]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/LineTotals/LineRollUp.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function apply(ObjectEntityInterface $line): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/LineTotals/LineTotalMath.php">
+    <InvalidOperand>
+      <code><![CDATA[$discount / 100]]></code>
+      <code><![CDATA[$subtotal * $vatRate / 100]]></code>
+      <code><![CDATA[1 - $discount / 100]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/LogiusConnector.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handleWebhookSignature(IRequest $request, string $rawBody): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/LoyaltyAccountService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getAccount(string $accountId): ?array {]]></code>
+      <code><![CDATA[public function listAccountsForProgramme(string $programmeId, int $limit = 1000, int $offset = 0): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/LoyaltyEngineService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processPosTransaction(string $customerId, array $transaction): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/LoyaltyPaymentService.php">
+    <InvalidOperand>
+      <code><![CDATA[$points * $pointValue]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function payWithPoints(string $accountId, int $points, string $posTransactionId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/LoyaltyProgrammeService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function activate(string $programmeId, string $activatedBy): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/LoyaltyReportingService.php">
+    <InvalidOperand>
+      <code><![CDATA[$outstanding * $pointValue]]></code>
+      <code><![CDATA[$part / $whole * 100]]></code>
+      <code><![CDATA[($totalCost / $salesTotal) * 100]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getExpiryForecast(string $programmeId, int $days = 30): array {]]></code>
+      <code><![CDATA[public function getKpis(string $programmeId, ?string $from = null, ?string $to = null): array {]]></code>
+      <code><![CDATA[public function getLiabilitySnapshot(string $programmeId): array {]]></code>
+      <code><![CDATA[public function getTierReport(string $programmeId): array {]]></code>
+      <code><![CDATA[public function kpisToCsv(array $kpis): string {]]></code>
+      <code><![CDATA[public function lastDaysWindow(int $days): array {]]></code>
+      <code><![CDATA[public function tiersToCsv(array $tiers): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/MailAddIn/OpenMailService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function addSender(string $name, string $email, string $client = ''): array {]]></code>
+      <code><![CDATA[public function logMail(string $entityType, string $entityId, string $subject, string $sentAt, string $preview): array {]]></code>
+      <code><![CDATA[public function lookup(string $email): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/MailingListService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function createMailingList(array $payload, string $createdByUid): array {]]></code>
+      <code><![CDATA[public function getMailingListById(string $listId): ?array {]]></code>
+      <code><![CDATA[public function listMailingLists(int $page, int $limit): array {]]></code>
+      <code><![CDATA[public function updateMailingList(string $listId, array $patch): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/ArticleMoveService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function run(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/BookkeepingSignals.php">
+    <InvalidOperand>
+      <code><![CDATA[$days / self::MONTH]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/Marketing/DeliverabilityCheckService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function checkTransportById(string $id, bool $forceRefresh = false): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/EventEmailService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function sendClosed(array $event, array $person): bool {]]></code>
+      <code><![CDATA[public function sendConfirmation(array $event, array $registration): bool {]]></code>
+      <code><![CDATA[public function sendEventCancelled(array $event, array $registration): bool {]]></code>
+      <code><![CDATA[public function sendPlaceFreed(array $event, array $registration): bool {]]></code>
+      <code><![CDATA[public function sendReminder(array $event, array $registration): bool {]]></code>
+      <code><![CDATA[public function verifyCancelToken(string $token): ?string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/EventRegistrationService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function cancel(string $registrationId): EventRegistrationOutcome {]]></code>
+      <code><![CDATA[public function event(string $eventId): ?array {]]></code>
+      <code><![CDATA[public function eventForCampaign(string $campaignId): ?array {]]></code>
+      <code><![CDATA[public function eventsStartingBetween(int $from, int $to): array {]]></code>
+      <code><![CDATA[public function markAttendance(string $registrationId, bool $attended): ?array {]]></code>
+      <code><![CDATA[public function register(array $event, array $person): EventRegistrationOutcome {]]></code>
+      <code><![CDATA[public function registration(string $registrationId): ?array {]]></code>
+      <code><![CDATA[public function registrationsWithStatus(string $eventId, string $status): array {]]></code>
+      <code><![CDATA[public function stamp(array $registration, string $field): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/FormDestinationBackfill.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function run(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/JourneyService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function compile(string $journeyId, string $runAs = ''): ?array {]]></code>
+      <code><![CDATA[public function find(string $journeyId): ?array {]]></code>
+      <code><![CDATA[public function listJourneys(): array {]]></code>
+      <code><![CDATA[public function runsFor(string $journeyId): array {]]></code>
+      <code><![CDATA[public function save(array $payload, string $createdByUid, ?string $journeyId = null): ?array {]]></code>
+      <code><![CDATA[public function setStatus(string $journeyId, string $status, string $runAs = ''): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/JourneyStepRunner.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function run(string $journeyId, array $subject = [], string $flowRunUuid = ''): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/ListObjectStore.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function findAll(string $schemaSlug, array $filters = []): array {]]></code>
+      <code><![CDATA[public function idOf(?array $payload): string {]]></code>
+      <code><![CDATA[public function save(string $schemaSlug, array $payload, ?string $id = null): ?array {]]></code>
+      <code><![CDATA[public function schemaSlug(string $configKey, string $default): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/MailBlockRenderer.php">
+    <TaintedUrlScheme>
+      <code><![CDATA[$this->escape(value: $href)]]></code>
+      <code><![CDATA[$this->escape(value: $href)]]></code>
+      <code><![CDATA[$this->escape(value: $href)]]></code>
+    </TaintedUrlScheme>
+  </file>
+  <file src="lib/Service/Marketing/PhysicalAddressRenderer.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function render(string $body, string $footerOverride, string $format): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/PreferenceCentreService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function preferencesForToken(string $token): ?array {]]></code>
+      <code><![CDATA[public function preferencesUrlFor(string $contactId): string {]]></code>
+      <code><![CDATA[public function savePreferences(string $token, array $selectedListIds): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/SegmentQueryCompiler.php">
+    <InvalidOperand>
+      <code><![CDATA[$value + 0]]></code>
+      <code><![CDATA[$value + 0]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/Marketing/SubmittedLeadIntake.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function partiesFor(array $lead): array {]]></code>
+      <code><![CDATA[public function recordTouchpoint(string $leadId, array $lead): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/SubscriptionQueryService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function countsForList(string $listId): array {]]></code>
+      <code><![CDATA[public function listSubscriptionsForContact(string $contactId): array {]]></code>
+      <code><![CDATA[public function listSubscriptionsForList(string $listId, int $page, int $limit): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/Transport/ConnectorSourceTransport.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function send(RenderedMail $mail): SendResult {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/Transport/InstanceMailerTransport.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function send(RenderedMail $mail): SendResult {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/Transport/MailAccountTransport.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function send(RenderedMail $mail): SendResult {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Marketing/WeeklyReviewService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function compose(string $weekStarting = ''): array {]]></code>
+      <code><![CDATA[public function generate(string $weekStarting = ''): ?array {]]></code>
+      <code><![CDATA[public function latest(): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Matomo/MatomoReportService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function report(string $from, string $to): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Mdm/MdmObjectRepository.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function findAll(string $schemaSlug, array $filters = []): array {]]></code>
+      <code><![CDATA[public function findMasterEntity(string $masterId): ?array {]]></code>
+      <code><![CDATA[public function now(): string {]]></code>
+      <code><![CDATA[public function save(string $schemaSlug, array $object, ?string $uuid = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Mdm/OpenRegisterSyncService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function syncMasterToRegister(string $masterId): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Merge/MergedAwayCard.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function mark(string $contactsUid, string $intoUuid, string $intoName): bool {]]></code>
+      <code><![CDATA[public function unmark(string $contactsUid): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Merge/MergedAwayStamp.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function apply(string $uuid, ObjectsMergedEvent $event): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Merge/PartyReferenceMover.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function move(string $partyType, string $fromUuid, string $intoUuid): array {]]></code>
+      <code><![CDATA[public function restore(array $ledger, string $fromUuid, string $intoUuid): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/MessagingService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function loadContact(string $contactId): ?array {]]></code>
+      <code><![CDATA[public function loadMessage(string $messageId): ?array {]]></code>
+      <code><![CDATA[public function preflight(string $contactId): array {]]></code>
+      <code><![CDATA[public function resend(array $message, array $contact, string $actor): array {]]></code>
+      <code><![CDATA[public function resendRefusal(array $message): ?string {]]></code>
+      <code><![CDATA[public function runProviderTest(array $provider): array {]]></code>
+      <code><![CDATA[public function send(MessageRoute $route, MessageContent $content, string $actor): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/MessagingServiceAccount.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configKey(): string {]]></code>
+      <code><![CDATA[protected function refuse(string $userId, string $reason): never {]]></code>
+      <code><![CDATA[public function group(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/MockPipelineCleanupService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function run(bool $dryRun=false): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/MyWork/RecentActivityService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function forUser(string $userId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/NaviRowCounts.php">
+    <InvalidOperand>
+      <code><![CDATA[$won * 100.0]]></code>
+      <code><![CDATA[($won * 100.0) / $total]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/NaviService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processQuery(string $query, string $userId, ?string $conversationId = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/NoteEventService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function triggerNoteEvents(string $objectType, string $objectId): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/NotesService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function addNote(string $objectType, string $objectId, string $message): array {]]></code>
+      <code><![CDATA[public function deleteAllNotes(string $objectType, string $objectId): void {]]></code>
+      <code><![CDATA[public function deleteNote(int $noteId): void {]]></code>
+      <code><![CDATA[public function getNotes(string $objectType, string $objectId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/NotificationService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function notifyTaskCompleted(]]></code>
+      <code><![CDATA[public function notifyTaskReassigned(]]></code>
+      <code><![CDATA[public function sendNotification(]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ObjectEventHandlerService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handleCreated(object $objectEntity): void {]]></code>
+      <code><![CDATA[public function handleUpdated(object $newObject, ?object $oldObject): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/OptOutService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function recordFromBrpResponse(]]></code>
+      <code><![CDATA[public function recordLocalOptOut(]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/OrganisationEnrichmentService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function apply(array $changes): array {]]></code>
+      <code><![CDATA[public function propose(array $clientIds): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/OrphanedLeadRepairService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function repair(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PartyIndicatorService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function acknowledge(string $valueId): array {]]></code>
+      <code><![CDATA[public function isBlocked(string $partyId, string $act, ?DateTimeImmutable $onDay = null): array {]]></code>
+      <code><![CDATA[public function resolve(string $partyId, ?DateTimeImmutable $onDay = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PartyKindRegistryService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function acceptanceFor(string $recordType): ?array {]]></code>
+      <code><![CDATA[public function kindsFor(string $recordType): array {]]></code>
+      <code><![CDATA[public function vocabulary(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PartyLinkService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function end(string $linkId): array {]]></code>
+      <code><![CDATA[public function import(string $recordType, string $recordId, array $rows): array {]]></code>
+      <code><![CDATA[public function link(string $recordType, string $recordId, string $party, string $kind): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PartyOrganisationTreeService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function setParent(string $nodeId, ?string $parentId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Payment/AbstractPaymentAdapter.php">
+    <InvalidOperand>
+      <code><![CDATA[$amount * 100]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[abstract public function getName(): string;]]></code>
+      <code><![CDATA[public function setHttpTransport(?HttpTransport $transport): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Payment/AdyenAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function authHeaders(): array {]]></code>
+      <code><![CDATA[protected function label(): string {]]></code>
+      <code><![CDATA[public function capture(string $sessionId): array {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function initiate(array $transactionData, float $amount, string $paymentMethod): array {]]></code>
+      <code><![CDATA[public function parseWebhook(array $payload): array {]]></code>
+      <code><![CDATA[public function refund(string $sessionId, string $reason): array {]]></code>
+      <code><![CDATA[public function testConnection(): array {]]></code>
+      <code><![CDATA[public function validateWebhook(string $rawPayload, string $signature): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Payment/BrokerHttpTransport.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function request(string $method, string $url, array $headers = [], ?string $body = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Payment/CcvAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function authHeaders(): array {]]></code>
+      <code><![CDATA[protected function connectionHttpError(int $status): string {]]></code>
+      <code><![CDATA[protected function label(): string {]]></code>
+      <code><![CDATA[public function capture(string $sessionId): array {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function initiate(array $transactionData, float $amount, string $paymentMethod): array {]]></code>
+      <code><![CDATA[public function parseWebhook(array $payload): array {]]></code>
+      <code><![CDATA[public function refund(string $sessionId, string $reason): array {]]></code>
+      <code><![CDATA[public function testConnection(): array {]]></code>
+      <code><![CDATA[public function validateWebhook(string $rawPayload, string $signature): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Payment/CurlHttpTransport.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function request(string $method, string $url, array $headers = [], ?string $body = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Payment/MollieAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function authHeaders(): array {]]></code>
+      <code><![CDATA[protected function connectionHttpError(int $status): string {]]></code>
+      <code><![CDATA[protected function label(): string {]]></code>
+      <code><![CDATA[public function capture(string $sessionId): array {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function initiate(array $transactionData, float $amount, string $paymentMethod): array {]]></code>
+      <code><![CDATA[public function parseWebhook(array $payload): array {]]></code>
+      <code><![CDATA[public function refund(string $sessionId, string $reason): array {]]></code>
+      <code><![CDATA[public function testConnection(): array {]]></code>
+      <code><![CDATA[public function validateWebhook(string $rawPayload, string $signature): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Payment/StripeAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function authHeaders(): array {]]></code>
+      <code><![CDATA[protected function bodyType(): string {]]></code>
+      <code><![CDATA[protected function label(): string {]]></code>
+      <code><![CDATA[public function capture(string $sessionId): array {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+      <code><![CDATA[public function initiate(array $transactionData, float $amount, string $paymentMethod): array {]]></code>
+      <code><![CDATA[public function parseWebhook(array $payload): array {]]></code>
+      <code><![CDATA[public function refund(string $sessionId, string $reason): array {]]></code>
+      <code><![CDATA[public function testConnection(): array {]]></code>
+      <code><![CDATA[public function validateWebhook(string $rawPayload, string $signature): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PhoneHistoryService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function findTickets(string $raw, ?string $orgId = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PipelinqEvidenceSourceProvider.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getSourceId(): string {]]></code>
+      <code><![CDATA[public function harvest(string $caseUuid, array $case): array {]]></code>
+      <code><![CDATA[public function isEnabled(): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PointsLedgerService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function expirePoints(string $accountId, int $amount, string $reason): array {]]></code>
+      <code><![CDATA[public function forOperation(string $operationId): static {]]></code>
+      <code><![CDATA[public function getLedgerHistory(string $accountId, ?string $from = null, ?string $to = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/AbstractPortalReadFacade.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getForAccount(array $account, int $page = 1, int $perPage = 10): array {]]></code>
+      <code><![CDATA[public function getOneForAccount(array $account, string $id): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/AbstractPosTransactionFacade.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function delegationScope(): string {]]></code>
+      <code><![CDATA[protected function ownerIds(array $object): array {]]></code>
+      <code><![CDATA[protected function schemaKey(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/DocumentSigningService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function generateUrl(]]></code>
+      <code><![CDATA[public function validateToken(string $token): array|string|null {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/MainRegisterReader.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function findAsCaller(string $schemaKey, string $id): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PasswordResetService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function requestReset(string $email, string $tenantId): void {]]></code>
+      <code><![CDATA[public function resetPassword(string $token, string $newPassword, string $tenantId): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalAccountService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function close(string $token, string $tenantId): void {]]></code>
+      <code><![CDATA[public function requestClosure(array $account, string $tenantId): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalAuditService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getForAccount(string $accountId): array {]]></code>
+      <code><![CDATA[public function getForTenant(string $tenantId): array {]]></code>
+      <code><![CDATA[public function getRecent(int $limit): array {]]></code>
+      <code><![CDATA[public function log(]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalAuthService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function login(]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalCleanupService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function run(): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalContractService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function delegationScope(): string {]]></code>
+      <code><![CDATA[protected function ownerIds(array $object): array {]]></code>
+      <code><![CDATA[protected function present(array $object, ?string $delegatedFrom): array {]]></code>
+      <code><![CDATA[protected function schemaKey(): string {]]></code>
+      <code><![CDATA[protected function sortKey(array $object): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalDelegationService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function grant(]]></code>
+      <code><![CDATA[public function listGrantedBy(string $granterAccountId): array {]]></code>
+      <code><![CDATA[public function revoke(string $delegationId, string $granterAccountId, string $tenantId): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalExportService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function buildExport(array $account): array {]]></code>
+      <code><![CDATA[public function requestExport(array $account, string $tenantId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalInvoiceService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function isListed(array $object): bool {]]></code>
+      <code><![CDATA[protected function present(array $object, ?string $delegatedFrom): array {]]></code>
+      <code><![CDATA[protected function sortKey(array $object): string {]]></code>
+      <code><![CDATA[protected function visibleRows(array $resolved): array {]]></code>
+      <code><![CDATA[public function getOneForAccount(array $account, string $id): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalMfaService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function encryptSecret(string $secret): string {]]></code>
+      <code><![CDATA[public function generateSecret(): string {]]></code>
+      <code><![CDATA[public function provisioningUri(string $secret, string $accountLabel, string $issuer): string {]]></code>
+      <code><![CDATA[public function verifyCode(?string $encryptedSecret, ?string $code): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalObjectRepository.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function find(string $schemaSlug, string $id): ?array {]]></code>
+      <code><![CDATA[public function findAll(string $schemaSlug, array $filters = []): array {]]></code>
+      <code><![CDATA[public function save(string $schemaSlug, array $data, ?string $id = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalOrderService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function present(array $object, ?string $delegatedFrom): array {]]></code>
+      <code><![CDATA[protected function sortKey(array $object): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalProfileService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function present(array $account): array {]]></code>
+      <code><![CDATA[public function update(array $account, string $tenantId, array $changes): array {]]></code>
+      <code><![CDATA[public function verifyEmail(string $token, string $tenantId): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalRequestGuard.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function authenticate(IRequest $request): array {]]></code>
+      <code><![CDATA[public function ipHash(IRequest $request): string {]]></code>
+      <code><![CDATA[public function resolveTenant(IRequest $request): string {]]></code>
+      <code><![CDATA[public function userAgentHash(IRequest $request): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalRequestService.php">
+    <InvalidOperand>
+      <code><![CDATA[$size / 1024 / 1024]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function addReply(array $account, string $tenantId, string $requestId, string $message): array {]]></code>
+      <code><![CDATA[public function getDetailForAccount(array $account, string $requestId, bool $exposeAssigneeName): ?array {]]></code>
+      <code><![CDATA[public function getForAccount(array $account, int $page = 1, int $perPage = 10): array {]]></code>
+      <code><![CDATA[public function previewDetail(array $ticket, bool $exposeAssigneeName): ?array {]]></code>
+      <code><![CDATA[public function submit(]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalServiceAccount.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function configKey(): string {]]></code>
+      <code><![CDATA[protected function refuse(string $userId, string $reason): never {]]></code>
+      <code><![CDATA[public function group(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalSessionManager.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function extendSessionOrThrow(string $sessionId, int $ttlHours = self::DEFAULT_TTL_HOURS): array {]]></code>
+      <code><![CDATA[public function revokeSession(string $sessionId, string $reason): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/PortalTenantService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getAdminConfig(string $tenantId): array {]]></code>
+      <code><![CDATA[public function getConfig(string $tenantId): ?array {]]></code>
+      <code><![CDATA[public function getPublicConfig(string $tenantId): array {]]></code>
+      <code><![CDATA[public function listConfigs(): array {]]></code>
+      <code><![CDATA[public function requireFeature(string $tenantId, string $feature): void {]]></code>
+      <code><![CDATA[public function saveConfig(string $tenantId, array $config): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/QuestionAnsweredNotice.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function isAnswered(array $before, array $after): bool {]]></code>
+      <code><![CDATA[public function tell(array $ticket, string $ticketId): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Portal/QuestionDetailService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function dossierItems(string $ticketId): array {]]></code>
+      <code><![CDATA[public function timeline(string $ticketId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PosBookkeepingService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function dispatchRaise(array $zReport, ?string $idempotencyKey = null): array {]]></code>
+      <code><![CDATA[public function generateZReport(string $reportDate, ?string $terminalId = null): array {]]></code>
+      <code><![CDATA[public function raiseJournalEntry(string $zReportId, string $userId): array {]]></code>
+      <code><![CDATA[public function shouldDispatch(): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PosCart/PosCartRepricer.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function reprice(string $transactionId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PosCustomerLinkService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function attachCustomer(]]></code>
+      <code><![CDATA[public function detachCustomer(string $transactionId): array {]]></code>
+      <code><![CDATA[public function getCustomerHistory(string $contactUuid, int $limit = self::DEFAULT_HISTORY_LIMIT): array {]]></code>
+      <code><![CDATA[public function searchCustomers(string $query, int $limit = self::DEFAULT_SEARCH_LIMIT): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PosPaymentService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function capturePayment(string $transactionId): array {]]></code>
+      <code><![CDATA[public function getProviderConfig(string $name, bool $includeMaskedSecrets = true): array {]]></code>
+      <code><![CDATA[public function handleWebhook(string $providerName, string $rawPayload, string $signature): array {]]></code>
+      <code><![CDATA[public function initiatePayment(string $transactionId, string $providerName, string $paymentMethod): array {]]></code>
+      <code><![CDATA[public function listPaymentMethods(): array {]]></code>
+      <code><![CDATA[public function listProviders(): array {]]></code>
+      <code><![CDATA[public function refundPayment(string $transactionId, string $reason, string $userId): array {]]></code>
+      <code><![CDATA[public function testConnection(string $name): array {]]></code>
+      <code><![CDATA[public function updateProvider(string $name, array $data): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PosRefundService.php">
+    <InvalidOperand>
+      <code><![CDATA[-1 * $refundAmount]]></code>
+      <code><![CDATA[-1 * $totalTax]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function confirmRefund(string $id, string $userId): array {]]></code>
+      <code><![CDATA[public function rejectRefund(string $id, string $reason, string $userId): array {]]></code>
+    </MissingOverrideAttribute>
+    <TaintedCallable>
+      <code><![CDATA[$e]]></code>
+    </TaintedCallable>
+  </file>
+  <file src="lib/Service/PosRoleService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function deleteRole(string $id): void {]]></code>
+      <code><![CDATA[public function getRole(string $id): array {]]></code>
+      <code><![CDATA[public function listRoles(): array {]]></code>
+      <code><![CDATA[public function saveRole(array $data, string $id = ''): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PosStaffReportService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function staffSalesReport(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PosStaffService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function authorizeStaff(string $staffId, string $userId): array {]]></code>
+      <code><![CDATA[public function deleteStaff(string $id): void {]]></code>
+      <code><![CDATA[public function getStaff(string $id): array {]]></code>
+      <code><![CDATA[public function listStaff(): array {]]></code>
+      <code><![CDATA[public function saveStaff(array $data, string $id = ''): array {]]></code>
+      <code><![CDATA[public function validatePin(string $staffId, string $pin): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/PosTenderService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function addTender(string $transactionId, array $payload): array {]]></code>
+      <code><![CDATA[public function createTenderType(array $data): array {]]></code>
+      <code><![CDATA[public function deleteTenderType(string $id): void {]]></code>
+      <code><![CDATA[public function emitSingleTenderPosted(string $transactionUuid, string $transactionReference, array $tender): string {]]></code>
+      <code><![CDATA[public function getTenderTypeById(string $id): array {]]></code>
+      <code><![CDATA[public function getTendersForTransaction(string $transactionId): array {]]></code>
+      <code><![CDATA[public function listTenderTypes(bool $activeOnly = false): array {]]></code>
+      <code><![CDATA[public function listUnpostedTenders(): array {]]></code>
+      <code><![CDATA[public function removeTender(string $transactionId, string $tenderId): void {]]></code>
+      <code><![CDATA[public function updateTenderType(string $id, array $data): array {]]></code>
+      <code><![CDATA[public function validateTenderSum(string $transactionId): array {]]></code>
+    </MissingOverrideAttribute>
+    <UnusedReturnValue>
+      <code><![CDATA[array<string, mixed>]]></code>
+    </UnusedReturnValue>
+  </file>
+  <file src="lib/Service/PosTransactionService.php">
+    <InvalidOperand>
+      <code><![CDATA[$discount / 100]]></code>
+      <code><![CDATA[$taxRate / 100]]></code>
+      <code><![CDATA[$taxRate / 100]]></code>
+      <code><![CDATA[$taxRate / 100]]></code>
+      <code><![CDATA[1 + ($taxRate / 100)]]></code>
+      <code><![CDATA[1 + ($taxRate / 100)]]></code>
+      <code><![CDATA[1 - ($discount / 100)]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function confirmTransaction(string $id, string $userId): array {]]></code>
+      <code><![CDATA[public function parkTransaction(string $id, string $userId): array {]]></code>
+      <code><![CDATA[public function refundTransaction(string $id, string $reason, string $userId): array {]]></code>
+      <code><![CDATA[public function resumeTransaction(string $id, string $userId): array {]]></code>
+      <code><![CDATA[public function settleTransaction(string $id, string $userId): array {]]></code>
+      <code><![CDATA[public function taxReport(?string $status = null, string $userId = ''): array {]]></code>
+    </MissingOverrideAttribute>
+    <TaintedCallable>
+      <code><![CDATA[$e]]></code>
+    </TaintedCallable>
+  </file>
+  <file src="lib/Service/PriceListResolver.php">
+    <UnusedReturnValue>
+      <code><![CDATA[int]]></code>
+    </UnusedReturnValue>
+  </file>
+  <file src="lib/Service/ProductCatalogService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function lookupByBarcode(string $barcode): ?array {]]></code>
+      <code><![CDATA[public function resolveEffectivePrice(]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ProgrammeEstimationService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function chartFor(array $cycle, array $tasks): array {]]></code>
+      <code><![CDATA[public function closeCycle(array $cycle, array $tasks): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ProgrammePortfolioService.php">
+    <InvalidOperand>
+      <code><![CDATA[($booked / $estimated) * 100]]></code>
+      <code><![CDATA[($closed / $total) * 100]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function linkWork(]]></code>
+      <code><![CDATA[public function presentWorkItem(array $workItem, array $resolvedTitles = [], array $installedApps = []): array {]]></code>
+      <code><![CDATA[public function progressFor(array $programme, array $tasks = [], ?array $effort = null): array {]]></code>
+      <code><![CDATA[public function read(string $schemaKey, array $filters): array {]]></code>
+      <code><![CDATA[public function tasksOf(string $programmeId): array {]]></code>
+      <code><![CDATA[public function workItemsOf(string $programmeId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ProspectDiscoveryService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function discover(bool $refresh=false, int $limit=10): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Provider/CmComSmsClient.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function payloadFor(string $toNumber, string $body): array {]]></code>
+      <code><![CDATA[public function getVendor(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Provider/LeafSmsClient.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function send(string $toNumber, string $body): array {]]></code>
+      <code><![CDATA[public function verifySignature(string $rawBody, string $signature): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Provider/MessageBirdSmsClient.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function payloadFor(string $toNumber, string $body): array {]]></code>
+      <code><![CDATA[public function getVendor(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Provider/TwilioSmsClient.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function payloadFor(string $toNumber, string $body): array {]]></code>
+      <code><![CDATA[protected function sendHeaders(): array {]]></code>
+      <code><![CDATA[public function getVendor(): string {]]></code>
+      <code><![CDATA[public function verifySignature(string $rawBody, string $signature): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/QuotaService.php">
+    <InvalidOperand>
+      <code><![CDATA[($projected / $quota) * 100]]></code>
+      <code><![CDATA[(($repSum - $teamQuota) / $teamQuota) * 100]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/QuoteNumberSequence.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function format(int $year, int $number): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/QuoteService.php">
+    <InvalidOperand>
+      <code><![CDATA[$net * (float) $rate / 100]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/RapportageService.php">
+    <InvalidOperand>
+      <code><![CDATA[$totals['daysSum'] / $totals['daysCount']]]></code>
+      <code><![CDATA[$totals['lostValueSum'] / $lostCount]]></code>
+      <code><![CDATA[$totals['wonValueSum'] / $wonCount]]></code>
+      <code><![CDATA[($wonCount / $total) * 100.0]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getAgingBuckets(): array {]]></code>
+      <code><![CDATA[public function getSourcePerformance(?string $dateFrom = null, ?string $dateTo = null): array {]]></code>
+      <code><![CDATA[public function getStageValues(?string $pipelineId = null): array {]]></code>
+      <code><![CDATA[public function getWinLossAnalysis(?string $dateFrom = null, ?string $dateTo = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ReceiptDeliveryService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function emailReceipt(]]></code>
+      <code><![CDATA[public function preview(string $transactionId, ?string $templateId = null, string $userId = ''): array {]]></code>
+      <code><![CDATA[public function printReceipt(string $transactionId, ?string $templateId, string $userId): array {]]></code>
+      <code><![CDATA[public function receiptLog(string $transactionId, string $userId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/RecurringRevenueService.php">
+    <InvalidOperand>
+      <code><![CDATA[($tally['renewed'] / $closed) * 100.0]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function computeRenewalMetrics(array $contracts, string $periodFrom, string $periodTo): array {]]></code>
+      <code><![CDATA[public function getSummary(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/RedemptionService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getValidRedemptionOptions(string $accountId, string $programmeId): array {]]></code>
+      <code><![CDATA[public function initiateRedemption(string $accountId, string $optionId): array {]]></code>
+      <code><![CDATA[public function markRedemptionUsed(string $redemptionId, ?string $posTransactionId = null): array {]]></code>
+      <code><![CDATA[public function validateCode(string $code): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/RegisterResolverService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function resolve(string $logicalName = 'default'): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/RenewalEngineService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function processContract(array $contract, string $today): string {]]></code>
+      <code><![CDATA[public function reconcile(array $contract): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ReportingService.php">
+    <InvalidOperand>
+      <code><![CDATA[$target - 5]]></code>
+      <code><![CDATA[($part / $total) * 100]]></code>
+      <code><![CDATA[($resolved / $total) * 100]]></code>
+      <code><![CDATA[($totalWithin / $total) * 100]]></code>
+      <code><![CDATA[($within / $total) * 100]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function generateCsv(array $headers, array $rows): string {]]></code>
+      <code><![CDATA[public function getAgentPerformance(string $from, string $to): array {]]></code>
+      <code><![CDATA[public function getAllSlaTargets(): array {]]></code>
+      <code><![CDATA[public function getChannelDistribution(string $from, string $to): array {]]></code>
+      <code><![CDATA[public function getChannelTrend(string $from, string $to, string $granularity = 'daily'): array {]]></code>
+      <code><![CDATA[public function getKpis(string $from, string $to): array {]]></code>
+      <code><![CDATA[public function setSlaTarget(string $channel, string $metric, string $value): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/RetentionMetadataBackfillService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function backfill(array $schemaKeys): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/RoadmapFeatureCatalog.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function categories(string $path=self::CURATED_PATH): array {]]></code>
+      <code><![CDATA[public function load(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/RoutingService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getSuggestedAgents(string $entityType, string $entityId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SatisfactionAggregationService.php">
+    <InvalidOperand>
+      <code><![CDATA[($net / $answered) * 100]]></code>
+      <code><![CDATA[array_sum($ratings) / count($ratings)]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function forClient(string $clientId, ?DateTimeImmutable $now = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ScheduledTaskService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function applyAcceptLanguage(string $acceptLanguage): void {]]></code>
+      <code><![CDATA[public function authorizeTaskMutation(array $task, string $userId): void {]]></code>
+      <code><![CDATA[public function createScheduledTask(array $data): array {]]></code>
+      <code><![CDATA[public function deleteScheduledTask(string $id): void {]]></code>
+      <code><![CDATA[public function getPendingTasks(int $windowMinutes = 60): array {]]></code>
+      <code><![CDATA[public function getScheduledTask(string $id): array {]]></code>
+      <code><![CDATA[public function getScheduledTasks(array $params): array {]]></code>
+      <code><![CDATA[public function processScheduledTasks(): void {]]></code>
+      <code><![CDATA[public function updateScheduledTask(string $id, array $data): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SchemaMapService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function resolveEntityType(?string $schemaId): ?string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Search/KeywordAnalysisService.php">
+    <InvalidOperand>
+      <code><![CDATA[(float)$entry['weighted'] / $impressions]]></code>
+      <code><![CDATA[(float)($row['position'] ?? 0.0) * $impressions]]></code>
+      <code><![CDATA[(float)($row['position'] ?? 0.0) * $impressions]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/Search/KeywordProposals.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function forWindow(array $window): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Search/KeywordTargetService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function all(): array {]]></code>
+      <code><![CDATA[public function confirm(array $payload, string $uid): ?array {]]></code>
+      <code><![CDATA[public function confirmedTerms(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SearchConsole/SearchConsoleImportService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function hasKey(): bool {]]></code>
+      <code><![CDATA[public function importRecent(int $days = 3): array {]]></code>
+      <code><![CDATA[public function lastImportAt(): string {]]></code>
+      <code><![CDATA[public function properties(): array {]]></code>
+      <code><![CDATA[public function serviceAccountEmail(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SearchConsole/SearchQueryReportService.php">
+    <InvalidOperand>
+      <code><![CDATA[(float)($row['position'] ?? 0.0) * $impressions]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function topQueries(?string $from = null, ?string $to = null, int $limit = 50, ?string $property = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SegmentService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function createSegment(array $payload, string $createdByUid): array {]]></code>
+      <code><![CDATA[public function estimateSize(string $segmentId): int {]]></code>
+      <code><![CDATA[public function getMembersForBlast(string $segmentId): array {]]></code>
+      <code><![CDATA[public function getSegmentById(string $segmentId): ?array {]]></code>
+      <code><![CDATA[public function listSegments(int $page, int $limit): array {]]></code>
+      <code><![CDATA[public function previewRulePayload(array $rules, string $entityType): array {]]></code>
+      <code><![CDATA[public function previewSegmentMembers(string $segmentId, int $limit = 50): array {]]></code>
+      <code><![CDATA[public function refreshSegmentSize(string $segmentId): int {]]></code>
+      <code><![CDATA[public function signalAvailability(): array {]]></code>
+      <code><![CDATA[public function signalCatalogue(): array {]]></code>
+      <code><![CDATA[public function updateSegment(string $segmentId, array $payload): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SemanticHandoffService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handoff(string $register, string $schema, string $id, string $handoffId): array {]]></code>
+      <code><![CDATA[public function hasImplementer(string $kindUri): bool {]]></code>
+      <code><![CDATA[public function implementerLocation(string $kindUri): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ServiceAccount.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[abstract public function group(): string;]]></code>
+      <code><![CDATA[public function assign(string $userId): array {]]></code>
+      <code><![CDATA[public function configuredUserId(): string {]]></code>
+      <code><![CDATA[public function ensureGroup(): ?IGroup {]]></code>
+      <code><![CDATA[public function status(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Settings/MenuStructure.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function normalise(string $stored): string {]]></code>
+      <code><![CDATA[public function normaliseModules(string $stored): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SettingsService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function createDefaultPipelines(): void {]]></code>
+      <code><![CDATA[public function createDefaultSkills(): void {]]></code>
+      <code><![CDATA[public function getSettings(): array {]]></code>
+      <code><![CDATA[public function getUserSettings(string $userId): array {]]></code>
+      <code><![CDATA[public function loadSettings(bool $force = false): array {]]></code>
+      <code><![CDATA[public function updateSettings(array $data): array {]]></code>
+      <code><![CDATA[public function updateUserSettings(string $userId, array $data): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ShillinqApService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function dispatchApEvent(array $expense, string $approvedBy, string $approvedAt): bool {]]></code>
+      <code><![CDATA[public function now(): string {]]></code>
+      <code><![CDATA[public function shouldDispatch(): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ShillinqFxRateReader.php">
+    <InvalidOperand>
+      <code><![CDATA[1 / $reverse['rate']]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/ShillinqStockReader.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function stockFor(string $productId, string $sku = ''): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/ShillinqWipService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function dispatchWipEvent(array $timeEntry, string $approvedBy, string $approvedAt): bool {]]></code>
+      <code><![CDATA[public function now(): string {]]></code>
+      <code><![CDATA[public function shouldDispatch(): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Sla/SlaEntitySweeper.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function indexPolicies(): array {]]></code>
+      <code><![CDATA[public function sweepAll(array $surfaces): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Sla/SlaSweepSource.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function interval(): int {]]></code>
+      <code><![CDATA[public function objectService(): ?object {]]></code>
+      <code><![CDATA[public function register(): string {]]></code>
+      <code><![CDATA[public function surfaces(SlaSweepRun $run): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SlaAttainmentFigures.php">
+    <InvalidOperand>
+      <code><![CDATA[$overallAttainment * 100]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/SlaAttainmentService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function compute(array $params): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SlaEngineService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function evaluateTargets(array $currentTargets, array $policy, DateTimeInterface $now): array {]]></code>
+      <code><![CDATA[public function executeEscalations(]]></code>
+      <code><![CDATA[public function initialiseStatus(array $policy, DateTimeInterface $startTime): array {]]></code>
+      <code><![CDATA[public function loadActivePolicies(): array {]]></code>
+      <code><![CDATA[public function markTargetMet(array $slaStatus, string $kind, DateTimeInterface $when): array {]]></code>
+      <code><![CDATA[public function pauseTimer(array $slaStatus, DateTimeInterface $now): array {]]></code>
+      <code><![CDATA[public function policyIdentity(array $policy): string {]]></code>
+      <code><![CDATA[public function resolvePolicyForObject(string $objectType, string $objectId, array $metadata): ?array {]]></code>
+      <code><![CDATA[public function resumeTimer(array $slaStatus, array $policy, DateTimeInterface $now): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SmsAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SnapshotGenerationService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function generate(?DateTimeImmutable $asOf = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Social/AbstractSocialAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function costPerPost(): float {]]></code>
+      <code><![CDATA[public function costPerRead(): float {]]></code>
+      <code><![CDATA[public function followersCall(array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function maxMedia(): int {]]></code>
+      <code><![CDATA[public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function normaliseMetrics(array $payload, string $externalId = ''): array {]]></code>
+      <code><![CDATA[public function publish(SocialPublishRequest $request): SocialPublishOutcome {]]></code>
+      <code><![CDATA[public function readFollowers(array $payload): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Social/BlueskyAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function readPublishedId(array $payload): string {]]></code>
+      <code><![CDATA[protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {]]></code>
+      <code><![CDATA[public function bodyLimit(): int {]]></code>
+      <code><![CDATA[public function brokerProvider(): string {]]></code>
+      <code><![CDATA[public function composerUrl(SocialPublishRequest $request): string {]]></code>
+      <code><![CDATA[public function followersCall(array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function maxMedia(): int {]]></code>
+      <code><![CDATA[public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function network(): string {]]></code>
+      <code><![CDATA[public function normaliseMetrics(array $payload, string $externalId = ''): array {]]></code>
+      <code><![CDATA[public function publishCall(SocialPublishRequest $request): SocialAdapterCall {]]></code>
+      <code><![CDATA[public function readFollowers(array $payload): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Social/ConnectionAuditService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function rows(): array {]]></code>
+      <code><![CDATA[public function run(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Social/FacebookPageAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {]]></code>
+      <code><![CDATA[public function bodyLimit(): int {]]></code>
+      <code><![CDATA[public function brokerProvider(): string {]]></code>
+      <code><![CDATA[public function composerUrl(SocialPublishRequest $request): string {]]></code>
+      <code><![CDATA[public function followersCall(array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function messagingPlatform(): string {]]></code>
+      <code><![CDATA[public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function network(): string {]]></code>
+      <code><![CDATA[public function normaliseMetrics(array $payload, string $externalId = ''): array {]]></code>
+      <code><![CDATA[public function publishCall(SocialPublishRequest $request): SocialAdapterCall {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Social/InstagramBusinessAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function bodyLimit(): int {]]></code>
+      <code><![CDATA[public function composerUrl(SocialPublishRequest $request): string {]]></code>
+      <code><![CDATA[public function messagingPlatform(): string {]]></code>
+      <code><![CDATA[public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function network(): string {]]></code>
+      <code><![CDATA[public function normaliseMetrics(array $payload, string $externalId = ''): array {]]></code>
+      <code><![CDATA[public function publish(SocialPublishRequest $request): SocialPublishOutcome {]]></code>
+      <code><![CDATA[public function publishCall(SocialPublishRequest $request): SocialAdapterCall {]]></code>
+      <code><![CDATA[public function publishContainerCall(SocialPublishRequest $request, string $containerId): SocialAdapterCall {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Social/LinkedInAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function readPublishedId(array $payload): string {]]></code>
+      <code><![CDATA[protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {]]></code>
+      <code><![CDATA[public function bodyLimit(): int {]]></code>
+      <code><![CDATA[public function brokerProvider(): string {]]></code>
+      <code><![CDATA[public function composerUrl(SocialPublishRequest $request): string {]]></code>
+      <code><![CDATA[public function followersCall(array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function network(): string {]]></code>
+      <code><![CDATA[public function normaliseMetrics(array $payload, string $externalId = ''): array {]]></code>
+      <code><![CDATA[public function publishCall(SocialPublishRequest $request): SocialAdapterCall {]]></code>
+      <code><![CDATA[public function readFollowers(array $payload): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Social/MastodonAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function bodyLimit(): int {]]></code>
+      <code><![CDATA[public function brokerProvider(): string {]]></code>
+      <code><![CDATA[public function composerUrl(SocialPublishRequest $request): string {]]></code>
+      <code><![CDATA[public function followersCall(array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function maxMedia(): int {]]></code>
+      <code><![CDATA[public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function network(): string {]]></code>
+      <code><![CDATA[public function normaliseMetrics(array $payload, string $externalId = ''): array {]]></code>
+      <code><![CDATA[public function publishCall(SocialPublishRequest $request): SocialAdapterCall {]]></code>
+      <code><![CDATA[public function readFollowers(array $payload): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Social/SocialPublicationStore.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function forPost(string $postId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Social/ThreadsAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function bodyLimit(): int {]]></code>
+      <code><![CDATA[public function brokerProvider(): string {]]></code>
+      <code><![CDATA[public function composerUrl(SocialPublishRequest $request): string {]]></code>
+      <code><![CDATA[public function network(): string {]]></code>
+      <code><![CDATA[public function publish(SocialPublishRequest $request): SocialPublishOutcome {]]></code>
+      <code><![CDATA[public function publishCall(SocialPublishRequest $request): SocialAdapterCall {]]></code>
+      <code><![CDATA[public function publishContainerCall(SocialPublishRequest $request, string $containerId): SocialAdapterCall {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Social/XAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function readPublishedId(array $payload): string {]]></code>
+      <code><![CDATA[protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {]]></code>
+      <code><![CDATA[public function bodyLimit(): int {]]></code>
+      <code><![CDATA[public function brokerProvider(): string {]]></code>
+      <code><![CDATA[public function composerUrl(SocialPublishRequest $request): string {]]></code>
+      <code><![CDATA[public function costPerPost(): float {]]></code>
+      <code><![CDATA[public function costPerRead(): float {]]></code>
+      <code><![CDATA[public function followersCall(array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function maxMedia(): int {]]></code>
+      <code><![CDATA[public function metricsCall(string $externalId, array $account): ?SocialAdapterCall {]]></code>
+      <code><![CDATA[public function network(): string {]]></code>
+      <code><![CDATA[public function normaliseMetrics(array $payload, string $externalId = ''): array {]]></code>
+      <code><![CDATA[public function publishCall(SocialPublishRequest $request): SocialAdapterCall {]]></code>
+      <code><![CDATA[public function readFollowers(array $payload): int {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SocialAccountService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function attachCredential(string $accountId, string $uid, array $payload): array {]]></code>
+      <code><![CDATA[public function connectRequest(string $accountId, string $uid, string $returnUrl): array {]]></code>
+      <code><![CDATA[public function createAccount(array $payload, string $uid): array {]]></code>
+      <code><![CDATA[public function getAccount(string $accountId): ?array {]]></code>
+      <code><![CDATA[public function listAccounts(): array {]]></code>
+      <code><![CDATA[public function mayActOn(string $uid, array $account): bool {]]></code>
+      <code><![CDATA[public function revoke(string $accountId, string $uid): array {]]></code>
+      <code><![CDATA[public function syncStatus(string $accountId): ?array {]]></code>
+    </MissingOverrideAttribute>
+    <UnusedReturnValue>
+      <code><![CDATA[array<string, mixed>|null]]></code>
+    </UnusedReturnValue>
+  </file>
+  <file src="lib/Service/SocialAdvocacyService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function confirmShare(string $publicationId, string $uid, string $url = ''): array {]]></code>
+      <code><![CDATA[public function shareBundle(string $publicationId, string $uid): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SocialMetricsService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function networkTotals(int $days = 30): array {]]></code>
+      <code><![CDATA[public function pullAll(): array {]]></code>
+      <code><![CDATA[public function ranking(string $network = '', int $limit = 50): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SocialPostService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function approve(string $postId, string $uid, string $note = ''): array {]]></code>
+      <code><![CDATA[public function createPost(array $payload, string $uid, string $agent = ''): array {]]></code>
+      <code><![CDATA[public function getPost(string $postId): ?array {]]></code>
+      <code><![CDATA[public function listPosts(string $status = ''): array {]]></code>
+      <code><![CDATA[public function publishDuePosts(?string $now = null): int {]]></code>
+      <code><![CDATA[public function reject(string $postId, string $uid, string $note = ''): array {]]></code>
+      <code><![CDATA[public function retryPublication(string $publicationId, string $uid): array {]]></code>
+      <code><![CDATA[public function submitForApproval(string $postId): array {]]></code>
+      <code><![CDATA[public function updatePost(string $postId, array $payload, string $uid): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Store/StoreInstallLedger.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function annotate(array $cards): array {]]></code>
+      <code><![CDATA[public function checkedAt(): string {]]></code>
+      <code><![CDATA[public function markChecked(DateTimeInterface $when): void {]]></code>
+      <code><![CDATA[public function record(string $slug, string $version): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Store/StoreTemplateAssembler.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function components(string $kind, array $chosen): array {]]></code>
+      <code><![CDATA[public function publishable(string $kind): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SubscriptionService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function confirm(string $token, string $ipAddress = ''): array {]]></code>
+      <code><![CDATA[public function globalUnsubscribe(string $contactId, string $reason = ''): int {]]></code>
+      <code><![CDATA[public function importSoftOptIn(string $listId, string $contactId, string $email, array $evidence): array {]]></code>
+      <code><![CDATA[public function peekUnsubscribeToken(string $token): ?array {]]></code>
+      <code><![CDATA[public function subscribe(]]></code>
+      <code><![CDATA[public function unsubscribeByToken(string $token, bool $global = false, string $reason = ''): array {]]></code>
+      <code><![CDATA[public function unsubscribeFromList(string $listId, string $contactId, string $reason = ''): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SurveyDispatchService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function matchingRules(string $entityType, string $status, string $channel = ''): array {]]></code>
+      <code><![CDATA[public function onInteractionCompleted(string $entityType, array $entity, array $contact): array {]]></code>
+      <code><![CDATA[public function read(array $filters): array {]]></code>
+      <code><![CDATA[public function responseRate(array $invitations): array {]]></code>
+      <code><![CDATA[public function withinDays(array $invitations, int $days, ?DateTimeImmutable $now = null): array {]]></code>
+      <code><![CDATA[public function write(array $invitation, ?string $uuid = null): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SurveyInvitationFigures.php">
+    <InvalidOperand>
+      <code><![CDATA[($counts['responded'] / $delivered) * 100]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/SurveyInvitationSender.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function send(array $invitation, string $address = ''): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SurveyResponseService.php">
+    <InvalidOperand>
+      <code><![CDATA[array_sum($ratings) / count($ratings)]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function show(string $token): array {]]></code>
+      <code><![CDATA[public function submit(string $token, array $answers, ?bool $optOut = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/SystemTagService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function addTag(string $objectType, string $name): array {]]></code>
+      <code><![CDATA[public function getTags(string $objectType): array {]]></code>
+      <code><![CDATA[public function removeTag(string $objectType, int $tagId): void {]]></code>
+      <code><![CDATA[public function renameTag(string $objectType, int $tagId, string $newName): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/TaskNameBackfillService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function backfill(): array {]]></code>
+    </MissingOverrideAttribute>
+    <StringIncrement>
+      <code><![CDATA[$counts[$outcome]]]></code>
+    </StringIncrement>
+  </file>
+  <file src="lib/Service/TeamLoadService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getTeamLoad(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/TemplateApprovalSyncService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function syncAll(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/TicketPhoneNumber.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function e164(array $ticket): ?string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/TicketReferenceSequence.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function format(int $year, int $number): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/TicketService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function findByType(string $ticketType, array $extraFilters = [], int $limit = 10000, array $sort = []): array {]]></code>
+      <code><![CDATA[public function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {]]></code>
+      <code><![CDATA[public function getRegisterId(): string {]]></code>
+      <code><![CDATA[public function getSchemaId(): string {]]></code>
+      <code><![CDATA[public function isConfigured(): bool {]]></code>
+      <code><![CDATA[public function sanitizeForSave(array $payload): array {]]></code>
+      <code><![CDATA[public function save(string $ticketType, array $payload, ?string $uuid = null): object {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/TierService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function updateTierIfNeeded(string $accountId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/TimeBillingHandoffService.php">
+    <InvalidOperand>
+      <code><![CDATA[((float)($entry['hours'] ?? 0)) * 60]]></code>
+    </InvalidOperand>
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handoffAvailable(): bool {]]></code>
+      <code><![CDATA[public function notifyPendingFailures(): array {]]></code>
+      <code><![CDATA[public function sendToBilling(string $clientId, string $periodStart, string $periodEnd): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/TouchpointService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function append(array $touchpoint): ?array {]]></code>
+      <code><![CDATA[public function channelForMedium(string $medium): string {]]></code>
+      <code><![CDATA[public function existsForNonce(string $nonce): bool {]]></code>
+      <code><![CDATA[public function recordSubmission(array $touchpoint, string $landingPage): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/TrackingLinkService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function recordClick(string $blastDeliveryId, string $url): void {]]></code>
+      <code><![CDATA[public function recordOpen(string $blastDeliveryId): void {]]></code>
+      <code><![CDATA[public function verifyToken(string $token): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Upl/UplListImporter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function download(string $url): string {]]></code>
+      <code><![CDATA[public function import(string $csv): array {]]></code>
+      <code><![CDATA[public function sourceUrl(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/VatRates.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function rates(): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/WalkInQueueService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function rebalance(): int {]]></code>
+    </MissingOverrideAttribute>
+    <UnusedReturnValue>
+      <code><![CDATA[array<string, mixed>|object]]></code>
+    </UnusedReturnValue>
+  </file>
+  <file src="lib/Service/WebForm/FormsQuestionReader.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function answers(int $submissionId, array $questions): array {]]></code>
+      <code><![CDATA[public function questions(int $formId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/WebForm/HeldObjectDrain.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function drain(string $register, string $schema, string $keyProperty, array $openFilter, bool $apply): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/WebForm/WebFormBindingCheck.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function findings(array $form): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/WebForm/WebFormFinder.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function publishedByFormsFormId(int $formsFormId): ?array {]]></code>
+      <code><![CDATA[public function schemaId(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/WebForm/WebFormIntakeService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function submit(array $form, array $payload, ?string $idempotencyKey = null): array {]]></code>
+      <code><![CDATA[public function submitByKey(string $key, array $payload, ?string $idempotencyKey = null): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/WebhookProcessorService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function normaliseSendGrid(array $event): array {]]></code>
+      <code><![CDATA[public function processEvent(array $event, string $provider): bool {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/WhatsAppAdapter.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/WipSyncNotifier.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function notifyFailure(string $title, string $uuid): void {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/WooRequestConversionService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function availability(array $ticket): array {]]></code>
+      <code><![CDATA[public function convert(string $ticketId, array $ticket): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Worklist/WeekStats.php">
+    <InvalidOperand>
+      <code><![CDATA[(array_sum($seconds) / count($seconds)) / self::DAY_SECONDS]]></code>
+    </InvalidOperand>
+  </file>
+  <file src="lib/Service/WorklistService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getMine(string $userId, ?int $limit=null, string $scope=WorkScope::MINE, string $member=''): array {]]></code>
+      <code><![CDATA[public function getWeekStats(string $userId, string $scope='mine'): array {]]></code>
+      <code><![CDATA[public function items(string $userId, array $view=[]): array {]]></code>
+      <code><![CDATA[public function summary(string $userId): string {]]></code>
+    </MissingOverrideAttribute>
+    <NullableReturnStatement>
+      <code><![CDATA[$last]]></code>
+    </NullableReturnStatement>
+  </file>
+  <file src="lib/Service/XWikiService.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getPageContent(string $wiki, string $page): array {]]></code>
+      <code><![CDATA[public function getPages(string $space, int $limit = 10, int $offset = 0): array {]]></code>
+      <code><![CDATA[public function getStatus(): array {]]></code>
+      <code><![CDATA[public function sanitiseHtml(string $html): string {]]></code>
+      <code><![CDATA[public function search(string $query, array $filter = []): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Zgw/ZgwApiClient.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function resolveClientSecret(string $reference): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Zgw/ZgwRegisterAccess.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function find(string $schema, string $id): ?array {]]></code>
+      <code><![CDATA[public function findAll(string $schema, array $filters = []): array {]]></code>
+      <code><![CDATA[public function save(string $schema, array $data, ?string $uuid = null): ?array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Zgw/ZrcClient.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getStatus(array $endpoint, string $statusUrl): array {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Service/Zgw/ZtcClient.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function invalidateCache(array $endpoint, string $resourceType = '*'): void {]]></code>
+      <code><![CDATA[public function resolveOmschrijvingFromUrl(array $endpoint, string $statustypeUrl): ?string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/Settings/AdminSettings.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getAuthorizedAppConfig(): array {]]></code>
+      <code><![CDATA[public function getForm(): TemplateResponse {]]></code>
+      <code><![CDATA[public function getName(): ?string {]]></code>
+      <code><![CDATA[public function getPriority(): int {]]></code>
+      <code><![CDATA[public function getSection(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/SetupCheck/BackgroundServiceAccountCheck.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function consequenceText(): string {]]></code>
+      <code><![CDATA[protected function usableText(string $userId): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/SetupCheck/MessagingServiceAccountCheck.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function consequenceText(): string {]]></code>
+      <code><![CDATA[protected function usableText(string $userId): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/SetupCheck/PortalServiceAccountCheck.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[protected function consequenceText(): string {]]></code>
+      <code><![CDATA[protected function usableText(string $userId): string {]]></code>
+      <code><![CDATA[public function getName(): string {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+  <file src="lib/SetupCheck/ServiceAccountCheck.php">
+    <MissingOverrideAttribute>
+      <code><![CDATA[public function getCategory(): string {]]></code>
+      <code><![CDATA[public function run(): SetupResult {]]></code>
+    </MissingOverrideAttribute>
+  </file>
+</files>
