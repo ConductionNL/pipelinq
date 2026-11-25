@@ -82,7 +82,7 @@
     "@vue/test-utils": "^2.6.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
-    "axe-core": "^4.13.0",
+    "axe-core": "^4.14.1",
     "babel-loader": "^10.1.1",
     "commander": "^15.0.0",
     "css-loader": "~7.1.5",
