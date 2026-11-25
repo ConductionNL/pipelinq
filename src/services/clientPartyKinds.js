@@ -24,6 +24,7 @@ const SHAPE_OF_TYPE = { person: 'naturalPerson', organization: 'organization' }
  *
  * @param {Array<object>} kinds The kinds the registry answered.
  * @return {Array<{id: string, label: string, shapes: string[]}>} The options.
+ * @spec openspec/changes/specify-capability-rows/specs/client-management/spec.md#requirement-a-client-records-what-kind-of-party-it-is
  */
 export function kindOptions(kinds) {
 	const options = []

@@ -173,7 +173,7 @@ class SeedPartyKindsTest extends TestCase {
 	 * @return void
 	 */
 	public function testAClientIsOfferedCitizenAndBusinessOnce(): void {
-		$output = $this->createMock(IOutput::class);
+		$output = $this->createMock(originalClassName: IOutput::class);
 		$this->step(withAcceptances: true)->run($output);
 		$this->step(withAcceptances: true)->run($output);
 
@@ -194,7 +194,7 @@ class SeedPartyKindsTest extends TestCase {
 	 * @return void
 	 */
 	public function testNoAcceptanceIsWrittenWithoutItsSchema(): void {
-		$this->step()->run($this->createMock(IOutput::class));
+		$this->step()->run($this->createMock(originalClassName: IOutput::class));
 
 		$this->assertSame(expected: [], actual: array_filter($this->written, static fn (array $row): bool => isset($row['recordType'])));
 	}//end testNoAcceptanceIsWrittenWithoutItsSchema()
