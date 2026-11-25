@@ -333,6 +333,89 @@ class ProductCatalogControllerTest extends TestCase {
 	}//end testResolvePriceForbiddenForNonPosUser()
 
 	/**
+	 * Anyone who may read the product may resolve its price: a non-POS caller
+	 * naming the product by id gets the STORED product priced, read with the
+	 * caller's own rights, never the payload it sent.
+	 *
+	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceForAReaderPricesTheStoredProduct(): void {
+		$this->loginAs(uid: 'sales-rep', isPos: false);
+		$this->withParams(['productId' => ' p-1 ', 'product' => ['unitPrice' => 0.01], 'quantity' => 12]);
+		$stored = ['id' => 'p-1', 'unitPrice' => 18.5, 'vatClass' => 'low'];
+		$this->reader->expects($this->once())->method('read')->with('p-1', 'product_schema')->willReturn($stored);
+		$this->service->expects($this->once())
+			->method('resolveEffectivePrice')
+			->with($stored, 12.0, null, null, null)
+			->willReturn(['unitPrice' => 16.25, 'source' => 'tier', 'taxRate' => 9]);
+
+		$response = $this->controller->resolvePrice();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(16.25, $response->getData()['unitPrice']);
+	}//end testResolvePriceForAReaderPricesTheStoredProduct()
+
+	/**
+	 * A non-POS caller may also name the product through the id of the product object.
+	 *
+	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceForAReaderTakesTheIdOfTheProductObject(): void {
+		$this->loginAs(uid: 'sales-rep', isPos: false);
+		$this->withParams(['product' => ['@self' => ['id' => 'p-2'], 'unitPrice' => 1.0], 'quantity' => 1]);
+		$stored = ['id' => 'p-2', 'unitPrice' => 40.0];
+		$this->reader->expects($this->once())->method('read')->with('p-2', 'product_schema')->willReturn($stored);
+		$this->service->expects($this->once())
+			->method('resolveEffectivePrice')
+			->with($stored, 1.0, null, null, null)
+			->willReturn(['unitPrice' => 40.0]);
+
+		$this->assertSame(Http::STATUS_OK, $this->controller->resolvePrice()->getStatus());
+	}//end testResolvePriceForAReaderTakesTheIdOfTheProductObject()
+
+	/**
+	 * A product the caller cannot read is not found, and nothing is priced.
+	 *
+	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceRefusesAProductTheCallerCannotRead(): void {
+		$this->loginAs(uid: 'sales-rep', isPos: false);
+		$this->withParams(['productId' => 'p-hidden', 'quantity' => 1]);
+		$this->reader->method('read')->willReturn(null);
+		$this->service->expects($this->never())->method('resolveEffectivePrice');
+
+		$response = $this->controller->resolvePrice();
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertSame(['error' => 'Product not found'], $response->getData());
+	}//end testResolvePriceRefusesAProductTheCallerCannotRead()
+
+	/**
+	 * The till prices the product object it sends, and reads nothing.
+	 *
+	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceForAPosOperatorPricesThePayload(): void {
+		$this->loginAs();
+		$this->withParams(['productId' => 'p-1', 'product' => ['unitPrice' => 7.0], 'quantity' => 1]);
+		$this->reader->expects($this->never())->method('read');
+		$this->service->expects($this->once())
+			->method('resolveEffectivePrice')
+			->with(['unitPrice' => 7.0], 1.0, null, null, null)
+			->willReturn(['unitPrice' => 7.0]);
+
+		$this->assertSame(Http::STATUS_OK, $this->controller->resolvePrice()->getStatus());
+	}//end testResolvePriceForAPosOperatorPricesThePayload()
+
+	/**
 	 * @return void
 	 */
 	public function testResolvePriceForwardsQuantityAndVariantSku(): void {
