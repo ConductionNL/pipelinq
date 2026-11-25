@@ -31,6 +31,7 @@ use OCA\Pipelinq\BackgroundJob\SearchConsoleImportJob;
 use OCA\Pipelinq\BackgroundJob\SocialMetricsPullJob;
 use OCA\Pipelinq\BackgroundJob\SocialPublishJob;
 use OCA\Pipelinq\BackgroundJob\TemplateApprovalSyncJob;
+use OCA\Pipelinq\Kernel\Contracts\TaskRecurrenceInterface;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\CostReconciliationService;
 use OCA\Pipelinq\Service\CtiService;
@@ -211,7 +212,9 @@ class ServiceSweepJobsTest extends TestCase {
 	public function testScheduledTasksRunAndAFailureKeepsTheException(): void {
 		$service = $this->createMock(ScheduledTaskService::class);
 		$service->expects($this->once())->method('processScheduledTasks');
-		$job = new ScheduledTaskJob($this->createMock(ITimeFactory::class), $service, $this->logger());
+		$recurrence = $this->createMock(TaskRecurrenceInterface::class);
+		$recurrence->expects($this->once())->method('run');
+		$job = new ScheduledTaskJob($this->createMock(ITimeFactory::class), $service, $this->logger(), $recurrence);
 
 		$this->runJob($job);
 
@@ -222,8 +225,15 @@ class ServiceSweepJobsTest extends TestCase {
 		$failure = new RuntimeException('boom');
 		$service = $this->createMock(ScheduledTaskService::class);
 		$service->method('processScheduledTasks')->willThrowException($failure);
-		$this->runJob(new ScheduledTaskJob($this->createMock(ITimeFactory::class), $service, $this->logger()));
+		$this->runJob(new ScheduledTaskJob($this->createMock(ITimeFactory::class), $service, $this->logger(), $this->createMock(TaskRecurrenceInterface::class)));
 		$this->assertSame([['error', 'ScheduledTaskJob failed', ['exception' => $failure]]], $this->logs);
+
+		// A failing recurrence pass is logged on its own and does not stop the deadline pass.
+		$this->logs = [];
+		$recurrence = $this->createMock(TaskRecurrenceInterface::class);
+		$recurrence->method('run')->willThrowException($failure);
+		$this->runJob(new ScheduledTaskJob($this->createMock(ITimeFactory::class), $this->createMock(ScheduledTaskService::class), $this->logger(), $recurrence));
+		$this->assertSame([['error', 'ScheduledTaskJob: repeating tasks failed', ['exception' => $failure]]], $this->logs);
 	}//end testScheduledTasksRunAndAFailureKeepsTheException()
 
 	/**

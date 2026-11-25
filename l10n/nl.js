@@ -10257,7 +10257,15 @@ OC.L10N.register(
         "Could not pass this ticket on.": "Kon dit ticket niet doorzetten.",
         "Handover note": "Overdrachtsnotitie",
         "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note.": "Wat de collega aan wie het ticket is doorgezet moet weten, geschreven bij de overdracht. Staat onder de overdracht op het tabblad Geschiedenis; leeg als de laatste overdracht geen notitie had.",
-        "Product not found": "Product niet gevonden"
+        "Product not found": "Product niet gevonden",
+        "Repeat": "Herhalen",
+        "How often the task comes back. When it is due, the next one is made, due one interval later.": "Hoe vaak de taak terugkomt. Als hij moet zijn afgerond, komt de volgende, een interval later.",
+        "Does not repeat": "Herhaalt niet",
+        "Every month": "Elke maand",
+        "Next occurrence": "Volgende keer",
+        "The task made when this repeating task came due.": "De taak die werd gemaakt toen deze herhalende taak moest zijn afgerond.",
+        "Previous occurrence": "Vorige keer",
+        "The repeating task this task was made from.": "De herhalende taak waarvan deze taak is gemaakt."
     },
     "nplurals=2; plural=(n != 1);"
 )

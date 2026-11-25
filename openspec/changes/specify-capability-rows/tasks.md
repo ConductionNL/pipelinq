@@ -22,8 +22,9 @@
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/SetupController.php`
 - [ ] 10.1 Check row `pipeline-kanban` against "A lead dragged to another stage column moves to that stage"
   - Verify: the scenarios hold on a live instance; evidence on the row: `src/views/pipeline/PipelineBoard.vue`
-- [ ] 11.1 Check row `work-recurring-task` against "A task with a repeat schedule comes back on that schedule"
+- [x] 11.1 Check row `work-recurring-task` against "A task with a repeat schedule comes back on that schedule"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/ScheduledTaskJob.php`
+  - Live 25 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main 119f4810, Zuiddrecht set and demo seed). Found red first: no task could repeat (no repeat field on `crmTask`, and `ScheduledTaskJob` only moves due tasks to in progress or expired). Built: `crmTask.repeat` (daily, weekly, monthly) with `nextOccurrence` / `previousOccurrence` (fragment `99-zzzzzzzzzzzzzzzzzz-task-repeat.json`, crmTask 1.2.1 -> 1.3.0) and `TaskRecurrence`, run by `ScheduledTaskJob` after its deadline pass, as the signed-in user or under cron as the system account: a repeating task whose due date has come gets one next occurrence, open, the same subject and assignee, due one interval on (or the first interval not before today). Then, as daan.verbeek: a weekly task due Monday 2026-11-23 09:00; `occ background-job:execute` for ScheduledTaskJob, twice: one occurrence, open, assigned to daan.verbeek, due Monday 2026-11-30 09:00 CET, the source linked to it, no second one. Tests: tests/Unit/Service/ScheduledTask/TaskRecurrenceTest.php, tests/Unit/BackgroundJob/ServiceSweepJobsTest.php.
 - [ ] 12.1 Check row `auto-overnight` against "Slow work runs as a background job, not in the user's request"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/SlaDeadlineSweepJob.php`
 - [ ] 13.1 Check row `meeting-link` against "A user can send a booking link that offers the free slots in their own calendar"

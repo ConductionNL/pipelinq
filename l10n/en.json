@@ -10352,6 +10352,14 @@
         "Could not pass this ticket on.": "Could not pass this ticket on.",
         "Handover note": "Handover note",
         "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note.": "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note.",
-        "Product not found": "Product not found"
+        "Product not found": "Product not found",
+        "Repeat": "Repeat",
+        "How often the task comes back. When it is due, the next one is made, due one interval later.": "How often the task comes back. When it is due, the next one is made, due one interval later.",
+        "Does not repeat": "Does not repeat",
+        "Every month": "Every month",
+        "Next occurrence": "Next occurrence",
+        "The task made when this repeating task came due.": "The task made when this repeating task came due.",
+        "Previous occurrence": "Previous occurrence",
+        "The repeating task this task was made from.": "The repeating task this task was made from."
     }
 }
