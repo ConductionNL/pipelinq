@@ -18,7 +18,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * @version GIT: <git_id>
  * @link https://pipelinq.nl
- * @spec openspec/changes/tickets-list-by-party/specs/ticket-leaf/spec.md#requirement-a-host-app-can-link-to-one-partys-ticket-list
+ * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-host-app-can-link-to-one-partys-ticket-list
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use OCP\IURLGenerator;
 /**
  * Opens the ticket list on the clients of one master entity.
  *
- * @spec openspec/changes/tickets-list-by-party/specs/ticket-leaf/spec.md#requirement-a-host-app-can-link-to-one-partys-ticket-list
+ * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-host-app-can-link-to-one-partys-ticket-list
  */
 class TicketPartyController extends Controller {
 	/**
@@ -66,7 +66,7 @@ class TicketPartyController extends Controller {
 	 *
 	 * @return RedirectResponse The ticket list.
 	 *
-	 * @spec openspec/changes/tickets-list-by-party/specs/ticket-leaf/spec.md#requirement-a-host-app-can-link-to-one-partys-ticket-list
+	 * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-host-app-can-link-to-one-partys-ticket-list
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
