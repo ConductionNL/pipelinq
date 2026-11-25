@@ -10930,6 +10930,9 @@
 			"_note": "My work as a manifest page (PqMijnWerk). A bar holds the lens chips with counts (All, Tickets, Leads, Follow-ups), the Show completed switch and the sort select; the lists listen to them (visibleWhen on the lens, pageControls for sort and toggle). Three ticket lists for the signed-in user (@me): answer today (deadline today or past), waiting on me, waiting on the customer; then the user's open leads and follow-up tasks. The start-here banner names the first ticket of the same urgent query. Rows carry a priority badge (urgent and high), the due date as text with a tone (`due`), and a meta line of parts that skips an empty customer; leads add a stale badge on `@self.updated` (14 days, the same field and threshold as the Leads list's Out of date chip) and the value in the lead's own currency, else the reporting currency. Priority first sorts by the enum rank, then by the due date. The \"Your week so far\" tiles read GET /api/my-work/week-stats (REQ-MW-090). Not here: the customer's name on the banner (the ticket stores a client reference, the banner reads no extended object).",
 			"config": {
 				"showRefresh": true,
+				"layoutPanel": true,
+				"_layoutPanelNote": "Arrange page (REQ-MW-160, board PqMijnWerkIndelen): the user hides and reorders My work's sections in the library's layout panel, stored per user (nextcloud-vue user layout). The work list (the three ticket lists, My leads, My follow-ups and the phone list) is locked: it can be moved, never hidden. Back to default returns to this layout.",
+				"layoutPanelLocked": ["my-answer-today", "my-waiting-on-me", "my-waiting-on-customer", "my-leads", "my-follow-ups", "my-items-phone"],
 				"showWidgetActions": false,
 				"headerActionsViewport": "wide",
 				"gridFloat": false,
