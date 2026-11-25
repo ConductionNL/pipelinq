@@ -80,18 +80,35 @@ class SystemServiceAccount {
 	 * @spec openspec/specs/pipeline/spec.md
 	 */
 	public function runAsCurrentOrSystem(callable $operation): mixed {
-		$previous = $this->userSession->getUser();
-		if ($previous !== null) {
+		if ($this->userSession->getUser() !== null) {
 			return $operation();
 		}
 
+		return $this->runAsSystem(operation: $operation);
+	}//end runAsCurrentOrSystem()
+
+	/**
+	 * Run an operation as the system account, whoever is signed in, restoring
+	 * the previous user afterwards.
+	 *
+	 * OpenRegister asks its permission checks of the session user, so a write
+	 * that must be judged as this account runs with it as the active user.
+	 *
+	 * @param callable $operation The work to run.
+	 *
+	 * @return mixed What the operation returns.
+	 *
+	 * @spec openspec/changes/website-forms-submit-into-tickets/tasks.md#task-1.3
+	 */
+	public function runAsSystem(callable $operation): mixed {
+		$previous = $this->userSession->getUser();
 		$this->userSession->setVolatileActiveUser($this->account());
 		try {
 			return $operation();
 		} finally {
 			$this->userSession->setVolatileActiveUser($previous);
 		}
-	}//end runAsCurrentOrSystem()
+	}//end runAsSystem()
 
 	/**
 	 * The system account, created disabled on first use.

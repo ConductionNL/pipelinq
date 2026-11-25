@@ -8,8 +8,10 @@
   - Test: tests/Unit/Service/WebForm/WebFormIntakeServiceTest.php (ticket form, lead form, no enquiry, honeypot with its control, refusals, 422 findings, 503), WebFormFinderTest, tests/Unit/Controller/WebFormControllerTest.php
 - [x] 1.2 Destination reference and `receivedAt` in the answer; same for `PortalRequestService`
   - Files: lib/Controller/WebFormController.php, lib/Service/Portal/PortalRequestService.php; Test: PortalRequestServiceTest::testSubmitCreatesRequestTicket
-- [ ] 1.3 Live: submit each seeded website form on an instance and read the ticket back (live pass, decision 139)
+- [x] 1.3 Live: submit each seeded website form on an instance and read the ticket back (live pass, decision 139)
   - Live pass 17 Nov 2026: all three seeded forms answered 503 because OpenRegister removed `submitAll()`; fixed in pipelinq#3914. After that fix OpenRegister refuses the ticket create as `pipelinq-system` (403 "You may not send this form", a NotAuthorizedException), although the ticket schema grants `user:pipelinq-system` create. Open: an access-control question for OpenRegister's form submit.
+  - Live pass 25 Nov 2026 (sandbox NC 34 + MariaDB + OpenRegister main): the 403 came from OpenRegister asking the create permission of the session user ("User 'Anonymous' does not have permission to 'create' objects in schema 'Ticket'"), not of the submitter's subject. `WebFormIntakeService` now runs the submit with the system account active (`SystemServiceAccount::runAsSystem()`). All three seeded forms (`website-support`, `website-partner`, `website-contact`) answer 201; each ticket reads back with its title, description, reporter name and e-mail, `channel: website`, its `source`, `status: new`, `ticketType: request`, owner `pipelinq-system`. A filled honeypot still answers 400.
+  - Files: lib/Service/SystemServiceAccount.php, lib/Service/WebForm/WebFormIntakeService.php; Test: SystemServiceAccountTest::testRunAsSystemReplacesTheSignedInUserAndRestoresThem, WebFormIntakeServiceTest::testSupportFormCreatesATicket
 
 ## 2. Landing page into lead
 
