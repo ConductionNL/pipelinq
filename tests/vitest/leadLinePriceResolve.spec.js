@@ -12,8 +12,8 @@
  * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
  */
 
-import { rowFromSource } from '@conduction/nextcloud-vue/src/utils/childRecordTotals.js'
 import { patchFromAnswer, resolveBody, shouldResolveAgain } from '@conduction/nextcloud-vue/src/utils/childRecordResolve.js'
+import { rowFromSource } from '@conduction/nextcloud-vue/src/utils/childRecordTotals.js'
 import { describe, expect, it } from 'vitest'
 import lines from '../../lib/Settings/register.d/99-zzzzzz-quote-and-lead-lines.json'
 import resolveFragment from '../../lib/Settings/register.d/99-zzzzzzzzzzzzzzzzz-lead-line-price-resolve.json'

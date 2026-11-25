@@ -343,7 +343,7 @@ class ProductCatalogControllerTest extends TestCase {
 	 */
 	public function testResolvePriceForAReaderPricesTheStoredProduct(): void {
 		$this->loginAs(uid: 'sales-rep', isPos: false);
-		$this->withParams(['productId' => ' p-1 ', 'product' => ['unitPrice' => 0.01], 'quantity' => 12]);
+		$this->withParams(params: ['productId' => ' p-1 ', 'product' => ['unitPrice' => 0.01], 'quantity' => 12]);
 		$stored = ['id' => 'p-1', 'unitPrice' => 18.5, 'vatClass' => 'low'];
 		$this->reader->expects($this->once())->method('read')->with('p-1', 'product_schema')->willReturn($stored);
 		$this->service->expects($this->once())
@@ -353,8 +353,8 @@ class ProductCatalogControllerTest extends TestCase {
 
 		$response = $this->controller->resolvePrice();
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(16.25, $response->getData()['unitPrice']);
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: 16.25, actual: $response->getData()['unitPrice']);
 	}//end testResolvePriceForAReaderPricesTheStoredProduct()
 
 	/**
@@ -366,7 +366,7 @@ class ProductCatalogControllerTest extends TestCase {
 	 */
 	public function testResolvePriceForAReaderTakesTheIdOfTheProductObject(): void {
 		$this->loginAs(uid: 'sales-rep', isPos: false);
-		$this->withParams(['product' => ['@self' => ['id' => 'p-2'], 'unitPrice' => 1.0], 'quantity' => 1]);
+		$this->withParams(params: ['product' => ['@self' => ['id' => 'p-2'], 'unitPrice' => 1.0], 'quantity' => 1]);
 		$stored = ['id' => 'p-2', 'unitPrice' => 40.0];
 		$this->reader->expects($this->once())->method('read')->with('p-2', 'product_schema')->willReturn($stored);
 		$this->service->expects($this->once())
@@ -374,7 +374,7 @@ class ProductCatalogControllerTest extends TestCase {
 			->with($stored, 1.0, null, null, null)
 			->willReturn(['unitPrice' => 40.0]);
 
-		$this->assertSame(Http::STATUS_OK, $this->controller->resolvePrice()->getStatus());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $this->controller->resolvePrice()->getStatus());
 	}//end testResolvePriceForAReaderTakesTheIdOfTheProductObject()
 
 	/**
@@ -386,14 +386,14 @@ class ProductCatalogControllerTest extends TestCase {
 	 */
 	public function testResolvePriceRefusesAProductTheCallerCannotRead(): void {
 		$this->loginAs(uid: 'sales-rep', isPos: false);
-		$this->withParams(['productId' => 'p-hidden', 'quantity' => 1]);
+		$this->withParams(params: ['productId' => 'p-hidden', 'quantity' => 1]);
 		$this->reader->method('read')->willReturn(null);
 		$this->service->expects($this->never())->method('resolveEffectivePrice');
 
 		$response = $this->controller->resolvePrice();
 
-		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
-		$this->assertSame(['error' => 'Product not found'], $response->getData());
+		$this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'Product not found'], actual: $response->getData());
 	}//end testResolvePriceRefusesAProductTheCallerCannotRead()
 
 	/**
@@ -405,14 +405,14 @@ class ProductCatalogControllerTest extends TestCase {
 	 */
 	public function testResolvePriceForAPosOperatorPricesThePayload(): void {
 		$this->loginAs();
-		$this->withParams(['productId' => 'p-1', 'product' => ['unitPrice' => 7.0], 'quantity' => 1]);
+		$this->withParams(params: ['productId' => 'p-1', 'product' => ['unitPrice' => 7.0], 'quantity' => 1]);
 		$this->reader->expects($this->never())->method('read');
 		$this->service->expects($this->once())
 			->method('resolveEffectivePrice')
 			->with(['unitPrice' => 7.0], 1.0, null, null, null)
 			->willReturn(['unitPrice' => 7.0]);
 
-		$this->assertSame(Http::STATUS_OK, $this->controller->resolvePrice()->getStatus());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $this->controller->resolvePrice()->getStatus());
 	}//end testResolvePriceForAPosOperatorPricesThePayload()
 
 	/**
