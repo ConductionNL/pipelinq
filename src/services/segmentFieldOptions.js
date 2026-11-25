@@ -58,7 +58,7 @@ export const CUSTOMER_FIELD_OPTIONS = [
 	{ value: 'address', label: 'Address', type: 'string' },
 	{ value: 'place', label: 'Place', type: 'string' },
 	// Derived on the server (SegmentSignalService), never stored on the client.
-	// @spec openspec/changes/segment-last-contact-signal/specs/marketing-integrated-campaigns/spec.md#requirement-a-customers-last-contact-is-a-derived-segment-field
+	// @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-customers-last-contact-is-a-derived-segment-field
 	{ value: 'pipelinqLastContactAt', label: 'Last contact', type: 'string', format: 'date' },
 	{ value: 'website', label: 'Website', type: 'string' },
 	{ value: 'industry', label: 'Industry', type: 'array' },
