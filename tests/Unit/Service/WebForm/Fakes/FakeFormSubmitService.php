@@ -36,6 +36,13 @@ class FakeFormSubmitService {
 	public array $calls = [];
 
 	/**
+	 * Reads the session's active user at submit time, when set.
+	 *
+	 * @var \Closure|null
+	 */
+	public ?\Closure $activeUser = null;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Throwable|null $throw What to throw instead of answering.
@@ -61,6 +68,7 @@ class FakeFormSubmitService {
 			'subject' => $submission->subject,
 			'idempotencyKey' => $idempotencyKey,
 			'scope' => $submission->scope,
+			'activeUser' => ($this->activeUser !== null) ? ($this->activeUser)() : null,
 		];
 		if ($this->throw !== null) {
 			throw $this->throw;

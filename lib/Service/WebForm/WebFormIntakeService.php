@@ -222,9 +222,14 @@ class WebFormIntakeService implements WebFormIntakeServiceInterface {
 				scope: 'pipelinq-web-form:' . (string)($form['id'] ?? ''),
 			);
 
-			return $this->container->get(self::SUBMIT_SERVICE)->submit(
-				submission: new $submissionClass(writes: $submission['writes'], payload: $submission['payload'], submitter: $submitter),
-				idempotencyKey: $submission['idempotencyKey'],
+			// OpenRegister asks the create permission of the session user, not
+			// of the submitter's subject: the visitor is anonymous, so the write
+			// runs with the system account active.
+			return $this->account->runAsSystem(
+				fn (): mixed => $this->container->get(self::SUBMIT_SERVICE)->submit(
+					submission: new $submissionClass(writes: $submission['writes'], payload: $submission['payload'], submitter: $submitter),
+					idempotencyKey: $submission['idempotencyKey'],
+				)
 			);
 		} catch (Throwable $e) {
 			throw $this->refusalFor(exception: $e, form: $form);
