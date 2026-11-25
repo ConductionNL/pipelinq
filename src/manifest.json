@@ -10933,6 +10933,8 @@
 				"layoutPanel": true,
 				"_layoutPanelNote": "Arrange page (REQ-MW-160, board PqMijnWerkIndelen): the user hides and reorders My work's sections in the library's layout panel, stored per user (nextcloud-vue user layout). The work list (the three ticket lists, My leads, My follow-ups and the phone list) is locked: it can be moved, never hidden. Back to default returns to this layout.",
 				"layoutPanelLocked": ["my-answer-today", "my-waiting-on-me", "my-waiting-on-customer", "my-leads", "my-follow-ups", "my-items-phone"],
+				"autoRefresh": { "intervalSeconds": 300, "staleAfterSeconds": 600, "button": true },
+				"_autoRefreshNote": "REQ-MW-190: every 5 minutes the lists read again in place (no reload, the scroll position stays); the header's refresh button reads at once and spins until they answer; after 10 minutes of failed reads a warning reads 'Data may be outdated. Last updated: <time>' with Retry (nextcloud-vue autoRefresh, 2.228.0).",
 				"showWidgetActions": false,
 				"headerActionsViewport": "wide",
 				"gridFloat": false,
@@ -11680,7 +11682,8 @@
 						"titleTone": "side",
 						"type": "record-list",
 						"title": "Recent activity",
-						"_note": "my-work-roadmap REQ-MW-110: the 10 latest audit-trail entries of the work assigned to the user (GET /api/my-work/recent-activity, read as the user), newest first: the item's kind, its title, how long ago and the fields the entry names as changed. An entry opens its item. No board draws this section yet; it sits in the side column under the call reviews. Not here yet: the collapsed state per user (task 3.2).",
+						"_note": "my-work-roadmap REQ-MW-110: the 10 latest audit-trail entries of the work assigned to the user (GET /api/my-work/recent-activity, read as the user), newest first: the item's kind, its title, how long ago and the fields the entry names as changed. An entry opens its item. No board draws this section yet; it sits in the side column under the call reviews. Collapsible (task 3.2): the chevron folds it to its header, and the page's per-user layout (layoutPanel) stores the fold, so it is still folded after a reload (nextcloud-vue widget-collapsible-section).",
+						"collapsible": true,
 						"content": {
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/my-work/recent-activity",

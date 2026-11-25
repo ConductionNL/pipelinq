@@ -40,6 +40,18 @@ describe('My work: Recent activity', () => {
 		expect(widget.content.emptyText).toBe('No recent activity on your items')
 	})
 
+	it('folds to its header, and the per-user layout keeps it folded after a reload', () => {
+		// The library stores the fold with the page's per-user layout, which
+		// the layout panel turns on (nextcloud-vue widget-collapsible-section).
+		expect(widget.collapsible).toBe(true)
+		expect(page.config.layoutPanel).toBe(true)
+		// Recent activity is not part of the work list, so it may also fold.
+		expect(page.config.layoutPanelLocked).not.toContain('my-activity')
+		// A folded card gives its rows back to the side column.
+		const item = page.config.layout.find((entry) => entry.widgetId === 'my-activity')
+		expect(item.sizeToContent).toBe(true)
+	})
+
 	it('has a place in the side column', () => {
 		const item = page.config.layout.find((entry) => entry.widgetId === 'my-activity')
 		expect(item.track).toBe('side')

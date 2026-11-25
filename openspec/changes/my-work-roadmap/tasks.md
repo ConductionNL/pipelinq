@@ -19,7 +19,9 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 - [x] 3.1 `src/components/myWork/RecentActivity.vue`: the 10 latest audit-trail entries of the user's assigned objects through OpenRegister's audit trail API.
   - Built as a manifest record list, not a Vue file: `my-activity` on the MyWork page (side column) reads `GET /api/my-work/recent-activity` (`MyWorkActivityController`), which `RecentActivityService` and `ActivityTrail` answer from OpenRegister's audit trail (`ObjectServiceInterface::getLogs()`) of the 20 most recently changed items the worklist reads as the user, newest 10 first, with kind, title, who, when and the changed fields. PHPUnit `RecentActivityServiceTest`, `MyWorkActivityControllerTest`; Vitest `tests/vitest/myWorkRecentActivity.spec.js`.
-- [ ] 3.2 Collapsed state per user through `/api/settings/user`; empty text "No recent activity on your items".
+- [x] 3.2 Collapsed state per user through `/api/settings/user`; empty text "No recent activity on your items".
+  - Built (25 Nov 2026): `my-activity` declares `collapsible: true`; the card draws a chevron ("Collapse Recent activity" / "Expand Recent activity") that folds it to its header, and the page's per-user layout (on through `layoutPanel`) stores the fold, so it is still folded after a reload; Back to default opens it again. The library side is ConductionNL/nextcloud-vue#2362 (`widget-collapsible-section`), which pipelinq now depends on. The empty text was already in place. Vitest `tests/vitest/myWorkRecentActivity.spec.js`. The live check (fold, reload, still folded) runs in the nightly.
+  - Decision (delegated, 25 Nov 2026): as for 8.1, the fold is stored by the library's per-user layout store (the user's Nextcloud preferences under `pipelinq`), not in `/api/settings/user`: one user's arrangement of My work stays in one place, and it needs no pipelinq code.
 
 ## 4. Follow-up rows (REQ-MW-120)
 
@@ -63,7 +65,8 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 11. Refresh (REQ-MW-190)
 
-- [ ] 11.1 Refresh button and a 5-minute timer in `MyWork.vue`, cleared on destroy; keep the scroll position; stale warning after 10 minutes of failed fetches.
+- [x] 11.1 Refresh button and a 5-minute timer in `MyWork.vue`, cleared on destroy; keep the scroll position; stale warning after 10 minutes of failed fetches.
+  - Built (25 Nov 2026) as manifest configuration, not a Vue file: My work sets `config.autoRefresh` (`intervalSeconds` 300, `staleAfterSeconds` 600, `button`). The library (ConductionNL/nextcloud-vue#2364, `dashboard-auto-refresh`, schema 2.202.0) fires `cn:page:refresh` every 5 minutes, which every list reads again on in place (no reload, so the scroll position stays); the timer is cleared when the page goes. The header's refresh button reads at once and spins until the lists answer; when the reads keep failing and the last good one is older than 10 minutes, "Data may be outdated. Last updated: <time>" shows with Retry. Vitest `tests/vitest/myWorkAutoRefresh.spec.js`; the library's own behaviour in `tests/components/CnDashboardPageAutoRefresh.spec.js` there. The live check (wait 5 minutes, a newly assigned ticket appears) runs in the nightly.
 
 ## 12. Filters (REQ-MW-200)
 
