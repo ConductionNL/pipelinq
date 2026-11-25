@@ -152,6 +152,8 @@ class TaskRecurrence implements TaskRecurrenceInterface {
 	 * @param DateTimeImmutable    $now  The reference instant.
 	 *
 	 * @return DateTimeImmutable|null The next due date.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/task-background-jobs/spec.md#requirement-a-task-with-a-repeat-schedule-comes-back-on-that-schedule
 	 */
 	public function nextDeadline(array $task, DateTimeImmutable $now): ?DateTimeImmutable {
 		$step = self::INTERVALS[(string) ($task['repeat'] ?? '')] ?? null;
@@ -176,7 +178,11 @@ class TaskRecurrence implements TaskRecurrenceInterface {
 			$next = $next->modify($step);
 		}
 
-		return $next === false ? null : $next;
+		if ($next === false) {
+			return null;
+		}
+
+		return $next;
 	}//end nextDeadline()
 
 	/**
@@ -192,7 +198,8 @@ class TaskRecurrence implements TaskRecurrenceInterface {
 		$sourceId   = (string) ($task['id'] ?? $task['@self']['id'] ?? '');
 		$occurrence = array_filter(
 			$task,
-			static fn (string $key): bool => in_array($key, self::NOT_COPIED, true) === false && str_starts_with($key, '@') === false && str_starts_with($key, '_') === false,
+			static fn (string $key): bool => in_array($key, self::NOT_COPIED, true) === false
+				&& str_starts_with($key, '@') === false && str_starts_with($key, '_') === false,
 			ARRAY_FILTER_USE_KEY
 		);
 		$occurrence['status']             = 'open';

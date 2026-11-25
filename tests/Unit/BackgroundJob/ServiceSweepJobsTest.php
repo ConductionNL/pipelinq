@@ -212,9 +212,7 @@ class ServiceSweepJobsTest extends TestCase {
 	public function testScheduledTasksRunAndAFailureKeepsTheException(): void {
 		$service = $this->createMock(ScheduledTaskService::class);
 		$service->expects($this->once())->method('processScheduledTasks');
-		$recurrence = $this->createMock(TaskRecurrenceInterface::class);
-		$recurrence->expects($this->once())->method('run');
-		$job = new ScheduledTaskJob($this->createMock(ITimeFactory::class), $service, $this->logger(), $recurrence);
+		$job = $this->scheduledTaskJob(service: $service, recurrence: $this->createMock(originalClassName: TaskRecurrenceInterface::class));
 
 		$this->runJob($job);
 
@@ -225,16 +223,47 @@ class ServiceSweepJobsTest extends TestCase {
 		$failure = new RuntimeException('boom');
 		$service = $this->createMock(ScheduledTaskService::class);
 		$service->method('processScheduledTasks')->willThrowException($failure);
-		$this->runJob(new ScheduledTaskJob($this->createMock(ITimeFactory::class), $service, $this->logger(), $this->createMock(TaskRecurrenceInterface::class)));
+		$this->runJob(job: $this->scheduledTaskJob(service: $service, recurrence: $this->createMock(originalClassName: TaskRecurrenceInterface::class)));
 		$this->assertSame([['error', 'ScheduledTaskJob failed', ['exception' => $failure]]], $this->logs);
-
-		// A failing recurrence pass is logged on its own and does not stop the deadline pass.
-		$this->logs = [];
-		$recurrence = $this->createMock(TaskRecurrenceInterface::class);
-		$recurrence->method('run')->willThrowException($failure);
-		$this->runJob(new ScheduledTaskJob($this->createMock(ITimeFactory::class), $this->createMock(ScheduledTaskService::class), $this->logger(), $recurrence));
-		$this->assertSame([['error', 'ScheduledTaskJob: repeating tasks failed', ['exception' => $failure]]], $this->logs);
 	}//end testScheduledTasksRunAndAFailureKeepsTheException()
+
+	/**
+	 * After the deadline pass the job makes the repeating tasks' next occurrences;
+	 * a failing recurrence pass is logged on its own.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/task-background-jobs/spec.md#requirement-a-task-with-a-repeat-schedule-comes-back-on-that-schedule
+	 */
+	public function testScheduledTasksAlsoBringRepeatingTasksBack(): void {
+		$recurrence = $this->createMock(originalClassName: TaskRecurrenceInterface::class);
+		$recurrence->expects($this->once())->method('run');
+		$this->runJob(job: $this->scheduledTaskJob(service: $this->createMock(originalClassName: ScheduledTaskService::class), recurrence: $recurrence));
+		$this->assertSame(expected: [], actual: $this->logs);
+
+		$failure    = new RuntimeException('boom');
+		$recurrence = $this->createMock(originalClassName: TaskRecurrenceInterface::class);
+		$recurrence->method('run')->willThrowException($failure);
+		$this->runJob(job: $this->scheduledTaskJob(service: $this->createMock(originalClassName: ScheduledTaskService::class), recurrence: $recurrence));
+		$this->assertSame(expected: [['error', 'ScheduledTaskJob: repeating tasks failed', ['exception' => $failure]]], actual: $this->logs);
+	}//end testScheduledTasksAlsoBringRepeatingTasksBack()
+
+	/**
+	 * The scheduled task job over the given service and recurrence.
+	 *
+	 * @param ScheduledTaskService    $service    The deadline pass.
+	 * @param TaskRecurrenceInterface $recurrence The recurrence pass.
+	 *
+	 * @return ScheduledTaskJob
+	 */
+	private function scheduledTaskJob(ScheduledTaskService $service, TaskRecurrenceInterface $recurrence): ScheduledTaskJob {
+		return new ScheduledTaskJob(
+			time: $this->createMock(originalClassName: ITimeFactory::class),
+			scheduledTaskService: $service,
+			logger: $this->logger(),
+			recurrence: $recurrence,
+		);
+	}//end scheduledTaskJob()
 
 	/**
 	 * Search Console imports nothing without a key or without properties.

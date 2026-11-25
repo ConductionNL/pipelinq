@@ -68,7 +68,13 @@ class TaskRecurrenceTest extends TestCase {
 	private function recurrence(array $tasks): TaskRecurrence {
 		$this->objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->objects->method('findAll')->willReturnCallback(
-			fn (array $config): array => isset($config['filters']['previousOccurrence']) === true ? $this->madeBefore : $tasks
+			function (array $config) use ($tasks): array {
+				if (isset($config['filters']['previousOccurrence']) === true) {
+					return $this->madeBefore;
+				}
+
+				return $tasks;
+			}
 		);
 		$this->objects->method('saveObject')->willReturnCallback(
 			function (array $data, ObjectSaveOptions $options): ObjectEntityInterface {
