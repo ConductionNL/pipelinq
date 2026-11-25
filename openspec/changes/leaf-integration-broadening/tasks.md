@@ -51,13 +51,14 @@
 
 ## 4. Verification
 
-- [ ] 4.1 e2e coverage for the mounted widgets
+- [x] 4.1 e2e coverage for the mounted widgets
   - **spec_ref**: `specs/collaboration-leaves/spec.md#requirement-deck-leaf-widget-on-leaddetail`, `specs/collaboration-leaves/spec.md#requirement-talk-rooms-on-client-and-lead-detail`, `specs/collaboration-leaves/spec.md#requirement-forms-leaf-widget-on-leaddetail`
   - **files**: `tests/e2e/`
   - **acceptance_criteria**:
     - Playwright asserts the "Board", "Deal room", "Intake forms" widgets render on LeadDetail and "Client room" on ClientDetail (widget presence + unavailable-state fallback when the NC app is absent on the CI instance)
     - Existing LeadDetail/ClientDetail e2e specs still pass (layout rows are appended, nothing moved)
   - Written, not yet run (needs a seeded instance): `tests/e2e/collaboration-leaves.spec.ts` seeds a client and a lead, opens the Deal room, Board and Intake forms tabs on LeadDetail and the Client room on ClientDetail, and expects each to render its widget or the unavailable state without a hard error.
+  - Live pass 25 Nov 2026 (sandbox NC 34 + MariaDB + OpenRegister main, seeded with `tests/e2e/ci-seed.sh`): `collaboration-leaves.spec.ts` 2/2 passed, no retries (LeadDetail: Deal room, Board, Intake forms; ClientDetail: Client room). Deck and Forms were not installed, so their tabs rendered the unavailable state.
 
 - [ ] 4.2 Gates + live verification
   - **spec_ref**: all
@@ -65,3 +66,4 @@
   - **acceptance_criteria**:
     - `composer check:strict` green; hydra gates pass; `openspec validate leaf-integration-broadening --strict` clean
     - Live-verify on :8080 after register re-import: talk linkedTypes visible on the leaf's link surface for client + lead; all four widgets render
+  - Live pass 25 Nov 2026 (same sandbox, after `api/settings/reimport`): all four widgets render (4.1); OpenRegister's link surface answers 200 for `talk`, `deck` and `forms` on a client and a lead (`GET /api/objects/pipelinq/{client|lead}/{id}/integrations/{id}`). Still open: OpenRegister reads `linkedTypes` only from a schema's `configuration.linkedTypes`, so the top-level `linkedTypes` lists on `client`, `lead` and `ticket` are not imported (stored schema: client none, lead `['mail']` from its `configuration`). Moving the lists into `configuration` is not a drop-in fix: OpenRegister validates every entry against the integration registry on each hydrate, and `planninq-projects` is only registered when planninq is installed. Gates part not run here.
