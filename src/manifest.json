@@ -11713,13 +11713,18 @@
 						"titleTone": "side",
 						"type": "saved-views",
 						"title": "Saved views",
+						"_note": "REQ-MW-150 (board PqMijnWerk): My work's own saved views, OpenRegister views through nextcloud-vue's saved-views widget (workspace mode, nextcloud-vue#2389); pipelinq keeps no store of them. A view stores the bar's type (lens), Show completed (showDone), priority, pipeline and the scope (scope, member); clicking one applies them to the page, Save view stores the current bar under a name, the user's own views delete after a confirmation. Each row counts its items through the worklist endpoint with the view's values.",
 						"content": {
-							"register": "pipelinq",
-							"schema": "ticket",
-							"route": "Tickets",
-							"showCounts": true,
-							"limit": 5,
-							"emptyText": "You have no saved views yet. Save a view on the tickets list."
+							"scope": "pipelinq/my-work",
+							"limit": 10,
+							"workspace": {
+								"keys": ["lens", "showDone", "priority", "pipeline", "scope", "member"],
+								"count": {
+									"url": "/apps/pipelinq/api/worklist/items?lens=@workspace.lens&done=@workspace.showDone&scope=@workspace.scope&member=@workspace.member&priority=@workspace.priority&pipeline=@workspace.pipeline",
+									"responsePath": "items"
+								}
+							},
+							"emptyText": "You have no saved views yet. Set the filters and choose Save view."
 						}
 					},
 					{

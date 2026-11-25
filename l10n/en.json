@@ -8098,7 +8098,7 @@
         "Start here": "Start here",
         "This ticket has waited {subject.occurredAt|days} days. The agreement is an answer within 2 working days.": "This ticket has waited {subject.occurredAt|days} days. The agreement is an answer within 2 working days.",
         "Waiting longest first": "Waiting longest first",
-        "You have no saved views yet. Save a view on the tickets list.": "You have no saved views yet. Save a view on the tickets list.",
+        "You have no saved views yet. Set the filters and choose Save view.": "You have no saved views yet. Set the filters and choose Save view.",
         "agreement: 2 working days": "agreement: 2 working days",
         "€ {value}": "€ {value}",
         "On the linked case": "On the linked case",
