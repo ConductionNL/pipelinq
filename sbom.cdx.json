@@ -12412,43 +12412,6 @@
     },
     {
       "type": "library",
-      "name": "es-module-lexer",
-      "version": "2.3.2",
-      "bom-ref": "pipelinq@0.1.0|es-module-lexer@2.3.2",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/es-module-lexer@2.3.2",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-2.3.2.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "a681c6a4e4400688c926e72757d29b39abc44d6f250559e98645bbec4479fc1439173ee85d2a0235e93b207def4799d18ddb04cfddba89b1585fc2ad2d099dcb"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/es-module-lexer"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "es-object-atoms",
       "version": "1.1.2",
       "bom-ref": "pipelinq@0.1.0|es-object-atoms@1.1.2",
@@ -23328,8 +23291,8 @@
     {
       "type": "library",
       "name": "tapable",
-      "version": "2.3.3",
-      "bom-ref": "pipelinq@0.1.0|tapable@2.3.3",
+      "version": "2.3.4",
+      "bom-ref": "pipelinq@0.1.0|tapable@2.3.4",
       "licenses": [
         {
           "license": {
@@ -23337,15 +23300,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/tapable@2.3.3",
+      "purl": "pkg:npm/tapable@2.3.4",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/tapable/-/tapable-2.3.3.tgz",
+          "url": "https://registry.npmjs.org/tapable/-/tapable-2.3.4.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "bb173fce9a8583ac7b0bcbce13b961e8b6dd6bc7842fdce6566fcf2de4cf051861d710a0756690f89d42522786a487e6d8776db14a51bfe1ec8626ac04c71ce8"
+              "content": "3471625a701b309c4d36907088eee3255183baa3314fdfe857cbf9ed147e7e00504a19098a5e629c60fcff15b2d218cbc874325f5b6edbb400361973dca06a0a"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -25162,8 +25125,8 @@
     {
       "type": "library",
       "name": "webpack-sources",
-      "version": "3.7.0",
-      "bom-ref": "pipelinq@0.1.0|webpack-sources@3.7.0",
+      "version": "3.7.1",
+      "bom-ref": "pipelinq@0.1.0|webpack-sources@3.7.1",
       "licenses": [
         {
           "license": {
@@ -25171,15 +25134,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/webpack-sources@3.7.0",
+      "purl": "pkg:npm/webpack-sources@3.7.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/webpack-sources/-/webpack-sources-3.7.0.tgz",
+          "url": "https://registry.npmjs.org/webpack-sources/-/webpack-sources-3.7.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "3dd5216c2c9cc048224b5841fc504392c58a83f6ac84022e24aab075b3e7f3f7455605392f142206f1b48ece954512333ee8ccad2b5809ccf2c29f363f42969e"
+              "content": "99cc6cec0d8bb04770b0da906eeaea4b84073d1d826b7346a6551a927e89e463d0be7559e280f820ce0525c4f77fc0153767b612c8ee215c4a8f8ae8ac7bf2b9"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -25232,8 +25195,8 @@
     {
       "type": "library",
       "name": "webpack",
-      "version": "5.112.2",
-      "bom-ref": "pipelinq@0.1.0|webpack@5.112.2",
+      "version": "5.113.0",
+      "bom-ref": "pipelinq@0.1.0|webpack@5.113.0",
       "licenses": [
         {
           "license": {
@@ -25241,15 +25204,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/webpack@5.112.2",
+      "purl": "pkg:npm/webpack@5.113.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/webpack/-/webpack-5.112.2.tgz",
+          "url": "https://registry.npmjs.org/webpack/-/webpack-5.113.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "076b69d4b23d0fc195a4f0eaa6b76dd76ba44e45d76a18fd333a92589ab87da48f80e50cec2759686001e87acbffc13a5306c1a5d8f8bf35836caa059d5a14ea"
+              "content": "ab9e221742cd68001d2c4b776a5f6a3170b6cc046f731ecb54a8c7a7e1318c24641b1d0cf1399ac061c05f2917c287d6cf184dccf4c087790b557bcd834125e0"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -25270,7 +25233,7 @@
           "type": "library",
           "name": "mime-db",
           "version": "1.54.0",
-          "bom-ref": "pipelinq@0.1.0|webpack@5.112.2|mime-db@1.54.0",
+          "bom-ref": "pipelinq@0.1.0|webpack@5.113.0|mime-db@1.54.0",
           "licenses": [
             {
               "license": {
