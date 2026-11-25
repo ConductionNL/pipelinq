@@ -93,6 +93,7 @@ describe('portalApi', () => {
 			[() => portalApi.invoices(), 'GET', '/invoices?page=1', undefined],
 			[() => portalApi.contracts(2), 'GET', '/contracts?page=2', undefined],
 			[() => portalApi.orders(3), 'GET', '/orders?page=3', undefined],
+			[() => portalApi.requestCategories(), 'GET', '/request-categories', undefined],
 			[() => portalApi.requests(), 'GET', '/requests?page=1', undefined],
 			[() => portalApi.request('a/b'), 'GET', '/requests/a%2Fb', undefined],
 			[() => portalApi.submitRequest({ t: 1 }), 'POST', '/requests', { t: 1 }],

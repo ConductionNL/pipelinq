@@ -482,6 +482,7 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'portalDocument#download', 'url' => '/portal/api/documents/{token}/download',  'verb' => 'GET'],
 
         // Requests. Static create/list before {id} detail/reply.
+        ['name' => 'portalRequest#categories', 'url' => '/portal/api/request-categories', 'verb' => 'GET'],
         ['name' => 'portalRequest#index',  'url' => '/portal/api/requests',           'verb' => 'GET'],
         ['name' => 'portalRequest#create', 'url' => '/portal/api/requests',           'verb' => 'POST'],
         ['name' => 'portalRequest#show',   'url' => '/portal/api/requests/{id}',       'verb' => 'GET'],

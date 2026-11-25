@@ -71,6 +71,9 @@ class SettingsLoadService {
 		// the retired `request`, `complaint` and `contactmoment` schemas; a
 		// subtype is selected with the `ticketType` discriminator.
 		'ticket',
+		// The ticket category vocabulary; the customer portal offers the
+		// categories open to clients (specify-capability-rows 20.1).
+		'ticketCategory',
 		'pipeline',
 		'product',
 		'productCategory',

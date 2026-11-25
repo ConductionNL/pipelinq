@@ -486,4 +486,50 @@ class PortalRequestServiceTest extends TestCase {
 		$this->assertSame('contact-b', $stored['contact']);
 		$this->assertNull($stored['client'] ?? null);
 	}//end testSubmitLinksTheFirstUsableIdOfALinkedList()
+	/**
+	 * The categories a client is offered are the active ones a desk opened to
+	 * clients, by name; once one is open a request must name an open one.
+	 *
+	 * @return void
+	 */
+	public function testOnlyCategoriesOpenToClientsAreOfferedAndAccepted(): void {
+		$this->reader->seed('ticketCategory', 'tc-1', ['key' => 'overlast', 'name' => 'Overlast', 'exposeToCustomer' => true]);
+		$this->reader->seed('ticketCategory', 'tc-2', ['key' => 'afval', 'name' => 'Afval', 'description' => 'Containers', 'exposeToCustomer' => true]);
+		$this->reader->seed('ticketCategory', 'tc-3', ['key' => 'woo', 'name' => 'Woo-verzoek']);
+		$this->reader->seed('ticketCategory', 'tc-4', ['key' => 'oud', 'name' => 'Oud', 'exposeToCustomer' => true, 'active' => false]);
+
+		$this->assertSame(
+			expected: [
+				['key' => 'afval', 'name' => 'Afval', 'description' => 'Containers'],
+				['key' => 'overlast', 'name' => 'Overlast', 'description' => ''],
+			],
+			actual: $this->service->openCategories()
+		);
+
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$saved = $this->service->submit($account, 'tenant-a', 'Container', 'Niet geleegd', [], 'afval');
+		$this->assertSame(expected: 'new', actual: $saved['status']);
+
+		foreach (['woo', 'oud', ''] as $refused) {
+			try {
+				$this->service->submit($account, 'tenant-a', 'Subject', 'Body', [], $refused);
+				$this->fail('Expected categoryNotAvailable for "' . $refused . '"');
+			} catch (PortalException $e) {
+				$this->assertSame(expected: 422, actual: $e->getStatus());
+			}
+		}
+	}//end testOnlyCategoriesOpenToClientsAreOfferedAndAccepted()
+
+	/**
+	 * While no category is open to clients nothing is offered and the intake stays open.
+	 *
+	 * @return void
+	 */
+	public function testWithoutOpenCategoriesTheIntakeStaysOpen(): void {
+		$this->reader->seed('ticketCategory', 'tc-3', ['key' => 'woo', 'name' => 'Woo-verzoek']);
+		$this->assertSame(expected: [], actual: $this->service->openCategories());
+
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$this->assertSame(expected: 'new', actual: $this->service->submit($account, 'tenant-a', 'Subject', 'Body', [], '')['status']);
+	}//end testWithoutOpenCategoriesTheIntakeStaysOpen()
 }//end class

@@ -10264,7 +10264,8 @@ OC.L10N.register(
         "Draft contract made.": "Conceptcontract gemaakt.",
         "Could not make the contract.": "Het contract kon niet worden gemaakt.",
         "Source lead": "Bronlead",
-        "The won lead this contract was made from. Optional; set by Create contract on the lead.": "De gewonnen lead waarvan dit contract is gemaakt. Optioneel; Contract maken op de lead vult het in."
+        "The won lead this contract was made from. Optional; set by Create contract on the lead.": "De gewonnen lead waarvan dit contract is gemaakt. Optioneel; Contract maken op de lead vult het in.",
+        "Choose a category": "Kies een categorie"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -71,6 +71,21 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 					:aria-describedby="error ? 'portal-requests-error' : null"
 					:aria-invalid="error ? 'true' : null" />
 			</div>
+			<div v-if="categories.length" class="portal-field">
+				<label for="portal-category">{{ t('pipelinq', 'Category') }}</label>
+				<select
+					id="portal-category"
+					v-model="form.categoryId"
+					required
+					data-testid="portal-request-category">
+					<option value="" disabled>
+						{{ t('pipelinq', 'Choose a category') }}
+					</option>
+					<option v-for="category in categories" :key="category.key" :value="category.key">
+						{{ category.name }}
+					</option>
+				</select>
+			</div>
 			<div class="portal-field">
 				<label for="portal-body">{{ t('pipelinq', 'Message') }}</label>
 				<textarea
@@ -108,17 +123,40 @@ export default {
 			detail: null,
 			replyText: '',
 			form: { subject: '', body: '', categoryId: '' },
+			/** The categories a client may file under; none means the intake asks for none. */
+			categories: [],
 			submitMessage: '',
 			error: '',
 			submitting: false,
 		}
 	},
 
+	/**
+	 * Load the client's requests and the categories they may file under.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-files-a-request-in-the-portal-and-follows-it
+	 */
 	mounted() {
 		this.load()
+		this.loadCategories()
 	},
 
 	methods: {
+		/**
+		 * Read the categories a desk opened to clients; none when that fails.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-files-a-request-in-the-portal-and-follows-it
+		 */
+		async loadCategories() {
+			try {
+				const result = await portalApi.requestCategories()
+				this.categories = Array.isArray(result?.categories) ? result.categories : []
+			} catch {
+				this.categories = []
+			}
+		},
+
 		async load() {
 			this.error = ''
 			try {
@@ -171,6 +209,7 @@ export default {
 				)
 				this.form.subject = ''
 				this.form.body = ''
+				this.form.categoryId = ''
 				await this.load()
 			} catch (e) {
 				this.error =
