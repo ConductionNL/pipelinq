@@ -812,7 +812,7 @@
 			"specs": [
 				"marketing-blast",
 				"marketing-blast-delivery",
-				"marketing-block-editor",
+				"mail-block-editor",
 				"marketing-compliance",
 				"marketing-email-tracking",
 				"marketing-integrated-campaigns",
@@ -869,7 +869,7 @@
 				"marketing-integrated-campaigns",
 				"my-work",
 				"my-work-roadmap",
-				"notify-the-followers-of-tickets-and-leads",
+				"notifications-activity",
 				"project-portfolio",
 				"task-background-jobs",
 				"work-letter-from-filinq-template"
@@ -4364,10 +4364,10 @@
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "TicketDetail, LeadDetail sidebar Tasks tab",
 				"readOn": "2026-10-07",
-				"change": "notify-the-followers-of-tickets-and-leads",
+				"change": "openspec/changes/archive/2026-11-24-notify-the-followers-of-tickets-and-leads",
 				"requirement": [
-					"openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity :: A user adds a colleague to a ticket or lead as a follower (REQ-NFTL-004)",
-					"openspec/changes/notify-the-followers-of-tickets-and-leads/specs/notifications-activity :: A colleague added to a ticket or lead can work on it (REQ-NFTL-005)"
+					"openspec/specs/notifications-activity :: A user adds a colleague to a ticket or lead as a follower (REQ-NFTL-004)",
+					"openspec/specs/notifications-activity :: A colleague added to a ticket or lead can work on it (REQ-NFTL-005)"
 				]
 			},
 			"evidence": {
@@ -5360,24 +5360,24 @@
 			"id": "mkt-block-editor",
 			"area": "marketing",
 			"name": "Design a mailing by dragging blocks instead of writing HTML",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "yes",
 			"pipedrive": "partial",
 			"espocrm": "no",
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "read in src/views/templates/TemplateForm.vue:93-140",
+			"providerHow": "read in src/components/templates/MailBlockEditor.vue and src/dialogs/TemplateFormDialog.vue",
 			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "src/views/templates/TemplateForm.vue:100 \"<textarea id=\\\"template-form-body-html\\\"\": a mailing template is written as HTML in a textarea; articles can be dropped in as an {{articles}} block (lib/Service/ArticleService.php), but there is no drag and drop block designer",
+				"state": "built",
+				"evidence": "src/components/templates/MailBlockEditor.vue, mounted in src/dialogs/TemplateFormDialog.vue:201; lib/Service/Marketing/MailBlockRenderer.php renders the blocks to mail-safe HTML on save and on POST /api/templates/render",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "nothing",
-				"readOn": "2026-09-26",
-				"change": "marketing-block-editor",
-				"requirement": "openspec/changes/marketing-block-editor/specs/mail-block-editor :: A marketer builds an email template from blocks (REQ-MBE-001)"
+				"reachedOn": "TemplateFormDialog (Marketing, Templates, New template)",
+				"readOn": "2026-11-24",
+				"spec": "openspec/specs/mail-block-editor",
+				"requirement": "openspec/specs/mail-block-editor :: A marketer builds an email template from blocks (REQ-MBE-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/create-and-send-marketing-emails \"In the marketing email editor ... you can edit its content, appearance, and module locations\" from templates, without HTML. All products and plans.",

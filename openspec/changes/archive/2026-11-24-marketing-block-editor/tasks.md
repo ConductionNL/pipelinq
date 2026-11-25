@@ -25,7 +25,7 @@
   - Verify: axe-core in the Playwright spec reports no violations on the editor
 - [x] 3.2 English source strings and Dutch translations, sentence case, no em-dashes (done: en, nl, de, es, fr, it)
   - Verify: `npm run test:l10n` exit 0
-- [ ] 3.3 User doc `docs/Features/mail-block-editor.md`: build a mailing from blocks, what the footer is for, the mail clients checked (not run: the doc is written; the hand check of the rendering in Outlook, Gmail and Apple Mail needs a live send and is owed)
+- [x] 3.3 User doc `docs/Features/mail-block-editor.md`: build a mailing from blocks, what the footer is for, the mail clients checked (done: the doc is written and `npm run build` in docs/ exits 0 with the page under docs/Features/mail-block-editor; the hand check of the rendering in Outlook, Gmail and Apple Mail needs a live send and is owed, and the doc says so under Mail clients)
   - Verify: docs build exit 0
 
 ## 4. The list from nextcloud-vue

@@ -10192,7 +10192,16 @@ OC.L10N.register(
         "All priorities": "Alle prioriteiten",
         "All pipelines": "Alle pijplijnen",
         "A call comes in for me or my sales team": "Er komt een gesprek binnen voor mij of mijn verkoopteam",
-        "An email comes in for me or my sales team": "Er komt een e-mail binnen voor mij of mijn verkoopteam"
+        "An email comes in for me or my sales team": "Er komt een e-mail binnen voor mij of mijn verkoopteam",
+        "Colleagues": "Collega's",
+        "The colleagues who work on this with the assignee. They can open and change it while they are listed.": "De collega's die hier samen met de behandelaar aan werken. Zolang ze erop staan, kunnen ze het openen en wijzigen.",
+        "Pass on": "Doorzetten",
+        "Note for your colleague": "Notitie voor uw collega",
+        "Shown under the handover in the ticket's History.": "Staat onder de overdracht in de Geschiedenis van het ticket.",
+        "Ticket passed on.": "Ticket doorgezet.",
+        "Could not pass this ticket on.": "Kon dit ticket niet doorzetten.",
+        "Handover note": "Overdrachtsnotitie",
+        "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note.": "Wat de collega aan wie het ticket is doorgezet moet weten, geschreven bij de overdracht. Staat onder de overdracht op het tabblad Geschiedenis; leeg als de laatste overdracht geen notitie had."
     },
     "nplurals=2; plural=(n != 1);"
 )

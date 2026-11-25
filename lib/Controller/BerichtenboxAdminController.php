@@ -230,7 +230,7 @@ class BerichtenboxAdminController extends Controller {
 				$counters[$status]++;
 			}
 
-			if ($status === 'sent' && (($data['readAt'] ?? '') === '' || $data['readAt'] === null)) {
+			if ($status === 'sent' && ($data['readAt'] ?? '') === '') {
 				$unread++;
 			}
 		}
