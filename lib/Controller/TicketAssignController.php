@@ -130,7 +130,7 @@ class TicketAssignController extends Controller {
 	 *
 	 * @return JSONResponse The ticket's id and new assignee, or an error.
 	 *
-	 * @spec openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#REQ-THH-001
+	 * @spec openspec/specs/ticket-handover-history/spec.md#REQ-THH-001
 	 */
 	#[NoAdminRequired]
 	public function passOn(string $id='', string $assignee='', string $handoverNote=''): JSONResponse {
@@ -155,7 +155,7 @@ class TicketAssignController extends Controller {
 	 *
 	 * @return JSONResponse The ticket's id and new assignee, or an error.
 	 *
-	 * @spec openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#REQ-THH-001
+	 * @spec openspec/specs/ticket-handover-history/spec.md#REQ-THH-001
 	 */
 	private function reassign(string $id, array $changes): JSONResponse {
 		if ($this->tickets->isConfigured() === false) {
@@ -177,7 +177,7 @@ class TicketAssignController extends Controller {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#REQ-THH-001
+	 * @spec openspec/specs/ticket-handover-history/spec.md#REQ-THH-001
 	 */
 	private function findTicket(string $id): array|null {
 		if ($id === '') {

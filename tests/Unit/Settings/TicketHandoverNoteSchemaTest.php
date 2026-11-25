@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#REQ-THH-001
+ * @spec openspec/specs/ticket-handover-history/spec.md#REQ-THH-001
  */
 
 declare(strict_types=1);
