@@ -49,6 +49,7 @@ use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\CashShiftSummaryServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\ClientContactCardSyncInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientIdentifierServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientCaseReaderInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientHistorySummaryServiceInterface;
@@ -509,6 +510,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(MergedAwayCardInterface::class, MergedAwayCard::class);
 		$context->registerServiceAlias(MergedAwayStampInterface::class, MergedAwayStamp::class);
 		$context->registerServiceAlias(MessagingServiceInterface::class, MessagingService::class);
+		$context->registerServiceAlias(ClientContactCardSyncInterface::class, ClientContactCardSync::class);
 		$context->registerServiceAlias(MockPipelineCleanupServiceInterface::class, MockPipelineCleanupService::class);
 		$context->registerServiceAlias(NaviServiceInterface::class, NaviService::class);
 		$context->registerServiceAlias(NoteEventServiceInterface::class, NoteEventService::class);
