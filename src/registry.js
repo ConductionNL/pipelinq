@@ -34,6 +34,7 @@ import BookingDetailSection from './components/bookings/BookingDetailSection.vue
 import BookingHeaderActions from './components/bookings/BookingHeaderActions.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
+import ClientOtherDetails from './components/ClientOtherDetails.vue'
 import ClientHistorySummarySection from './components/clients/ClientHistorySummarySection.vue'
 import ClientIdentifiersSection from './components/clients/ClientIdentifiersSection.vue'
 import ClientRiskSection from './components/clients/ClientRiskSection.vue'
@@ -716,6 +717,16 @@ const registry = {
 		),
 		...PANEL_WIDGET_META,
 		_note: 'The contact strip as a widget, so ClientDetail places it in the band across the page, above the tabs and the side column (PqKlant, PqOrganisatie). It draws its own card.',
+	},
+	ClientOtherDetailsWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ClientOtherDetailsWidget',
+			ClientOtherDetails,
+			({ objectData }) => ({ client: objectData }),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'The fields an administrator added to the client schema in OpenRegister (specify-capability-rows 37.1): every property the runtime schema carries that pipelinq does not ship, with its value, in a card of its own on the Overview tab; nothing while none holds a value.',
 	},
 	PartyIndicatorPanel: {
 		kind: 'section',
