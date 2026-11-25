@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
@@ -39,7 +40,7 @@ use OCA\Pipelinq\Util\OptionalPayloadToArray;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use SensitiveParameter;
 
 /**
  * Mailbox lookup with TTL cache.
@@ -86,7 +87,7 @@ class MailboxResolver {
 	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function resolve(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsn,
 		string $tenantId,
 	): array {

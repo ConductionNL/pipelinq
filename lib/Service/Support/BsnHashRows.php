@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Support;
 
 use OCA\Pipelinq\Service\BsnValidationService;
+use SensitiveParameter;
 
 /**
  * Hashes the BSN in-process and queries the [register, schema] the host's
@@ -46,7 +47,7 @@ trait BsnHashRows {
 	 *
 	 * @spec exclude shared plumbing of the classes that use it, no spec surface of its own.
 	 */
-	private function rowsForBsn(#[\SensitiveParameter] string $rawBsn): mixed {
+	private function rowsForBsn(#[SensitiveParameter] string $rawBsn): mixed {
 		[$register, $schema] = $this->config();
 		$hash = BsnValidationService::hash($rawBsn);
 		return $this->getObjectService()->findAll(

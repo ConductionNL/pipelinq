@@ -43,6 +43,7 @@ use OCP\Http\Client\IClientService;
 use OCP\TaskProcessing\IManager;
 use OCP\TaskProcessing\Task;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -245,7 +246,7 @@ class CallTranscriptionService implements CallTranscriptionServiceInterface {
 
 		$file = $this->folder()->newFile(sprintf('%s-%s.audio', preg_replace('/[^A-Za-z0-9-]/', '', $ticketId), bin2hex(random_bytes(6))), (string) $audio);
 		if (($file instanceof File) === false) {
-			throw new \RuntimeException('The temporary audio file could not be created');
+			throw new RuntimeException('The temporary audio file could not be created');
 		}
 
 		return $file;
@@ -264,7 +265,7 @@ class CallTranscriptionService implements CallTranscriptionServiceInterface {
 		$done   = $this->taskProcessing->runTask($task);
 		$output = $done->getOutput();
 		if ($done->getStatus() !== Task::STATUS_SUCCESSFUL || is_array($output) === false || is_string($output['output'] ?? null) === false) {
-			throw new \RuntimeException('The speech-to-text task did not succeed');
+			throw new RuntimeException('The speech-to-text task did not succeed');
 		}
 
 		return trim($output['output']);
@@ -284,7 +285,7 @@ class CallTranscriptionService implements CallTranscriptionServiceInterface {
 		}
 
 		if (($folder instanceof Folder) === false) {
-			throw new \RuntimeException('The temporary audio folder is not a folder');
+			throw new RuntimeException('The temporary audio folder is not a folder');
 		}
 
 		return $folder;

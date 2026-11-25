@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Berichtenbox;
 
+use SensitiveParameter;
+
 /**
  * The case status change a resident is told about.
  *
@@ -47,7 +49,7 @@ class CaseStatusMessage {
 		public readonly string $caseId,
 		public readonly ?string $interactionId,
 		public readonly string $status,
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		public readonly string $bsn,
 	) {
 	}//end __construct()

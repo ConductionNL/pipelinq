@@ -41,35 +41,50 @@
   Deleting this file today would redden `development` for everyone with 30 real
   findings, which helps nobody. It stays until the remainder is burned down.
 
+  PHPMD 3.0.0 (25 Nov 2026): the rule classes were renamed (WeightedMethodCount
+  is now Design\ExcessiveClassComplexity, LongMethod ExcessiveMethodLength,
+  LongParameterList ExcessiveParameterList, NpathComplexity NPathComplexity),
+  so the entries above carry the new names. PHPMD 3 also counts attribute
+  classes such as #[NoAdminRequired] as couplings, which puts four unchanged
+  controllers at 14 against the threshold of 13 (BlastTrackingController,
+  PortalQuestionController, SetupController, StaffProfileController). Their
+  entries record that metric change on code nobody touched; they are debt to
+  burn down like the rest, not new findings. The new MissingImport findings
+  were fixed with use statements, not baselined.
+
   This baseline is a RATCHET: any NEW violation outside these entries fails the
   gate. Do NOT regenerate it to silence a new finding, and do NOT re-add an
   entry that a fix has retired.
 -->
 <phpmd-baseline>
-  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/AppInfo/Application.php"/>
-  <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Controller/PortalController.php" method="__construct"/>
-  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Controller/SemanticHandoffController.php"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Notification/Notifier.php" method="applyNotificationSubject"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Portal/PortalContributionProvider.php" method="clientContribution"/>
-  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Repair/MigrateAvgVerzoekenToOrDsar.php"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Repair/MigrateAvgVerzoekenToOrDsar.php" method="migrateOne"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Controller/BlastTrackingController.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Controller/PortalQuestionController.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Controller/SetupController.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Controller/StaffProfileController.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="lib/AppInfo/Application.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="lib/Controller/PortalController.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="lib/Controller/SemanticHandoffController.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="lib/Notification/Notifier.php" method="applyNotificationSubject"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="lib/Portal/PortalContributionProvider.php" method="clientContribution"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="lib/Repair/MigrateAvgVerzoekenToOrDsar.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="lib/Repair/MigrateAvgVerzoekenToOrDsar.php" method="migrateOne"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Repair/UnifyClientContactIdentity.php"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Repair/UnifyClientContactIdentity.php" method="migrate"/>
-  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/DemoSeedService.php"/>
-  <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Service/EmailSyncService.php" method="buildEmailLinkData"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveMethodLength" file="lib/Repair/UnifyClientContactIdentity.php" method="migrate"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="lib/Service/DemoSeedService.php"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveParameterList" file="lib/Service/EmailSyncService.php" method="buildEmailLinkData"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/LeadService.php" method="createLead"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/LeadService.php" method="createLead"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="lib/Service/LeadService.php" method="createLead"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="lib/Service/NotificationService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/Payment/CurlHttpTransport.php" method="request"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/Payment/CurlHttpTransport.php" method="request"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="lib/Service/Payment/CurlHttpTransport.php" method="request"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/PosPaymentService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/TicketService.php" method="logContactmoment"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/TicketService.php" method="logContactmoment"/>
-  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/TimeBillingHandoffService.php"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="lib/Service/TicketService.php" method="logContactmoment"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="lib/Service/TimeBillingHandoffService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/TimeBillingHandoffService.php" method="selectBatch"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/TimeBillingHandoffService.php" method="selectBatch"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="lib/Service/TimeBillingHandoffService.php" method="selectBatch"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/TimeBillingHandoffService.php" method="notifyPendingFailures"/>
-  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/TimeBillingHandoffService.php" method="notifyPendingFailures"/>
-  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/TrackingLinkService.php"/>
+  <violation rule="PHPMD\Rule\Design\NPathComplexity" file="lib/Service/TimeBillingHandoffService.php" method="notifyPendingFailures"/>
+  <violation rule="PHPMD\Rule\Design\ExcessiveClassComplexity" file="lib/Service/TrackingLinkService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/TrackingLinkService.php" method="extractId"/>
 </phpmd-baseline>

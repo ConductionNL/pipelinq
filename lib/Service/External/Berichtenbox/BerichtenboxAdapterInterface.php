@@ -56,6 +56,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\External\Berichtenbox;
 
+use SensitiveParameter;
+
 /**
  * Berichtenbox / Logius BBK 1.7 adapter port.
  *
@@ -121,7 +123,7 @@ interface BerichtenboxAdapterInterface {
 	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function checkMailbox(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsn,
 	): BerichtenboxResult;
 

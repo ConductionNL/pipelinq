@@ -35,6 +35,7 @@ use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
 use OCP\IURLGenerator;
 use Psr\Log\LoggerInterface;
+use SensitiveParameter;
 use Throwable;
 
 /**
@@ -122,7 +123,7 @@ class HaalCentraalClient implements HaalCentraalClientInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess)          BsnValidationService::mask is a pure stateless helper.
 	 */
 	public function lookupPersoon(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsn,
 		?string $requestIdContext = null,
 	): ?array {

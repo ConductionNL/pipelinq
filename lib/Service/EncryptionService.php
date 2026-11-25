@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Service;
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use SensitiveParameter;
 
 /**
  * BSN encryption + keyed-hash service for the Berichtenbox bridge.
@@ -123,7 +124,7 @@ class EncryptionService {
 	 * @spec openspec/specs/berichtenbox/spec.md#REQ-ENCRYPTION-008
 	 */
 	public function encrypt(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $plaintext,
 		string $tenantId,
 	): string {
@@ -203,7 +204,7 @@ class EncryptionService {
 	 *   exercised through the features that call it
 	 */
 	public function hashBsn(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $plaintext,
 		string $tenantId,
 	): string {
@@ -223,7 +224,7 @@ class EncryptionService {
 	 *   exercised through the features that call it
 	 */
 	public function bsnEquals(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $candidate,
 		string $hash,
 		string $tenantId,

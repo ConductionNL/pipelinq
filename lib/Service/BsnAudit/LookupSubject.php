@@ -26,6 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\BsnAudit;
 
+use SensitiveParameter;
+
 /**
  * Whose BSN an audit record is about: the raw BSN, hashed in-process and never stored, or a hash the caller already holds.
  *
@@ -41,7 +43,7 @@ class LookupSubject {
 	 * @return void
 	 */
 	public function __construct(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		public readonly string $rawBsn,
 		public readonly ?string $bsnHash = null,
 	) {
