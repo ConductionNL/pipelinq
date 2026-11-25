@@ -129,9 +129,7 @@
 			"key": "journey-welkom-flow",
 			"register": "pipelinq",
 			"schema": "journey",
-			"where": {
-				"name": "Welkom nieuwe inwoners"
-			},
+			"object": "journey-welkom",
 			"set": {
 				"flowUuid": "{{flow:flow-journey-welkom.uuid}}"
 			}

@@ -8951,7 +8951,7 @@
 				"readOn": "2026-09-26",
 				"spec": "openspec/specs/register-i18n",
 				"requirement": "openspec/specs/register-i18n :: App UI MUST provide complete Dutch and English translations per ADR-005",
-				"change": "openspec/changes/i18n-key-hygiene-dutch-literals"
+				"change": "openspec/changes/archive/2026-11-25-i18n-key-hygiene-dutch-literals"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/hubspot-language-offerings lists Nederlands (Dutch) among \"languages ... available in the HubSpot interface\", noting some features may lag. All products and plans.",

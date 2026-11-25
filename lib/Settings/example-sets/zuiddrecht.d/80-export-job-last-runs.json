@@ -5,9 +5,7 @@
 			"key": "laatste-run-tickets",
 			"register": "pipelinq",
 			"schema": "exportJob",
-			"where": {
-				"name": "Tickets voor het KCC-dashboard"
-			},
+			"object": "export-job-kcc-tickets",
 			"set": {
 				"lastRunStatus": "succeeded",
 				"lastRunAt": "{{datetime:0 02:04}}",
@@ -20,9 +18,7 @@
 			"key": "laatste-run-contactmomenten",
 			"register": "pipelinq",
 			"schema": "exportJob",
-			"where": {
-				"name": "Contactmomenten per kanaal"
-			},
+			"object": "export-job-contacts-per-channel",
 			"set": {
 				"lastRunStatus": "succeeded",
 				"lastRunAt": "{{datetime:0 10:01}}",
@@ -35,9 +31,7 @@
 			"key": "laatste-run-afspraken",
 			"register": "pipelinq",
 			"schema": "exportJob",
-			"where": {
-				"name": "Afspraken en niet verschenen"
-			},
+			"object": "export-job-appointments",
 			"set": {
 				"lastRunStatus": "partial",
 				"lastRunAt": "{{datetime:-2 03:12}}",
@@ -51,9 +45,7 @@
 			"key": "laatste-run-leads",
 			"register": "pipelinq",
 			"schema": "exportJob",
-			"where": {
-				"name": "Leads en waarde in de pijplijn"
-			},
+			"object": "export-job-leads",
 			"set": {
 				"lastRunStatus": "failed",
 				"lastRunAt": "{{datetime:-1 01:00}}",

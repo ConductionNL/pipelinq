@@ -5,9 +5,7 @@
 			"key": "offerte-0042-contact-en-vervaldatum",
 			"register": "pipelinq",
 			"schema": "salesQuote",
-			"where": {
-				"number": "OFF-2026-0042"
-			},
+			"object": "offerte-0042",
 			"set": {
 				"contact": "{{object:contact-kees-bakker.id}}",
 				"expiresAt": "{{date:30}}"
@@ -17,9 +15,7 @@
 			"key": "contract-sportvelden-contact",
 			"register": "pipelinq",
 			"schema": "salesContract",
-			"where": {
-				"contractNumber": "CON-2026-0031"
-			},
+			"object": "contract-sportvelden-2026",
 			"set": {
 				"contactRef": "{{object:contact-joke-smit.id}}"
 			}

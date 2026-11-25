@@ -86,6 +86,13 @@ class WebFormIntakeServiceTest extends TestCase {
 	private IUser $systemUser;
 
 	/**
+	 * The session's active user, as the fake session sees it.
+	 *
+	 * @var IUser|null
+	 */
+	private ?IUser $activeUser = null;
+
+	/**
 	 * The seed forms that ship, plus a lead form, as stored rows.
 	 *
 	 * @return array<int, array<string, mixed>> The forms.
@@ -152,7 +159,14 @@ class WebFormIntakeServiceTest extends TestCase {
 		$this->systemUser = $this->createMock(IUser::class);
 		$users = $this->createMock(IUserManager::class);
 		$users->method('get')->willReturn($this->systemUser);
-		$account = new SystemServiceAccount($users, $this->createMock(IUserSession::class), $this->createMock(ISecureRandom::class));
+		$this->activeUser = null;
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturnCallback(fn (): ?IUser => $this->activeUser);
+		$session->method('setVolatileActiveUser')->willReturnCallback(function (?IUser $user): void {
+			$this->activeUser = $user;
+		});
+		$this->submitter->activeUser = fn (): ?IUser => $this->activeUser;
+		$account = new SystemServiceAccount(userManager: $users, userSession: $session, random: $this->createMock(originalClassName: ISecureRandom::class));
 
 		return new WebFormIntakeService(
 			new WebFormFinder($config, $this->contractOver($this->store)),
@@ -184,6 +198,10 @@ class WebFormIntakeServiceTest extends TestCase {
 		$this->assertSame('jane@example.com', $call['payload']['contactEmail']);
 		$this->assertSame('pipelinq-web-form:form-0', $call['scope']);
 		$this->assertTrue($call['subject'] === $this->systemUser, 'The submit is written as pipelinq\'s system account');
+		// OpenRegister asks its create permission of the session user: the anonymous visitor's
+		// submit runs with the system account active, and nobody is left signed in afterwards.
+		$this->assertTrue(condition: $call['activeUser'] === $this->systemUser, message: 'The submit runs with the system account active');
+		$this->assertNull(actual: $this->activeUser);
 	}//end testSupportFormCreatesATicket()
 
 	/**
