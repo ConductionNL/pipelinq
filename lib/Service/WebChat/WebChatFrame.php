@@ -29,6 +29,8 @@ use Throwable;
 /**
  * Reads the channel a chat window is opened for, and builds the policy that
  * lets only that channel's own websites frame the window (D3).
+ *
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-an-administrator-puts-a-chat-on-the-website-req-wch-001
  */
 class WebChatFrame {
 

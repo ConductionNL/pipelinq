@@ -32,6 +32,8 @@ use Throwable;
  * Makes a chat a ticket through InboundTicketService (D5), so the ticket is in
  * the Queue at once and the chatWaiting rule notifies the team, and keeps that
  * ticket in step with the chat.
+ *
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-the-chat-goes-to-a-colleague-through-the-queue-req-wch-004
  */
 class WebChatHandover {
 

@@ -38,6 +38,8 @@ use RuntimeException;
  * Who may reach a chat is WebChatAccess, what the windows show is
  * WebChatWindow, the message rows are WebChatMessages, and the handover to a
  * ticket in the Queue (D5) is WebChatHandover. This class runs the turns.
+ *
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-a-visitor-chats-without-an-account-req-wch-002
  */
 class WebChatService {
 

@@ -76,13 +76,16 @@ class WebChatControllerTest extends TestCase {
 	 * @return WebChatController
 	 */
 	private function controller(array $params=[]): WebChatController {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParam')->willReturnCallback(static fn (string $key, mixed $default=null): mixed => ($params[$key] ?? $default));
-		$this->chat ??= $this->createMock(WebChatService::class);
-		$this->store ??= $this->createMock(WebChatStore::class);
-		$urls = $this->createMock(IURLGenerator::class);
-		$urls->method('linkToRoute')->willReturnCallback(static fn (string $route, array $args): string => $route . ':' . ($args['channelToken'] ?? ''));
-		$state = $this->createMock(IInitialState::class);
+		$this->chat ??= $this->createMock(originalClassName: WebChatService::class);
+		$this->store ??= $this->createMock(originalClassName: WebChatStore::class);
+		$urls = $this->createMock(originalClassName: IURLGenerator::class);
+		$urls->method('linkToRoute')->willReturnCallback(static fn (
+			string $route,
+			array $args,
+		): string => $route . ':' . ($args['channelToken'] ?? ''));
+		$state = $this->createMock(originalClassName: IInitialState::class);
 		$state->method('provideInitialState')->willReturnCallback(
 			function (string $key, mixed $data): void {
 				$this->initial[$key] = $data;
@@ -92,10 +95,10 @@ class WebChatControllerTest extends TestCase {
 		return new WebChatController(
 			request: $request,
 			chat: $this->chat,
-			frame: new WebChatFrame(store: $this->store, logger: $this->createMock(LoggerInterface::class)),
+			frame: new WebChatFrame(store: $this->store, logger: $this->createMock(originalClassName: LoggerInterface::class)),
 			urls: $urls,
 			state: $state,
-			logger: $this->createMock(LoggerInterface::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
 		);
 	}//end controller()
 
@@ -106,8 +109,8 @@ class WebChatControllerTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		$this->chat  = $this->createMock(WebChatService::class);
-		$this->store = $this->createMock(WebChatStore::class);
+		$this->chat  = $this->createMock(originalClassName: WebChatService::class);
+		$this->store = $this->createMock(originalClassName: WebChatStore::class);
 	}//end setUp()
 
 	/**
@@ -117,24 +120,38 @@ class WebChatControllerTest extends TestCase {
 	 */
 	public function testTheWindowMayBeFramedOnlyByTheChannelsWebsites(): void {
 		$this->store->method('activeChannel')->willReturn(
-			['id' => 'ch-1', 'name' => 'Website', 'allowedOrigins' => ['https://www.gemeente.nl/', 'HTTPS://WWW.GEMEENTE.NL', 'https://wijk.gemeente.nl:8443', "https://evil.example; script-src *", 'javascript:x', 7]]
+			[
+				'id' => 'ch-1',
+				'name' => 'Website',
+				'allowedOrigins' => [
+					'https://www.gemeente.nl/',
+					'HTTPS://WWW.GEMEENTE.NL',
+					'https://wijk.gemeente.nl:8443',
+					"https://evil.example; script-src *",
+					'javascript:x',
+					7,
+				],
+			]
 		);
 
 		$response = $this->controller()->window(channelToken: 'abcdefghijklmnop1234');
 
-		$this->assertSame(200, $response->getStatus());
-		$this->assertSame('base', $response->getRenderAs());
-		$this->assertStringContainsString('frame-ancestors https://www.gemeente.nl https://wijk.gemeente.nl:8443;', $response->getContentSecurityPolicy()->buildPolicy());
-		$this->assertStringNotContainsString('evil', $response->getContentSecurityPolicy()->buildPolicy());
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertSame(expected: 'base', actual: $response->getRenderAs());
+		$this->assertStringContainsString(
+			needle: 'frame-ancestors https://www.gemeente.nl https://wijk.gemeente.nl:8443;',
+			haystack: $response->getContentSecurityPolicy()->buildPolicy(),
+		);
+		$this->assertStringNotContainsString(needle: 'evil', haystack: $response->getContentSecurityPolicy()->buildPolicy());
 		$this->assertSame(
-			[
+			expected: [
 				'available' => true,
 				'name'      => 'Website',
 				'startUrl'  => 'pipelinq.webChat.start:abcdefghijklmnop1234',
 				'sendUrl'   => 'pipelinq.webChat.send:abcdefghijklmnop1234',
 				'pollUrl'   => 'pipelinq.webChat.poll:abcdefghijklmnop1234',
 			],
-			$this->initial['web-chat']
+			actual: $this->initial['web-chat']
 		);
 	}//end testTheWindowMayBeFramedOnlyByTheChannelsWebsites()
 
@@ -148,10 +165,10 @@ class WebChatControllerTest extends TestCase {
 
 		$response = $this->controller()->window(channelToken: 'abcdefghijklmnop1234');
 
-		$this->assertSame(404, $response->getStatus());
-		$this->assertStringContainsString("frame-ancestors 'none';", $response->getContentSecurityPolicy()->buildPolicy());
-		$this->assertFalse($this->initial['web-chat']['available']);
-		$this->assertSame('pipelinq.webChat.start:', $this->initial['web-chat']['startUrl']);
+		$this->assertSame(expected: 404, actual: $response->getStatus());
+		$this->assertStringContainsString(needle: "frame-ancestors 'none';", haystack: $response->getContentSecurityPolicy()->buildPolicy());
+		$this->assertFalse(condition: $this->initial['web-chat']['available']);
+		$this->assertSame(expected: 'pipelinq.webChat.start:', actual: $this->initial['web-chat']['startUrl']);
 	}//end testAnUnknownChannelMayBeFramedByNobody()
 
 	/**
@@ -164,8 +181,8 @@ class WebChatControllerTest extends TestCase {
 
 		$response = $this->controller()->window(channelToken: 'abcdefghijklmnop1234');
 
-		$this->assertSame(404, $response->getStatus());
-		$this->assertStringContainsString("frame-ancestors 'none';", $response->getContentSecurityPolicy()->buildPolicy());
+		$this->assertSame(expected: 404, actual: $response->getStatus());
+		$this->assertStringContainsString(needle: "frame-ancestors 'none';", haystack: $response->getContentSecurityPolicy()->buildPolicy());
 	}//end testAFailedLookupAnswersAPageFramedByNobody()
 
 	/**
@@ -183,10 +200,17 @@ class WebChatControllerTest extends TestCase {
 		)->willReturn(['state' => 'waiting', 'messages' => []]);
 
 		$start = $this->controller()->start(channelToken: 'abcdefghijklmnop1234');
-		$send  = $this->controller(params: ['conversation' => 'c-1', 'secret' => 's', 'text' => 'Hallo', 'handover' => 'true', 'locale' => 'en-GB', 'email' => ['not', 'a', 'string']])->send(channelToken: 'abcdefghijklmnop1234');
+		$send  = $this->controller(params: [
+			'conversation' => 'c-1',
+			'secret' => 's',
+			'text' => 'Hallo',
+			'handover' => 'true',
+			'locale' => 'en-GB',
+			'email' => ['not', 'a', 'string'],
+		])->send(channelToken: 'abcdefghijklmnop1234');
 
-		$this->assertSame([201, ['conversation' => 'c-1', 'secret' => 's']], [$start->getStatus(), $start->getData()]);
-		$this->assertSame([200, ['state' => 'waiting', 'messages' => []]], [$send->getStatus(), $send->getData()]);
+		$this->assertSame(expected: [201, ['conversation' => 'c-1', 'secret' => 's']], actual: [$start->getStatus(), $start->getData()]);
+		$this->assertSame(expected: [200, ['state' => 'waiting', 'messages' => []]], actual: [$send->getStatus(), $send->getData()]);
 	}//end testStartAndSendPassTheBody()
 
 	/**
@@ -201,8 +225,8 @@ class WebChatControllerTest extends TestCase {
 		$poll  = $this->controller(params: ['conversation' => 'c-1', 'secret' => 'wrong', 'since' => ''])->poll(channelToken: 'abcdefghijklmnop1234');
 		$start = $this->controller()->start(channelToken: 'abcdefghijklmnop1234');
 
-		$this->assertSame([403, ['error' => 'This chat is not known.']], [$poll->getStatus(), $poll->getData()]);
-		$this->assertSame([503, ['error' => 'The chat is not available right now.']], [$start->getStatus(), $start->getData()]);
+		$this->assertSame(expected: [403, ['error' => 'This chat is not known.']], actual: [$poll->getStatus(), $poll->getData()]);
+		$this->assertSame(expected: [503, ['error' => 'The chat is not available right now.']], actual: [$start->getStatus(), $start->getData()]);
 	}//end testARefusalAnswersItsStatusAndAFailureNoDetail()
 
 	/**
@@ -214,7 +238,7 @@ class WebChatControllerTest extends TestCase {
 		foreach (['window', 'start', 'send', 'poll'] as $method) {
 			$reflection = new ReflectionMethod(WebChatController::class, $method);
 			foreach ([PublicPage::class, NoCSRFRequired::class, AnonRateLimit::class] as $attribute) {
-				$this->assertCount(1, $reflection->getAttributes($attribute), $method . ' ' . $attribute);
+				$this->assertCount(expectedCount: 1, haystack: $reflection->getAttributes($attribute), message: $method . ' ' . $attribute);
 			}
 		}
 	}//end testEveryRouteIsPublicAndRateLimited()

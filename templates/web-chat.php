@@ -19,7 +19,8 @@ Util::addStyle('pipelinq', 'web-chat');
 Util::addScript('pipelinq', 'pipelinq-web-chat-window');
 ?>
 <main id="pipelinq-web-chat" class="pipelinq-web-chat">
-<?php if ($_['available'] === false) { ?>
+<?php if ($_['available'] === false) { // phpcs:ignore Squiz.NamingConventions.ValidVariableName.NotCamelCaps
+	?>
 	<p><?php p($l->t('This chat is not available.')); ?></p>
 <?php } ?>
 </main>

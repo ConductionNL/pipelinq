@@ -38,6 +38,8 @@ use Throwable;
  * Every route first checks that the colleague may read the chat through
  * OpenRegister's checks (requireReadableChat); a chat they may not read
  * answers 404, as if it were not there.
+ *
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-the-chat-goes-to-a-colleague-through-the-queue-req-wch-004
  */
 class WebChatAgentController extends Controller {
 

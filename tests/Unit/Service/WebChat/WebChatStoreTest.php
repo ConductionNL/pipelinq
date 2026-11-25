@@ -108,9 +108,9 @@ class WebChatStoreTest extends TestCase {
 				return array_merge($object, ['id' => ($options->uuid ?? 'new-id')]);
 			}
 		};
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturn($objects);
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturn('');
 		return new WebChatStore(container: $container, appConfig: $config);
 	}//end store()
@@ -139,14 +139,22 @@ class WebChatStoreTest extends TestCase {
 			['id' => 'c', 'channelToken' => $token, 'active' => true],
 		];
 
-		$this->assertSame('c', $this->store(rows: $rows)->activeChannel(token: $token)['id']);
-		$this->assertSame(['findAll', ['filters' => ['register' => 'pipelinq', 'schema' => 'webChatChannel', 'channelToken' => $token], 'sort' => [], 'limit' => 5], false, false], $this->calls[0]);
-		$this->assertNull($this->store(rows: [$rows[1]])->activeChannel(token: $token));
+		$this->assertSame(expected: 'c', actual: $this->store(rows: $rows)->activeChannel(token: $token)['id']);
+		$this->assertSame(
+			expected: [
+				'findAll',
+				['filters' => ['register' => 'pipelinq', 'schema' => 'webChatChannel', 'channelToken' => $token], 'sort' => [], 'limit' => 5],
+				false,
+				false,
+			],
+			actual: $this->calls[0],
+		);
+		$this->assertNull(actual: $this->store(rows: [$rows[1]])->activeChannel(token: $token));
 
 		$this->calls = [];
-		$this->assertNull($this->store(rows: $rows)->activeChannel(token: 'short'));
-		$this->assertNull($this->store(rows: $rows)->activeChannel(token: 'abcdefghijklmnop12;-'));
-		$this->assertSame([], $this->calls);
+		$this->assertNull(actual: $this->store(rows: $rows)->activeChannel(token: 'short'));
+		$this->assertNull(actual: $this->store(rows: $rows)->activeChannel(token: 'abcdefghijklmnop12;-'));
+		$this->assertSame(expected: [], actual: $this->calls);
 	}//end testOnlyAnActiveChannelWithThisTokenIsFound()
 
 	/**
@@ -161,8 +169,8 @@ class WebChatStoreTest extends TestCase {
 			['id' => 'm1', 'conversationId' => 'x', 'sentAt' => '2026-11-17T10:00:01+00:00'],
 		];
 
-		$this->assertSame(['m1', 'm2'], array_column($this->store(rows: $rows)->messages(conversationId: 'x'), 'id'));
-		$this->assertSame(['conversationId' => 'x', 'channel' => 'chat'], array_slice($this->calls[0][1]['filters'], 2));
+		$this->assertSame(expected: ['m1', 'm2'], actual: array_column($this->store(rows: $rows)->messages(conversationId: 'x'), 'id'));
+		$this->assertSame(expected: ['conversationId' => 'x', 'channel' => 'chat'], actual: array_slice($this->calls[0][1]['filters'], 2));
 	}//end testMessagesAreTheChatsOwnOldestFirst()
 
 	/**
@@ -173,11 +181,14 @@ class WebChatStoreTest extends TestCase {
 	public function testTheVisitorLookupSkipsRbacAndTheColleaguesDoesNot(): void {
 		$store = $this->store(found: ['channel' => 'chat']);
 
-		$this->assertSame(['channel' => 'chat', 'id' => 'c-1'], $store->conversation(id: 'c-1'));
-		$this->assertSame(['channel' => 'chat', 'id' => 'c-1'], $store->readableConversation(id: 'c-1'));
-		$this->assertSame([['find', 'c-1', 'channelConversation', false], ['find', 'c-1', 'channelConversation', true]], $this->calls);
-		$this->assertNull($store->conversation(id: ''));
-		$this->assertNull($this->store(found: null)->readableConversation(id: 'c-1'));
+		$this->assertSame(expected: ['channel' => 'chat', 'id' => 'c-1'], actual: $store->conversation(id: 'c-1'));
+		$this->assertSame(expected: ['channel' => 'chat', 'id' => 'c-1'], actual: $store->readableConversation(id: 'c-1'));
+		$this->assertSame(
+			expected: [['find', 'c-1', 'channelConversation', false], ['find', 'c-1', 'channelConversation', true]],
+			actual: $this->calls,
+		);
+		$this->assertNull(actual: $store->conversation(id: ''));
+		$this->assertNull(actual: $this->store(found: null)->readableConversation(id: 'c-1'));
 	}//end testTheVisitorLookupSkipsRbacAndTheColleaguesDoesNot()
 
 	/**
@@ -191,9 +202,9 @@ class WebChatStoreTest extends TestCase {
 		$saved = $store->saveConversation(conversation: ['@self' => [], 'id' => 'c-1', 'status' => 'open'], id: 'c-1');
 		$store->addMessage(message: ['body' => 'Hoi']);
 
-		$this->assertSame(['status' => 'open', 'id' => 'c-1'], $saved);
-		$this->assertSame(['save', ['status' => 'open'], 'pipelinq', 'channelConversation', 'c-1'], $this->calls[0]);
-		$this->assertSame(['save', ['body' => 'Hoi'], 'pipelinq', 'channelMessage', null], $this->calls[1]);
+		$this->assertSame(expected: ['status' => 'open', 'id' => 'c-1'], actual: $saved);
+		$this->assertSame(expected: ['save', ['status' => 'open'], 'pipelinq', 'channelConversation', 'c-1'], actual: $this->calls[0]);
+		$this->assertSame(expected: ['save', ['body' => 'Hoi'], 'pipelinq', 'channelMessage', null], actual: $this->calls[1]);
 	}//end testWritesGoToTheRightSchema()
 
 	/**
@@ -204,10 +215,10 @@ class WebChatStoreTest extends TestCase {
 	public function testTheIdOfARow(): void {
 		$store = $this->store();
 
-		$this->assertSame('a', $store->idOf(row: ['id' => 'a', 'uuid' => 'b']));
-		$this->assertSame('b', $store->idOf(row: ['id' => '', 'uuid' => 'b']));
-		$this->assertSame('c', $store->idOf(row: ['@self' => ['id' => 'c']]));
-		$this->assertSame('', $store->idOf(row: ['@self' => 'x']));
+		$this->assertSame(expected: 'a', actual: $store->idOf(row: ['id' => 'a', 'uuid' => 'b']));
+		$this->assertSame(expected: 'b', actual: $store->idOf(row: ['id' => '', 'uuid' => 'b']));
+		$this->assertSame(expected: 'c', actual: $store->idOf(row: ['@self' => ['id' => 'c']]));
+		$this->assertSame(expected: '', actual: $store->idOf(row: ['@self' => 'x']));
 	}//end testTheIdOfARow()
 
 	/**
@@ -216,15 +227,15 @@ class WebChatStoreTest extends TestCase {
 	 * @return void
 	 */
 	public function testWithoutOpenRegister(): void {
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willThrowException(new RuntimeException('absent'));
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturn('');
 		$store = new WebChatStore(container: $container, appConfig: $config);
 
-		$this->assertSame([], $store->agentProfiles());
-		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('OpenRegister is not available.');
+		$this->assertSame(expected: [], actual: $store->agentProfiles());
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'OpenRegister is not available.');
 		$store->messages(conversationId: 'x');
 	}//end testWithoutOpenRegister()
 }//end class

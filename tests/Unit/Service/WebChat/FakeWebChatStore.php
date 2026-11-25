@@ -77,7 +77,11 @@ class FakeWebChatStore extends WebChatStore {
 	}//end __construct()
 
 	/**
-	 * {@inheritDoc}
+	 * The active channel with this token.
+	 *
+	 * @param string $token The channel token.
+	 *
+	 * @return array<string, mixed>|null
 	 */
 	public function activeChannel(string $token): ?array {
 		foreach ($this->channels as $channel) {
@@ -90,14 +94,22 @@ class FakeWebChatStore extends WebChatStore {
 	}//end activeChannel()
 
 	/**
-	 * {@inheritDoc}
+	 * The conversation, past the checks.
+	 *
+	 * @param string $id The conversation id.
+	 *
+	 * @return array<string, mixed>|null
 	 */
 	public function conversation(string $id): ?array {
 		return ($this->conversations[$id] ?? null);
 	}//end conversation()
 
 	/**
-	 * {@inheritDoc}
+	 * The conversation, when the colleague may read it.
+	 *
+	 * @param string $id The conversation id.
+	 *
+	 * @return array<string, mixed>|null
 	 */
 	public function readableConversation(string $id): ?array {
 		if (in_array($id, $this->readable, true) === false) {
@@ -108,28 +120,43 @@ class FakeWebChatStore extends WebChatStore {
 	}//end readableConversation()
 
 	/**
-	 * {@inheritDoc}
+	 * The channel.
+	 *
+	 * @param string $id The channel id.
+	 *
+	 * @return array<string, mixed>|null
 	 */
 	public function channel(string $id): ?array {
 		return ($this->channels[$id] ?? null);
 	}//end channel()
 
 	/**
-	 * {@inheritDoc}
+	 * The chat's messages, oldest first.
+	 *
+	 * @param string $conversationId The conversation id.
+	 *
+	 * @return list<array<string, mixed>>
 	 */
 	public function messages(string $conversationId): array {
 		return array_values(array_filter($this->messages, static fn (array $m): bool => $m['conversationId'] === $conversationId));
 	}//end messages()
 
 	/**
-	 * {@inheritDoc}
+	 * The colleagues' chat profiles.
+	 *
+	 * @return list<array<string, mixed>>
 	 */
 	public function agentProfiles(): array {
 		return $this->profiles;
 	}//end agentProfiles()
 
 	/**
-	 * {@inheritDoc}
+	 * Save a conversation.
+	 *
+	 * @param array<string, mixed> $conversation The conversation.
+	 * @param string|null          $id           Its id, or null for a new one.
+	 *
+	 * @return array<string, mixed>
 	 */
 	public function saveConversation(array $conversation, ?string $id=null): array {
 		if ($id === null) {
@@ -142,7 +169,11 @@ class FakeWebChatStore extends WebChatStore {
 	}//end saveConversation()
 
 	/**
-	 * {@inheritDoc}
+	 * Add a message.
+	 *
+	 * @param array<string, mixed> $message The message.
+	 *
+	 * @return array<string, mixed>
 	 */
 	public function addMessage(array $message): array {
 		$message['id']    = 'msg-' . (++$this->next);

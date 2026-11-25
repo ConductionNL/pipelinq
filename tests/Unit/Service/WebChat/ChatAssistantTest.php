@@ -43,14 +43,14 @@ class ChatAssistantTest extends TestCase {
 	 * @return ChatAssistant
 	 */
 	private function assistant(?object $entryPoint): ChatAssistant {
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		if ($entryPoint === null) {
 			$container->method('get')->willThrowException(new RuntimeException('not installed'));
 		} else {
 			$container->method('get')->with(ChatAssistant::ENTRY_POINT)->willReturn($entryPoint);
 		}
 
-		return new ChatAssistant(container: $container, logger: $this->createMock(LoggerInterface::class));
+		return new ChatAssistant(container: $container, logger: $this->createMock(originalClassName: LoggerInterface::class));
 	}//end assistant()
 
 	/**
@@ -97,12 +97,15 @@ class ChatAssistantTest extends TestCase {
 	 * @return void
 	 */
 	public function testWithoutHermiqOrWithTheAssistantOffThereIsNoAssistant(): void {
-		$this->assertFalse($this->assistant(entryPoint: null)->answersFor(channel: ['assistantEnabled' => true]));
-		$this->assertNull($this->assistant(entryPoint: null)->ask(channelId: 'c', question: 'q', locale: 'nl', token: ''));
-		$this->assertFalse($this->assistant(entryPoint: $this->entryPoint(reply: []))->answersFor(channel: ['assistantEnabled' => false]));
-		$this->assertFalse($this->assistant(entryPoint: $this->entryPoint(reply: []))->answersFor(channel: []));
-		$this->assertFalse($this->assistant(entryPoint: new \stdClass())->answersFor(channel: ['assistantEnabled' => true]), 'An object without ask() is no entry point.');
-		$this->assertTrue($this->assistant(entryPoint: $this->entryPoint(reply: []))->answersFor(channel: ['assistantEnabled' => true]));
+		$this->assertFalse(condition: $this->assistant(entryPoint: null)->answersFor(channel: ['assistantEnabled' => true]));
+		$this->assertNull(actual: $this->assistant(entryPoint: null)->ask(channelId: 'c', question: 'q', locale: 'nl', token: ''));
+		$this->assertFalse(condition: $this->assistant(entryPoint: $this->entryPoint(reply: []))->answersFor(channel: ['assistantEnabled' => false]));
+		$this->assertFalse(condition: $this->assistant(entryPoint: $this->entryPoint(reply: []))->answersFor(channel: []));
+		$this->assertFalse(
+			condition: $this->assistant(entryPoint: new \stdClass())->answersFor(channel: ['assistantEnabled' => true]),
+			message: 'An object without ask() is no entry point.',
+		);
+		$this->assertTrue(condition: $this->assistant(entryPoint: $this->entryPoint(reply: []))->answersFor(channel: ['assistantEnabled' => true]));
 	}//end testWithoutHermiqOrWithTheAssistantOffThereIsNoAssistant()
 
 	/**
@@ -123,15 +126,18 @@ class ChatAssistantTest extends TestCase {
 		];
 
 		$this->assertSame(
-			[
+			expected: [
 				'answer'     => 'Ja.',
-				'sources'    => [['title' => 'https://www.gemeente.nl/a', 'url' => 'https://www.gemeente.nl/a'], ['title' => 'B', 'url' => 'http://www.gemeente.nl/b']],
+				'sources'    => [
+					['title' => 'https://www.gemeente.nl/a', 'url' => 'https://www.gemeente.nl/a'],
+					['title' => 'B', 'url' => 'http://www.gemeente.nl/b'],
+				],
 				'token'      => 'old',
 				'disclosure' => 'AI',
 			],
-			$this->assistant(entryPoint: $this->entryPoint(reply: $reply))->ask(channelId: 'c', question: 'q', locale: 'nl', token: 'old')
+			actual: $this->assistant(entryPoint: $this->entryPoint(reply: $reply))->ask(channelId: 'c', question: 'q', locale: 'nl', token: 'old')
 		);
-		$this->assertSame('app:pipelinq:c-9', $this->assistant(entryPoint: null)->channelKey(channelId: 'c-9'));
+		$this->assertSame(expected: 'app:pipelinq:c-9', actual: $this->assistant(entryPoint: null)->channelKey(channelId: 'c-9'));
 	}//end testAnAnswerKeepsItsLinkedSources()
 
 	/**
@@ -141,7 +147,12 @@ class ChatAssistantTest extends TestCase {
 	 */
 	public function testNoAnswerIsNull(): void {
 		foreach ([['answer' => '  '], 'text', new RuntimeException('model down')] as $reply) {
-			$this->assertNull($this->assistant(entryPoint: $this->entryPoint(reply: $reply))->ask(channelId: 'c', question: 'q', locale: 'nl', token: ''));
+			$this->assertNull(actual: $this->assistant(entryPoint: $this->entryPoint(reply: $reply))->ask(
+				channelId: 'c',
+				question: 'q',
+				locale: 'nl',
+				token: '',
+			));
 		}
 	}//end testNoAnswerIsNull()
 }//end class

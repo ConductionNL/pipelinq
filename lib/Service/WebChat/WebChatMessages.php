@@ -27,6 +27,8 @@ use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
  * Builds and reads chat message rows, and the times they carry.
+ *
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-a-visitor-chats-without-an-account-req-wch-002
  */
 class WebChatMessages {
 

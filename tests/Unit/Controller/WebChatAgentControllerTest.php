@@ -48,14 +48,19 @@ class WebChatAgentControllerTest extends TestCase {
 	 * @return WebChatAgentController
 	 */
 	private function controller(WebChatService $chat, array $params=[]): WebChatAgentController {
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParam')->willReturnCallback(static fn (string $key, mixed $default=null): mixed => ($params[$key] ?? $default));
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('anna');
 		$user->method('getDisplayName')->willReturn('Anna de Vries');
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$session->method('getUser')->willReturn($user);
-		return new WebChatAgentController(request: $request, chat: $chat, userSession: $session, logger: $this->createMock(LoggerInterface::class));
+		return new WebChatAgentController(
+			request: $request,
+			chat: $chat,
+			userSession: $session,
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+		);
 	}//end controller()
 
 	/**
@@ -67,8 +72,8 @@ class WebChatAgentControllerTest extends TestCase {
 	 */
 	public function testTheTicketsThreadKeyNamesTheChat(): void {
 		$view = ['conversation' => 'c-1', 'status' => 'open', 'assignedTo' => '', 'ticket' => 't-1', 'messages' => []];
-		$chat = $this->createMock(WebChatService::class);
-		$chat->expects($this->exactly(4))->method('requireReadableChat')->with('c-1');
+		$chat = $this->createMock(originalClassName: WebChatService::class);
+		$chat->expects($this->exactly(count: 4))->method('requireReadableChat')->with('c-1');
 		$chat->expects($this->once())->method('agentView')->with('c-1')->willReturn($view);
 		$chat->expects($this->once())->method('take')->with('c-1', 'anna')->willReturn($view);
 		$chat->expects($this->once())->method('reply')->with('c-1', 'anna', 'Anna de Vries', 'Hoi')->willReturn($view);
@@ -76,11 +81,11 @@ class WebChatAgentControllerTest extends TestCase {
 		$controller = $this->controller(chat: $chat, params: ['text' => 'Hoi']);
 
 		foreach (['show', 'take', 'reply', 'end'] as $route) {
-			$this->assertSame(200, $controller->$route(id: 'conversation:c-1')->getStatus(), $route);
+			$this->assertSame(expected: 200, actual: $controller->$route(id: 'conversation:c-1')->getStatus(), message: $route);
 		}
 
-		$this->assertSame('c-1', WebChatAgentController::conversationIdOf(id: 'c-1'));
-		$this->assertSame('c-1', WebChatAgentController::conversationIdOf(id: 'conversation:c-1'));
+		$this->assertSame(expected: 'c-1', actual: WebChatAgentController::conversationIdOf(id: 'c-1'));
+		$this->assertSame(expected: 'c-1', actual: WebChatAgentController::conversationIdOf(id: 'conversation:c-1'));
 	}//end testTheTicketsThreadKeyNamesTheChat()
 
 	/**
@@ -89,7 +94,7 @@ class WebChatAgentControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAChatTheColleagueMayNotReadIsNotThere(): void {
-		$chat = $this->createMock(WebChatService::class);
+		$chat = $this->createMock(originalClassName: WebChatService::class);
 		$chat->method('requireReadableChat')->willThrowException(new WebChatRefusal(message: 'This chat is not known.', status: 404));
 		$chat->expects($this->never())->method('take');
 		$chat->expects($this->never())->method('reply');
@@ -99,7 +104,7 @@ class WebChatAgentControllerTest extends TestCase {
 
 		foreach (['show', 'take', 'reply', 'end'] as $route) {
 			$response = $controller->$route(id: 'c-1');
-			$this->assertSame(404, $response->getStatus(), $route);
+			$this->assertSame(expected: 404, actual: $response->getStatus(), message: $route);
 		}
 	}//end testAChatTheColleagueMayNotReadIsNotThere()
 
@@ -110,7 +115,7 @@ class WebChatAgentControllerTest extends TestCase {
 	 */
 	public function testTakeAndReplyActAsTheColleague(): void {
 		$order = [];
-		$chat  = $this->createMock(WebChatService::class);
+		$chat  = $this->createMock(originalClassName: WebChatService::class);
 		$chat->method('requireReadableChat')->willReturnCallback(
 			static function (string $id) use (&$order): void {
 				$order[] = 'check:' . $id;
@@ -127,8 +132,8 @@ class WebChatAgentControllerTest extends TestCase {
 		$take  = $this->controller(chat: $chat)->take(id: 'c-1');
 		$reply = $this->controller(chat: $chat, params: ['text' => 'Ik kijk het na'])->reply(id: 'c-1');
 
-		$this->assertSame(['check:c-1', 'take', 'check:c-1'], $order);
-		$this->assertSame([200, ['status' => 'assigned']], [$take->getStatus(), $take->getData()]);
-		$this->assertSame(200, $reply->getStatus());
+		$this->assertSame(expected: ['check:c-1', 'take', 'check:c-1'], actual: $order);
+		$this->assertSame(expected: [200, ['status' => 'assigned']], actual: [$take->getStatus(), $take->getData()]);
+		$this->assertSame(expected: 200, actual: $reply->getStatus());
 	}//end testTakeAndReplyActAsTheColleague()
 }//end class

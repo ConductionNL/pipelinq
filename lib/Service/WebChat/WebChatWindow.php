@@ -26,6 +26,8 @@ use OCA\Pipelinq\Service\RoutingService;
 
 /**
  * The visitor's and the colleague's view of a chat.
+ *
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-a-visitor-chats-without-an-account-req-wch-002
  */
 class WebChatWindow {
 

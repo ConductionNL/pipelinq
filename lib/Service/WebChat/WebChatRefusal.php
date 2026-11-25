@@ -26,6 +26,8 @@ use RuntimeException;
 
 /**
  * Carries a message the window may show and the status it is answered with.
+ *
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-a-visitor-chats-without-an-account-req-wch-002
  */
 class WebChatRefusal extends RuntimeException {
 

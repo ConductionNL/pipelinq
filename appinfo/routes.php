@@ -274,10 +274,30 @@ return \OCA\Pipelinq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // are public: a visitor has no account and no cookie, and proves a chat by
         // the secret in the body. The window may only be framed by the channel's
         // own websites. The colleague's routes check per chat that they may read it.
-        ['name' => 'webChat#window', 'url' => '/chat/{channelToken}', 'verb' => 'GET', 'requirements' => ['channelToken' => '[A-Za-z0-9]{16,64}']],
-        ['name' => 'webChat#start', 'url' => '/api/web-chat/{channelToken}/start', 'verb' => 'POST', 'requirements' => ['channelToken' => '[A-Za-z0-9]{16,64}']],
-        ['name' => 'webChat#send', 'url' => '/api/web-chat/{channelToken}/send', 'verb' => 'POST', 'requirements' => ['channelToken' => '[A-Za-z0-9]{16,64}']],
-        ['name' => 'webChat#poll', 'url' => '/api/web-chat/{channelToken}/poll', 'verb' => 'POST', 'requirements' => ['channelToken' => '[A-Za-z0-9]{16,64}']],
+        [
+            'name' => 'webChat#window',
+            'url' => '/chat/{channelToken}',
+            'verb' => 'GET',
+            'requirements' => ['channelToken' => '[A-Za-z0-9]{16,64}'],
+        ],
+        [
+            'name' => 'webChat#start',
+            'url' => '/api/web-chat/{channelToken}/start',
+            'verb' => 'POST',
+            'requirements' => ['channelToken' => '[A-Za-z0-9]{16,64}'],
+        ],
+        [
+            'name' => 'webChat#send',
+            'url' => '/api/web-chat/{channelToken}/send',
+            'verb' => 'POST',
+            'requirements' => ['channelToken' => '[A-Za-z0-9]{16,64}'],
+        ],
+        [
+            'name' => 'webChat#poll',
+            'url' => '/api/web-chat/{channelToken}/poll',
+            'verb' => 'POST',
+            'requirements' => ['channelToken' => '[A-Za-z0-9]{16,64}'],
+        ],
         ['name' => 'webChatAgent#show', 'url' => '/api/web-chat/conversations/{id}', 'verb' => 'GET'],
         ['name' => 'webChatAgent#take', 'url' => '/api/web-chat/conversations/{id}/take', 'verb' => 'POST'],
         ['name' => 'webChatAgent#reply', 'url' => '/api/web-chat/conversations/{id}/reply', 'verb' => 'POST'],

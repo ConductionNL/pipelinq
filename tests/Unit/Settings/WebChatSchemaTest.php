@@ -40,9 +40,9 @@ class WebChatSchemaTest extends TestCase {
 	 * @return array<string, mixed> The register file with every fragment merged on.
 	 */
 	private function register(): array {
-		$appManager = $this->createMock(IAppManager::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('getAppPath')->willReturn(dirname(__DIR__, 3));
-		return (new ConfigFileLoaderService($appManager))->loadConfigurationFile();
+		return (new ConfigFileLoaderService(appManager: $appManager))->loadConfigurationFile();
 	}//end register()
 
 	/**
@@ -54,22 +54,32 @@ class WebChatSchemaTest extends TestCase {
 	public function testAWebChatChannelIsADeclarationThatStartsOff(): void {
 		$register = $this->register();
 		$channel  = $register['components']['schemas']['webChatChannel'] ?? null;
-		$this->assertIsArray($channel, 'The webChatChannel schema was not read.');
+		$this->assertIsArray(actual: $channel, message: 'The webChatChannel schema was not read.');
 
 		$this->assertSame(
-			['name', 'allowedOrigins', 'greeting', 'offlineText', 'assistantEnabled', 'waitSeconds', 'showAgentFirstName', 'active', 'channelToken'],
-			array_keys($channel['properties'])
+			expected: [
+				'name',
+				'allowedOrigins',
+				'greeting',
+				'offlineText',
+				'assistantEnabled',
+				'waitSeconds',
+				'showAgentFirstName',
+				'active',
+				'channelToken',
+			],
+			actual: array_keys($channel['properties'])
 		);
-		$this->assertFalse($channel['properties']['active']['default']);
-		$this->assertFalse($channel['properties']['assistantEnabled']['default']);
-		$this->assertFalse($channel['properties']['showAgentFirstName']['default']);
-		$this->assertSame(180, $channel['properties']['waitSeconds']['default']);
-		$this->assertSame(['name', 'channelToken'], $channel['required']);
+		$this->assertFalse(condition: $channel['properties']['active']['default']);
+		$this->assertFalse(condition: $channel['properties']['assistantEnabled']['default']);
+		$this->assertFalse(condition: $channel['properties']['showAgentFirstName']['default']);
+		$this->assertSame(expected: 180, actual: $channel['properties']['waitSeconds']['default']);
+		$this->assertSame(expected: ['name', 'channelToken'], actual: $channel['required']);
 		foreach (['create', 'update', 'delete'] as $action) {
-			$this->assertSame(['admin'], $channel['authorization'][$action], $action);
+			$this->assertSame(expected: ['admin'], actual: $channel['authorization'][$action], message: $action);
 		}
 
-		$this->assertContains('webChatChannel', $register['components']['registers']['pipelinq']['schemas']);
+		$this->assertContains(needle: 'webChatChannel', haystack: $register['components']['registers']['pipelinq']['schemas']);
 	}//end testAWebChatChannelIsADeclarationThatStartsOff()
 
 	/**
@@ -81,13 +91,13 @@ class WebChatSchemaTest extends TestCase {
 	public function testAConversationCarriesTheChatFieldsAndNoAddress(): void {
 		$conversation = $this->register()['components']['schemas']['channelConversation'];
 		foreach (['webChatChannel', 'visitorSecretHash', 'ticket', 'handedOverAt', 'lastMessageAt', 'assistantToken', 'unsourcedAnswers'] as $field) {
-			$this->assertArrayHasKey($field, $conversation['properties'], $field);
+			$this->assertArrayHasKey(key: $field, array: $conversation['properties'], message: $field);
 		}
 
-		$this->assertContains('chat', $conversation['properties']['channel']['enum']);
-		$this->assertArrayNotHasKey('ipAddress', $conversation['properties']);
-		$this->assertArrayNotHasKey('visitorSecret', $conversation['properties']);
-		$this->assertNotContains('webChatChannel', (array)($conversation['required'] ?? []));
+		$this->assertContains(needle: 'chat', haystack: $conversation['properties']['channel']['enum']);
+		$this->assertArrayNotHasKey(key: 'ipAddress', array: $conversation['properties']);
+		$this->assertArrayNotHasKey(key: 'visitorSecret', array: $conversation['properties']);
+		$this->assertNotContains(needle: 'webChatChannel', haystack: (array)($conversation['required'] ?? []));
 	}//end testAConversationCarriesTheChatFieldsAndNoAddress()
 
 	/**
@@ -99,11 +109,14 @@ class WebChatSchemaTest extends TestCase {
 	public function testAChatTicketNotifiesTheTeamAtOnce(): void {
 		$rules = $this->register()['components']['schemas']['ticket']['x-openregister-notifications'];
 
-		$this->assertArrayHasKey('newTicket', $rules);
+		$this->assertArrayHasKey(key: 'newTicket', array: $rules);
 		$rule = $rules['chatWaiting'];
-		$this->assertSame(['type' => 'created', 'filter' => ['field' => 'channel', 'operator' => 'equals', 'value' => 'chat']], $rule['trigger']);
-		$this->assertSame(['nc-notification', 'web-push'], $rule['channels']);
-		$this->assertEqualsCanonicalizing($rules['newTicket']['recipients'], $rule['recipients']);
-		$this->assertTrue($rule['enabled']);
+		$this->assertSame(
+			expected: ['type' => 'created', 'filter' => ['field' => 'channel', 'operator' => 'equals', 'value' => 'chat']],
+			actual: $rule['trigger'],
+		);
+		$this->assertSame(expected: ['nc-notification', 'web-push'], actual: $rule['channels']);
+		$this->assertEqualsCanonicalizing(expected: $rules['newTicket']['recipients'], actual: $rule['recipients']);
+		$this->assertTrue(condition: $rule['enabled']);
 	}//end testAChatTicketNotifiesTheTeamAtOnce()
 }//end class

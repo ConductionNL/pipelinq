@@ -31,6 +31,8 @@ use RuntimeException;
  * A visitor proves a chat by its secret, of which only a hash is stored. A
  * colleague reads a conversation through OpenRegister's checks: one they may
  * not read is not there.
+ *
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-a-visitor-chats-without-an-account-req-wch-002
  */
 class WebChatAccess {
 

@@ -44,6 +44,8 @@ use Throwable;
  * session, no cookie. A chat is proven by the secret its window holds, which
  * travels in the body. The window is a pipelinq page that only the channel's
  * own websites may frame.
+ *
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-a-visitor-chats-without-an-account-req-wch-002
  */
 class WebChatController extends Controller {
 

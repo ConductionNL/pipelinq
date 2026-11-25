@@ -31,6 +31,8 @@ use Throwable;
  * resolves its provider (design D4): pipelinq calls no model itself. With
  * hermiq absent, the entry point missing, or the channel's assistant off,
  * there is no assistant and the chat goes to a person.
+ *
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-the-assistant-answers-first-when-switched-on-req-wch-003
  */
 class ChatAssistant {
 

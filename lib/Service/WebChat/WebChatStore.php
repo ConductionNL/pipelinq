@@ -41,6 +41,8 @@ use Throwable;
  * window needs leaves the service. Writes go through OpenRegister's checks,
  * as whichever account the caller runs them as (the messaging service account
  * for a visitor, the colleague for an answer).
+ *
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-a-visitor-chats-without-an-account-req-wch-002
  */
 class WebChatStore {
 	use PayloadToArray;
