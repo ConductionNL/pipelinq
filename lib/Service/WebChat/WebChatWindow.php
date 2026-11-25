@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover/spec.md
+ * @spec openspec/specs/web-chat-and-handover/spec.md
  */
 
 declare(strict_types=1);
@@ -64,7 +64,7 @@ class WebChatWindow {
 	 *
 	 * @return array{state: string, messages: list<array<string, mixed>>, offlineText: string}
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function visitorView(array $channel, string $conversationId, string $since, ?array $conversation=null): array {
 		$conversation = ($conversation ?? ($this->store->conversation(id: $conversationId) ?? []));
@@ -91,7 +91,7 @@ class WebChatWindow {
 	 *
 	 * @return array{conversation: string, status: string, assignedTo: string, ticket: string, messages: list<array<string, mixed>>}
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function agentView(string $conversationId, array $conversation): array {
 		return [
@@ -113,7 +113,7 @@ class WebChatWindow {
 	 *
 	 * @return string One of assistant, person, offline.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function startMode(array $channel): string {
 		if ($this->assistant->answersFor(channel: $channel) === true) {

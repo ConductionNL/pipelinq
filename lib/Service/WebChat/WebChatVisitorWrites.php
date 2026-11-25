@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
  */
 
 declare(strict_types=1);
@@ -57,7 +57,7 @@ class WebChatVisitorWrites {
 	 *
 	 * @throws WebChatRefusal When the account or OpenRegister is unavailable.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function run(callable $writes): array {
 		try {

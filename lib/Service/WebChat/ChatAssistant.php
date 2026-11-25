@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover/spec.md#requirement-the-assistant-answers-first-when-switched-on-req-wch-003
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-the-assistant-answers-first-when-switched-on-req-wch-003
  */
 
 declare(strict_types=1);
@@ -69,7 +69,7 @@ class ChatAssistant {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-4.1
 	 */
 	public function answersFor(array $channel): bool {
 		return ($channel['assistantEnabled'] ?? false) === true && $this->entryPoint() !== null;
@@ -82,7 +82,7 @@ class ChatAssistant {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-4.1
 	 */
 	public function channelKey(string $channelId): string {
 		return 'app:pipelinq:' . $channelId;
@@ -98,7 +98,7 @@ class ChatAssistant {
 	 *
 	 * @return array{answer: string, sources: list<array{title: string, url: string}>, token: string, disclosure: string}|null
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-4.1
 	 */
 	public function ask(string $channelId, string $question, string $locale, string $token): ?array {
 		$entryPoint = $this->entryPoint();

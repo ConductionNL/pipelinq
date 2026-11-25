@@ -4,7 +4,7 @@
  *
  * The admin Web chat section's helpers (requests-web-chat-and-bot task 1.2).
  *
- * @spec openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover/spec.md#requirement-an-administrator-puts-a-chat-on-the-website-req-wch-001
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-an-administrator-puts-a-chat-on-the-website-req-wch-001
  */
 import { describe, expect, it, vi } from 'vitest'
 

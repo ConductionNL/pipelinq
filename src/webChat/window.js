@@ -4,7 +4,7 @@
  *
  * Entry of the website chat window (webpack entry `webChatWindow`).
  *
- * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.2
  */
 import { loadState } from '@nextcloud/initial-state'
 import { getLanguage, translate } from '@nextcloud/l10n'

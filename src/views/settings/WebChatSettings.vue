@@ -5,7 +5,7 @@
   Admin: website chat channels (requests-web-chat-and-bot D2). List, add,
   switch on, and copy the line to paste into the website. A new channel is off.
 
-  @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+  @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
 -->
 <template>
 	<NcSettingsSection
@@ -82,7 +82,7 @@ export default {
 		 *
 		 * @param {object} channel The channel.
 		 * @return {string}
-		 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
 		 */
 		idOf(channel) {
 			return channel.id || channel?.['@self']?.id || channel.channelToken
@@ -93,7 +93,7 @@ export default {
 		 *
 		 * @param {object} channel The channel.
 		 * @return {string}
-		 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
 		 */
 		embedOf(channel) {
 			return channelEmbedLine(channel)
@@ -103,7 +103,7 @@ export default {
 		 * Read the channels again.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
 		 */
 		async load() {
 			try {
@@ -117,7 +117,7 @@ export default {
 		 * Save the draft as a new channel, off until switched on.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
 		 */
 		async add() {
 			this.busy = true
@@ -144,7 +144,7 @@ export default {
 		 * @param {object} channel The channel.
 		 * @param {boolean} on Whether it is on.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
 		 */
 		async toggle(channel, on) {
 			this.busy = true
@@ -163,7 +163,7 @@ export default {
 		 *
 		 * @param {object} channel The channel.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
 		 */
 		async copy(channel) {
 			try {

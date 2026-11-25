@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover/spec.md#requirement-a-visitor-chats-without-an-account-req-wch-002
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-a-visitor-chats-without-an-account-req-wch-002
  */
 
 declare(strict_types=1);
@@ -74,7 +74,7 @@ class WebChatStore {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function activeChannel(string $token): ?array {
 		if (preg_match('/^[A-Za-z0-9]{16,64}$/', $token) !== 1) {
@@ -97,7 +97,7 @@ class WebChatStore {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function conversation(string $id): ?array {
 		return $this->one(id: $id, schema: $this->conversationSchema(), rbac: false);
@@ -110,7 +110,7 @@ class WebChatStore {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function readableConversation(string $id): ?array {
 		return $this->one(id: $id, schema: $this->conversationSchema(), rbac: true);
@@ -123,7 +123,7 @@ class WebChatStore {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function channel(string $id): ?array {
 		return $this->one(id: $id, schema: $this->channelSchema(), rbac: false);
@@ -136,7 +136,7 @@ class WebChatStore {
 	 *
 	 * @return list<array<string, mixed>>
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function messages(string $conversationId): array {
 		$messages = array_values(
@@ -159,7 +159,7 @@ class WebChatStore {
 	 *
 	 * @return list<array<string, mixed>>
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.3
 	 */
 	public function agentProfiles(): array {
 		try {
@@ -179,7 +179,7 @@ class WebChatStore {
 	 *
 	 * @throws RuntimeException When OpenRegister is absent or refuses the write.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function saveConversation(array $conversation, ?string $id=null): array {
 		unset($conversation['@self'], $conversation['id'], $conversation['uuid']);
@@ -195,7 +195,7 @@ class WebChatStore {
 	 *
 	 * @throws RuntimeException When OpenRegister is absent or refuses the write.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function addMessage(array $message): array {
 		return $this->save(object: $message, schema: $this->messageSchema(), id: null);
@@ -208,7 +208,7 @@ class WebChatStore {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function idOf(array $row): string {
 		$candidates = [($row['id'] ?? null), ($row['uuid'] ?? null)];

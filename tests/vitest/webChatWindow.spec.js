@@ -5,7 +5,7 @@
  *
  * The website chat window (requests-web-chat-and-bot tasks 3.3 and 4.2).
  *
- * @spec openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover/spec.md
+ * @spec openspec/specs/web-chat-and-handover/spec.md
  */
 import { describe, expect, it, vi } from 'vitest'
 import { createChatWindow, windowTexts } from '../../src/webChat/chatWindow.js'
