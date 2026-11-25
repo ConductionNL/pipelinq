@@ -148,6 +148,32 @@ class MockPipelineCleanupServiceTest extends TestCase {
 	}//end testARefusedDeleteIsReported()
 
 	/**
+	 * The register seed's default Sales pipeline goes when nothing is on it, and
+	 * the set's lead default is then the only default left; with a lead on it,
+	 * it stays.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
+	 */
+	public function testTheSeededDefaultSalesPipelineIsAMock(): void {
+		$seeded = ['id' => 'p-seeded', '@self' => ['slug' => 'pipelinq-default-sales-pipeline'], 'title' => 'Sales', 'isDefault' => true];
+		$verkoop = ['id' => 'p-verkoop', 'title' => 'Verkoop', 'isDefault' => true];
+
+		$report = $this->service(pipelines: [$seeded, $verkoop])->run();
+
+		$this->assertSame(expected: ['p-seeded'], actual: $this->deleted);
+		$this->assertSame(expected: [['id' => 'p-verkoop', 'title' => 'Verkoop']], actual: $report['defaults']);
+
+		$this->deleted = [];
+		$report        = $this->service(pipelines: [$seeded, $verkoop], usedBy: ['p-seeded' => ['lead-schema']])->run();
+
+		$this->assertSame(expected: [], actual: $this->deleted);
+		$this->assertSame(expected: [['id' => 'p-seeded', 'title' => 'Sales', 'usedBy' => ['lead']]], actual: $report['kept']);
+		$this->assertSame(expected: ['p-seeded', 'p-verkoop'], actual: array_column($report['defaults'], 'id'));
+	}//end testTheSeededDefaultSalesPipelineIsAMock()
+
+	/**
 	 * Only the exact known title and description mark a mock: a renamed or
 	 * re-described copy is somebody's own pipeline.
 	 *

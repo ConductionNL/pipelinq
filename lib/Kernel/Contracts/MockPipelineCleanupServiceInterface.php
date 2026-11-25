@@ -53,7 +53,7 @@ interface MockPipelineCleanupServiceInterface {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $dryRun is the command's --dry-run option.
 	 *
-	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
+	 * @spec openspec/specs/pipeline/spec.md#requirement-mock-pipelines-can-be-removed-when-nothing-is-on-them
 	 */
 	public function run(bool $dryRun=false): array;
 }//end interface
