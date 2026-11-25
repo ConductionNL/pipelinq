@@ -141,9 +141,7 @@
 			"key": "kassabon-0871-klantcontact",
 			"register": "pipelinq",
 			"schema": "posTransaction",
-			"where": {
-				"reference": "POS-2026-0871"
-			},
+			"object": "kassabon-0871",
 			"set": {
 				"customer": "{{object:contact-sanne-thuis.id}}"
 			}
@@ -152,9 +150,7 @@
 			"key": "kassabon-0214-klantcontact",
 			"register": "pipelinq",
 			"schema": "posTransaction",
-			"where": {
-				"reference": "POS-2026-0214"
-			},
+			"object": "kassabon-0214",
 			"set": {
 				"customer": "{{object:contact-sanne-thuis.id}}"
 			}
