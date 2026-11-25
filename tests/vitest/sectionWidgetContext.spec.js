@@ -7,7 +7,7 @@
  * tab widget: `sectionWidget(..., { context: true })` provides the record the
  * detail page hands every widget (board PqTicket, the Overview stack).
  *
- * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-003
+ * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-003
  */
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'

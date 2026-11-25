@@ -14,7 +14,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+ * @spec openspec/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,7 +29,7 @@ use RuntimeException;
 /**
  * A refused rename, with the HTTP status that answers it.
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+ * @spec openspec/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
  */
 class LabelRenameException extends RuntimeException {
 	/**
@@ -38,7 +38,7 @@ class LabelRenameException extends RuntimeException {
 	 * @param string  $message What was refused, for the administrator.
 	 * @param integer $status  The HTTP status: 400, 403, 404 or 409.
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+	 * @spec openspec/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
 	 */
 	public function __construct(string $message, private int $status) {
 		parent::__construct(message: $message);
@@ -49,7 +49,7 @@ class LabelRenameException extends RuntimeException {
 	 *
 	 * @return integer
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+	 * @spec openspec/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
 	 */
 	public function getStatus(): int {
 		return $this->status;

@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-labels-are-one-shared-list-for-articles-leads-and-customers
+ * @spec openspec/specs/shared-labels/spec.md#requirement-labels-are-one-shared-list-for-articles-leads-and-customers
  */
 
 declare(strict_types=1);
@@ -76,7 +76,7 @@ class SharedLabelListSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+	 * @spec openspec/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
 	 */
 	public function testOnlyAnAdministratorWritesTheList(): void {
 		$authorization = $this->config['components']['schemas']['itemLabel']['authorization'];

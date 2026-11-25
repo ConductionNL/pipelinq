@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+ * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use Throwable;
 /**
  * Queued once by LabelRenameService::rename() past its inline limit.
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+ * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
  */
 class LabelRenameJob extends QueuedJob {
 	/**
@@ -50,7 +50,7 @@ class LabelRenameJob extends QueuedJob {
 	 * @param IUserSession       $userSession Carries the administrator for OpenRegister's access check.
 	 * @param LoggerInterface    $logger      The logger.
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	public function __construct(
 		ITimeFactory $time,
@@ -69,7 +69,7 @@ class LabelRenameJob extends QueuedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	protected function run(mixed $argument): void {
 		$args = (array)$argument;

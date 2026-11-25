@@ -16,7 +16,7 @@ An `open-modal` action carries no object context, so the route names the
 ticket. When the dialog closes the page is asked to reload, so its status
 pill, its primary button and its conversation show what was just saved.
 
-@spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+@spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
 -->
 <template>
 	<CnDialog
@@ -64,7 +64,7 @@ import { useObjectStore } from '../store/modules/object.js'
 /**
  * The Answer dialog on a ticket.
  *
- * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+ * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
  */
 export default {
 	name: 'TicketAnswerDialog',
@@ -85,7 +85,7 @@ export default {
 		 * The ticket the page is on.
 		 *
 		 * @return {string} The id from the route, or an empty string.
-		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+		 * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
 		 */
 		ticketId() {
 			const id = this.$route?.params?.id
@@ -96,7 +96,7 @@ export default {
 		 * The line above the title: "Answer · PQ-2026-0417".
 		 *
 		 * @return {string} The eyebrow, or "Answer" until the ticket is read.
-		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+		 * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
 		 */
 		eyebrow() {
 			const reference = this.ticket?.reference || ''
@@ -109,7 +109,7 @@ export default {
 		 * The line under the title: the customer, the reference and the ticket's title.
 		 *
 		 * @return {string} The parts that are known, joined with a middle dot.
-		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+		 * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
 		 */
 		subtitle() {
 			return [this.clientName, this.ticket?.reference, this.ticket?.title]
@@ -128,7 +128,7 @@ export default {
 		/**
 		 * Read the ticket and its customer's name for the dialog's header lines.
 		 *
-		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+		 * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
 		 */
 		async loadTicket() {
 			if (!this.ticketId) {
@@ -150,7 +150,7 @@ export default {
 		/**
 		 * Send the answer the section holds, and set the status when the box is ticked.
 		 *
-		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+		 * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
 		 */
 		send() {
 			this.$refs.reply?.save(this.replyState.waitForCustomer)
@@ -159,7 +159,7 @@ export default {
 		/**
 		 * A sent answer: say so and close.
 		 *
-		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+		 * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
 		 */
 		onSaved() {
 			showSuccess(
@@ -174,7 +174,7 @@ export default {
 		/**
 		 * Close, and have the page read the ticket again.
 		 *
-		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+		 * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
 		 */
 		close() {
 			emit('cn:page:refresh', {})

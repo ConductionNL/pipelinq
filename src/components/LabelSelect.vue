@@ -59,7 +59,7 @@ export default {
 		 * The list's names and the item's own, in alphabetical order.
 		 *
 		 * @return {string[]}
-		 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-labels-are-one-shared-list-for-articles-leads-and-customers
+		 * @spec openspec/specs/shared-labels/spec.md#requirement-labels-are-one-shared-list-for-articles-leads-and-customers
 		 */
 		options() {
 			const all = new Set([...this.names, ...(this.modelValue || []).map(String)])
@@ -68,7 +68,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-labels-are-one-shared-list-for-articles-leads-and-customers
+	 * @spec openspec/specs/shared-labels/spec.md#requirement-labels-are-one-shared-list-for-articles-leads-and-customers
 	 */
 	async mounted() {
 		this.loading = true

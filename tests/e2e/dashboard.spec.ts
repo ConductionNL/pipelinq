@@ -77,7 +77,13 @@ test.describe('Sales dashboard', () => {
 	test('every required KPI and chart widget is rendered', async ({ page }) => {
 		const missing: string[] = []
 		for (const id of REQUIRED_WIDGETS) {
-			const widget = page.locator(`[role="group"][aria-label="${id}"]`).first()
+			// Grid widgets are a `role=group` named by their id; stat widgets sit
+			// in the KPI row above the grid, each cell carrying its id as a testid.
+			const widget = page
+				.locator(
+					`[role="group"][aria-label="${id}"], [data-testid="cn-dashboard-page-kpi-${id}"]`,
+				)
+				.first()
 			if ((await widget.count()) === 0) missing.push(id)
 		}
 		expect(
@@ -92,7 +98,7 @@ test.describe('Sales dashboard', () => {
 		// is why they are safe to assert by name. The refresh control beside
 		// them is NOT: its accessible name is translated
 		// ("Dashboard vernieuwen"), so it is asserted by role and count below.
-		for (const name of ['New Lead', 'New Client']) {
+		for (const name of ['New lead', 'New client']) {
 			await expect(
 				page.getByRole('button', { name, exact: true }).first(),
 				`the ${name} quick-create action must be offered`,
@@ -104,7 +110,7 @@ test.describe('Sales dashboard', () => {
 		// hardcoded together in one actionsComponent, so every dashboard naming
 		// that component got all three whether or not they belonged.
 		await expect(
-			page.getByRole('button', { name: 'New Request', exact: true }),
+			page.getByRole('button', { name: 'New request', exact: true }),
 			'New Request belongs on Customer Support, not on the sales dashboard',
 		).toHaveCount(0)
 	})
