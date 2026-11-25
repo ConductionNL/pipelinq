@@ -5,6 +5,7 @@
 			"key": "ticket-sanne-fietspad-lindelaan",
 			"register": "pipelinq",
 			"schema": "ticket",
+			"optional": true,
 			"lookups": {
 				"case": {
 					"register": "dossiq",

@@ -64,7 +64,7 @@ class ZuiddrechtSaleInShiftTest extends TestCase {
 		$changes  = array_column($fragment['changes'], null, 'key');
 		$change   = $changes['kassabon-1043-in-dienst'];
 
-		$this->assertSame(expected: ['reference' => 'POS-2026-1043'], actual: $change['where']);
+		$this->assertSame(expected: 'kassabon-1043', actual: $change['object']);
 		$this->assertSame(expected: ['shift' => '{{object:kassadienst-7okt-balie2.id}}'], actual: $change['set']);
 
 		$objects = array_column($fragment['objects'], null, 'key');
