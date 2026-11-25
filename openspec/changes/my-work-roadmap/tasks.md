@@ -37,8 +37,10 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 6. Notification summary (REQ-MW-140)
 
-- [ ] 6.1 Header badge with the unread Pipelinq notification count through the Nextcloud notifications OCS API; list with icon, summary, relative time, link.
-- [ ] 6.2 Mark read on open; no badge at 0.
+- [x] 6.1 Header badge with the unread Pipelinq notification count through the Nextcloud notifications OCS API; list with icon, summary, relative time, link.
+  - Built (25 Nov 2026) as manifest configuration: My work sets `config.notificationsBadge: true`. The library's `CnNotificationsBadge` (ConductionNL/nextcloud-vue#2373, `dashboard-notifications-badge`, schema 2.203.0) reads the notifications OCS API, keeps the `pipelinq` entries (what `lib/Notification/Notifier.php` prepares), shows their count in the header and lists them newest first with icon, summary, relative time and link; it reads again on every page refresh, so `autoRefresh` keeps the count current. Vitest `tests/vitest/myWorkNotificationsBadge.spec.js`; the library's behaviour in `tests/components/CnNotificationsBadge.spec.js` there.
+- [x] 6.2 Mark read on open; no badge at 0.
+  - Built with 6.1: opening a notification dismisses it through the OCS API (the notifications app's read), lowers the count and opens its link; with nothing unread, or without the notifications app, no badge shows. The live check (assign two tickets, read 2, open one, read 1) runs in the nightly.
 
 ## 7. Saved views (REQ-MW-150)
 
