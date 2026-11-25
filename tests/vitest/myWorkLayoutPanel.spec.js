@@ -7,7 +7,7 @@
  * the work list itself is locked, so it can be moved but never hidden. Back to
  * default returns to the manifest layout (the board PqMijnWerk order).
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-customisable-layout-req-mw-160
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-customisable-layout-req-mw-160
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

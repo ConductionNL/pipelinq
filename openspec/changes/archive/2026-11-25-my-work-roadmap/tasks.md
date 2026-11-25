@@ -44,7 +44,8 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 7. Saved views (REQ-MW-150)
 
-- [ ] 7.1 `CnSavedViewsControl` from nextcloud-vue on My work, storing type, Show completed, priority, pipeline and scope; the "Saved views" panel with counts as on `PqMijnWerk`.
+- [x] 7.1 `CnSavedViewsControl` from nextcloud-vue on My work, storing type, Show completed, priority, pipeline and scope; the "Saved views" panel with counts as on `PqMijnWerk`.
+  - Moved (25 Nov 2026) unbuilt to `openspec/changes/my-work-saved-views-and-phone`, so the built rest could be archived (task 13.2).
 
 ## 8. Layout (REQ-MW-160)
 
@@ -54,7 +55,8 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 9. Phone (REQ-MW-170)
 
-- [ ] 9.1 Below 768 px: filter chips with counts as on `PqMobiel`, sticky group headers with counts, 44 px targets kept; quick actions folded into one "Actions" button in the header, as on `PqMobiel`, once block 2 is built.
+- [x] 9.1 Below 768 px: filter chips with counts as on `PqMobiel`, sticky group headers with counts, 44 px targets kept; quick actions folded into one "Actions" button in the header, as on `PqMobiel`, once block 2 is built.
+  - Moved (25 Nov 2026) unbuilt to `openspec/changes/my-work-saved-views-and-phone`.
 
 ## 10. Scope (REQ-MW-180)
 
@@ -77,6 +79,7 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 13. Close
 
-- [ ] 13.1 Set `built.state` of the matching rows in `openspec/parity/capabilities.json` as each block lands.
+- [x] 13.1 Set `built.state` of the matching rows in `openspec/parity/capabilities.json` as each block lands.
   - Done for the blocks built so far: `work-my-week-stats` (090), `work-quick-create` (100), `work-upcoming-meetings` (130) and `work-team-view` (180) now read built; on 25 Nov 2026 `work-layout` (160, with 110's fold), `work-auto-refresh` (190) and `work-filter-priority-pipeline` (200) too. Stays open while blocks 7 (saved views, row `work-saved-view`) and 9 (phone) are unbuilt.
-- [ ] 13.2 Archive this change into `openspec/specs/my-work` once all blocks are built, or split the unbuilt rest into a new change.
+- [x] 13.2 Archive this change into `openspec/specs/my-work` once all blocks are built, or split the unbuilt rest into a new change.
+  - Done (25 Nov 2026): the ten built requirements (REQ-MW-090 to 140, 160, 180 to 200) are synced into `openspec/specs/my-work/spec.md`; blocks 7 and 9 moved unbuilt to `openspec/changes/my-work-saved-views-and-phone`, with `work-saved-view` pointing there.

@@ -8,7 +8,7 @@
  * after creating unticked, and a ticket saved there asks the page's lists to
  * read again instead of leaving the page.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-quick-actions-on-my-work-req-mw-100
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-quick-actions-on-my-work-req-mw-100
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

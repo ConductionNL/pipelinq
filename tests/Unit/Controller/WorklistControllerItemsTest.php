@@ -153,7 +153,7 @@ class WorklistControllerItemsTest extends TestCase {
 	/**
 	 * `?scope=` and `?member=` reach the service; a scope the user may not ask for is a 400.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */
@@ -254,7 +254,7 @@ class WorklistControllerItemsTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	public function testItemsPassThePriorityAndPipelineFilters(): void {
 		$this->worklist->expects($this->once())->method('items')
@@ -283,7 +283,7 @@ class WorklistControllerItemsTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	public function testAnUnknownPriorityIs400(): void {
 		$this->worklist->expects($this->never())->method('items');

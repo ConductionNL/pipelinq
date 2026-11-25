@@ -14,7 +14,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use RuntimeException;
 /**
  * GET /api/my-work/meetings: the session user's meetings, an empty list on a failed read.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
  */
 #[CoversClass(MyWorkMeetingsController::class)]
 class MyWorkMeetingsControllerTest extends TestCase {

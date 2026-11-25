@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use Throwable;
 /**
  * The Upcoming meetings of My work.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
  */
 class MyWorkMeetingsController extends Controller {
 
@@ -68,7 +68,7 @@ class MyWorkMeetingsController extends Controller {
 	 *
 	 * @return JSONResponse The meetings, or 401 without a user.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/tasks.md#task-5.2
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/tasks.md#task-5.2
 	 */
 	#[NoAdminRequired]
 	public function upcoming(): JSONResponse {

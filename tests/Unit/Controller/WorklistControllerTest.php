@@ -232,7 +232,7 @@ class WorklistControllerTest extends TestCase {
 	/**
 	 * `?scope=` and `?member=` reach the service; without them the scope is `mine`.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */
@@ -257,7 +257,7 @@ class WorklistControllerTest extends TestCase {
 	/**
 	 * No scope in the request reads as the user's own work.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */
@@ -276,7 +276,7 @@ class WorklistControllerTest extends TestCase {
 	/**
 	 * A scope the user may not choose answers 400 with a static message.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 *
 	 * @return void
 	 */

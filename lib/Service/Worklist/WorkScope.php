@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -46,7 +46,7 @@ use OCP\IGroupManager;
  * A scope only widens whose work is asked for. OpenRegister still reads every
  * object under the user's own permissions (design D5).
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
  */
 class WorkScope {
 
@@ -97,7 +97,7 @@ class WorkScope {
 	 *
 	 * @return array<int, string> The scopes.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	public function available(string $userId): array {
 		$scopes = [self::MINE];
@@ -123,7 +123,7 @@ class WorkScope {
 	 *
 	 * @throws InvalidArgumentException For a scope the user may not choose, or a member outside their team.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	public function assignees(string $userId, string $scope, string $member=''): ?array {
 		if (in_array($scope, $this->available(userId: $userId), true) === false) {
@@ -161,7 +161,7 @@ class WorkScope {
 	 *
 	 * @throws InvalidArgumentException For a scope the user may not choose, or a member outside their team.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	public function assigneeFilters(string $userId, string $scope, string $member=''): array {
 		$assignees = $this->assignees(userId: $userId, scope: $scope, member: $member);
@@ -179,7 +179,7 @@ class WorkScope {
 	 *
 	 * @return array<int, string> The UIDs; empty when the user manages no team.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	public function teamMembers(string $userId): array {
 		return array_map(static fn (int|string $uid): string => (string)$uid, array_keys($this->team(userId: $userId)));
@@ -192,7 +192,7 @@ class WorkScope {
 	 *
 	 * @return array<string, string> Display name per UID; empty when the user manages no team.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	public function team(string $userId): array {
 		$members = [];

@@ -14,7 +14,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * GET /api/my-work/recent-activity: the session user's recent activity, 401 when signed out.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
  */
 #[CoversClass(MyWorkActivityController::class)]
 class MyWorkActivityControllerTest extends TestCase {

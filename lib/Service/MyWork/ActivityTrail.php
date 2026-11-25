@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use Throwable;
  * The trail is read for the most recently changed items only, one read per
  * item, to keep the page cheap for a user with a long list.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
  */
 class ActivityTrail {
 
@@ -78,7 +78,7 @@ class ActivityTrail {
 	 *
 	 * @return array<int, array<string, string>> The entries.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	public function latest(array $items): array {
 		$entries = [];
@@ -100,7 +100,7 @@ class ActivityTrail {
 	 *
 	 * @return array<int, array<string, mixed>> The items whose trail is read.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	private function recentlyChanged(array $items): array {
 		$items = array_values(array_filter($items, fn (array $item): bool => $this->uuidOf(item: $item) !== ''));
@@ -119,7 +119,7 @@ class ActivityTrail {
 	 *
 	 * @return array<int, mixed> The rows.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	private function trailOf(array $item): array {
 		try {
@@ -138,7 +138,7 @@ class ActivityTrail {
 	 *
 	 * @return array<string, string> The entry.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	private function entry(mixed $row, array $item): array {
 		$values = $this->rowValues(row: $row);
@@ -167,7 +167,7 @@ class ActivityTrail {
 	 *
 	 * @return string The field names, or '' when it names none.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	private function changedFields(mixed $changed): string {
 		if (is_array($changed) === false) {
@@ -189,7 +189,7 @@ class ActivityTrail {
 	 *
 	 * @return int The timestamp.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	private function timestamp(string $moment): int {
 		$time = strtotime($moment);
@@ -207,7 +207,7 @@ class ActivityTrail {
 	 *
 	 * @return array<string, mixed> Its values; empty for anything else.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	private function rowValues(mixed $row): array {
 		if ($row instanceof JsonSerializable) {
@@ -228,7 +228,7 @@ class ActivityTrail {
 	 *
 	 * @return string The moment.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	private function moment(mixed $value): string {
 		if ($value instanceof DateTimeInterface) {
@@ -249,7 +249,7 @@ class ActivityTrail {
 	 *
 	 * @return string The uuid, or ''.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	private function uuidOf(array $item): string {
 		$record = $this->recordOf(item: $item);
@@ -264,7 +264,7 @@ class ActivityTrail {
 	 *
 	 * @return string The moment.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	private function updatedOf(array $item): string {
 		$record = $this->recordOf(item: $item);
@@ -279,7 +279,7 @@ class ActivityTrail {
 	 *
 	 * @return array<string, mixed> The record.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
 	 */
 	private function recordOf(array $item): array {
 		$record = ($item['record'] ?? null);

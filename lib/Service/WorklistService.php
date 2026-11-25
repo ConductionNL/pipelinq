@@ -232,7 +232,7 @@ class WorklistService implements WorklistServiceInterface {
 	 *
 	 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 	 * @spec openspec/specs/my-work/spec.md
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	public function getMine(string $userId, ?int $limit=null, string $scope=WorkScope::MINE, string $member=''): array {
 		$leads    = [];
@@ -458,8 +458,8 @@ class WorklistService implements WorklistServiceInterface {
 	 * @throws InvalidArgumentException For a scope the user may not choose, a member outside their team, or an unknown priority.
 	 *
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	public function items(string $userId, array $view=[]): array {
 		$list = [
@@ -590,8 +590,8 @@ class WorklistService implements WorklistServiceInterface {
 	 *
 	 * @throws InvalidArgumentException For a scope the user may not choose.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-kpi-summary-tiles-on-my-work-req-mw-090
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-kpi-summary-tiles-on-my-work-req-mw-090
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	public function getWeekStats(string $userId, string $scope='mine'): array {
 		$tickets = [];
