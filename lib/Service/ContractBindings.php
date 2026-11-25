@@ -49,6 +49,7 @@ use OCA\Pipelinq\Kernel\Contracts\CashShiftServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\CashShiftSummaryServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ChannelProviderRepositoryInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientBusinessReaderInterface;
+use OCA\Pipelinq\Kernel\Contracts\ClientContactCardSyncInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientIdentifierServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientCaseReaderInterface;
 use OCA\Pipelinq\Kernel\Contracts\ClientHistorySummaryServiceInterface;
@@ -652,6 +653,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(ClientBusinessReaderInterface::class, ClientBusinessReader::class);
 		$context->registerServiceAlias(ClientIdentifierServiceInterface::class, ClientIdentifierService::class);
 		$context->registerServiceAlias(ClientCaseReaderInterface::class, ClientCaseReader::class);
+		$context->registerServiceAlias(ClientContactCardSyncInterface::class, ClientContactCardSync::class);
 		$context->registerServiceAlias(ClientHistorySummaryServiceInterface::class, ClientHistorySummaryService::class);
 		$context->registerServiceAlias(ClientManagementIntegrationInterface::class, ClientManagementIntegration::class);
 		$context->registerServiceAlias(ClientRiskServiceInterface::class, ClientRiskService::class);
