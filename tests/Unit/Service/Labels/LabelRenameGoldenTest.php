@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+ * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
  */
 
 declare(strict_types=1);
@@ -56,7 +56,7 @@ use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
  * @uses \OCA\Pipelinq\Util\PayloadToArray
  * @uses \OCA\Pipelinq\Util\LockedRecord
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+ * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
  */
 class LabelRenameGoldenTest extends TestCase {
 	private const GOLDEN = __DIR__ . '/LabelRenameGolden.json';

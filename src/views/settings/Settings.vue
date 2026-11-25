@@ -698,7 +698,7 @@ export default {
 		 * Where the Labels card sends a rename, so the items follow it.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
+		 * @spec openspec/specs/shared-labels/spec.md#requirement-an-administrator-manages-the-labels-on-beheer-marketing
 		 */
 		labelRenameUrl() {
 			// The card fills {id}; generateUrl would escape the braces.

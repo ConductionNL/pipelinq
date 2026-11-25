@@ -7,7 +7,7 @@
  * offers the shared label list, refuses a typed word, and keeps a label an
  * item already carries when the list no longer has it.
  *
- * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#requirement-labels-are-one-shared-list-for-articles-leads-and-customers
+ * @spec openspec/specs/shared-labels/spec.md#requirement-labels-are-one-shared-list-for-articles-leads-and-customers
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

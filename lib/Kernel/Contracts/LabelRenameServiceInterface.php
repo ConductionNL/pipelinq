@@ -49,7 +49,7 @@ interface LabelRenameServiceInterface {
 	 *                              empty or too long (400), the label is unknown (404), another
 	 *                              label already has the name (409) or OpenRegister is missing (503).
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	public function rename(string $labelId, string $name): array;
 
@@ -65,7 +65,7 @@ interface LabelRenameServiceInterface {
 	 *
 	 * @return integer How many items were rewritten; 0 when the user is no longer an administrator.
 	 *
-	 * @spec openspec/changes/shared-label-list/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
+	 * @spec openspec/specs/shared-labels/spec.md#scenario-a-renamed-label-follows-its-items
 	 */
 	public function rewriteAll(string $from, string $to, string $userId): int;
 }//end interface
