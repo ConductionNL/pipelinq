@@ -58,8 +58,8 @@ describe('ClientDetail overview as the boards draw it', () => {
 		expect(overview.widgetIds).toEqual(['client-person-card', 'client-organisation-card', 'client-other-details', 'client-cases', 'client-tickets', 'client-latest-moments', 'client-found-us', 'client-touchpoints', 'client-activity'])
 		expect(widget('client-person-card').visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'person' })
 		expect(widget('client-organisation-card').visibleWhen).toEqual({ field: 'type', op: 'eq', value: 'organization' })
-		expect(widget('client-person-card').content.fields.map((field) => nl[field.label])).toEqual(['Naam', 'Voornamen', 'Achternaam', 'Geboortedatum', 'Woonadres', 'Omschrijving'])
-		expect(widget('client-organisation-card').content.fields.map((field) => nl[field.label])).toEqual(['Handelsnaam', 'KVK-nummer', 'Rechtsvorm', 'Adres', 'Land', 'Prijslijst'])
+		expect(widget('client-person-card').content.fields.map((field) => nl[field.label])).toEqual(['Naam', 'Voornamen', 'Achternaam', 'Geboortedatum', 'Woonadres', 'Omschrijving', 'Soort partij'])
+		expect(widget('client-organisation-card').content.fields.map((field) => nl[field.label])).toEqual(['Handelsnaam', 'KVK-nummer', 'Rechtsvorm', 'Adres', 'Land', 'Prijslijst', 'Soort partij'])
 	})
 
 	it('draws the tickets as ruled rows with a pill and the date at the end', () => {
