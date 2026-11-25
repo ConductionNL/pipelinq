@@ -11680,7 +11680,8 @@
 						"titleTone": "side",
 						"type": "record-list",
 						"title": "Recent activity",
-						"_note": "my-work-roadmap REQ-MW-110: the 10 latest audit-trail entries of the work assigned to the user (GET /api/my-work/recent-activity, read as the user), newest first: the item's kind, its title, how long ago and the fields the entry names as changed. An entry opens its item. No board draws this section yet; it sits in the side column under the call reviews. Not here yet: the collapsed state per user (task 3.2).",
+						"_note": "my-work-roadmap REQ-MW-110: the 10 latest audit-trail entries of the work assigned to the user (GET /api/my-work/recent-activity, read as the user), newest first: the item's kind, its title, how long ago and the fields the entry names as changed. An entry opens its item. No board draws this section yet; it sits in the side column under the call reviews. Collapsible (task 3.2): the chevron folds it to its header, and the page's per-user layout (layoutPanel) stores the fold, so it is still folded after a reload (nextcloud-vue widget-collapsible-section).",
+						"collapsible": true,
 						"content": {
 							"endpointSource": {
 								"url": "/apps/pipelinq/api/my-work/recent-activity",
