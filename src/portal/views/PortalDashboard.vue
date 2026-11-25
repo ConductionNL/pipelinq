@@ -115,6 +115,12 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The record-type tabs to offer: the given `features`, else the tenant's switched-on ones.
+		 *
+		 * @return {Array<{key: string, label: string}>}
+		 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-sees-their-own-invoices-contracts-orders-and-quotes
+		 */
 		availableTabs() {
 			const all = [
 				{ key: 'invoices', label: t('pipelinq', 'Invoices') },
@@ -135,6 +141,12 @@ export default {
 		},
 	},
 
+	/**
+	 * Learn the tenant's switched-on record types when none are given, then open the first tab.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-sees-their-own-invoices-contracts-orders-and-quotes
+	 */
 	async mounted() {
 		if (this.features === null) {
 			await this.loadTenantFeatures()

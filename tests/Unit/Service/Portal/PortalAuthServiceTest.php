@@ -158,7 +158,10 @@ class PortalAuthServiceTest extends TestCase {
 		$this->seedAccount();
 		$result = $this->auth->login('jan@pietersen.nl', 'geheimwachtwoord123', 'tenant-a', null, 'ip', 'ua');
 
-		$this->assertSame((new \DateTime())->setTimestamp($this->now + (8 * 3600))->format(DATE_ATOM), $result['expiresAt']);
+		$this->assertSame(
+			expected: (new \DateTime())->setTimestamp($this->now + (8 * 3600))->format(DATE_ATOM),
+			actual: $result['expiresAt']
+		);
 	}//end testSuccessfulLoginCarriesTheSessionExpiry()
 
 	/**

@@ -127,11 +127,11 @@ class PortalExportServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$audit       = new PortalAuditService($this->repository, $time, $logger);
-		$urls = $this->createMock(IURLGenerator::class);
+		$urls = $this->createMock(originalClassName: IURLGenerator::class);
 		$urls->method('linkToRouteAbsolute')->willReturnCallback(
 			static fn (string $route, array $params): string => 'https://crm.example.test/' . $route . '/' . $params['token']
 		);
-		$mail        = new PortalMailService($this->mailer, $urls, $l10n, $logger);
+		$mail        = new PortalMailService(mailer: $this->mailer, urlGenerator: $urls, l10n: $l10n, logger: $logger);
 		$tokens      = new PortalTokenService($random, $time);
 		$profile     = new PortalProfileService($this->repository, $tokens, $mail, $audit, $l10n);
 		$delegations = new PortalDelegationService($this->repository, $audit, $time);
@@ -242,8 +242,9 @@ class PortalExportServiceTest extends TestCase {
 		// The mail carries the same signed link, absolute, so it opens from the mail.
 		$token = explode('/', $result['downloadUrl'])[4];
 		$this->assertSame(
-			"T:Your data export is ready to download. The link is valid for 30 days.\n\nhttps://crm.example.test/pipelinq.portalDocument.download/" . $token,
-			$body
+			expected: "T:Your data export is ready to download. The link is valid for 30 days.\n\n"
+				. 'https://crm.example.test/pipelinq.portalDocument.download/' . $token,
+			actual: $body
 		);
 
 		$payload = explode('.', explode('/', $result['downloadUrl'])[4])[0];

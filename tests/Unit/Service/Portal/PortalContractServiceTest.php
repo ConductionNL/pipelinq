@@ -115,7 +115,7 @@ class PortalContractServiceTest extends TestCase {
 
 		$page = $this->service->getForAccount($account);
 
-		$this->assertSame(['c-contact-ref', 'c-client-ref'], array_column($page['items'], 'id'));
+		$this->assertSame(expected: ['c-contact-ref', 'c-client-ref'], actual: array_column($page['items'], 'id'));
 	}//end testContractsNamingTheAccountInTheirReferencesAreReturned()
 
 	/**
