@@ -44,7 +44,9 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 8. Layout (REQ-MW-160)
 
-- [ ] 8.1 `src/components/myWork/LayoutPanel.vue`: hide and reorder sections, stored in `/api/settings/user` under `myWorkLayout`; "Terug naar de standaardindeling"; the work list cannot be hidden.
+- [x] 8.1 `src/components/myWork/LayoutPanel.vue`: hide and reorder sections, stored in `/api/settings/user` under `myWorkLayout`; "Terug naar de standaardindeling"; the work list cannot be hidden.
+  - Progress (25 Nov 2026): My work turns on the library's layout panel (`config.layoutPanel: true`, Arrange page, board PqMijnWerkIndelen) with `config.layoutPanelLocked` naming the work list (the three ticket lists, My leads, My follow-ups and the phone list), so those sections can be moved but not hidden; Back to default returns to the manifest layout. Vitest `tests/vitest/myWorkLayoutPanel.spec.js`. The lock is built in nextcloud-vue (ConductionNL/nextcloud-vue#2342, schema 2.201.0, waiting for its merge and release); until that release the installed library ignores `layoutPanelLocked`. Done (25 Nov 2026): #2342 is merged and released in nextcloud-vue 2.221.0, which pipelinq now depends on. The live check (hide Recent activity, reload, it stays hidden; the work list cannot be switched off) runs in the nightly.
+  - Decision (delegated, 25 Nov 2026): the arrangement is stored by the library's per-user layout store (the user's Nextcloud preferences under `pipelinq`), not under `myWorkLayout` in `/api/settings/user`. It is per user, survives a reload and needs no pipelinq code, which is what the requirement asks for; a second store would split one user's layout over two places.
 
 ## 9. Phone (REQ-MW-170)
 
