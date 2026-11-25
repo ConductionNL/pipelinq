@@ -454,9 +454,9 @@ class ContractControllerTest extends TestCase {
 		$this->signIn();
 		$this->groupManager->method('isInGroup')->willReturn(true);
 		$this->objects->seed('c-1', 'salesContract', ['contractNumber' => 'CON-'.date('Y').'-0001', 'status' => 'active', 'ownerId' => 'owner-1']);
-		$this->withBody(['title' => 'Onderhoud', 'clientRef' => 'client-1', 'value' => 5200, 'sourceLeadRef' => 'lead-1', '_route' => 'x']);
+		$this->withBody(body: ['title' => 'Onderhoud', 'clientRef' => 'client-1', 'value' => 5200, 'sourceLeadRef' => 'lead-1', '_route' => 'x']);
 
-		$response = $this->buildController($this->objects)->create();
+		$response = $this->buildController(store: $this->objects)->create();
 
 		$this->assertSame(expected: Http::STATUS_CREATED, actual: $response->getStatus());
 		$saved = end($this->objects->saves);
@@ -478,9 +478,9 @@ class ContractControllerTest extends TestCase {
 	public function testCreateKeepsAGivenTerm(): void {
 		$this->signIn();
 		$this->groupManager->method('isInGroup')->willReturn(true);
-		$this->withBody(['title' => 'Support', 'clientRef' => 'client-1', 'value' => 100, 'valuePerInterval' => 80, 'startDate' => '2027-01-01']);
+		$this->withBody(body: ['title' => 'Support', 'clientRef' => 'client-1', 'value' => 100, 'valuePerInterval' => 80, 'startDate' => '2027-01-01']);
 
-		$this->buildController($this->objects)->create();
+		$this->buildController(store: $this->objects)->create();
 
 		$saved = end($this->objects->saves);
 		$this->assertSame(expected: '2027-01-01', actual: $saved['startDate']);

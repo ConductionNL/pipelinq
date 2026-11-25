@@ -171,7 +171,7 @@ class ContractController extends Controller {
 	 */
 	private function withTermDefaults(array $body): array {
 		if (trim((string)($body['startDate'] ?? '')) === '') {
-			$body['startDate'] = (new \DateTimeImmutable('today'))->format('Y-m-d');
+			$body['startDate'] = (new DateTimeImmutable('today'))->format('Y-m-d');
 		}
 
 		if (isset($body['valuePerInterval']) === false && is_numeric($body['value'] ?? null) === true) {
