@@ -71,7 +71,7 @@ class WebChatHandover {
 			return $conversation;
 		}
 
-		$messages = $this->messages->of(conversationId: $conversationId);
+		$messages = $this->messages->ofChat(conversationId: $conversationId);
 		$message  = [
 			'channel'   => 'chat',
 			'threadKey' => 'conversation:' . $conversationId,

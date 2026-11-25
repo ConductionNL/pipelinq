@@ -63,7 +63,7 @@ class WebChatStore {
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private IAppConfig $appConfig,
+		protected readonly IAppConfig $appConfig,
 	) {
 	}//end __construct()
 

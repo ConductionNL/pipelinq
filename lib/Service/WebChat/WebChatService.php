@@ -205,7 +205,8 @@ class WebChatService {
 	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function agentView(string $conversationId): array {
-		return $this->records->window->agentView(conversationId: $conversationId, conversation: $this->records->access->readableOrRefuse(conversationId: $conversationId));
+		$conversation = $this->records->access->readableOrRefuse(conversationId: $conversationId);
+		return $this->records->window->agentView(conversationId: $conversationId, conversation: $conversation);
 	}//end agentView()
 
 	/**
@@ -305,7 +306,12 @@ class WebChatService {
 		$now = $this->records->messages->now();
 		if ($turn['text'] !== '') {
 			$this->records->store->addMessage(
-				message: $this->records->messages->row(conversationId: $conversationId, direction: 'inbound', body: $turn['text'], metadata: ['author' => 'visitor'])
+				message: $this->records->messages->row(
+					conversationId: $conversationId,
+					direction: 'inbound',
+					body: $turn['text'],
+					metadata: ['author' => 'visitor']
+				)
 			);
 			$conversation['lastInboundAt'] = $now;
 		}

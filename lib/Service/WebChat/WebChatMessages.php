@@ -145,9 +145,9 @@ class WebChatMessages {
 	 *
 	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.1
 	 */
-	public function of(string $conversationId): array {
+	public function ofChat(string $conversationId): array {
 		return $this->store->messages(conversationId: $conversationId);
-	}//end of()
+	}//end ofChat()
 
 	/**
 	 * A message as the colleague's thread draws it: the view, its side (`us` for the
