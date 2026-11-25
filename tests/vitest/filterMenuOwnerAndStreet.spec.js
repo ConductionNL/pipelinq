@@ -6,7 +6,7 @@
  * filter on the owner by name ("Eigenaar: Pieter Jansen"), and the
  * PqEvenement registrations chip names the street ("Straat: Lindelaan").
  *
- * @spec openspec/changes/filter-menu-owner-and-street/specs/filter-menu-owner-and-street/spec.md
+ * @spec openspec/specs/filter-menu-owner-and-street/spec.md
  */
 
 import { readFileSync } from 'node:fs'
@@ -34,6 +34,10 @@ describe('PqContracten owner filter', () => {
 		expect(list.config.filterMenuFields).toEqual([ownerEntry])
 	})
 
+	it('names the owner chip "Owner", not the schema title "Owner ID"', () => {
+		expect(list.config.filterLabels).toEqual({ ownerId: { label: 'Owner' } })
+	})
+
 	it('lets the API count contracts per owner without changing the field', () => {
 		const owner = register.components.schemas.salesContract.properties.ownerId
 		expect(owner.facetable).toBe(true)
@@ -48,6 +52,10 @@ describe('PqFlows owner filter', () => {
 		expect(flows.config.entitySource).toBe('flows')
 		expect(flows.config.filterMenu).toBe(true)
 		expect(flows.config.filterMenuFields).toEqual([{ ...ownerEntry, key: 'owner' }])
+	})
+
+	it('names the owner chip "Owner", not the raw key', () => {
+		expect(flows.config.filterLabels).toEqual({ owner: { label: 'Owner' } })
 	})
 })
 
