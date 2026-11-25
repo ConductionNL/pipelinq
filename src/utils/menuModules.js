@@ -58,7 +58,8 @@ export function resolveMenuModules(raw, profileFile) {
  * A module that is off adds its `ids` to `removals`. A module that is on adds
  * its `menu` to the profile menu, takes its `ids` out of `removals` (Loyalty
  * is removed by the full profile too, and must come back when its module is
- * on), and brings the modules caption with it.
+ * on), and brings the modules caption with it when a module that is on has
+ * entries without a caption of its own.
  *
  * A file that declares no modules comes back as it went in, which is what
  * keeps the full profile untouched.
@@ -79,10 +80,29 @@ export function applyMenuModules(profileFile, enabled) {
 	for (const key of Object.keys(modules)) {
 		applyModule(modules[key] || {}, { isOn: on.has(key), result })
 	}
-	if (Object.keys(modules).some((key) => on.has(key))) {
+	if (
+		Object.keys(modules).some(
+			(key) => on.has(key) && needsModulesCaption(modules[key]),
+		)
+	) {
 		pushCaption(result.menu, profileFile.modulesCaption)
 	}
 	return { ...profileFile, removals: [...result.removals], menu: result.menu }
+}
+
+/**
+ * Whether a switched-on module's entries need the shared modules caption: it
+ * brings entries and no caption of its own. Since the board gave Sales and
+ * Marketing their own caption (#2391), the shared one under them stood empty.
+ *
+ * @param {object} module The module.
+ * @return {boolean} True when its menu has entries and no caption.
+ *
+ * @spec openspec/specs/navigation-ia/spec.md#REQ-NIA-104
+ */
+function needsModulesCaption(module) {
+	const menu = listOf(module?.menu)
+	return menu.length > 0 && !menu.some((entry) => entry?.type === 'caption')
 }
 
 /**
