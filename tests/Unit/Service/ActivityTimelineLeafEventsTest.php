@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/calendar-deepening/tasks.md#4-timeline-merge
+ * @spec openspec/specs/email-calendar-sync/spec.md#requirement-leaf-linked-events-appear-on-the-record-timeline
  */
 
 declare(strict_types=1);

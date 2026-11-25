@@ -338,7 +338,7 @@ class ActivityTimelineReader {
 	 *
 	 * @return array<int,array<string,mixed>> The leaf's event rows.
 	 *
-	 * @spec openspec/changes/calendar-deepening/tasks.md#4-timeline-merge
+	 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-leaf-linked-events-appear-on-the-record-timeline
 	 */
 	public function linkedEvents(string $entityId): array {
 		try {

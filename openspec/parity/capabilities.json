@@ -4523,7 +4523,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"change": [
 					"openspec/changes/archive/2026-11-25-my-work-roadmap",
-					"openspec/changes/calendar-deepening"
+					"openspec/changes/archive/2026-11-25-calendar-deepening"
 				],
 				"requirement": "openspec/specs/my-work :: Upcoming meetings from the calendar (REQ-MW-130)"
 			},

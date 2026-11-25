@@ -368,7 +368,7 @@ class ActivityItemNormalizer {
 	 *
 	 * @return array<string,mixed>|null The activity item, or null for an event without a UID.
 	 *
-	 * @spec openspec/changes/calendar-deepening/tasks.md#4-timeline-merge
+	 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-leaf-linked-events-appear-on-the-record-timeline
 	 */
 	private function normalizeLeafEvent(array $event, ActivityOrigin $origin): ?array {
 		$uid = $this->stringOrNull(value: ($event['uid'] ?? null));
