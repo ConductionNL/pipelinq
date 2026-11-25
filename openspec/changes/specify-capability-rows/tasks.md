@@ -8,8 +8,9 @@
 - [x] 3.1 Check row `clients-search` against "A client can be found by name, email or phone outside the client list"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Dashboard/FindClientWidget.php`
   - Live 25 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main 119f4810, Zuiddrecht set and demo seed, Playwright as daan.verbeek with the Find client widget on his Nextcloud dashboard). Found red first: the widget passed the typed text to OpenRegister's `_search`, so "0612340000" found nothing for a client stored as "+31612340000", and the clients' phones are stored in mixed forms ("+31612340000", "06 12 34 56 78"). Fixed in `src/views/widgets/FindClientWidget.vue`: a search that reads as a phone number (`looksLikePhoneNumber`) is matched by the server's caller match (`POST /api/cti/screen-pop`, read-only: normalises the number and compares digits on both sides); when that is refused the text is searched as typed. Then "0612340000" lists "[Demo] Anna Jansen · +31612340000", choosing it opens her client page; "0612345678" finds Sanne de Vries stored as "06 12 34 56 78". Names and email still search as text. Test: tests/vitest/findClientSearch.spec.js.
-- [ ] 4.1 Check row `auto-cross-app` against "A change made to a tracked object by another app gets the same follow-up"
+- [x] 4.1 Check row `auto-cross-app` against "A change made to a tracked object by another app gets the same follow-up"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Listener/ObjectEventListener.php`
+  - Live 25 Nov 2026 (same sandbox): the lead "[Demo] Webshop vernieuwing Gouden Korst" (no assignee) reassigned to daan.verbeek straight through OpenRegister's object API (`PATCH /apps/openregister/api/objects/pipelinq/lead/{id}` as admin, not through pipelinq), then `php cron.php`: daan gets the notification "Lead assigned: [Demo] Webshop vernieuwing Gouden Korst", and his activity stream shows the same line from app pipelinq.
 - [ ] 5.1 Check row `plat-health-check` against "One check reports the state of every configured connection"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/HealthController.php`
 - [ ] 6.1 Check row `clients-party-kind` against "A client records what kind of party it is"
@@ -19,14 +20,17 @@
 - [x] 8.1 Check row `req-complaint` against "A complaint is held to the legal answer term by default"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/ComplaintSlaService.php:112`
   - Live 25 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main 119f4810, Zuiddrecht set and demo seed; no `complaint_sla_*` term and no SLA policy configured). Found red first: nothing gave a new complaint a deadline (`ComplaintSlaService::calculateDeadline` answers null without a category term and had no caller; the eight seeded complaints had no `slaDeadline`). Built: `ComplaintAnswerTermCreatingListener` (ObjectCreatingEvent on the ticket schema) stamps `slaDeadline` on a new complaint that has none, from `ComplaintSlaService::answerDeadline()`: the category's configured term when shorter, else six weeks (Awb 9:11) from `occurredAt`, else from now. Then, as daan.verbeek through the API: a service complaint received now got `slaDeadline` 2027-01-06 (six weeks on); one with `occurredAt` 2026-10-07 got 2026-11-18, and the Tickets "Past the deadline" filter (`slaDeadline[lt]=now`) lists it and not the new one. Test: tests/Unit/Listener/ComplaintAnswerTermCreatingListenerTest.php.
-- [ ] 9.1 Check row `auto-setup-wizard` against "The setup wizard opens by itself on the first visit"
+- [x] 9.1 Check row `auto-setup-wizard` against "The setup wizard opens by itself on the first visit"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/SetupController.php`
-- [ ] 10.1 Check row `pipeline-kanban` against "A lead dragged to another stage column moves to that stage"
+  - Live 25 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main 119f4810, pipelinq development 3db8eb51, Playwright): with `setup_completed_version` and `setup_dismissed_version` removed from the app config (never completed or dismissed), the admin opening `/apps/pipelinq/` gets the dialog "Welcome to Pipelinq / Set up Pipelinq, step 1 of 7" without asking for it, steps Welcome, Load example data?, Reporting currency, Organisation, Till, Integrations, All set.
+- [x] 10.1 Check row `pipeline-kanban` against "A lead dragged to another stage column moves to that stage"
   - Verify: the scenarios hold on a live instance; evidence on the row: `src/views/pipeline/PipelineBoard.vue`
+  - Live 25 Nov 2026 (same sandbox, Zuiddrecht set and demo seed, Playwright as daan.verbeek on `/apps/pipelinq/pipeline`): dragging the lead "Ledenportaal energiecoöperatie" from the Nieuw column to Benaderd saves it (`PUT .../pipelinq/lead/{id}` 200 with `stage: Benaderd`), and after a reload the card sits in the Benaderd column.
 - [ ] 11.1 Check row `work-recurring-task` against "A task with a repeat schedule comes back on that schedule"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/ScheduledTaskJob.php`
-- [ ] 12.1 Check row `auto-overnight` against "Slow work runs as a background job, not in the user's request"
+- [x] 12.1 Check row `auto-overnight` against "Slow work runs as a background job, not in the user's request"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/SlaDeadlineSweepJob.php`
+  - Live 25 Nov 2026 (same sandbox): `SlaDeadlineSweepJob` is in `oc_jobs` and ran from `php cron.php` (last run 20:47 UTC) with no user signed in; a forced `occ background-job:execute` of it checks the open tickets' deadlines in the background and logs "complaint past its SLA deadline" for the two complaints whose `slaDeadline` has passed. The export scheduler and worker run the same way (`ExportSchedulerJob`, `ExportWorkerJob`).
 - [ ] 13.1 Check row `meeting-link` against "A user can send a booking link that offers the free slots in their own calendar"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/AvailabilityService.php:174`
 - [x] 14.1 Check row `contract-number` against "A won lead can be turned into a numbered contract"
