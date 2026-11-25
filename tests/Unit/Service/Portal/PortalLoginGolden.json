@@ -212,7 +212,8 @@
             "mfaRequired": false,
             "accountId": "acc-1",
             "token": "tok-1",
-            "sessionId": "ses-1"
+            "sessionId": "ses-1",
+            "expiresAt": null
         }
     },
     "unparsable lockout": {
@@ -300,7 +301,8 @@
             "mfaRequired": false,
             "accountId": "acc-1",
             "token": "tok-1",
-            "sessionId": "ses-1"
+            "sessionId": "ses-1",
+            "expiresAt": null
         }
     },
     "wrong password": {
@@ -641,7 +643,8 @@
             "mfaRequired": false,
             "accountId": "acc-1",
             "token": "tok-1",
-            "sessionId": "ses-1"
+            "sessionId": "ses-1",
+            "expiresAt": null
         }
     },
     "success without status": {
@@ -727,7 +730,8 @@
             "mfaRequired": false,
             "accountId": "acc-1",
             "token": "tok-1",
-            "sessionId": "ses-1"
+            "sessionId": "ses-1",
+            "expiresAt": null
         }
     },
     "tenant enforces mfa, not enrolled": {
@@ -1025,7 +1029,8 @@
             "mfaRequired": false,
             "accountId": "acc-1",
             "token": "tok-1",
-            "sessionId": "ses-1"
+            "sessionId": "ses-1",
+            "expiresAt": null
         }
     },
     "mfa enforced and enrolled, right code": {

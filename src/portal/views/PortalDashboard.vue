@@ -103,14 +103,15 @@ import { portalApi } from '../portalApi.js'
 export default {
 	name: 'PortalDashboard',
 	props: {
+		/** The record types to offer; when not given, the tenant's switched-on features decide. */
 		features: {
 			type: Array,
-			default: () => ['invoices', 'contracts', 'orders'],
+			default: null,
 		},
 	},
 
 	data() {
-		return { activeTab: 'invoices', rows: [], loading: false, error: '' }
+		return { activeTab: 'invoices', rows: [], loading: false, error: '', tenantFeatures: null }
 	},
 
 	computed: {
@@ -120,7 +121,8 @@ export default {
 				{ key: 'contracts', label: t('pipelinq', 'Contracts') },
 				{ key: 'orders', label: t('pipelinq', 'Orders') },
 			]
-			return all.filter((tab) => this.features.includes(tab.key))
+			const enabled = this.features ?? this.tenantFeatures ?? []
+			return all.filter((tab) => enabled.includes(tab.key))
 		},
 
 		tableCaption() {
@@ -133,13 +135,35 @@ export default {
 		},
 	},
 
-	mounted() {
+	async mounted() {
+		if (this.features === null) {
+			await this.loadTenantFeatures()
+		}
 		if (this.availableTabs.length) {
 			this.select(this.availableTabs[0].key)
 		}
 	},
 
 	methods: {
+		/**
+		 * Read which record types the tenant has switched on, so a type it has
+		 * not switched on gets no tab. When the configuration cannot be read
+		 * the three types are offered and the server answers for each.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-sees-their-own-invoices-contracts-orders-and-quotes
+		 */
+		async loadTenantFeatures() {
+			try {
+				const config = await portalApi.tenantConfig()
+				this.tenantFeatures = Array.isArray(config?.enabledFeatures)
+					? config.enabledFeatures
+					: ['invoices', 'contracts', 'orders']
+			} catch {
+				this.tenantFeatures = ['invoices', 'contracts', 'orders']
+			}
+		},
+
 		onTabKeydown(event, key) {
 			// WAI-ARIA Authoring Practices: tab roving focus on Arrow keys.
 			const keys = this.availableTabs.map((tab) => tab.key)

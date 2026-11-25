@@ -149,6 +149,19 @@ class PortalAuthServiceTest extends TestCase {
 	}//end testSuccessfulLogin()
 
 	/**
+	 * The login answer carries the session's expiry (the tenant's eight hours),
+	 * which the portal needs to keep the client signed in until then.
+	 *
+	 * @return void
+	 */
+	public function testSuccessfulLoginCarriesTheSessionExpiry(): void {
+		$this->seedAccount();
+		$result = $this->auth->login('jan@pietersen.nl', 'geheimwachtwoord123', 'tenant-a', null, 'ip', 'ua');
+
+		$this->assertSame((new \DateTime())->setTimestamp($this->now + (8 * 3600))->format(DATE_ATOM), $result['expiresAt']);
+	}//end testSuccessfulLoginCarriesTheSessionExpiry()
+
+	/**
 	 * A wrong password is rejected with 401 invalidCredentials.
 	 *
 	 * @return void
