@@ -37,6 +37,11 @@ use OCA\Pipelinq\BackgroundJob\ExportWorkerJob;
 use OCA\Pipelinq\Service\Export\ExportExecutionService;
 use OCA\Pipelinq\Service\Export\ExportRunService;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCA\Pipelinq\Service\SystemServiceAccount;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
+use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -102,6 +107,7 @@ class ExportWorkerJobTest extends TestCase {
 			runs: $this->runs,
 			execution: $this->execution,
 			logger: $this->logger,
+			systemAccount: $this->signedInAccount(),
 		);
 	}//end buildJob()
 
@@ -309,4 +315,20 @@ class ExportWorkerJobTest extends TestCase {
 		$this->invokeRun(job: $this->buildJob());
 
 	}//end testWorkerHonoursBatchCapPerTick()
+
+	/**
+	 * A system account whose session already has a user, so jobs run as that user.
+	 *
+	 * @return SystemServiceAccount The account.
+	 */
+	private function signedInAccount(): SystemServiceAccount {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn($this->createMock(originalClassName: IUser::class));
+
+		return new SystemServiceAccount(
+			userManager: $this->createMock(originalClassName: IUserManager::class),
+			userSession: $session,
+			random: $this->createMock(originalClassName: ISecureRandom::class)
+		);
+	}//end signedInAccount()
 }//end class

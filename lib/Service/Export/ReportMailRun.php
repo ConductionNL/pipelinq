@@ -110,7 +110,9 @@ class ReportMailRun {
 	 * Run a mail delivery: one mail per person with the rows that person may
 	 * read. The outcome is shaped for ExportRunService::completeRun(): the
 	 * run succeeded when every mail went out, failed when none did, and is
-	 * partial otherwise; the manifest lists each person's outcome.
+	 * partial otherwise; the manifest lists each person's outcome, one entry
+	 * per person, since the run's `fileManifestJson` is an array of objects
+	 * (a keyed `{mail: [...]}` was refused on save and failed every mailed run).
 	 *
 	 * @param array<string, mixed> $job         The export job.
 	 * @param array<string, mixed> $destination The mail destination.
@@ -142,7 +144,7 @@ class ReportMailRun {
 			'rowCount'     => $rows,
 			'byteCount'    => $bytes,
 			'fileCount'    => $files,
-			'manifest'     => ['mail' => $outcomes],
+			'manifest'     => $outcomes,
 			'errorMessage' => $this->reasonOf(failed: $failed),
 		];
 	}//end deliver()
