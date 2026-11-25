@@ -5099,15 +5099,6 @@
 									"label": "Overview"
 								},
 								{
-									"widgetId": "ticket-web-chat",
-									"label": "Website chat",
-									"visibleWhen": {
-										"field": "channel",
-										"op": "eq",
-										"value": "chat"
-									}
-								},
-								{
 									"widgetIds": [
 										"ticket-decision-routes",
 										"ticket-decisions",
@@ -5127,6 +5118,15 @@
 									"visibleWhen": {
 										"field": "recording_url",
 										"op": "notEmpty"
+									}
+								},
+								{
+									"widgetId": "ticket-web-chat",
+									"label": "Website chat",
+									"visibleWhen": {
+										"field": "channel",
+										"op": "eq",
+										"value": "chat"
 									}
 								},
 								{
