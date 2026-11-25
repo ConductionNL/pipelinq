@@ -65,7 +65,8 @@ Each block is one requirement and can ship on its own. Every block ends with a V
 
 ## 11. Refresh (REQ-MW-190)
 
-- [ ] 11.1 Refresh button and a 5-minute timer in `MyWork.vue`, cleared on destroy; keep the scroll position; stale warning after 10 minutes of failed fetches.
+- [x] 11.1 Refresh button and a 5-minute timer in `MyWork.vue`, cleared on destroy; keep the scroll position; stale warning after 10 minutes of failed fetches.
+  - Built (25 Nov 2026) as manifest configuration, not a Vue file: My work sets `config.autoRefresh` (`intervalSeconds` 300, `staleAfterSeconds` 600, `button`). The library (ConductionNL/nextcloud-vue#2364, `dashboard-auto-refresh`, schema 2.202.0) fires `cn:page:refresh` every 5 minutes, which every list reads again on in place (no reload, so the scroll position stays); the timer is cleared when the page goes. The header's refresh button reads at once and spins until the lists answer; when the reads keep failing and the last good one is older than 10 minutes, "Data may be outdated. Last updated: <time>" shows with Retry. Vitest `tests/vitest/myWorkAutoRefresh.spec.js`; the library's own behaviour in `tests/components/CnDashboardPageAutoRefresh.spec.js` there. The live check (wait 5 minutes, a newly assigned ticket appears) runs in the nightly.
 
 ## 12. Filters (REQ-MW-200)
 
