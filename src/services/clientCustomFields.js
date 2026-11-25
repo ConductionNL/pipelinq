@@ -73,6 +73,9 @@ export const SHIPPED_CLIENT_PROPERTIES = [
 
 const SHIPPED = new Set(SHIPPED_CLIENT_PROPERTIES)
 
+const KIND_BY_TYPE = { boolean: 'boolean', number: 'number', integer: 'number' }
+const DATE_FORMATS = new Set(['date', 'date-time'])
+
 /**
  * The input a property's type asks for, or null for a shape the form does not edit.
  *
@@ -83,17 +86,34 @@ function kindOf(property) {
 	if (Array.isArray(property.enum) && property.enum.length > 0) {
 		return 'choice'
 	}
-	switch (property.type) {
-	case 'boolean':
-		return 'boolean'
-	case 'number':
-	case 'integer':
-		return 'number'
-	case 'string':
-		return (property.format === 'date' || property.format === 'date-time') ? 'date' : 'text'
-	default:
-		return null
+	if (property.type === 'string') {
+		return DATE_FORMATS.has(property.format) ? 'date' : 'text'
 	}
+	return KIND_BY_TYPE[property.type] ?? null
+}
+
+/**
+ * @param {string|number|boolean|null|undefined} value A value typed into the form.
+ * @return {boolean} Whether nothing was filled in.
+ */
+function isUnfilled(value) {
+	return value === undefined || value === null || (typeof value === 'string' && value.trim() === '')
+}
+
+/**
+ * The value to store for a filled-in field: a number for a number field, or
+ * undefined when the text is not one.
+ *
+ * @param {{kind: string}} field The field.
+ * @param {string|number|boolean} value The filled-in value.
+ * @return {string|number|boolean|undefined} The value to store.
+ */
+function storedValue(field, value) {
+	if (field.kind !== 'number') {
+		return value
+	}
+	const number = Number(value)
+	return Number.isNaN(number) ? undefined : number
 }
 
 /**
@@ -156,21 +176,10 @@ export function customFieldValuesToSave(fields, values, existing) {
 	const out = {}
 	for (const field of (Array.isArray(fields) ? fields : [])) {
 		const value = values ? values[field.key] : undefined
-		const empty = value === undefined || value === null || (typeof value === 'string' && value.trim() === '')
-		if (empty) {
-			if (existing) {
-				out[field.key] = null
-			}
-			continue
+		const stored = isUnfilled(value) ? (existing ? null : undefined) : storedValue(field, value)
+		if (stored !== undefined) {
+			out[field.key] = stored
 		}
-		if (field.kind === 'number') {
-			const number = Number(value)
-			if (!Number.isNaN(number)) {
-				out[field.key] = number
-			}
-			continue
-		}
-		out[field.key] = value
 	}
 	return out
 }

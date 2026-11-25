@@ -718,6 +718,7 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'The contact strip as a widget, so ClientDetail places it in the band across the page, above the tabs and the side column (PqKlant, PqOrganisatie). It draws its own card.',
 	},
+	// @custom-widget-ratchet exclude no built-in widget can stay hidden until a property unknown at build time holds a value: the data widget draws its empty state on every client and needs its field list in the manifest, while the added fields exist only in the runtime schema
 	ClientOtherDetailsWidget: {
 		kind: 'widget',
 		component: sectionWidget(

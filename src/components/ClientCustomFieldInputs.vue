@@ -73,6 +73,7 @@ export default {
 		/**
 		 * @param {{key: string}} field The field.
 		 * @return {string} The input's id.
+		 * @spec openspec/changes/specify-capability-rows/specs/client-management/spec.md#requirement-a-field-an-administrator-adds-to-the-client-schema-shows-on-the-client-pages
 		 */
 		inputId(field) {
 			return `client-custom-${field.key}`
@@ -81,6 +82,7 @@ export default {
 		/**
 		 * @param {{kind: string}} field The field.
 		 * @return {string} The HTML input type.
+		 * @spec openspec/changes/specify-capability-rows/specs/client-management/spec.md#requirement-a-field-an-administrator-adds-to-the-client-schema-shows-on-the-client-pages
 		 */
 		inputType(field) {
 			if (field.kind === 'number') {

@@ -49,12 +49,20 @@ export default {
 	},
 
 	computed: {
-		/** @return {Array<{key: string, label: string, value: string}>} The rows to show. */
+		/**
+		 * @return {Array<{key: string, label: string, value: string}>} The rows to show.
+		 * @spec openspec/changes/specify-capability-rows/specs/client-management/spec.md#requirement-a-field-an-administrator-adds-to-the-client-schema-shows-on-the-client-pages
+		 */
 		rows() {
 			return customFieldRows(this.fields, this.client, (text) => translate('pipelinq', text))
 		},
 	},
 
+	/**
+	 * Read the added fields once the card is on the page.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/client-management/spec.md#requirement-a-field-an-administrator-adds-to-the-client-schema-shows-on-the-client-pages
+	 */
 	mounted() {
 		this.loadFields()
 	},

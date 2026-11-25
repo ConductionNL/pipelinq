@@ -616,6 +616,11 @@ export default {
 		client: populateFormWatcher(),
 	},
 
+	/**
+	 * Load the languages and the fields an administrator added to the client schema.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/client-management/spec.md#requirement-a-field-an-administrator-adds-to-the-client-schema-shows-on-the-client-pages
+	 */
 	mounted() {
 		this.loadLanguages()
 		this.loadCustomFields()
