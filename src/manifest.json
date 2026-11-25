@@ -4888,7 +4888,7 @@
 						"type": "audit-trail",
 						"title": "History",
 						"icon": "History",
-						"_note": "Board PqTicket History tab (change ticket-handover-history, spec_ref openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#REQ-THH-001): OpenRegister's audit trail of the ticket in words, newest first. A handover reads \"Passed to <assignee> by <actor>\", a status change the state it reached; any other update reads \"Updated by <actor>\" with the fields it changed. The change rules are limited to updates, so the creation entry keeps \"Created by <actor>\". The ticket schema has no team field, so there is no team rule.",
+						"_note": "Board PqTicket History tab (change ticket-handover-history, spec_ref openspec/specs/ticket-handover-history/spec.md#REQ-THH-001): OpenRegister's audit trail of the ticket in words, newest first. A handover reads \"Passed to <assignee> by <actor>\", a status change the state it reached; any other update reads \"Updated by <actor>\" with the fields it changed. The change rules are limited to updates, so the creation entry keeps \"Created by <actor>\". The ticket schema has no team field, so there is no team rule.",
 						"content": {
 							"layout": "stacked",
 							"actionLabels": {

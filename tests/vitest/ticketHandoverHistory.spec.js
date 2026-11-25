@@ -8,7 +8,7 @@
  * of its own. A handover's note is the `handoverNote` the Pass on action
  * writes with the new assignee, shown under the entry by the rule's `note`.
  *
- * @spec openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#REQ-THH-001
+ * @spec openspec/specs/ticket-handover-history/spec.md#REQ-THH-001
  */
 
 import fs from 'fs'

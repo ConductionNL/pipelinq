@@ -19,7 +19,7 @@
  * handover-note field yet (see tasks.md). The admin account only provisions
  * the two users and the ticket, and removes them again.
  *
- * @spec openspec/changes/ticket-handover-history/specs/ticket-handover-history/spec.md#requirement-the-ticket-page-has-a-history-tab-in-words-req-thh-001
+ * @spec openspec/specs/ticket-handover-history/spec.md#requirement-the-ticket-page-has-a-history-tab-in-words-req-thh-001
  */
 import type { APIRequestContext } from '@playwright/test'
 
