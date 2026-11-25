@@ -42,9 +42,13 @@ use Psr\Log\LoggerInterface;
 /**
  * Controller for POS product catalogue endpoints.
  *
- * Authorization model: every action requires an authenticated POS operator (a
- * POS-group member or admin), enforced via PosAccessPolicy — the catalogue is a
- * cashier capability, not an any-authenticated-user one. Lookup and price
+ * Authorization model: barcode lookup requires an authenticated POS operator (a
+ * POS-group member or admin), enforced via PosAccessPolicy — the barcode
+ * search is a cashier capability. Price resolution is also open to any signed-in
+ * user who may read the product (products-quote-from-lead task 1): such a
+ * caller names the product by id, the server reads it with the caller's own
+ * rights (404 when it cannot be read) and prices the stored product, never the
+ * payload. Lookup and price
  * resolution are scoped inside ProductCatalogService to this app's own register
  * + product schema, so a caller can never reach objects outside the catalogue
  * (no IDOR). The effective price and tax rate are resolved server-side from the
@@ -129,17 +133,28 @@ class ProductCatalogController extends Controller {
 	 *
 	 * @return JSONResponse The resolved price.
 	 *
+	 * A POS operator may send the product object itself (the till holds it).
+	 * Any other signed-in user names the product by id (`productId`, or the id
+	 * of the `product` object); it is read with the caller's rights and the
+	 * stored product is priced, so a caller who may read the product may
+	 * resolve its price and nobody else.
+	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
 	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
+	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
 	 */
 	#[NoAdminRequired]
 	public function resolvePrice(): JSONResponse {
-		$uid = $this->requireUserId();
+		$uid = $this->posResponses()->userIdOr401(user: $this->userSession->getUser());
 		if ($uid instanceof JSONResponse) {
 			return $uid;
 		}
 
-		$product = (array)$this->request->getParam('product', []);
+		$product = $this->productToPrice(uid: $uid);
+		if ($product instanceof JSONResponse) {
+			return $product;
+		}
+
 		$quantity = (float)$this->request->getParam('quantity', 1);
 
 		// 🔴 A NEGATIVE QUANTITY IS A BAD REQUEST, NOT A ZERO.
@@ -176,6 +191,68 @@ class ProductCatalogController extends Controller {
 			label: 'resolvePrice'
 		);
 	}//end resolvePrice()
+
+	/**
+	 * The product a price is resolved for.
+	 *
+	 * A POS operator's product object is priced as sent (the till's
+	 * catalogue). For anyone else the product is the stored one, read by id
+	 * with the caller's rights: no id is a 403 (only the till prices an
+	 * object it sends), an id the caller cannot read is a 404.
+	 *
+	 * @param string $uid The signed-in user.
+	 *
+	 * @return array<string, mixed>|JSONResponse The product, or the refusal.
+	 *
+	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 */
+	private function productToPrice(string $uid): array|JSONResponse {
+		$product = (array)$this->request->getParam('product', []);
+		if ($this->policy->isPosUser(userId: $uid) === true) {
+			return $product;
+		}
+
+		$productId = $this->productIdOf(product: $product);
+		if ($productId === '') {
+			return new JSONResponse(
+				['error' => $this->l10n->t('POS access is required for the product catalogue')],
+				Http::STATUS_FORBIDDEN
+			);
+		}
+
+		$stored = $this->reader->read(id: $productId, schemaKey: 'product_schema');
+		if ($stored === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Product not found')], Http::STATUS_NOT_FOUND);
+		}
+
+		return $stored;
+	}//end productToPrice()
+
+	/**
+	 * The id of the product to price: the productId parameter, else the id
+	 * the product object carries.
+	 *
+	 * @param array<string, mixed> $product The product object sent, if any.
+	 *
+	 * @return string The id; empty when none is given.
+	 *
+	 * @spec openspec/changes/products-quote-from-lead/tasks.md#task-1
+	 */
+	private function productIdOf(array $product): string {
+		$candidates = [
+			$this->request->getParam('productId', ''),
+			($product['id'] ?? ''),
+			($product['@self']['id'] ?? ''),
+			($product['uuid'] ?? ''),
+		];
+		foreach ($candidates as $candidate) {
+			if (is_scalar($candidate) === true && trim((string)$candidate) !== '') {
+				return trim((string)$candidate);
+			}
+		}
+
+		return '';
+	}//end productIdOf()
 
 	/**
 	 * A request parameter as a string, or null when it is absent.
