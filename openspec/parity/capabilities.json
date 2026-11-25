@@ -1689,7 +1689,7 @@
 				"reachedOn": "Clients -> New client -> Account owner; client detail page",
 				"readOn": "2026-10-07",
 				"requirement": "openspec/specs/unify-client-contact :: REQ-PUCC-008 — Every client SHALL name the colleague who owns it",
-				"change": "openspec/changes/filter-menu-owner-and-street"
+				"change": "openspec/changes/archive/2026-11-25-filter-menu-owner-and-street"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/how-to-set-a-record-owner \"Assign records to HubSpot users, using the [Object] owner property for contacts, leads, companies, deals, tickets, and custom object records.\" All products and plans.",
