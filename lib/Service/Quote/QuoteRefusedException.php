@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ use Throwable;
 /**
  * A quote that was not sent, and why.
  *
- * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
  */
 class QuoteRefusedException extends RuntimeException {
 
@@ -56,7 +56,7 @@ class QuoteRefusedException extends RuntimeException {
 	 *
 	 * @return int The status.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 	 */
 	public function getStatus(): int {
 		return $this->status;
@@ -67,7 +67,7 @@ class QuoteRefusedException extends RuntimeException {
 	 *
 	 * @return array<string, mixed> The details.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 	 */
 	public function getDetails(): array {
 		return $this->details;

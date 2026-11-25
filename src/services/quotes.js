@@ -17,7 +17,7 @@ import { generateUrl } from '@nextcloud/router'
  *
  * @param {string} leadId The lead.
  * @return {Promise<?{email: string, name: string, source: string}>} The recipient, or null without an email address.
- * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
  */
 export async function fetchQuoteRecipient(leadId) {
 	const { data } = await axios.get(
@@ -32,7 +32,7 @@ export async function fetchQuoteRecipient(leadId) {
  * @param {string} leadId The lead.
  * @param {{templateId: string, validUntil?: string}} input The template and the last day the quote holds (Y-m-d).
  * @return {Promise<{number: string, validUntil: string, recipient: object, fileId: ?number, path: ?string, contactMomentId: ?string}>}
- * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
  */
 export async function sendQuote(leadId, input) {
 	const body = { templateId: input.templateId }
@@ -49,7 +49,7 @@ export async function sendQuote(leadId, input) {
  *
  * @param {Date} date The date.
  * @return {string} The date, e.g. "2026-12-17".
- * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
  */
 export function isoDate(date) {
 	const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -62,7 +62,7 @@ export function isoDate(date) {
  *
  * @param {Date} [today] Today.
  * @return {Date} The last day the quote holds.
- * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
  */
 export function defaultValidUntil(today = new Date()) {
 	const date = new Date(today.getFullYear(), today.getMonth(), today.getDate())

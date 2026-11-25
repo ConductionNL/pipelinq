@@ -477,7 +477,7 @@ class FilinqLetterAdapter implements FilinqLetterAdapterInterface
      *
      * @return array<string, array<string, mixed>> The option.
      *
-     * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-the-quote-shows-vat-per-rate-req-qslice-003
+     * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-the-quote-shows-vat-per-rate-req-qslice-003
      */
     private static function adHocOptions(array $adHocData): array
     {

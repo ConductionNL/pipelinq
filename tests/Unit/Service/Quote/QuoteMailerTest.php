@@ -15,7 +15,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/products-quote-from-lead/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use RuntimeException;
 /**
  * The quote's mail: addressee, subject, body and the PDF attached.
  *
- * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
  */
 class QuoteMailerTest extends TestCase {
 

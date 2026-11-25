@@ -5,7 +5,7 @@ Send a client a quote built from the products on a lead. filinq turns the lead's
 ## Specs
 
 - `openspec/specs/product-catalog-quoting/spec.md`
-- `openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md`
+- `openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md`
 
 ## Send a quote
 

@@ -130,7 +130,7 @@ class LeadLinePricer {
 	 *
 	 * @return bool True when the price equals the product's own price.
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/tasks.md
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md
 	 */
 	private function isOwnPrice(array $line): bool {
 		$product = $this->reader->read(id: (string)$line['product'], schemaKey: 'product_schema');

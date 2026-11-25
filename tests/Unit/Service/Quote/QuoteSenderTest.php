@@ -15,7 +15,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/products-quote-from-lead/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -47,8 +47,8 @@ use RuntimeException;
 /**
  * Render, mail and log; refuse without a recipient; keep the file when the mail fails.
  *
- * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
- * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-the-quote-shows-vat-per-rate-req-qslice-003
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-the-quote-shows-vat-per-rate-req-qslice-003
  */
 class QuoteSenderTest extends TestCase {
 
@@ -235,7 +235,7 @@ class QuoteSenderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 	 */
 	public function testSendsToTheContactAndLogsTheQuote(): void {
 		$this->numbers->expects($this->once())->method('next')->willReturn('OFF-2026-0042');
@@ -340,7 +340,7 @@ class QuoteSenderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 	 */
 	public function testWithoutAContactEmailTheClientReceivesIt(): void {
 		$this->readable[self::CONTACT]['email'] = '';
@@ -382,7 +382,7 @@ class QuoteSenderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 	 */
 	public function testWithoutARecipientNothingIsSentOrLogged(): void {
 		$this->readable[self::CONTACT]['email'] = '';
@@ -406,7 +406,7 @@ class QuoteSenderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 	 */
 	public function testAFailedMailLogsNothingAndNamesTheFile(): void {
 		$this->numbers->method('next')->willReturn('OFF-2026-0042');
@@ -450,7 +450,7 @@ class QuoteSenderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-sent-quote-does-not-change-afterwards-req-qslice-004
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-sent-quote-does-not-change-afterwards-req-qslice-004
 	 */
 	public function testSendingAgainTakesTheNextNumber(): void {
 		$this->numbers->method('next')->willReturnOnConsecutiveCalls('OFF-2026-0042', 'OFF-2026-0043');

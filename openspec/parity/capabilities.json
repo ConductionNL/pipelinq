@@ -6151,17 +6151,17 @@
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "openspec/specs/product-catalog-quoting describes it; lib/Controller holds no quote controller, so only the pricing half is built",
+			"providerHow": "openspec/specs/product-catalog-quoting REQ-QSLICE-001 to 004: a quote from the lead's lines, sent as a PDF and logged",
 			"feature": "product-catalog-quoting",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "openspec/specs/product-catalog-quoting, with no matching controller in lib/Controller",
+				"state": "built",
+				"evidence": "lib/Controller/QuoteController.php (POST /api/leads/{id}/quotes), lib/Service/QuoteService.php (totals per VAT rate, numbering), lib/Service/Quote/QuoteSender.php (PDF through filinq, mail, contact moment), src/modals/SendQuoteModal.vue (Send quote on the lead); lead lines priced through resolve-price with lead.lines.addFrom.resolve (#4123)",
 				"owner": "ConductionNL/pipelinq",
-				"change": "products-quote-from-lead",
+				"change": "openspec/changes/archive/2026-11-25-products-quote-from-lead",
 				"requirement": [
-					"openspec/changes/products-quote-from-lead/specs/product-catalog-quoting :: A line is filled from the catalogue (REQ-QSLICE-001)",
-					"openspec/changes/products-quote-from-lead/specs/product-catalog-quoting :: A quote is sent as a PDF and logged (REQ-QSLICE-002)"
+					"openspec/specs/product-catalog-quoting :: A line is filled from the catalogue (REQ-QSLICE-001)",
+					"openspec/specs/product-catalog-quoting :: A quote is sent as a PDF and logged (REQ-QSLICE-002)"
 				]
 			},
 			"note": "The prices and the tiers are built. Producing a quote document from them is specified and not built. Corrections round 9 (2026-09-28): built.state specified to none, because no change carries the quote document. The archived openspec/changes/archive/2026-03-21-product-catalog-quoting left only the main spec openspec/specs/product-catalog-quoting, which says quote generation and PDF export are not implemented (spec.md:9); the open change products-price-lists prices quote lines and does not produce or send a quote; open change beta-surface-alignment (proposal.md:54-60) records that no PDF or template step exists for the quote-as-contract record. No gap-decisions entry names the row.",

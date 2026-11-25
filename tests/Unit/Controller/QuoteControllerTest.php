@@ -15,7 +15,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/products-quote-from-lead/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-3
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Every status of the send endpoint, the recipient preview and the validity date.
  *
- * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+ * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
  */
 class QuoteControllerTest extends TestCase {
 
@@ -203,7 +203,7 @@ class QuoteControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 	 */
 	public function testWithoutFilinqIs503(): void {
 		$this->letters->method('unavailableReason')->willReturn('filinq_absent: filinq is not installed');
@@ -263,7 +263,7 @@ class QuoteControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/specs/product-catalog-quoting/spec.md#requirement-a-quote-is-sent-as-a-pdf-and-logged-req-qslice-002
 	 */
 	public function testSendsTheQuote(): void {
 		$this->filinqPresent();
