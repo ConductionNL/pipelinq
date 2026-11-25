@@ -144,6 +144,8 @@ class ContractController extends Controller {
 	 * @param string              $uid  The acting user.
 	 *
 	 * @return array<string,mixed>
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/contract-renewal-tracking/spec.md#requirement-a-won-lead-can-be-turned-into-a-numbered-contract
 	 */
 	private function withContractDefaults(array $body, string $uid): array {
 		if (trim((string)($body['ownerId'] ?? '')) === '') {
@@ -154,8 +156,30 @@ class ContractController extends Controller {
 			$body['status'] = 'draft';
 		}
 
-		return $body;
+		return $this->withTermDefaults(body: $body);
 	}//end withContractDefaults()
+
+	/**
+	 * Default what a contract made from a won lead does not carry: it starts
+	 * today, and its value per interval is the lead's value.
+	 *
+	 * @param array<string,mixed> $body The request body.
+	 *
+	 * @return array<string,mixed>
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/contract-renewal-tracking/spec.md#requirement-a-won-lead-can-be-turned-into-a-numbered-contract
+	 */
+	private function withTermDefaults(array $body): array {
+		if (trim((string)($body['startDate'] ?? '')) === '') {
+			$body['startDate'] = (new DateTimeImmutable('today'))->format('Y-m-d');
+		}
+
+		if (isset($body['valuePerInterval']) === false && is_numeric($body['value'] ?? null) === true) {
+			$body['valuePerInterval'] = $body['value'];
+		}
+
+		return $body;
+	}//end withTermDefaults()
 
 	/**
 	 * Apply a guarded lifecycle transition to a contract.

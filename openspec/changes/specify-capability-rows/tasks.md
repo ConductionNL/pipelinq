@@ -16,8 +16,9 @@
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/PartyKindRegistryService.php:112`
 - [ ] 7.1 Check row `clients-opencorporates` against "An organisation abroad can be looked up in an international company register"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/OpenCorporatesApiClient.php:96`
-- [ ] 8.1 Check row `req-complaint` against "A complaint is held to the legal answer term by default"
+- [x] 8.1 Check row `req-complaint` against "A complaint is held to the legal answer term by default"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/ComplaintSlaService.php:112`
+  - Live 25 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main 119f4810, Zuiddrecht set and demo seed; no `complaint_sla_*` term and no SLA policy configured). Found red first: nothing gave a new complaint a deadline (`ComplaintSlaService::calculateDeadline` answers null without a category term and had no caller; the eight seeded complaints had no `slaDeadline`). Built: `ComplaintAnswerTermCreatingListener` (ObjectCreatingEvent on the ticket schema) stamps `slaDeadline` on a new complaint that has none, from `ComplaintSlaService::answerDeadline()`: the category's configured term when shorter, else six weeks (Awb 9:11) from `occurredAt`, else from now. Then, as daan.verbeek through the API: a service complaint received now got `slaDeadline` 2027-01-06 (six weeks on); one with `occurredAt` 2026-10-07 got 2026-11-18, and the Tickets "Past the deadline" filter (`slaDeadline[lt]=now`) lists it and not the new one. Test: tests/Unit/Listener/ComplaintAnswerTermCreatingListenerTest.php.
 - [ ] 9.1 Check row `auto-setup-wizard` against "The setup wizard opens by itself on the first visit"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/SetupController.php`
 - [ ] 10.1 Check row `pipeline-kanban` against "A lead dragged to another stage column moves to that stage"
@@ -29,8 +30,9 @@
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/SlaDeadlineSweepJob.php`
 - [ ] 13.1 Check row `meeting-link` against "A user can send a booking link that offers the free slots in their own calendar"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/AvailabilityService.php:174`
-- [ ] 14.1 Check row `contract-number` against "A won lead can be turned into a numbered contract"
+- [x] 14.1 Check row `contract-number` against "A won lead can be turned into a numbered contract"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/ContractService.php:208`
+  - Live 25 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main 119f4810, Zuiddrecht set and demo seed, Playwright as daan.verbeek). Found red first: a won lead offered no Create contract, and `POST /api/contracts` with a lead's title, client and value failed 500 (the schema requires `startDate` and `valuePerInterval`). Built: LeadDetail header action `create-contract` (only when `status` is won) posting the lead's title, client, value and id to `/api/contracts`; `ContractController` now defaults `startDate` to today and `valuePerInterval` to `value`; `salesContract.sourceLeadRef` (new fragment `99-zz-sales-contract-source-lead.json`, salesContract 1.3.0 -> 1.4.0) names the lead. Then on "[Demo] Onderhoudscontract gewonnen": Create contract, Confirm, 201, toast "Draft contract made.", contract `C-2026-001`, status draft, the lead's client and value 5200, `sourceLeadRef` the lead; the 12 contracts' numbers are all distinct. Tests: tests/Unit/Controller/ContractControllerTest.php (create from a won lead, a given term kept), tests/vitest/contractFromWonLead.spec.js.
 - [ ] 15.1 Check row `gov-klantinteracties` against "Stored contact moments can be read in the VNG Klantinteracties format"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Integration/ContactMomentLeafProvider.php`
 - [ ] 16.1 Check row `req-conversation-export` against "Every service conversation can be copied to an outside archive"
