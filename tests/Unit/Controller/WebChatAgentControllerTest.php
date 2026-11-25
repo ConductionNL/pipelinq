@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover/spec.md#requirement-the-chat-goes-to-a-colleague-through-the-queue-req-wch-004
+ * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-the-chat-goes-to-a-colleague-through-the-queue-req-wch-004
  */
 
 declare(strict_types=1);
@@ -68,7 +68,7 @@ class WebChatAgentControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function testTheTicketsThreadKeyNamesTheChat(): void {
 		$view = ['conversation' => 'c-1', 'status' => 'open', 'assignedTo' => '', 'ticket' => 't-1', 'messages' => []];

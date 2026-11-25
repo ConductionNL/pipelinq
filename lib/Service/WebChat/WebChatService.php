@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover/spec.md
+ * @spec openspec/specs/web-chat-and-handover/spec.md
  */
 
 declare(strict_types=1);
@@ -77,7 +77,7 @@ class WebChatService {
 	 *
 	 * @throws WebChatRefusal When the channel is not active or the chat cannot be stored.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function start(string $token): array {
 		$channel = $this->records->access->channelOrRefuse(token: $token);
@@ -121,7 +121,7 @@ class WebChatService {
 	 *
 	 * @throws WebChatRefusal When the chat is unknown, the secret is wrong, or the message is empty or invalid.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.1
 	 */
 	public function send(string $token, string $conversationId, string $secret, array $turn): array {
 		[$channel, $conversation] = $this->records->access->chatOrRefuse(token: $token, conversationId: $conversationId, secret: $secret);
@@ -166,7 +166,7 @@ class WebChatService {
 	 *
 	 * @throws WebChatRefusal When the chat is unknown or the secret is wrong.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function poll(string $token, string $conversationId, string $secret, string $since=''): array {
 		[$channel, $conversation] = $this->records->access->chatOrRefuse(token: $token, conversationId: $conversationId, secret: $secret);
@@ -187,7 +187,7 @@ class WebChatService {
 	 *
 	 * @throws WebChatRefusal When they may not, or it is not a chat.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function requireReadableChat(string $conversationId): void {
 		$this->records->access->readableOrRefuse(conversationId: $conversationId);
@@ -202,7 +202,7 @@ class WebChatService {
 	 *
 	 * @throws WebChatRefusal When the colleague may not read this chat.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function agentView(string $conversationId): array {
 		$conversation = $this->records->access->readableOrRefuse(conversationId: $conversationId);
@@ -219,7 +219,7 @@ class WebChatService {
 	 *
 	 * @throws WebChatRefusal When the colleague may not read this chat or it has ended.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function take(string $conversationId, string $userId): array {
 		$conversation = $this->records->access->openReadableOrRefuse(conversationId: $conversationId);
@@ -247,7 +247,7 @@ class WebChatService {
 	 *
 	 * @throws WebChatRefusal When the colleague may not read this chat, it has ended, or the answer is empty.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function reply(string $conversationId, string $userId, string $displayName, string $text): array {
 		$conversation = $this->records->access->openReadableOrRefuse(conversationId: $conversationId);
@@ -280,7 +280,7 @@ class WebChatService {
 	 *
 	 * @throws WebChatRefusal When the colleague may not read this chat.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function end(string $conversationId): array {
 		$conversation = $this->records->access->readableOrRefuse(conversationId: $conversationId);

@@ -3,7 +3,7 @@
 /**
  * Web chat channels for the admin Web chat section (requests-web-chat-and-bot D2).
  *
- * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
  */
 import axios from '@nextcloud/axios'
 import { generateFilePath, generateUrl } from '@nextcloud/router'
@@ -16,7 +16,7 @@ const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
  *
  * @param {Crypto} [cryptoApi] The crypto source.
  * @return {string}
- * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
  */
 export function newChannelToken(cryptoApi = globalThis.crypto) {
 	const bytes = new Uint8Array(32)
@@ -29,7 +29,7 @@ export function newChannelToken(cryptoApi = globalThis.crypto) {
  *
  * @param {string} text The text.
  * @return {string[]}
- * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
  */
 export function parseOrigins(text) {
 	const origins = []
@@ -49,7 +49,7 @@ export function parseOrigins(text) {
  * @param {string} scriptPath The embed script's path.
  * @param {string} windowPath The chat window's path.
  * @return {string}
- * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
  */
 export function embedLine(origin, scriptPath, windowPath) {
 	const chat = encodeURIComponent(origin + windowPath)
@@ -61,7 +61,7 @@ export function embedLine(origin, scriptPath, windowPath) {
  *
  * @param {object} channel The channel.
  * @return {string}
- * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
  */
 export function channelEmbedLine(channel) {
 	return embedLine(
@@ -75,7 +75,7 @@ export function channelEmbedLine(channel) {
  * The channels.
  *
  * @return {Promise<object[]>}
- * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
  */
 export async function fetchChannels() {
 	const { data } = await axios.get(generateUrl(CHANNELS), { params: { _limit: 100 } })
@@ -87,7 +87,7 @@ export async function fetchChannels() {
  *
  * @param {object} channel The channel.
  * @return {Promise<object>}
- * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-1.2
  */
 export async function saveChannel(channel) {
 	const id = channel.id || channel?.['@self']?.id || ''

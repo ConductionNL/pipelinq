@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover/spec.md
+ * @spec openspec/specs/web-chat-and-handover/spec.md
  */
 
 declare(strict_types=1);
@@ -64,7 +64,7 @@ class WebChatHandover {
 	 *
 	 * @return array<string, mixed> The conversation with its ticket.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.1
 	 */
 	public function handOver(array $conversation, string $conversationId, string $email): array {
 		if ((string)($conversation['ticket'] ?? '') !== '') {
@@ -98,7 +98,7 @@ class WebChatHandover {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.1
 	 */
 	public function followUp(string $conversationId, string $ticketId, string $text, string $email): void {
 		$lines = array_values(array_filter([$text, $this->answerAtLine(email: $email)], static fn (string $line): bool => $line !== ''));
@@ -136,7 +136,7 @@ class WebChatHandover {
 	 *
 	 * @throws WebChatRefusal When the ticket cannot be read or written.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function assignTicket(string $ticketId, string $userId): void {
 		$this->updateTicket(ticketId: $ticketId, rbac: true, change: static function (array $ticket) use ($userId): array {

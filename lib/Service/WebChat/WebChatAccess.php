@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover/spec.md
+ * @spec openspec/specs/web-chat-and-handover/spec.md
  */
 
 declare(strict_types=1);
@@ -56,7 +56,7 @@ class WebChatAccess {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function newSecret(): string {
 		return $this->random->generate(length: 48, characters: ISecureRandom::CHAR_ALPHANUMERIC);
@@ -69,7 +69,7 @@ class WebChatAccess {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function hashOf(string $secret): string {
 		return hash('sha256', $secret);
@@ -84,7 +84,7 @@ class WebChatAccess {
 	 *
 	 * @throws WebChatRefusal When there is none.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function channelOrRefuse(string $token): array {
 		try {
@@ -112,7 +112,7 @@ class WebChatAccess {
 	 *
 	 * @throws WebChatRefusal When the chat is not on this channel or the secret is wrong.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function chatOrRefuse(string $token, string $conversationId, string $secret): array {
 		$channel      = $this->channelOrRefuse(token: $token);
@@ -145,7 +145,7 @@ class WebChatAccess {
 	 *
 	 * @throws WebChatRefusal When they may not, or it is not a chat.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function readableOrRefuse(string $conversationId): array {
 		$conversation = $this->store->readableConversation(id: $conversationId);
@@ -165,7 +165,7 @@ class WebChatAccess {
 	 *
 	 * @throws WebChatRefusal When they may not, or it has ended.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function openReadableOrRefuse(string $conversationId): array {
 		$conversation = $this->readableOrRefuse(conversationId: $conversationId);

@@ -9,7 +9,7 @@
  * frame's sessionStorage only, so closing the tab ends the chat, and sets no
  * cookie. It polls every three seconds while the chat is open.
  *
- * @spec openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover/spec.md
+ * @spec openspec/specs/web-chat-and-handover/spec.md
  */
 
 export const POLL_MS = 3000
@@ -280,7 +280,7 @@ export function createChatWindow(root, config, deps) {
 	 * The chat this tab holds from an earlier visit, or null.
 	 *
 	 * @return {object|null}
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.2
 	 */
 	function heldChat() {
 		try {
@@ -295,7 +295,7 @@ export function createChatWindow(root, config, deps) {
 	 * Start a new chat and show its greeting; false when the channel refuses.
 	 *
 	 * @return {Promise<boolean>}
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.2
 	 */
 	async function startChat() {
 		const started = await post(config.startUrl, {})
@@ -317,7 +317,7 @@ export function createChatWindow(root, config, deps) {
 	 * Resume the chat this tab holds, or start one.
 	 *
 	 * @return {Promise<void>}
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.2
 	 */
 	async function begin() {
 		if (!config.available) {

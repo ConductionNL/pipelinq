@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-4.1
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ class WebChatAssistantTurn {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-4.1
 	 */
 	public function answersFor(array $channel): bool {
 		return $this->assistant->answersFor(channel: $channel);
@@ -67,7 +67,7 @@ class WebChatAssistantTurn {
 	 *
 	 * @return array<string, mixed> The conversation, with `assistantFailed` when there was no answer.
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-4.1
 	 */
 	public function answer(array $channel, array $conversation, string $conversationId, array $question): array {
 		$reply = $this->assistant->ask(

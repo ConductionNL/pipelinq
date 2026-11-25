@@ -9,7 +9,7 @@
  * Adds a chat button to the host page and opens the chat window in a frame.
  * The window decides what it shows; only the channel's own websites may frame it.
  *
- * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.2
  */
 
 /**

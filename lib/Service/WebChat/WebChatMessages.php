@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/requests-web-chat-and-bot/specs/web-chat-and-handover/spec.md
+ * @spec openspec/specs/web-chat-and-handover/spec.md
  */
 
 declare(strict_types=1);
@@ -68,7 +68,7 @@ class WebChatMessages {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function row(string $conversationId, string $direction, string $body, array $metadata): array {
 		return [
@@ -90,7 +90,7 @@ class WebChatMessages {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function view(array $message, bool $showAgentName): array {
 		$metadata = ($message['metadata'] ?? []);
@@ -124,7 +124,7 @@ class WebChatMessages {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.1
 	 */
 	public function firstQuestion(array $messages): string {
 		foreach ($messages as $message) {
@@ -143,7 +143,7 @@ class WebChatMessages {
 	 *
 	 * @return list<array<string, mixed>>
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.1
 	 */
 	public function ofChat(string $conversationId): array {
 		return $this->store->messages(conversationId: $conversationId);
@@ -157,7 +157,7 @@ class WebChatMessages {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function threadLine(array $message): array {
 		$view = $this->view(message: $message, showAgentName: true);
@@ -182,7 +182,7 @@ class WebChatMessages {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.1
 	 */
 	public function transcript(array $messages): string {
 		$names = self::AUTHOR_NAMES;
@@ -202,7 +202,7 @@ class WebChatMessages {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function idle(array $conversation): bool {
 		return $this->secondsSince(value: ($conversation['lastMessageAt'] ?? '')) >= self::IDLE_SECONDS;
@@ -215,7 +215,7 @@ class WebChatMessages {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function secondsSince(mixed $value): int {
 		if (is_string($value) === false || $value === '') {
@@ -235,7 +235,7 @@ class WebChatMessages {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function now(): string {
 		return $this->time->getDateTime()->format(DateTimeInterface::ATOM);

@@ -10,7 +10,7 @@
  * actions. Both ticket page structures carry the same widget, and only a chat
  * ticket shows it.
  *
- * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-requests-web-chat-and-bot/tasks.md#task-3.2
  */
 import { evaluateVisibleWhenLocal } from '@conduction/nextcloud-vue/src/utils/visibleWhen.js'
 import fs from 'fs'
