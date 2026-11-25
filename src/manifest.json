@@ -4813,6 +4813,9 @@
 							"overrides": {
 								"assignee": {
 									"formatter": "userDisplayName"
+								},
+								"collaborators": {
+									"formatter": "userDisplayName"
 								}
 							}
 						}
