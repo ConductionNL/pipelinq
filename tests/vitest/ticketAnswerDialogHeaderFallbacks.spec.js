@@ -7,7 +7,7 @@
  * read in full: a client without a name, a ticket without a client, and a
  * ticket that fails to load all leave only the parts that are known.
  *
- * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+ * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
  */
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'

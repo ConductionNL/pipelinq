@@ -12,7 +12,7 @@
  *   - every number is a filter on fields the schema has;
  *   - a number and the list it links to use the same filter.
  *
- * @spec openspec/changes/simple-contact-dashboard/specs/kcc-werkplek/spec.md
+ * @spec openspec/specs/kcc-werkplek/spec.md
  */
 
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'
