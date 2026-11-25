@@ -127,7 +127,11 @@ class PortalExportServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$audit       = new PortalAuditService($this->repository, $time, $logger);
-		$mail        = new PortalMailService($this->mailer, $this->createMock(IURLGenerator::class), $l10n, $logger);
+		$urls = $this->createMock(IURLGenerator::class);
+		$urls->method('linkToRouteAbsolute')->willReturnCallback(
+			static fn (string $route, array $params): string => 'https://crm.example.test/' . $route . '/' . $params['token']
+		);
+		$mail        = new PortalMailService($this->mailer, $urls, $l10n, $logger);
 		$tokens      = new PortalTokenService($random, $time);
 		$profile     = new PortalProfileService($this->repository, $tokens, $mail, $audit, $l10n);
 		$delegations = new PortalDelegationService($this->repository, $audit, $time);
@@ -209,8 +213,13 @@ class PortalExportServiceTest extends TestCase {
 		$message = $this->createMock(IMessage::class);
 		$message->expects($this->once())->method('setTo')->with(['jan@example.test']);
 		$message->expects($this->once())->method('setSubject')->with('T:Your data export is ready');
-		$message->expects($this->once())->method('setPlainBody')
-			->with('T:Your data export is ready to download. The link is valid for 30 days.');
+		$body = '';
+		$message->expects($this->once())->method('setPlainBody')->willReturnCallback(
+			static function (string $text) use (&$body, $message) {
+				$body = $text;
+				return $message;
+			}
+		);
 		$this->mailer->method('validateMailAddress')->willReturn(true);
 		$this->mailer->method('createMessage')->willReturn($message);
 		$this->mailer->expects($this->once())->method('send')->with($message)->willReturn([]);
@@ -229,6 +238,13 @@ class PortalExportServiceTest extends TestCase {
 
 		$this->assertSame(self::NOW + (30 * 24 * 60 * 60), $result['expiresAt']);
 		$this->assertMatchesRegularExpression('#^/portal/api/documents/[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/download$#', $result['downloadUrl']);
+
+		// The mail carries the same signed link, absolute, so it opens from the mail.
+		$token = explode('/', $result['downloadUrl'])[4];
+		$this->assertSame(
+			"T:Your data export is ready to download. The link is valid for 30 days.\n\nhttps://crm.example.test/pipelinq.portalDocument.download/" . $token,
+			$body
+		);
 
 		$payload = explode('.', explode('/', $result['downloadUrl'])[4])[0];
 		$decoded = json_decode(base64_decode(strtr($payload, '-_', '+/')), true);

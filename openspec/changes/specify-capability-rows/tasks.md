@@ -54,8 +54,9 @@
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalInvoiceService.php`
 - [ ] 24.1 Check row `portal-delegation` against "A business client gives another portal account access to part of their records"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalDelegationService.php:95`
-- [ ] 25.1 Check row `portal-export` against "A client downloads everything the portal holds about them"
+- [x] 25.1 Check row `portal-export` against "A client downloads everything the portal holds about them"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalExportService.php:86`
+  - Live 25 Nov 2026 (same sandbox, Nextcloud mail to a local catcher). Found red first: Henk's export request answered a signed download link, but the mail "Your data export is ready" carried no link at all, so the client never received one by email. Fixed: `PortalMailService::sendDownloadLink()` puts the absolute address of the signed download (`/portal/api/documents/{token}/download`, 30 days) in the mail, and `PortalExportService::requestExport()` uses it. Then the mail to henk.bakker@zuiddrecht.example holds the link; opening it without a portal session answers 200 with one JSON download: his portal profile, his activity log (logins, request submit and reply, downloads) and his documents (none here). The bundle is assembled when the link is opened, not ahead of time by a background job. Test: `tests/Unit/Service/Portal/PortalExportServiceTest.php` (the mail body carries the same signed link, absolute).
 - [ ] 26.1 Check row `portal-close-account` against "A client closes their own portal account"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalAccountService.php:89`
 - [ ] 27.1 Check row `portal-sign` against "A client signs a document from a link"
