@@ -42,6 +42,7 @@
                     "name": {
                         "type": "string",
                         "title": "Name",
+                        "description": "The name colleagues know the channel by, such as the website it runs on.",
                         "maxLength": 255
                     },
                     "allowedOrigins": {
@@ -56,21 +57,25 @@
                     "greeting": {
                         "type": "string",
                         "title": "Greeting",
+                        "description": "The first line the window shows a visitor.",
                         "maxLength": 500
                     },
                     "offlineText": {
                         "type": "string",
                         "title": "Text when nobody is available",
+                        "description": "What the window says when no colleague is available, above the form for an email address.",
                         "maxLength": 500
                     },
                     "assistantEnabled": {
                         "type": "boolean",
                         "title": "The assistant answers first",
+                        "description": "Whether the assistant answers a visitor before a colleague is asked.",
                         "default": false
                     },
                     "waitSeconds": {
                         "type": "integer",
                         "title": "Seconds a chat waits for a colleague",
+                        "description": "How long a handed-over chat waits for a colleague before the visitor is asked for an email address.",
                         "minimum": 30,
                         "maximum": 3600,
                         "default": 180
@@ -78,11 +83,13 @@
                     "showAgentFirstName": {
                         "type": "boolean",
                         "title": "Show the colleague's first name",
+                        "description": "Whether the visitor sees the first name of the colleague who answers.",
                         "default": false
                     },
                     "active": {
                         "type": "boolean",
                         "title": "On",
+                        "description": "Whether the chat runs on the channel's websites. A new channel is off.",
                         "default": false,
                         "facetable": true
                     },
@@ -167,12 +174,14 @@
                     "handedOverAt": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Handed over at"
+                        "title": "Handed over at",
+                        "description": "When the chat was handed to a colleague through the Queue."
                     },
                     "lastMessageAt": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Last message at"
+                        "title": "Last message at",
+                        "description": "When the last message in the chat was sent, by either side."
                     },
                     "assistantToken": {
                         "type": "string",
@@ -182,6 +191,7 @@
                     "unsourcedAnswers": {
                         "type": "integer",
                         "title": "Answers in a row without a source",
+                        "description": "How many assistant answers in a row had no source; at two the chat goes to a colleague.",
                         "minimum": 0,
                         "default": 0
                     }

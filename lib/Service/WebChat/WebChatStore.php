@@ -26,6 +26,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -45,6 +46,7 @@ use Throwable;
  * @spec openspec/specs/web-chat-and-handover/spec.md#requirement-a-visitor-chats-without-an-account-req-wch-002
  */
 class WebChatStore {
+	use ConfiguredSchemaSlug;
 	use PayloadToArray;
 
 	/**
@@ -336,29 +338,16 @@ class WebChatStore {
 	 * @throws RuntimeException When OpenRegister is not installed.
 	 */
 	private function objects(): object {
+		if (class_exists('OCA\OpenRegister\Service\ObjectService') === false) {
+			throw new RuntimeException('OpenRegister is not available.');
+		}
+
 		try {
 			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		} catch (Throwable $e) {
 			throw new RuntimeException('OpenRegister is not available.', 0, $e);
 		}
 	}//end objects()
-
-	/**
-	 * A slug from the app config, or its default when the key is absent or blank.
-	 *
-	 * @param string $key     The app config key.
-	 * @param string $default The built-in slug.
-	 *
-	 * @return string
-	 */
-	private function resolveSchemaSlug(string $key, string $default): string {
-		$slug = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-		if ($slug !== '') {
-			return $slug;
-		}
-
-		return $default;
-	}//end resolveSchemaSlug()
 
 	/**
 	 * The pipelinq register slug; never empty.

@@ -77,14 +77,34 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The id of a channel row.
+		 *
+		 * @param {object} channel The channel.
+		 * @return {string}
+		 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+		 */
 		idOf(channel) {
 			return channel.id || channel?.['@self']?.id || channel.channelToken
 		},
 
+		/**
+		 * The embed line a website pastes for this channel.
+		 *
+		 * @param {object} channel The channel.
+		 * @return {string}
+		 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+		 */
 		embedOf(channel) {
 			return channelEmbedLine(channel)
 		},
 
+		/**
+		 * Read the channels again.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+		 */
 		async load() {
 			try {
 				this.channels = await fetchChannels()
@@ -93,6 +113,12 @@ export default {
 			}
 		},
 
+		/**
+		 * Save the draft as a new channel, off until switched on.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+		 */
 		async add() {
 			this.busy = true
 			try {
@@ -112,6 +138,14 @@ export default {
 			}
 		},
 
+		/**
+		 * Switch a channel on or off.
+		 *
+		 * @param {object} channel The channel.
+		 * @param {boolean} on Whether it is on.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+		 */
 		async toggle(channel, on) {
 			this.busy = true
 			try {
@@ -124,6 +158,13 @@ export default {
 			}
 		},
 
+		/**
+		 * Copy the channel's embed line to the clipboard.
+		 *
+		 * @param {object} channel The channel.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-1.2
+		 */
 		async copy(channel) {
 			try {
 				await navigator.clipboard.writeText(this.embedOf(channel))
