@@ -66,6 +66,7 @@ class ContactsSyncCommand extends Command {
 	 *
 	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
 	 */
+	#[\Override]
 	protected function configure(): void {
 		$this->setName(name: 'pipelinq:contacts:sync')
 			->setDescription('Write a Contacts card for every client under the uid the client names.')
@@ -83,6 +84,7 @@ class ContactsSyncCommand extends Command {
 	 *
 	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
 	 */
+	#[\Override]
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$user = $this->actingUser(requested: $input->getOption('user'));
 		if ($user === null) {

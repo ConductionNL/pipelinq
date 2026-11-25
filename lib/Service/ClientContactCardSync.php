@@ -79,6 +79,7 @@ class ClientContactCardSync implements ClientContactCardSyncInterface {
 	 *
 	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
 	 */
+	#[\Override]
 	public function run(bool $dryRun=false): array {
 		if ($this->contactsManager->isEnabled() === false) {
 			throw new RuntimeException('Nextcloud Contacts is not available for the acting user.');
