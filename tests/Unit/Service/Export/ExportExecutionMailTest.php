@@ -91,7 +91,7 @@ class ExportExecutionMailTest extends TestCase {
 	 * @return void
 	 */
 	public function testAMailDestinationIsDeliveredByMail(): void {
-		$outcome = ['status' => 'partial', 'rowCount' => 3, 'byteCount' => 20, 'fileCount' => 2, 'manifest' => ['mail' => []], 'errorMessage' => 'bram: refused'];
+		$outcome = ['status' => 'partial', 'rowCount' => 3, 'byteCount' => 20, 'fileCount' => 2, 'manifest' => [], 'errorMessage' => 'bram: refused'];
 		$mailRun = $this->createMock(ReportMailRun::class);
 		$mailRun->expects($this->once())->method('deliver')->with(
 			$this->callback(static fn (array $job): bool => $job['id'] === 'job-1'),

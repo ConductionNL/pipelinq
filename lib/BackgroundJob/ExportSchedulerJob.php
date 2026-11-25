@@ -34,6 +34,7 @@ use DateTimeImmutable;
 use OCA\Pipelinq\Kernel\Contracts\CronExpressionHelperInterface;
 use OCA\Pipelinq\Kernel\Contracts\ExportJobServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\ExportRunServiceInterface;
+use OCA\Pipelinq\Service\SystemServiceAccount;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -66,6 +67,7 @@ class ExportSchedulerJob extends TimedJob {
 	 * @param ExportRunServiceInterface $runs The run service.
 	 * @param CronExpressionHelperInterface $cron The cron helper.
 	 * @param LoggerInterface $logger The logger.
+	 * @param SystemServiceAccount $systemAccount The account the run records are written as when nobody is signed in.
 	 */
 	public function __construct(
 		ITimeFactory $time,
@@ -73,6 +75,7 @@ class ExportSchedulerJob extends TimedJob {
 		private ExportRunServiceInterface $runs,
 		private CronExpressionHelperInterface $cron,
 		private LoggerInterface $logger,
+		private SystemServiceAccount $systemAccount,
 	) {
 		parent::__construct(time: $time);
 		$this->setInterval(seconds: self::INTERVAL);
@@ -88,9 +91,26 @@ class ExportSchedulerJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
 	 */
 	protected function run(mixed $argument): void {
 		$now = (new DateTimeImmutable())->setTimestamp($this->time->getTime());
+
+		// Cron runs with nobody signed in, and OpenRegister refuses an anonymous
+		// create: the pending run is written as the system account.
+		$this->systemAccount->runAsCurrentOrSystem(fn () => $this->enqueueDue(now: $now));
+	}//end run()
+
+	/**
+	 * Enqueue a pending run per due enabled job, as the acting account.
+	 *
+	 * @param DateTimeImmutable $now The tick's moment.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
+	 */
+	private function enqueueDue(DateTimeImmutable $now): void {
 
 		try {
 			$jobs = $this->jobs->listJobs();
@@ -113,7 +133,7 @@ class ExportSchedulerJob extends TimedJob {
 		if ($enqueued > 0) {
 			$this->logger->info('ExportSchedulerJob: enqueued export runs', ['count' => $enqueued]);
 		}
-	}//end run()
+	}//end enqueueDue()
 
 	/**
 	 * Whether the job is enabled and its schedule fired since the previous tick.

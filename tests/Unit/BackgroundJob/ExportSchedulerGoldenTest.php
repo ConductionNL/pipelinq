@@ -27,6 +27,11 @@ use OCA\Pipelinq\Service\Export\ExportJobService;
 use OCA\Pipelinq\Service\Export\ExportRunService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
+use OCA\Pipelinq\Service\SystemServiceAccount;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
+use OCP\Security\ISecureRandom;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use RuntimeException;
@@ -83,7 +88,7 @@ class ExportSchedulerGoldenTest extends TestCase {
 		}
 
 		try {
-			$job = new ExportSchedulerJob(time: $time, jobs: $list, runs: $runs, cron: new CronExpressionHelper(), logger: $logger);
+			$job = new ExportSchedulerJob(time: $time, jobs: $list, runs: $runs, cron: new CronExpressionHelper(), logger: $logger, systemAccount: $this->signedInAccount());
 			$job->setLastRun((int)strtotime('2026-11-03 12:03:20 UTC'));
 			(new ReflectionMethod($job, 'run'))->invoke($job, null);
 		} finally {
@@ -144,4 +149,20 @@ class ExportSchedulerGoldenTest extends TestCase {
 		$this->assertSame([['error', 'ExportSchedulerJob: failed to list jobs', ['error' => 'register down']]], $this->tick(null));
 		$this->assertSame([], $this->tick([['id' => 'j-later', 'enabled' => true, 'scheduleCron' => '30 * * * *']]));
 	}//end testListFailureAndQuietTick()
+
+	/**
+	 * A system account whose session already has a user, so jobs run as that user.
+	 *
+	 * @return SystemServiceAccount The account.
+	 */
+	private function signedInAccount(): SystemServiceAccount {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn($this->createMock(originalClassName: IUser::class));
+
+		return new SystemServiceAccount(
+			userManager: $this->createMock(originalClassName: IUserManager::class),
+			userSession: $session,
+			random: $this->createMock(originalClassName: ISecureRandom::class)
+		);
+	}//end signedInAccount()
 }//end class
