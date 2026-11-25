@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Kernel\Contracts\ClientContactCardSyncInterface;
 use OCP\Contacts\IManager as IContactsManager;
+use Override;
 use RuntimeException;
 
 /**
@@ -79,7 +80,7 @@ class ClientContactCardSync implements ClientContactCardSyncInterface {
 	 *
 	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
 	 */
-	#[\Override]
+	#[Override]
 	public function run(bool $dryRun=false): array {
 		if ($this->contactsManager->isEnabled() === false) {
 			throw new RuntimeException('Nextcloud Contacts is not available for the acting user.');

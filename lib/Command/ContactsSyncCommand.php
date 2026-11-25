@@ -30,6 +30,7 @@ use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
+use Override;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -66,7 +67,7 @@ class ContactsSyncCommand extends Command {
 	 *
 	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
 	 */
-	#[\Override]
+	#[Override]
 	protected function configure(): void {
 		$this->setName(name: 'pipelinq:contacts:sync')
 			->setDescription('Write a Contacts card for every client under the uid the client names.')
@@ -84,7 +85,7 @@ class ContactsSyncCommand extends Command {
 	 *
 	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
 	 */
-	#[\Override]
+	#[Override]
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$user = $this->actingUser(requested: $input->getOption('user'));
 		if ($user === null) {
