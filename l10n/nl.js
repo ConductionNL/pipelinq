@@ -10256,7 +10256,8 @@ OC.L10N.register(
         "Ticket passed on.": "Ticket doorgezet.",
         "Could not pass this ticket on.": "Kon dit ticket niet doorzetten.",
         "Handover note": "Overdrachtsnotitie",
-        "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note.": "Wat de collega aan wie het ticket is doorgezet moet weten, geschreven bij de overdracht. Staat onder de overdracht op het tabblad Geschiedenis; leeg als de laatste overdracht geen notitie had."
+        "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note.": "Wat de collega aan wie het ticket is doorgezet moet weten, geschreven bij de overdracht. Staat onder de overdracht op het tabblad Geschiedenis; leeg als de laatste overdracht geen notitie had.",
+        "Product not found": "Product niet gevonden"
     },
     "nplurals=2; plural=(n != 1);"
 )

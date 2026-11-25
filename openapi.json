@@ -12962,7 +12962,7 @@
             "post": {
                 "operationId": "product-catalog-resolve-price",
                 "summary": "Resolve the server-authoritative effective unit price for a product",
-                "description": "Resolve the server-authoritative effective unit price for a product. Accepts a product object payload plus quantity and optional variantSku, and returns the resolved unitPrice, source, tax rate and BTW class. The client-supplied price is ignored; the figure is derived from the product's own tiers / variant overrides and BTW class. Needs a signed-in Nextcloud user.",
+                "description": "Resolve the server-authoritative effective unit price for a product. A POS operator may send the product object itself; any other signed-in user names the product by id (productId, or the id of the product object), and the product is read with the caller's own rights and the stored product is priced, so anyone who may read the product may resolve its price. Returns the resolved unitPrice, source, tax rate and BTW class; the client-supplied price is ignored. With a clientId the client's price lists go first. Needs a signed-in Nextcloud user.",
                 "tags": [
                     "product-catalog"
                 ],
@@ -12973,6 +12973,10 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
+                                    "productId": {
+                                        "type": "string",
+                                        "description": "The product's id. Required for a caller who is not a POS operator."
+                                    },
                                     "product": {
                                         "description": "The product."
                                     },
@@ -12981,6 +12985,14 @@
                                     },
                                     "variantSku": {
                                         "description": "The variant sku."
+                                    },
+                                    "clientId": {
+                                        "type": "string",
+                                        "description": "The client the line is for; its price lists go first."
+                                    },
+                                    "currency": {
+                                        "type": "string",
+                                        "description": "The quote's currency; EUR when empty."
                                     }
                                 },
                                 "additionalProperties": false
@@ -13010,6 +13022,9 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
                     }
                 }
             }

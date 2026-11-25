@@ -10,6 +10,7 @@ Send a client a quote built from the products on a lead. filinq turns the lead's
 ## Send a quote
 
 1. Open a lead and add its products under **Products on this lead**.
+   When you pick a product, the line takes its unit price and VAT rate from the product for the quantity on the line, including a quantity tier. Change the quantity and the price is looked up again. A price you type yourself stays as you typed it. You only see prices of products you may read.
 2. Choose **Send quote** at the top of the lead.
 3. Pick the quote template and the date until which the quote holds. Without a date it holds for thirty days.
 4. Check who the quote goes to. The dialog names the recipient before you send.

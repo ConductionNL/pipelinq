@@ -1,0 +1,45 @@
+{
+    "$comment": "products-quote-from-lead task 1: a product picked onto a lead line asks the price resolver (POST /api/products/resolve-price, open to anyone who may read the product, the product read with the caller's rights) for the unit price and VAT rate at the line's quantity, and asks again when the quantity changes; a price the user types stays theirs (nextcloud-vue CnChildRecordsField addFrom.resolve). A lead line gains vatRate, the rate the quote groups it under (QuoteService::lineRate). Sorted after every other lead and leadProduct fragment so the versions it stamps are the merged ones: lead 1.8.0 -> 1.9.0, leadProduct 1.3.0 -> 1.4.0.",
+    "components": {
+        "schemas": {
+            "lead": {
+                "slug": "lead",
+                "version": "1.9.0",
+                "properties": {
+                    "lines": {
+                        "addFrom": {
+                            "resolve": {
+                                "url": "/apps/pipelinq/api/products/resolve-price",
+                                "method": "POST",
+                                "body": {
+                                    "productId": "@row.product",
+                                    "quantity": "@row.quantity"
+                                },
+                                "map": {
+                                    "unitPrice": "unitPrice",
+                                    "vatRate": "taxRate"
+                                },
+                                "when": [
+                                    "quantity"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "leadProduct": {
+                "slug": "leadProduct",
+                "version": "1.4.0",
+                "properties": {
+                    "vatRate": {
+                        "type": "number",
+                        "title": "VAT rate",
+                        "description": "The VAT rate in percent for this line, filled from the product's VAT class when the product is picked. The quote groups its lines by this rate.",
+                        "minimum": 0,
+                        "maximum": 100
+                    }
+                }
+            }
+        }
+    }
+}
