@@ -76,7 +76,8 @@ class ComplaintAnswerTermCreatingListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAComplaintWithoutACategoryTermGetsSixWeeks(): void {
-		$event = $this->event(schema: '40', data: ['ticketType' => 'complaint', 'complaintCategory' => 'service', 'occurredAt' => '2026-11-02T09:00:00+01:00']);
+		$data  = ['ticketType' => 'complaint', 'complaintCategory' => 'service', 'occurredAt' => '2026-11-02T09:00:00+01:00'];
+		$event = $this->event(schema: '40', data: $data);
 
 		$this->listener()->handle($event);
 
@@ -89,11 +90,12 @@ class ComplaintAnswerTermCreatingListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAShorterCategoryTermWinsAndALongerOneDoesNot(): void {
-		$short = $this->event(schema: '40', data: ['ticketType' => 'complaint', 'complaintCategory' => 'billing', 'occurredAt' => '2026-11-02T09:00:00+01:00']);
+		$data  = ['ticketType' => 'complaint', 'complaintCategory' => 'billing', 'occurredAt' => '2026-11-02T09:00:00+01:00'];
+		$short = $this->event(schema: '40', data: $data);
 		$this->listener(terms: ['complaint_sla_billing' => '48'])->handle($short);
 		$this->assertSame(expected: '2026-11-04T09:00:00+01:00', actual: $short->getModifiedData()['slaDeadline']);
 
-		$long = $this->event(schema: '40', data: ['ticketType' => 'complaint', 'complaintCategory' => 'billing', 'occurredAt' => '2026-11-02T09:00:00+01:00']);
+		$long = $this->event(schema: '40', data: $data);
 		$this->listener(terms: ['complaint_sla_billing' => '2000'])->handle($long);
 		$this->assertSame(expected: '2026-12-14T09:00:00+01:00', actual: $long->getModifiedData()['slaDeadline']);
 	}//end testAShorterCategoryTermWinsAndALongerOneDoesNot()

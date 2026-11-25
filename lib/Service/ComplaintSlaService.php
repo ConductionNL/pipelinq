@@ -151,7 +151,7 @@ class ComplaintSlaService {
 	 * @spec openspec/changes/specify-capability-rows/specs/klachtenregistratie/spec.md#requirement-a-complaint-is-held-to-the-legal-answer-term-by-default
 	 */
 	public function answerDeadline(string $category, DateTimeInterface $received): DateTimeImmutable {
-		$start = DateTimeImmutable::createFromInterface($received);
+		$start = new DateTimeImmutable($received->format('Y-m-d\TH:i:sP'));
 		$legal = $start->modify(self::LEGAL_ANSWER_TERM);
 		assert($legal !== false);
 
