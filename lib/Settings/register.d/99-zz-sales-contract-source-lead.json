@@ -1,0 +1,20 @@
+{
+  "$comment": "specify-capability-rows 14.1 (row contract-number): a won lead can be turned into a numbered contract. The contract names the lead it was made from. Sorted after 99-zz-sales-contract-contact-ref so the version it stamps is the merged one: salesContract 1.3.0 -> 1.4.0. Additive, optional.",
+  "components": {
+    "schemas": {
+      "salesContract": {
+        "slug": "salesContract",
+        "version": "1.4.0",
+        "properties": {
+          "sourceLeadRef": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "lead",
+            "title": "Source lead",
+            "description": "The won lead this contract was made from. Optional; set by Create contract on the lead."
+          }
+        }
+      }
+    }
+  }
+}

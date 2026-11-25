@@ -28,8 +28,9 @@
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/BackgroundJob/SlaDeadlineSweepJob.php`
 - [ ] 13.1 Check row `meeting-link` against "A user can send a booking link that offers the free slots in their own calendar"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/AvailabilityService.php:174`
-- [ ] 14.1 Check row `contract-number` against "A won lead can be turned into a numbered contract"
+- [x] 14.1 Check row `contract-number` against "A won lead can be turned into a numbered contract"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/ContractService.php:208`
+  - Live 25 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main 119f4810, Zuiddrecht set and demo seed, Playwright as daan.verbeek). Found red first: a won lead offered no Create contract, and `POST /api/contracts` with a lead's title, client and value failed 500 (the schema requires `startDate` and `valuePerInterval`). Built: LeadDetail header action `create-contract` (only when `status` is won) posting the lead's title, client, value and id to `/api/contracts`; `ContractController` now defaults `startDate` to today and `valuePerInterval` to `value`; `salesContract.sourceLeadRef` (new fragment `99-zz-sales-contract-source-lead.json`, salesContract 1.3.0 -> 1.4.0) names the lead. Then on "[Demo] Onderhoudscontract gewonnen": Create contract, Confirm, 201, toast "Draft contract made.", contract `C-2026-001`, status draft, the lead's client and value 5200, `sourceLeadRef` the lead; the 12 contracts' numbers are all distinct. Tests: tests/Unit/Controller/ContractControllerTest.php (create from a won lead, a given term kept), tests/vitest/contractFromWonLead.spec.js.
 - [ ] 15.1 Check row `gov-klantinteracties` against "Stored contact moments can be read in the VNG Klantinteracties format"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Integration/ContactMomentLeafProvider.php`
 - [ ] 16.1 Check row `req-conversation-export` against "Every service conversation can be copied to an outside archive"
