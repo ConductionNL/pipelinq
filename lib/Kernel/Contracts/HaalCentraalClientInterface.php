@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Kernel\Contracts;
 
 use OCA\Pipelinq\Service\HaalCentraalException;
+use SensitiveParameter;
 
 /**
  * Contract of HaalCentraalClient.
@@ -72,7 +73,7 @@ interface HaalCentraalClientInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess)          BsnValidationService::mask is a pure stateless helper.
 	 */
 	public function lookupPersoon(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $bsn,
 		?string $requestIdContext = null,
 	): ?array;

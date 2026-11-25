@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use SensitiveParameter;
+
 /**
  * What a till asks when it redeems a gift card.
  *
@@ -40,7 +42,7 @@ final class GiftCardRedemption {
 	 */
 	public function __construct(
 		public readonly string $giftCardId,
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		public readonly string $pin,
 		public readonly float $amount,
 		public readonly ?string $posTransactionId = null,

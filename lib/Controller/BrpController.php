@@ -62,6 +62,7 @@ use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
+use SensitiveParameter;
 use Throwable;
 
 /**
@@ -817,7 +818,7 @@ class BrpController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function recordOptOut(
-		#[\SensitiveParameter]
+		#[SensitiveParameter]
 		string $rawBsn,
 		string $actor,
 		mixed $note,
