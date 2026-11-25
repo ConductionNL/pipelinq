@@ -10352,6 +10352,13 @@
         "Could not pass this ticket on.": "Could not pass this ticket on.",
         "Handover note": "Handover note",
         "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note.": "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note.",
-        "Product not found": "Product not found"
+        "Product not found": "Product not found",
+        "Create contract": "Create contract",
+        "Create a contract from this lead?": "Create a contract from this lead?",
+        "A draft contract with its own contract number is made for this lead's client and value.": "A draft contract with its own contract number is made for this lead's client and value.",
+        "Draft contract made.": "Draft contract made.",
+        "Could not make the contract.": "Could not make the contract.",
+        "Source lead": "Source lead",
+        "The won lead this contract was made from. Optional; set by Create contract on the lead.": "The won lead this contract was made from. Optional; set by Create contract on the lead."
     }
 }
