@@ -16,7 +16,7 @@
  * number than the app does, and a string without a translation is shown in
  * English. So every one of those is held here.
  *
- * @spec openspec/changes/simple-contact-dashboard/specs/kcc-werkplek/spec.md
+ * @spec openspec/specs/kcc-werkplek/spec.md
  */
 
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'

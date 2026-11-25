@@ -210,7 +210,7 @@ export default {
 		 * What the customer asked: the ticket's description.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+		 * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
 		 */
 		question() {
 			return (this.ticket && this.ticket.description) || ''
@@ -220,7 +220,7 @@ export default {
 		 * What the dialog footer needs to draw its send button.
 		 *
 		 * @return {{canSave: boolean, busy: boolean, waitForCustomer: boolean}}
-		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+		 * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
 		 */
 		state() {
 			return {
@@ -261,7 +261,7 @@ export default {
 			immediate: true,
 			/**
 			 * @param {object} value The send button's state.
-			 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+			 * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
 			 */
 			handler(value) {
 				this.$emit('state', value)

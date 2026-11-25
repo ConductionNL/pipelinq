@@ -8,4 +8,4 @@
 - [x] 2.1 `tests/vitest/simpleTicketPage.spec.js`: every name in the overlay
   against the schema, the lifecycle, the registry, the icons and the strings;
   the full page unchanged; the built manifest valid.
-- [ ] 3.1 Live check by the coordinator.
+- [x] 3.1 Live check by the coordinator. Done by the live lane on 25 Nov 2026 on a sandbox instance (Nextcloud 34, MariaDB, OpenRegister main, pipelinq development, demo seed); results in the PR that archives this change.

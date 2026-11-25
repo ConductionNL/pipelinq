@@ -7,7 +7,7 @@
  * Send answer follows the reply section's state and asks it to save, and
  * every way out asks the page to reload.
  *
- * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
+ * @spec openspec/specs/ticket-detail-page/spec.md#REQ-TDP-001
  */
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
