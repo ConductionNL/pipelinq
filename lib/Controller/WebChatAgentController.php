@@ -68,6 +68,24 @@ class WebChatAgentController extends Controller {
 	}//end __construct()
 
 	/**
+	 * The conversation id from a route id: the id itself, or the ticket's thread key
+	 * (`conversation:<id>`), which the ticket page's widget and actions pass.
+	 *
+	 * @param string $id The id in the route.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
+	 */
+	public static function conversationIdOf(string $id): string {
+		if (str_starts_with($id, self::THREAD_PREFIX) === true) {
+			return substr($id, strlen(self::THREAD_PREFIX));
+		}
+
+		return $id;
+	}//end conversationIdOf()
+
+	/**
 	 * The chat's transcript and state.
 	 *
 	 * @param string $id The conversation id.
@@ -157,24 +175,6 @@ class WebChatAgentController extends Controller {
 			}
 		);
 	}//end end()
-
-	/**
-	 * The conversation id from a route id: the id itself, or the ticket's thread key
-	 * (`conversation:<id>`), which the ticket page's widget and actions pass.
-	 *
-	 * @param string $id The id in the route.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
-	 */
-	public static function conversationIdOf(string $id): string {
-		if (str_starts_with($id, self::THREAD_PREFIX) === true) {
-			return substr($id, strlen(self::THREAD_PREFIX));
-		}
-
-		return $id;
-	}//end conversationIdOf()
 
 	/**
 	 * The colleague's user id.

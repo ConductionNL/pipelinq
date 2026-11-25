@@ -40,14 +40,12 @@ class WebChatHandover {
 	/**
 	 * Constructor.
 	 *
-	 * @param WebChatStore           $store    Where the chat is kept.
 	 * @param WebChatMessages        $messages The chat's messages and times.
 	 * @param InboundTicketService   $inbound  The intake that makes a handed-over chat a ticket.
 	 * @param TicketServiceInterface $tickets  The ticket a colleague takes.
 	 * @param LoggerInterface        $logger   Where a failed ticket write is logged.
 	 */
 	public function __construct(
-		private readonly WebChatStore $store,
 		private readonly WebChatMessages $messages,
 		private readonly InboundTicketService $inbound,
 		private readonly TicketServiceInterface $tickets,
@@ -73,7 +71,7 @@ class WebChatHandover {
 			return $conversation;
 		}
 
-		$messages = $this->store->messages(conversationId: $conversationId);
+		$messages = $this->messages->of(conversationId: $conversationId);
 		$message  = [
 			'channel'   => 'chat',
 			'threadKey' => 'conversation:' . $conversationId,

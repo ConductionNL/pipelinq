@@ -34,7 +34,10 @@ use OCA\Pipelinq\Service\WebChat\WebChatAccess;
 use OCA\Pipelinq\Service\WebChat\WebChatHandover;
 use OCA\Pipelinq\Service\WebChat\WebChatMessages;
 use OCA\Pipelinq\Service\WebChat\WebChatRefusal;
+use OCA\Pipelinq\Service\WebChat\WebChatAssistantTurn;
+use OCA\Pipelinq\Service\WebChat\WebChatRecords;
 use OCA\Pipelinq\Service\WebChat\WebChatService;
+use OCA\Pipelinq\Service\WebChat\WebChatVisitorWrites;
 use OCA\Pipelinq\Service\WebChat\WebChatWindow;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Security\ISecureRandom;
@@ -48,6 +51,9 @@ use RuntimeException;
  * REQ-WCH-002 to REQ-WCH-005 on the service.
  *
  * @covers \OCA\Pipelinq\Service\WebChat\WebChatService
+ * @covers \OCA\Pipelinq\Service\WebChat\WebChatAssistantTurn
+ * @covers \OCA\Pipelinq\Service\WebChat\WebChatVisitorWrites
+ * @uses   \OCA\Pipelinq\Service\WebChat\WebChatRecords
  * @uses   \OCA\Pipelinq\Service\WebChat\ChatAssistant
  * @uses   \OCA\Pipelinq\Service\WebChat\WebChatRefusal
  * @uses   \OCA\Pipelinq\Service\WebChat\WebChatStore
@@ -178,22 +184,23 @@ class WebChatServiceTest extends TestCase {
 		$assistant = new ChatAssistant(container: $this->container, logger: $logger);
 		$messages  = new WebChatMessages(store: $this->store, time: $time);
 
-		return new WebChatService(
+		$records = new WebChatRecords(
 			store: $this->store,
-			assistant: $assistant,
-			account: $this->account,
-			random: $random,
-			access: new WebChatAccess(store: $this->store, logger: $logger),
 			messages: $messages,
+			access: new WebChatAccess(store: $this->store, logger: $logger, random: $random),
 			window: new WebChatWindow(store: $this->store, messages: $messages, assistant: $assistant, routing: $routing),
+		);
+
+		return new WebChatService(
+			records: $records,
 			handover: new WebChatHandover(
-				store: $this->store,
 				messages: $messages,
 				inbound: $this->inbound,
 				tickets: $this->tickets,
 				logger: $logger,
 			),
-			logger: $logger,
+			writes: new WebChatVisitorWrites(account: $this->account, logger: $logger),
+			turns: new WebChatAssistantTurn(assistant: $assistant, store: $this->store, messages: $messages),
 		);
 	}//end service()
 

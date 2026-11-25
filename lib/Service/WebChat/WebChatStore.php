@@ -25,7 +25,6 @@ namespace OCA\Pipelinq\Service\WebChat;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
-use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Util\ConfiguredSchemaSlug;
 use OCA\Pipelinq\Util\PayloadToArray;
 use OCP\IAppConfig;

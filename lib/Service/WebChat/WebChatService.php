@@ -22,11 +22,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\WebChat;
 
-use OCA\Pipelinq\Service\MessagingServiceAccount;
-use OCA\Pipelinq\Service\ServiceAccountUnavailableException;
-use OCP\Security\ISecureRandom;
-use Psr\Log\LoggerInterface;
-use RuntimeException;
 
 /**
  * The visitor side (start, send, poll) runs for an anonymous caller: it
@@ -60,26 +55,16 @@ class WebChatService {
 	/**
 	 * Constructor.
 	 *
-	 * @param WebChatStore            $store     Where the chat is kept.
-	 * @param ChatAssistant           $assistant The assistant that may answer first.
-	 * @param MessagingServiceAccount $account   The account a visitor's writes run as.
-	 * @param ISecureRandom           $random    The visitor's chat secret.
-	 * @param WebChatAccess           $access    Who may reach a chat.
-	 * @param WebChatMessages         $messages  The message rows and the times.
-	 * @param WebChatWindow           $window    What the windows show.
-	 * @param WebChatHandover         $handover  The ticket a chat becomes.
-	 * @param LoggerInterface         $logger    Where a failed write is logged.
+	 * @param WebChatRecords       $records  The rows, messages, access checks and windows of a chat.
+	 * @param WebChatHandover      $handover The ticket a chat becomes.
+	 * @param WebChatVisitorWrites $writes   A visitor's writes, as the messaging service account.
+	 * @param WebChatAssistantTurn $turns    The assistant's turn.
 	 */
 	public function __construct(
-		private readonly WebChatStore $store,
-		private readonly ChatAssistant $assistant,
-		private readonly MessagingServiceAccount $account,
-		private readonly ISecureRandom $random,
-		private readonly WebChatAccess $access,
-		private readonly WebChatMessages $messages,
-		private readonly WebChatWindow $window,
+		private readonly WebChatRecords $records,
 		private readonly WebChatHandover $handover,
-		private readonly LoggerInterface $logger,
+		private readonly WebChatVisitorWrites $writes,
+		private readonly WebChatAssistantTurn $turns,
 	) {
 	}//end __construct()
 
@@ -95,17 +80,17 @@ class WebChatService {
 	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function start(string $token): array {
-		$channel = $this->access->channelOrRefuse(token: $token);
-		$secret  = $this->random->generate(48, ISecureRandom::CHAR_ALPHANUMERIC);
-		$now     = $this->messages->now();
+		$channel = $this->records->access->channelOrRefuse(token: $token);
+		$secret  = $this->records->access->newSecret();
+		$now     = $this->records->messages->now();
 
-		$conversation = $this->asVisitor(
-			writes: fn (): array => $this->store->saveConversation(
+		$conversation = $this->writes->run(
+			writes: fn (): array => $this->records->store->saveConversation(
 				conversation: [
 					'channel'           => 'chat',
 					'status'            => 'open',
-					'webChatChannel'    => $this->store->idOf(row: $channel),
-					'visitorSecretHash' => $this->access->hashOf(secret: $secret),
+					'webChatChannel'    => $this->records->store->idOf(row: $channel),
+					'visitorSecretHash' => $this->records->access->hashOf(secret: $secret),
 					'lastMessageAt'     => $now,
 					'lastInboundAt'     => $now,
 					'unsourcedAnswers'  => 0,
@@ -114,9 +99,9 @@ class WebChatService {
 		);
 
 		return [
-			'conversation' => $this->store->idOf(row: $conversation),
+			'conversation' => $this->records->store->idOf(row: $conversation),
 			'secret'       => $secret,
-			'mode'         => $this->window->startMode(channel: $channel),
+			'mode'         => $this->records->window->startMode(channel: $channel),
 			'greeting'     => (string)($channel['greeting'] ?? ''),
 			'offlineText'  => (string)($channel['offlineText'] ?? ''),
 		];
@@ -139,7 +124,7 @@ class WebChatService {
 	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.1
 	 */
 	public function send(string $token, string $conversationId, string $secret, array $turn): array {
-		[$channel, $conversation] = $this->access->chatOrRefuse(token: $token, conversationId: $conversationId, secret: $secret);
+		[$channel, $conversation] = $this->records->access->chatOrRefuse(token: $token, conversationId: $conversationId, secret: $secret);
 		$text     = (string)($turn['text'] ?? '');
 		$email    = (string)($turn['email'] ?? '');
 		$handover = (($turn['handover'] ?? false) === true);
@@ -159,14 +144,14 @@ class WebChatService {
 		}
 
 		$turn = ['text' => $text, 'email' => $email, 'handover' => $handover, 'locale' => $locale];
-		$this->asVisitor(
+		$this->writes->run(
 			writes: function () use ($channel, $conversation, $conversationId, $turn): array {
 				$this->visitorTurn(channel: $channel, conversation: $conversation, conversationId: $conversationId, turn: $turn);
 				return [];
 			}
 		);
 
-		return $this->window->visitorView(channel: $channel, conversationId: $conversationId, since: '');
+		return $this->records->window->visitorView(channel: $channel, conversationId: $conversationId, since: '');
 	}//end send()
 
 	/**
@@ -184,13 +169,13 @@ class WebChatService {
 	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
 	 */
 	public function poll(string $token, string $conversationId, string $secret, string $since=''): array {
-		[$channel, $conversation] = $this->access->chatOrRefuse(token: $token, conversationId: $conversationId, secret: $secret);
-		if (($conversation['status'] ?? 'open') !== 'closed' && $this->messages->idle(conversation: $conversation) === true) {
+		[$channel, $conversation] = $this->records->access->chatOrRefuse(token: $token, conversationId: $conversationId, secret: $secret);
+		if (($conversation['status'] ?? 'open') !== 'closed' && $this->records->messages->idle(conversation: $conversation) === true) {
 			$conversation['status'] = 'closed';
-			$this->asVisitor(writes: fn (): array => $this->store->saveConversation(conversation: $conversation, id: $conversationId));
+			$this->writes->run(writes: fn (): array => $this->records->store->saveConversation(conversation: $conversation, id: $conversationId));
 		}
 
-		return $this->window->visitorView(channel: $channel, conversationId: $conversationId, since: $since, conversation: $conversation);
+		return $this->records->window->visitorView(channel: $channel, conversationId: $conversationId, since: $since, conversation: $conversation);
 	}//end poll()
 
 	/**
@@ -205,7 +190,7 @@ class WebChatService {
 	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function requireReadableChat(string $conversationId): void {
-		$this->access->readableOrRefuse(conversationId: $conversationId);
+		$this->records->access->readableOrRefuse(conversationId: $conversationId);
 	}//end requireReadableChat()
 
 	/**
@@ -220,7 +205,7 @@ class WebChatService {
 	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function agentView(string $conversationId): array {
-		return $this->window->agentView(conversationId: $conversationId, conversation: $this->access->readableOrRefuse(conversationId: $conversationId));
+		return $this->records->window->agentView(conversationId: $conversationId, conversation: $this->records->access->readableOrRefuse(conversationId: $conversationId));
 	}//end agentView()
 
 	/**
@@ -236,10 +221,10 @@ class WebChatService {
 	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function take(string $conversationId, string $userId): array {
-		$conversation = $this->access->openReadableOrRefuse(conversationId: $conversationId);
+		$conversation = $this->records->access->openReadableOrRefuse(conversationId: $conversationId);
 		$conversation['assignedTo'] = $userId;
 		$conversation['status']     = 'assigned';
-		$this->store->saveConversation(conversation: $conversation, id: $conversationId);
+		$this->records->store->saveConversation(conversation: $conversation, id: $conversationId);
 
 		$ticketId = (string)($conversation['ticket'] ?? '');
 		if ($ticketId !== '') {
@@ -264,23 +249,23 @@ class WebChatService {
 	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function reply(string $conversationId, string $userId, string $displayName, string $text): array {
-		$conversation = $this->access->openReadableOrRefuse(conversationId: $conversationId);
+		$conversation = $this->records->access->openReadableOrRefuse(conversationId: $conversationId);
 		$text         = mb_substr(trim($text), 0, self::TEXT_LIMIT, 'UTF-8');
 		if ($text === '') {
 			throw new WebChatRefusal(message: 'Type a message first.', status: 400);
 		}
 
 		$firstName = trim((string)strtok(trim($displayName), ' '));
-		$this->store->addMessage(
-			message: $this->messages->row(
+		$this->records->store->addMessage(
+			message: $this->records->messages->row(
 				conversationId: $conversationId,
 				direction: 'outbound',
 				body: $text,
 				metadata: ['author' => 'agent', 'agent' => $userId, 'agentFirstName' => $firstName]
 			)
 		);
-		$conversation['lastMessageAt'] = $this->messages->now();
-		$this->store->saveConversation(conversation: $conversation, id: $conversationId);
+		$conversation['lastMessageAt'] = $this->records->messages->now();
+		$this->records->store->saveConversation(conversation: $conversation, id: $conversationId);
 
 		return $this->agentView(conversationId: $conversationId);
 	}//end reply()
@@ -297,10 +282,10 @@ class WebChatService {
 	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.2
 	 */
 	public function end(string $conversationId): array {
-		$conversation = $this->access->readableOrRefuse(conversationId: $conversationId);
+		$conversation = $this->records->access->readableOrRefuse(conversationId: $conversationId);
 		if (($conversation['status'] ?? 'open') !== 'closed') {
 			$conversation['status'] = 'closed';
-			$this->store->saveConversation(conversation: $conversation, id: $conversationId);
+			$this->records->store->saveConversation(conversation: $conversation, id: $conversationId);
 		}
 
 		return $this->agentView(conversationId: $conversationId);
@@ -317,10 +302,10 @@ class WebChatService {
 	 * @return void
 	 */
 	private function visitorTurn(array $channel, array $conversation, string $conversationId, array $turn): void {
-		$now = $this->messages->now();
+		$now = $this->records->messages->now();
 		if ($turn['text'] !== '') {
-			$this->store->addMessage(
-				message: $this->messages->row(conversationId: $conversationId, direction: 'inbound', body: $turn['text'], metadata: ['author' => 'visitor'])
+			$this->records->store->addMessage(
+				message: $this->records->messages->row(conversationId: $conversationId, direction: 'inbound', body: $turn['text'], metadata: ['author' => 'visitor'])
 			);
 			$conversation['lastInboundAt'] = $now;
 		}
@@ -329,18 +314,17 @@ class WebChatService {
 		$ticketId = (string)($conversation['ticket'] ?? '');
 		if ($ticketId !== '') {
 			$this->handover->followUp(conversationId: $conversationId, ticketId: $ticketId, text: $turn['text'], email: $turn['email']);
-			$this->store->saveConversation(conversation: $conversation, id: $conversationId);
+			$this->records->store->saveConversation(conversation: $conversation, id: $conversationId);
 			return;
 		}
 
-		$toPerson = $turn['handover'] === true || $turn['email'] !== '' || $this->assistant->answersFor(channel: $channel) === false;
+		$toPerson = $turn['handover'] === true || $turn['email'] !== '' || $this->turns->answersFor(channel: $channel) === false;
 		if ($toPerson === false && $turn['text'] !== '') {
-			$conversation = $this->assistantTurn(
+			$conversation = $this->turns->answer(
 				channel: $channel,
 				conversation: $conversation,
 				conversationId: $conversationId,
-				question: $turn['text'],
-				locale: $turn['locale']
+				question: ['text' => $turn['text'], 'locale' => $turn['locale']]
 			);
 			$toPerson     = (int)($conversation['unsourcedAnswers'] ?? 0) >= self::UNSOURCED_LIMIT || ($conversation['assistantFailed'] ?? false) === true;
 			unset($conversation['assistantFailed']);
@@ -350,67 +334,6 @@ class WebChatService {
 			$conversation = $this->handover->handOver(conversation: $conversation, conversationId: $conversationId, email: $turn['email']);
 		}
 
-		$this->store->saveConversation(conversation: $conversation, id: $conversationId);
+		$this->records->store->saveConversation(conversation: $conversation, id: $conversationId);
 	}//end visitorTurn()
-
-	/**
-	 * Let the assistant answer; counts the answers in a row without a source.
-	 *
-	 * @param array<string, mixed> $channel        The channel.
-	 * @param array<string, mixed> $conversation   The conversation.
-	 * @param string               $conversationId Its id.
-	 * @param string               $question       The visitor's message.
-	 * @param string               $locale         The visitor's language.
-	 *
-	 * @return array<string, mixed> The conversation, with `assistantFailed` when there was no answer.
-	 */
-	private function assistantTurn(array $channel, array $conversation, string $conversationId, string $question, string $locale): array {
-		$reply = $this->assistant->ask(
-			channelId: $this->store->idOf(row: $channel),
-			question: $question,
-			locale: $locale,
-			token: (string)($conversation['assistantToken'] ?? '')
-		);
-		if ($reply === null) {
-			$conversation['assistantFailed'] = true;
-			return $conversation;
-		}
-
-		$this->store->addMessage(
-			message: $this->messages->row(
-				conversationId: $conversationId,
-				direction: 'outbound',
-				body: $reply['answer'],
-				metadata: ['author' => 'assistant', 'sources' => $reply['sources'], 'disclosure' => $reply['disclosure']]
-			)
-		);
-		$previous = (int)($conversation['unsourcedAnswers'] ?? 0);
-		$conversation['assistantToken']   = $reply['token'];
-		$conversation['unsourcedAnswers'] = 0;
-		if ($reply['sources'] === []) {
-			$conversation['unsourcedAnswers'] = ($previous + 1);
-		}
-
-		return $conversation;
-	}//end assistantTurn()
-
-	/**
-	 * Run a visitor's writes as the messaging service account.
-	 *
-	 * @param callable(): array<string, mixed> $writes The writes.
-	 *
-	 * @return array<string, mixed>
-	 *
-	 * @throws WebChatRefusal When the account or OpenRegister is unavailable.
-	 */
-	private function asVisitor(callable $writes): array {
-		try {
-			return $this->account->runAs(operation: $writes);
-		} catch (WebChatRefusal $e) {
-			throw $e;
-		} catch (ServiceAccountUnavailableException | RuntimeException $e) {
-			$this->logger->error('Pipelinq web chat: a visitor write failed', ['exception' => $e->getMessage()]);
-			throw new WebChatRefusal(message: 'The chat is not available right now.', status: 503);
-		}
-	}//end asVisitor()
 }//end class

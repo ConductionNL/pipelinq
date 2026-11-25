@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\WebChat;
 
+use OCP\Security\ISecureRandom;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -41,12 +42,25 @@ class WebChatAccess {
 	 *
 	 * @param WebChatStore    $store  Where the chat is kept.
 	 * @param LoggerInterface $logger Where an unreadable channel list is logged.
+	 * @param ISecureRandom   $random The visitor's chat secret.
 	 */
 	public function __construct(
 		private readonly WebChatStore $store,
 		private readonly LoggerInterface $logger,
+		private readonly ISecureRandom $random,
 	) {
 	}//end __construct()
+
+	/**
+	 * A new chat secret for a visitor's window; only its hash is stored.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.1
+	 */
+	public function newSecret(): string {
+		return $this->random->generate(length: 48, characters: ISecureRandom::CHAR_ALPHANUMERIC);
+	}//end newSecret()
 
 	/**
 	 * The hash of a chat secret, the only form in which it is stored.

@@ -249,7 +249,12 @@ class WebChatControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testEveryRouteIsPublicAndRateLimited(): void {
-		$routes = [[WebChatWindowController::class, 'show'], [WebChatController::class, 'start'], [WebChatController::class, 'send'], [WebChatController::class, 'poll']];
+		$routes = [
+			[WebChatWindowController::class, 'show'],
+			[WebChatController::class, 'start'],
+			[WebChatController::class, 'send'],
+			[WebChatController::class, 'poll'],
+		];
 		foreach ($routes as [$class, $method]) {
 			$reflection = new ReflectionMethod($class, $method);
 			foreach ([PublicPage::class, NoCSRFRequired::class, AnonRateLimit::class] as $attribute) {

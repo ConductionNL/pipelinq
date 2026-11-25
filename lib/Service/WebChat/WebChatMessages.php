@@ -137,6 +137,19 @@ class WebChatMessages {
 	}//end firstQuestion()
 
 	/**
+	 * The chat's stored messages, oldest first.
+	 *
+	 * @param string $conversationId The chat.
+	 *
+	 * @return list<array<string, mixed>>
+	 *
+	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-3.1
+	 */
+	public function of(string $conversationId): array {
+		return $this->store->messages(conversationId: $conversationId);
+	}//end of()
+
+	/**
 	 * A message as the colleague's thread draws it: the view, its side (`us` for the
 	 * assistant and colleagues, `them` for the visitor) and who said it.
 	 *

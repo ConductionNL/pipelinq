@@ -277,9 +277,47 @@ export function createChatWindow(root, config, deps) {
 	personButton.addEventListener('click', () => send(true))
 
 	/**
+	 * The chat this tab holds from an earlier visit, or null.
+	 *
+	 * @return {object|null}
+	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.2
+	 */
+	function heldChat() {
+		try {
+			const held = JSON.parse(deps.storage.getItem(storageKey) || 'null')
+			return held && held.conversation && held.secret ? held : null
+		} catch {
+			return null
+		}
+	}
+
+	/**
+	 * Start a new chat and show its greeting; false when the channel refuses.
+	 *
+	 * @return {Promise<boolean>}
+	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.2
+	 */
+	async function startChat() {
+		const started = await post(config.startUrl, {})
+		if (!started.ok) {
+			showState('unavailable')
+			return false
+		}
+		state.chat = { conversation: started.body.conversation, secret: started.body.secret }
+		state.offlineText = started.body.offlineText || ''
+		deps.storage.setItem(storageKey, JSON.stringify(state.chat))
+		if (started.body.greeting) {
+			log.append(el(doc, 'li', 'pipelinq-web-chat__greeting', started.body.greeting))
+		}
+		showState(started.body.mode)
+		return true
+	}
+
+	/**
 	 * Resume the chat this tab holds, or start one.
 	 *
 	 * @return {Promise<void>}
+	 * @spec openspec/changes/requests-web-chat-and-bot/tasks.md#task-2.2
 	 */
 	async function begin() {
 		if (!config.available) {
@@ -287,29 +325,13 @@ export function createChatWindow(root, config, deps) {
 			form.hidden = true
 			return
 		}
-		let held
-		try {
-			held = JSON.parse(deps.storage.getItem(storageKey) || 'null')
-		} catch {
-			held = null
-		}
-		if (held && held.conversation && held.secret) {
+		const held = heldChat()
+		if (held !== null) {
 			state.chat = held
 			await poll()
 		}
-		if (state.chat === null || state.status === 'closed') {
-			const started = await post(config.startUrl, {})
-			if (!started.ok) {
-				showState('unavailable')
-				return
-			}
-			state.chat = { conversation: started.body.conversation, secret: started.body.secret }
-			state.offlineText = started.body.offlineText || ''
-			deps.storage.setItem(storageKey, JSON.stringify(state.chat))
-			if (started.body.greeting) {
-				log.append(el(doc, 'li', 'pipelinq-web-chat__greeting', started.body.greeting))
-			}
-			showState(started.body.mode)
+		if ((state.chat === null || state.status === 'closed') && !(await startChat())) {
+			return
 		}
 		state.timer = deps.setInterval(poll, POLL_MS)
 	}
