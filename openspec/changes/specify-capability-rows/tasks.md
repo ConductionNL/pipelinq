@@ -38,14 +38,16 @@
   - Verify: the scenarios hold on a live instance; evidence on the row: `an`
 - [ ] 17.1 Check row `rep-schema-evolution` against "An export keeps working when a field is added or removed"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Export/SchemaEvolutionService.php`
-- [ ] 18.1 Check row `portal-login` against "A client logs in to the portal with an account of their own"
+- [x] 18.1 Check row `portal-login` against "A client logs in to the portal with an account of their own"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalAuthService.php:130`
+  - Live 25 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main 50949d88, pipelinq development 076fdba9, Zuiddrecht set and demo seed; portal service account set, a portal account in the `pipelinq-portal` register linked to client Henk Bakker). `POST /portal/api/auth/login` with the account's password answers `authenticated` with a bearer token. With it, Requests lists only Henk's request PQ-2026-0001 (not his phone contact moment, and none of the other clients' 90 tickets, e.g. Sanne de Vries' seven); invoices, contracts and orders answer his own (none). The same token on Nextcloud routes outside the portal API: OCS `cloud/user` 401, WebDAV 401, pipelinq's `/api/clients` 401, and OpenRegister's objects API answers as for nobody signed in (0 clients).
 - [ ] 19.1 Check row `portal-mfa` against "The portal asks for a second factor when the tenant requires it"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalMfaService.php:173`
 - [ ] 20.1 Check row `portal-file-request` against "A client files a request in the portal and follows it"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalRequestService.php:216`
-- [ ] 21.1 Check row `portal-reply` against "A client answers a question on their request in the portal"
+- [x] 21.1 Check row `portal-reply` against "A client answers a question on their request in the portal"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Service/Portal/PortalRequestService.php:298`
+  - Live 25 Nov 2026 (same sandbox). Henk filed "Container niet geleegd" in the portal (PQ-2026-0425: `ticketType` request, `channel` portal, client Henk, his account as reporter). daan.verbeek set it to `awaiting_customer` with a message for the client and an internal note. The portal detail then offers the reply (`canReply` true) and shows the handler's message, not the internal note. Henk's reply "Het betreft Lindelaan 12." is stored on the ticket (`portalReplies`), shown to him as his note under the handler's, the ticket moves to `in_progress` and the reply field goes away. The internal note is unchanged and never shown.
 - [ ] 22.1 Check row `portal-documents` against "A client downloads their own documents through a short-lived link"
   - Verify: the scenarios hold on a live instance; evidence on the row: `lib/Controller/PortalDocumentController.php`
 - [ ] 23.1 Check row `portal-invoices` against "A client sees their own invoices, contracts, orders and quotes"
