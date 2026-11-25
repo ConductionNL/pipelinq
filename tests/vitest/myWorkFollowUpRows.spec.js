@@ -9,7 +9,7 @@
  * danger tone for one past its deadline. The page config is read through the
  * library's own due text, row condition and template, as the record list does.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-follow-ups-read-at-a-glance-req-mw-120
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-follow-ups-read-at-a-glance-req-mw-120
  */
 
 import { resolveDue } from '@conduction/nextcloud-vue/dist/esm/utils/dueText.js'

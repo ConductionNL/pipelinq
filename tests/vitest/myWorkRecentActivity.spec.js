@@ -7,7 +7,7 @@
  * badge, the item's title, how long ago, who and what changed, opens the
  * item's page, and says so when there is nothing.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-recent-activity-on-my-items-req-mw-110
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

@@ -8,7 +8,7 @@
  * every list and the download pass them to the worklist, which narrows the
  * items server side.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
  */
 
 import fs from 'fs'

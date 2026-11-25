@@ -8,7 +8,7 @@
  * `autoRefresh`); this pins the page's settings and that the installed
  * library knows them.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-auto-refresh-and-a-refresh-button-req-mw-190
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-auto-refresh-and-a-refresh-button-req-mw-190
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

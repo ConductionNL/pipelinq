@@ -7,7 +7,7 @@
  * and the linked record's name, opens the record's page, and is hidden when
  * the route answers no meetings.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'

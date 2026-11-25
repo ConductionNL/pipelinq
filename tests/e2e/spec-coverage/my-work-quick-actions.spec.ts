@@ -15,7 +15,7 @@
  *
  * Written from the change's scenarios; not yet run (it needs a seeded instance).
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-quick-actions-on-my-work-req-mw-100
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-quick-actions-on-my-work-req-mw-100
  */
 import type { APIRequestContext, Page } from '@playwright/test'
 

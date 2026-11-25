@@ -18,7 +18,7 @@
  *
  * Written from the change's scenarios; not yet run (it needs a seeded instance).
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
  */
 import type { APIRequestContext } from '@playwright/test'
 

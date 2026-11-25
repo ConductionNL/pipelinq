@@ -82,7 +82,7 @@ class WorklistController extends Controller {
 	 * @return JSONResponse The worklist payload, or an error envelope.
 	 *
 	 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	#[NoAdminRequired]
 	public function mine(): JSONResponse {
@@ -121,7 +121,7 @@ class WorklistController extends Controller {
 	 *
 	 * @return array{0: string, 1: string} The scope and the member ('' for none).
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
 	 */
 	private function workScopeParams(): array {
 		$scope = (string)$this->request->getParam('scope', '');
@@ -176,8 +176,8 @@ class WorklistController extends Controller {
 	 *   ask for or an unknown priority, or a 500 envelope when it is unavailable.
 	 *
 	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	private function fetchItems(IUser $user, string $bucket): array|JSONResponse {
 		$priority = (string)$this->request->getParam('priority', '');

@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ use InvalidArgumentException;
  * leads, whose pipeline is the chosen one. Tickets and follow-ups have no
  * pipeline, so the pipeline filter leaves them in the list.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
  */
 class WorkFilters {
 
@@ -68,7 +68,7 @@ class WorkFilters {
 	 *
 	 * @throws InvalidArgumentException When a priority is not one of {@see self::PRIORITIES}.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	public function __construct(string $priorities='', string $pipeline='') {
 		$chosen = [];
@@ -95,7 +95,7 @@ class WorkFilters {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	public function activeCount(): int {
 		$count = count($this->priorities);
@@ -113,7 +113,7 @@ class WorkFilters {
 	 *
 	 * @return array<int, array<string, mixed>> The rows kept.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	public function keep(array $rows): array {
 		if ($this->activeCount() === 0) {
@@ -130,7 +130,7 @@ class WorkFilters {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
 	 */
 	private function passes(array $row): bool {
 		$priority = (string)($row['priority'] ?? '');

@@ -6,7 +6,7 @@
  * scope: declared as a settings section, saved in the app config, mounted
  * for administrators only.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
  */
 
 import { readFileSync } from 'node:fs'

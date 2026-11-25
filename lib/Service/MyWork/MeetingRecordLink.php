@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Service\MyWork;
 /**
  * The pipelinq record an event's text links to.
  *
- * @spec openspec/changes/my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
+ * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-upcoming-meetings-from-the-calendar-req-mw-130
  */
 class MeetingRecordLink {
 
@@ -60,7 +60,7 @@ class MeetingRecordLink {
 	 *
 	 * @return array{kind: string, schemaKey: string, route: string, id: string}|null The record.
 	 *
-	 * @spec openspec/changes/my-work-roadmap/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/tasks.md#task-5.1
 	 */
 	public function recordIn(array $texts): ?array {
 		foreach ($texts as $text) {
