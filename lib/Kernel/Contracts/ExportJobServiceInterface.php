@@ -122,7 +122,7 @@ interface ExportJobServiceInterface {
 	 *
 	 * @return string The schedule in words; the normalized expression when it has no wording; '' when it is not a valid expression.
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md
 	 */
 	public function describeSchedule(string $expression, string $locale = 'en'): string;
 

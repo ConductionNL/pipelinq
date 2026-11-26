@@ -7,7 +7,7 @@
  * groups, and the schedule in words with who it goes to. The object store,
  * export API, sharee search and toasts are mocked.
  *
- * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+ * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
@@ -142,6 +142,19 @@ describe('ExportJobForm mail delivery', () => {
 		expect(push).toHaveBeenCalledWith({ name: 'ExportJobs' })
 	})
 
+	it('stamps who made a new job and when, which the schema requires (found live: every new job was refused)', async () => {
+		window.OC = { ...(window.OC ?? {}), getCurrentUser: () => ({ uid: 'anna' }) }
+		const { wrapper } = mountForm()
+		await flushPromises()
+		wrapper.vm.model.name = 'Open tickets'
+		wrapper.vm.delivery = 'mail'
+		wrapper.vm.onRecipientsSelect([TEAM_LEADS])
+		await wrapper.vm.save()
+		const job = store.saveObject.mock.calls[1][1]
+		expect(job.createdBy).toBe('anna')
+		expect(Number.isNaN(Date.parse(job.createdAt))).toBe(false)
+	})
+
 	it('opens an existing mailed job with its recipients and updates its destination', async () => {
 		store.getCollection.mockReturnValue([
 			{ id: 'w-1', name: 'Warehouse', type: 's3', validationStatus: 'valid' },
@@ -159,5 +172,6 @@ describe('ExportJobForm mail delivery', () => {
 		expect(job.id).toBe('job-1')
 		expect(job.destinationId).toBe('m-1')
 		expect(job.enabled).toBe(false)
+		expect(job).not.toHaveProperty('createdBy')
 	})
 })

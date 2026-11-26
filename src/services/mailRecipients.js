@@ -6,7 +6,7 @@
 // as the recipients picker shows them (`{id, label, type}` options, the shape
 // searchAssignees() answers with).
 //
-// @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+// @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
 
 const KINDS = ['user', 'group']
 

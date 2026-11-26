@@ -205,7 +205,7 @@ class OwnCalendar {
 	 * @return string The value, or ''.
 	 */
 	private static function text(array $event, string $name): string {
-		$value = ((($event[$name] ?? [])[0] ?? [])[0] ?? '');
+		$value = (self::first(event: $event, name: $name) ?? '');
 		if (is_scalar($value) === false) {
 			return '';
 		}
@@ -222,11 +222,37 @@ class OwnCalendar {
 	 * @return int|null The moment, or null when the event has none.
 	 */
 	private static function moment(array $event, string $name): ?int {
-		$value = ((($event[$name] ?? [])[0] ?? [])[0] ?? null);
+		$value = self::first(event: $event, name: $name);
 		if ($value instanceof DateTimeInterface) {
 			return $value->getTimestamp();
 		}
 
 		return null;
 	}//end moment()
+
+	/**
+	 * The first value of an event property, in either shape the calendar search
+	 * answers: a property allowed once (DTSTART, DTEND, STATUS, TRANSP) is one
+	 * `[value, parameters]` pair, a property allowed more than once is a list
+	 * of such pairs.
+	 *
+	 * @param array<string, mixed> $event The event's properties.
+	 * @param string               $name  The property.
+	 *
+	 * @return mixed The value, or null when the event has none.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/appointment-booking/spec.md#requirement-a-user-can-send-a-booking-link-that-offers-the-free-slots-in-their-own-calendar
+	 */
+	private static function first(array $event, string $name): mixed {
+		$property = ($event[$name] ?? null);
+		if (is_array($property) === false || array_key_exists(0, $property) === false) {
+			return null;
+		}
+
+		if (is_array($property[0]) === true) {
+			return ($property[0][0] ?? null);
+		}
+
+		return $property[0];
+	}//end first()
 }//end class

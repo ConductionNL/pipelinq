@@ -88,6 +88,15 @@ describe('the portal session warning', () => {
 		expect(push).not.toHaveBeenCalled()
 	})
 
+	it('does not sign out a session whose expiry is not stored (the guard counts it as signed in)', async () => {
+		api.expiry = 0
+		const { wrapper, push } = mountWarning()
+		await vi.advanceTimersByTimeAsync(3000)
+		expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+		expect(api.clearToken).not.toHaveBeenCalled()
+		expect(push).not.toHaveBeenCalled()
+	})
+
 	it('extends the session with the new expiry and hides', async () => {
 		api.extendSession.mockResolvedValue({ expiresAt: 1234 })
 		expiresIn(30)

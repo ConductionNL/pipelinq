@@ -22,7 +22,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+ * @spec openspec/specs/report-periods-and-delivery/spec.md
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Sends one export file to one user by mail.
  *
- * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+ * @spec openspec/specs/report-periods-and-delivery/spec.md
  */
 class ReportMailDelivery {
 	/**
@@ -82,7 +82,7 @@ class ReportMailDelivery {
 	 *
 	 * @return array{userId: string, status: string, reason: string} The outcome; a failure says why.
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md
 	 */
 	public function deliver(array $job, string $userId, array $file): array {
 		return $this->deliverFiles(job: $job, userId: $userId, files: [$file]);
@@ -97,7 +97,7 @@ class ReportMailDelivery {
 	 *
 	 * @return array{userId: string, status: string, reason: string} The outcome; a failure says why.
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
 	 */
 	public function deliverFiles(array $job, string $userId, array $files): array {
 		$user = $this->userManager->get($userId);

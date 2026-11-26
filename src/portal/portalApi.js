@@ -184,4 +184,5 @@ export const portalApi = {
 		portalFetch({ method: 'DELETE', path: `/delegations/${encodeURIComponent(id)}` }),
 	requestExport: () => post('/exports'),
 	requestClose: () => post('/accounts/close'),
+	confirmClose: (token) => post('/accounts/close/confirm', { token }),
 }

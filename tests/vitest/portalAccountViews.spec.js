@@ -21,6 +21,7 @@ const api = vi.hoisted(() => ({
 		passwordReset: vi.fn(),
 		requestExport: vi.fn(),
 		requestClose: vi.fn(),
+		confirmClose: vi.fn(),
 		delegations: vi.fn(),
 		grantDelegation: vi.fn(),
 		revokeDelegation: vi.fn(),
@@ -28,6 +29,7 @@ const api = vi.hoisted(() => ({
 		updateProfile: vi.fn(),
 	},
 	setToken: vi.fn(),
+	clearToken: vi.fn(),
 }))
 vi.mock('../../src/portal/portalApi.js', () => api)
 vi.mock('@nextcloud/router', () => ({ generateUrl: (p) => '/index.php' + p }))
@@ -40,6 +42,8 @@ const { default: PortalPasswordReset } = await import('../../src/portal/views/Po
 const { default: PortalExport } = await import('../../src/portal/views/PortalExport.vue')
 const { default: PortalDelegations } = await import('../../src/portal/views/PortalDelegations.vue')
 const { default: PortalProfile } = await import('../../src/portal/views/PortalProfile.vue')
+const { default: PortalAccountClose } = await import('../../src/portal/views/PortalAccountClose.vue')
+const { portalRoutes } = await import('../../src/portal/portalRoutes.js')
 
 let push
 
@@ -63,6 +67,7 @@ function button(wrapper, label) {
 beforeEach(() => {
 	push = vi.fn()
 	api.setToken.mockReset()
+	api.clearToken.mockReset()
 	for (const fn of Object.values(api.portalApi)) {
 		fn.mockReset()
 	}
@@ -385,5 +390,48 @@ describe('the profile', () => {
 		expect(wrapper.vm.error).toBe('Phone number is invalid.')
 		await wrapper.vm.save()
 		expect([wrapper.vm.error, wrapper.vm.message]).toEqual(['Could not save your details.', ''])
+	})
+})
+
+describe('confirming the account closing from the email link', () => {
+	it('is a public page, so a client whose sessions ended can open it', () => {
+		const route = portalRoutes.find((r) => r.path === '/account-close')
+		expect(route.component).toBe(PortalAccountClose)
+		expect(route.meta.public).toBe(true)
+	})
+
+	it('closes nothing on opening; the button sends the link token and forgets the session', async () => {
+		window.history.replaceState(null, '', '/portal/account-close?token=close-tok')
+		api.portalApi.confirmClose.mockResolvedValueOnce({ status: 'account-closed' })
+		const wrapper = mountView(PortalAccountClose)
+		expect(api.portalApi.confirmClose).not.toHaveBeenCalled()
+
+		await button(wrapper, 'Close my account for good').trigger('click')
+		await flushPromises()
+
+		expect(api.portalApi.confirmClose).toHaveBeenCalledWith('close-tok')
+		expect(api.clearToken).toHaveBeenCalled()
+		expect(wrapper.find('[role="status"]').text()).toBe('Your account is closed. You can no longer sign in.')
+		expect(button(wrapper, 'Close my account for good')).toBeUndefined()
+	})
+
+	it('shows the server refusal of an expired link and keeps the session', async () => {
+		window.history.replaceState(null, '', '/portal/account-close?token=old')
+		api.portalApi.confirmClose.mockRejectedValueOnce(new Error('Deze bevestigings-link is ongeldig of verlopen.'))
+		const wrapper = mountView(PortalAccountClose)
+
+		await button(wrapper, 'Close my account for good').trigger('click')
+		await flushPromises()
+
+		expect(wrapper.find('[role="alert"]').text()).toBe('Deze bevestigings-link is ongeldig of verlopen.')
+		expect(api.clearToken).not.toHaveBeenCalled()
+	})
+
+	it('says the link is incomplete when it has no token', () => {
+		window.history.replaceState(null, '', '/portal/account-close')
+		const wrapper = mountView(PortalAccountClose)
+
+		expect(wrapper.find('[role="alert"]').text()).toBe('This confirmation link is incomplete. Open the link from the email again.')
+		expect(button(wrapper, 'Close my account for good')).toBeUndefined()
 	})
 })

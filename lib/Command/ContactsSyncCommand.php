@@ -18,7 +18,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-26-example-set-zuiddrecht/tasks.md#task-2.5
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Writes a Contacts card per client with the client's uid.
  *
- * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-26-example-set-zuiddrecht/tasks.md#task-2.5
  */
 class ContactsSyncCommand extends Command {
 
@@ -65,7 +65,7 @@ class ContactsSyncCommand extends Command {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-26-example-set-zuiddrecht/tasks.md#task-2.5
 	 */
 	#[Override]
 	protected function configure(): void {
@@ -83,7 +83,7 @@ class ContactsSyncCommand extends Command {
 	 *
 	 * @return int The exit code: 0 when no card failed.
 	 *
-	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-26-example-set-zuiddrecht/tasks.md#task-2.5
 	 */
 	#[Override]
 	protected function execute(InputInterface $input, OutputInterface $output): int {

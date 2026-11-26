@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-26-example-set-zuiddrecht/tasks.md#task-2.2
  */
 
 declare(strict_types=1);
