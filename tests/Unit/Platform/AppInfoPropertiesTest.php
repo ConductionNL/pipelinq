@@ -78,6 +78,7 @@ class AppInfoPropertiesTest extends TestCase {
 		'PortalDocumentController::download' => 'the portal session token and the document token (requireSession, validateToken)',
 		'PortalRequestController::index' => 'the portal session token (requireSession)',
 		'PortalRequestController::create' => 'the portal session token (requireSession)',
+		'PortalRequestController::categories' => 'the portal session token (requireSession)',
 		'PortalRequestController::show' => 'the portal session token (requireSession)',
 		'PortalRequestController::reply' => 'the portal session token (requireSession)',
 		'PortalDataController::invoices' => 'the portal session token and per-object access (requireSession, requireObjectAccess)',

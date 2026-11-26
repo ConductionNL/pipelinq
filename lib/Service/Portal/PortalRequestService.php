@@ -626,6 +626,7 @@ class PortalRequestService implements PortalRequestServiceInterface {
 	 *
 	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-files-a-request-in-the-portal-and-follows-it
 	 */
+	#[\Override]
 	public function openCategories(): array {
 		return (new OpenRequestCategories(reader: $this->reader))->all();
 	}//end openCategories()
