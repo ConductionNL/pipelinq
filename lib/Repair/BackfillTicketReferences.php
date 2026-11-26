@@ -38,6 +38,7 @@ use OCA\Pipelinq\Util\JsonSerializableToArray;
 use OCP\IGroupManager;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
+use Override;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -82,6 +83,7 @@ class BackfillTicketReferences implements IRepairStep {
 	 *
 	 * @spec openspec/changes/ticket-leaf-closed-reference-assignee/tasks.md#task-3.1
 	 */
+	#[Override]
 	public function getName(): string {
 		return 'Give every request and complaint without one its reference number';
 	}//end getName()
@@ -95,6 +97,7 @@ class BackfillTicketReferences implements IRepairStep {
 	 *
 	 * @spec openspec/changes/ticket-leaf-closed-reference-assignee/tasks.md#task-3.1
 	 */
+	#[Override]
 	public function run(IOutput $output): void {
 		if ($this->ticketService->isConfigured() === false) {
 			$output->info('Ticket surface not configured — skipping the ticket reference backfill.');
