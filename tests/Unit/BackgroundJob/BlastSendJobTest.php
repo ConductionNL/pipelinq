@@ -29,9 +29,14 @@ namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
 use OCA\Pipelinq\BackgroundJob\BlastSendJob;
 use OCA\Pipelinq\Service\BlastService;
+use OCA\Pipelinq\Service\SystemServiceAccount;
 use OCA\Pipelinq\Service\WebhookProcessorService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
+use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -137,8 +142,26 @@ class BlastSendJobTest extends TestCase {
 			$this->blastService,
 			$this->webhookProcessor,
 			$this->logger,
+			$this->signedInSystemAccount(),
 		);
 	}//end buildJob()
+
+	/**
+	 * A system account over a session where someone is signed in, so the job
+	 * runs as that caller and never switches.
+	 *
+	 * @return SystemServiceAccount The account.
+	 */
+	private function signedInSystemAccount(): SystemServiceAccount {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn($this->createMock(originalClassName: IUser::class));
+
+		return new SystemServiceAccount(
+			userManager: $this->createMock(originalClassName: IUserManager::class),
+			userSession: $session,
+			random: $this->createMock(originalClassName: ISecureRandom::class)
+		);
+	}//end signedInSystemAccount()
 
 	/**
 	 * Test job instantiation.
@@ -310,7 +333,15 @@ class BlastSendJobTest extends TestCase {
 		$container->method('get')->willReturn($failing);
 		$this->logger->expects($this->once())->method('warning')
 			->with('BlastSendJob.loadSendingBlasts: findAll failed', ['exception' => 'register offline']);
-		$job = new BlastSendJob($this->timeFactory, $this->appConfig, $container, $this->blastService, $this->webhookProcessor, $this->logger);
+		$job = new BlastSendJob(
+			time: $this->timeFactory,
+			appConfig: $this->appConfig,
+			container: $container,
+			blastService: $this->blastService,
+			webhookProcessor: $this->webhookProcessor,
+			logger: $this->logger,
+			systemAccount: $this->signedInSystemAccount()
+		);
 		$this->assertSame([], $load->invoke($job));
 	}//end testSendingBlastsAreReadExactly()
 }//end class
