@@ -6237,7 +6237,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"spec": "openspec/specs/contract-renewal-tracking",
 				"requirement": "openspec/changes/specify-capability-rows/specs/contract-renewal-tracking :: A won lead can be turned into a numbered contract",
-				"change": "openspec/changes/contract-contact-ref"
+				"change": "openspec/changes/archive/2026-11-25-contract-contact-ref"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/contracts/set-up-contracts \"Contracts are created when a quote is accepted\", inheriting line items and terms, or created directly (beta); each contract is its own record with a Record ID, linked to the deal (https://knowledge.hubspot.com/contracts/understand-contracts-in-hubspot). Revenue Hub. Note: Was partial for the hub; the contract is its own record.",
