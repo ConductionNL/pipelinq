@@ -78,17 +78,23 @@ final class InMemoryInvoiceSequenceService extends InvoiceSequenceService {
 	}
 
 	/**
-	 * Seed the in-memory counter at 1 if absent.
+	 * The in-memory counter, or null when it has no row yet.
 	 *
-	 * @return int 1 when this call set the value to 1, else 0.
+	 * @return int|null The stored value.
 	 */
-	protected function seedCounter(): int {
-		if (($this->store['receipt_invoice_counter'] ?? 0) !== 0) {
-			return 0;
-		}
+	protected function readCounter(): ?int {
+		return $this->store[static::COUNTER_KEY] ?? null;
+	}
 
-		$this->store['receipt_invoice_counter'] = 1;
-		return 1;
+	/**
+	 * Zero the in-memory counter when it has a row.
+	 *
+	 * @return void
+	 */
+	protected function resetCounter(): void {
+		if (isset($this->store[static::COUNTER_KEY]) === true) {
+			$this->store[static::COUNTER_KEY] = 0;
+		}
 	}
 }
 
@@ -192,4 +198,55 @@ class InvoiceSequenceServiceTest extends TestCase {
 
 		$this->assertSame(sprintf('%04d-%06d', $year, 11), $number);
 	}//end testRetriesOnLostCasRace()
+
+	/**
+	 * IAppConfig caches what it read once per process and does not see the
+	 * compare-and-set writes. Several numbers drawn in one process (a repair
+	 * step, a batch) must still never repeat, from the first use of the year
+	 * and from a counter that already runs.
+	 *
+	 * @return void
+	 */
+	public function testNumbersDrawnInOneProcessNeverRepeatDespiteTheConfigCache(): void {
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
+		$service   = new InMemoryInvoiceSequenceService(
+			$this->createMock(originalClassName: IDBConnection::class),
+			$appConfig,
+			$this->createMock(originalClassName: LoggerInterface::class)
+		);
+		// The per-process cache: filled on first read, updated only by setValueInt.
+		$cache = [];
+		$appConfig->method('getValueInt')->willReturnCallback(
+			static function (string $app, string $key, int $default = 0) use ($service, &$cache): int {
+				if (array_key_exists($key, $cache) === false) {
+					$cache[$key] = ($service->store[$key] ?? $default);
+				}
+
+				return $cache[$key];
+			}
+		);
+		$appConfig->method('setValueInt')->willReturnCallback(
+			static function (string $app, string $key, int $value) use ($service, &$cache): bool {
+				$cache[$key]          = $value;
+				$service->store[$key] = $value;
+				return true;
+			}
+		);
+
+		$first = [$service->next(), $service->next(), $service->next()];
+		$this->assertSame(
+			expected: [
+				sprintf('%04d-%06d', (int)date('Y'), 1),
+				sprintf('%04d-%06d', (int)date('Y'), 2),
+				sprintf('%04d-%06d', (int)date('Y'), 3),
+			],
+			actual: $first
+		);
+
+		// A counter left over from last year, read stale from the cache: reset, then 1, 2.
+		$service->store = ['receipt_invoice_counter' => 873, 'receipt_invoice_counter_year' => ((int)date('Y') - 1)];
+		$cache          = ['receipt_invoice_counter' => 0];
+		$this->assertSame(expected: sprintf('%04d-%06d', (int)date('Y'), 1), actual: $service->next());
+		$this->assertSame(expected: sprintf('%04d-%06d', (int)date('Y'), 2), actual: $service->next());
+	}//end testNumbersDrawnInOneProcessNeverRepeatDespiteTheConfigCache()
 }//end class

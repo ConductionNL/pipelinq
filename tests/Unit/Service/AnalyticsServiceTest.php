@@ -220,7 +220,7 @@ class AnalyticsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-001
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-001
 	 */
 	#[DataProvider('overviewPeriods')]
 	public function testThePreviousWindowHasTheSameLengthAndEndsWhereTheCurrentStarts(string $period, int $days): void {

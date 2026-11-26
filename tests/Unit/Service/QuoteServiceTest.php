@@ -62,6 +62,26 @@ final class QuoteServiceTestSequence extends QuoteNumberSequence {
 	}//end casCounter()
 
 	/**
+	 * The in-memory counter row, or null when there is none.
+	 *
+	 * @return int|null The stored value.
+	 */
+	protected function readCounter(): ?int {
+		return $this->counter;
+	}//end readCounter()
+
+	/**
+	 * Zero the in-memory counter row when there is one.
+	 *
+	 * @return void
+	 */
+	protected function resetCounter(): void {
+		if ($this->counter !== null) {
+			$this->counter = 0;
+		}
+	}//end resetCounter()
+
+	/**
 	 * Seed the in-memory counter at 1 when there is none.
 	 *
 	 * @return int The rows affected.

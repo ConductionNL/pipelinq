@@ -82,20 +82,29 @@ export class BackofficeSample {
 			name: `E2E-A11Y-${run} client`,
 			type: 'organization',
 			email: `a11y-${run}@example.nl`,
+			// Required since clients and contacts carry their Contacts card uid.
+			contactsUid: `e2e-a11y-${run}-client`,
 		})
 		const contact = await this.create('contact', {
 			name: `E2E-A11Y-${run} contact`,
 			client,
+			contactsUid: `e2e-a11y-${run}-contact`,
 		})
 		const ticket = await this.create('ticket', {
 			title: `E2E-A11Y-${run} ticket`,
+			ticketType: 'request',
 			client,
 			channel: 'phone',
 			priority: 'normal',
 		})
+		// A lead sits on a pipeline; take the instance's first one.
+		const pipelines = await (await this.api.get(`${OBJECTS}/pipeline`, { params: { _limit: '1' } })).json()
+		const pipeline = (pipelines.results ?? [])[0]
+		expect(pipeline, 'the instance has a pipeline to put the sample lead on').toBeTruthy()
 		const lead = await this.create('lead', {
 			title: `E2E-A11Y-${run} lead`,
 			client,
+			pipeline: String(pipeline.id ?? pipeline['@self']?.id),
 			status: 'open',
 		})
 		return { client, contact, ticket, lead }

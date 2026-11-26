@@ -67,15 +67,36 @@ class CronExpressionHelper implements CronExpressionHelperInterface {
 	private const DESCRIPTIONS = [
 		'hourly' => ['en' => 'Every hour', 'nl' => 'Elk uur'],
 		'daily' => ['en' => 'Every day at {time}', 'nl' => 'Elke dag om {time}'],
-		'weekly' => ['en' => 'Every Sunday at {time}', 'nl' => 'Elke zondag om {time}'],
+		'weekly' => ['en' => 'Every {day} at {time}', 'nl' => 'Elke {day} om {time}'],
 	];
 
 	/**
-	 * Day-of-week field values with a fixed-time preview (0 and 7 are Sunday).
+	 * Weekday names per locale, by cron day-of-week value (0 and 7 are Sunday).
+	 *
+	 * @var array<string, array<int, string>>
+	 */
+	private const DAY_NAMES = [
+		'en' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+		'nl' => ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag'],
+	];
+
+	/**
+	 * Day-of-week field values with a fixed-time preview: every day, or one
+	 * weekday (0 and 7 are Sunday).
 	 *
 	 * @var array<int|string, string>
 	 */
-	private const DAY_OF_WEEK_SHAPES = ['*' => 'daily', '0' => 'weekly', '7' => 'weekly'];
+	private const DAY_OF_WEEK_SHAPES = [
+		'*' => 'daily',
+		'0' => 'weekly',
+		'1' => 'weekly',
+		'2' => 'weekly',
+		'3' => 'weekly',
+		'4' => 'weekly',
+		'5' => 'weekly',
+		'6' => 'weekly',
+		'7' => 'weekly',
+	];
 
 	/**
 	 * Inclusive value bounds per cron field (minute, hour, dom, month, dow).
@@ -144,8 +165,9 @@ class CronExpressionHelper implements CronExpressionHelperInterface {
 	/**
 	 * Build a short human-readable preview of a cron expression.
 	 *
-	 * Recognises the common "every day at HH:MM" / "every hour" / "every week"
-	 * shapes; falls back to echoing the canonical expression for complex ones.
+	 * Recognises the common "every day at HH:MM" / "every hour" / "every
+	 * Monday at HH:MM" shapes; falls back to echoing the canonical expression
+	 * for complex ones.
 	 *
 	 * @param string $expression The cron expression.
 	 * @param string $locale 'nl' or 'en' (defaults to English).
@@ -153,6 +175,7 @@ class CronExpressionHelper implements CronExpressionHelperInterface {
 	 * @return string The human-readable description.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
 	 */
 	public function describe(string $expression, string $locale = 'en'): string {
 		$fields = $this->fieldsOf(expression: $expression);
@@ -165,9 +188,14 @@ class CronExpressionHelper implements CronExpressionHelperInterface {
 			return $this->normalize(expression: $expression);
 		}
 
-		$texts = self::DESCRIPTIONS[$shape];
+		$language = 'en';
+		if (isset(self::DAY_NAMES[$locale]) === true) {
+			$language = $locale;
+		}
+
 		$time = sprintf('%02d:%02d', (int)$fields[1], (int)$fields[0]);
-		return str_replace('{time}', $time, ($texts[$locale] ?? $texts['en']));
+		$day  = (self::DAY_NAMES[$language][(int)$fields[4]] ?? '');
+		return str_replace(['{time}', '{day}'], [$time, $day], self::DESCRIPTIONS[$shape][$language]);
 	}//end describe()
 
 	/**
