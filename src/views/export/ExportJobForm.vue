@@ -287,7 +287,7 @@ export default {
 		 * Delivery options: a warehouse destination, or mail to users and groups.
 		 *
 		 * @return {Array<object>} The options.
-		 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+		 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
 		 */
 		deliveryOptions() {
 			return DELIVERIES.map((id) => ({
@@ -309,7 +309,7 @@ export default {
 		 * The picked recipients as picker options, labelled from the searches so far.
 		 *
 		 * @return {Array<object>} The options.
-		 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+		 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
 		 */
 		selectedRecipients() {
 			return toOptions(this.recipients, this.knownRecipients)
@@ -331,7 +331,7 @@ export default {
 		 * Falls back to the expression itself while its words are not known.
 		 *
 		 * @return {string} The summary.
-		 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+		 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
 		 */
 		scheduleSummary() {
 			const schedule = this.scheduleWords || this.model.scheduleCron || ''
@@ -469,7 +469,7 @@ export default {
 		 *
 		 * @param {string} expression The cron expression.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+		 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
 		 */
 		async describeSchedule(expression) {
 			if (!expression) {
@@ -491,7 +491,7 @@ export default {
 		 *
 		 * @param {string} query What the user typed.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+		 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
 		 */
 		async onRecipientSearch(query) {
 			this.searchingRecipients = true
@@ -520,7 +520,7 @@ export default {
 		 *
 		 * @return {Promise<string>} The destination id.
 		 * @throws {Error} When it could not be saved.
-		 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+		 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
 		 */
 		async saveMailDestination() {
 			const destination = {
@@ -555,6 +555,7 @@ export default {
 		 * Persist the job via the shared object store.
 		 *
 		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-upload-with-retries-req-bie-008
+		 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
 		 */
 		async save() {
 			if (this.delivery === 'mail' && this.recipients.length === 0) {
@@ -576,6 +577,12 @@ export default {
 				}
 				if (this.isEdit) {
 					payload.id = this.jobId
+				} else {
+					// The schema requires who made the job and when; the server's own
+					// createJob stamps both, and a job saved through the object store
+					// must carry them too or OpenRegister refuses it (found live).
+					payload.createdBy = window.OC?.getCurrentUser?.()?.uid ?? ''
+					payload.createdAt = new Date().toISOString()
 				}
 				await this.objectStore.saveObject('exportJob', payload)
 				showSuccess(this.t('pipelinq', 'Export job saved'))

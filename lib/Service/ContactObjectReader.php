@@ -100,7 +100,7 @@ class ContactObjectReader {
 	 *
 	 * @return list<array<string, mixed>>|null The objects, or null when the type is not allowed or not configured.
 	 *
-	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-26-example-set-zuiddrecht/tasks.md#task-2.5
 	 */
 	public function page(string $objectType, int $limit, int $offset): ?array {
 		if (in_array($objectType, self::OBJECT_TYPES, true) === false) {

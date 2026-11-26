@@ -341,7 +341,7 @@ class ExportDestinationService extends AbstractExportService implements ExportDe
 	 *
 	 * @throws OCSBadRequestException When there is none, or one is malformed or unknown.
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md
 	 */
 	private function validateRecipients(mixed $recipients): void {
 		if (is_array($recipients) === false || $recipients === []) {
@@ -362,7 +362,7 @@ class ExportDestinationService extends AbstractExportService implements ExportDe
 	 *
 	 * @return string|null The recipient as `type:id`, or null.
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md
 	 */
 	private function missingRecipient(mixed $recipients): ?string {
 		if (is_array($recipients) === false || $recipients === []) {

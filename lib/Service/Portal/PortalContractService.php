@@ -59,14 +59,21 @@ class PortalContractService extends AbstractPortalReadFacade implements PortalCo
 	/**
 	 * {@inheritDoc}
 	 *
+	 * The sales contract names its parties in `contactRef` and `clientRef`;
+	 * `contact` and `client` are read only when those are absent. Reading
+	 * only the bare names, as before, matched no stored contract, so no
+	 * client ever saw one in the portal.
+	 *
 	 * @param array<string, mixed> $object The raw contract.
 	 *
 	 * @return array{0: string|null, 1: string|null} The [contactId, clientId].
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-sees-their-own-invoices-contracts-orders-and-quotes
 	 */
 	protected function ownerIds(array $object): array {
 		return [
-			$this->readId(value: ($object['contact'] ?? null)),
-			$this->readId(value: ($object['client'] ?? null)),
+			$this->readId(value: ($object['contactRef'] ?? $object['contact'] ?? null)),
+			$this->readId(value: ($object['clientRef'] ?? $object['client'] ?? null)),
 		];
 	}//end ownerIds()
 

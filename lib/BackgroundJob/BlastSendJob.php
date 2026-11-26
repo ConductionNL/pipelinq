@@ -35,6 +35,7 @@ use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Kernel\Contracts\BlastSendJobInterface;
 use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
+use OCA\Pipelinq\Service\SystemServiceAccount;
 use OCA\Pipelinq\Util\ContainerObjectService;
 use OCA\Pipelinq\Util\JsonConfigArray;
 use OCA\Pipelinq\Util\ObjectServiceTarget;
@@ -90,8 +91,10 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	 * @param BlastServiceInterface $blastService Dispatch service.
 	 * @param WebhookProcessorServiceInterface $webhookProcessor Webhook event processor.
 	 * @param LoggerInterface $logger Logger.
+	 * @param SystemServiceAccount $systemAccount The account the cycle runs as when nobody is signed in (cron).
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
+	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
 	 */
 	public function __construct(
 		ITimeFactory $time,
@@ -100,6 +103,7 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 		private BlastServiceInterface $blastService,
 		private WebhookProcessorServiceInterface $webhookProcessor,
 		private LoggerInterface $logger,
+		private SystemServiceAccount $systemAccount,
 	) {
 		parent::__construct(time: $time);
 		$this->setInterval(seconds: self::INTERVAL);
@@ -117,6 +121,21 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
 	 */
 	protected function run(mixed $argument): void {
+		// Under cron nobody is signed in, and OpenRegister refuses an anonymous
+		// read of a blast, so no queued mailing was ever sent. Run the cycle as
+		// the signed-in user, else as the pipelinq system account, the account
+		// the export jobs run as (granted on the register).
+		$this->systemAccount->runAsCurrentOrSystem(fn () => $this->cycle());
+	}//end run()
+
+	/**
+	 * One dispatch + webhook drain cycle.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
+	 */
+	private function cycle(): void {
 		$this->logger->info('BlastSendJob: starting cycle');
 
 		$dispatched = $this->dispatchSendingBlasts();
@@ -126,7 +145,7 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 			'BlastSendJob: cycle complete',
 			['dispatched' => $dispatched, 'webhookEventsDrained' => $drained]
 		);
-	}//end run()
+	}//end cycle()
 
 	/**
 	 * Iterate Blasts with status `sending` and dispatch each.

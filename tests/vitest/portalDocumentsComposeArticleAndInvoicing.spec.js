@@ -41,7 +41,7 @@ vi.mock('@nextcloud/dialogs/style.css', () => ({}))
 vi.mock('@nextcloud/vue', () => ({ NcButton: stub('NcButton'), NcLoadingIcon: stub('NcLoadingIcon'), NcNoteCard: stub('NcNoteCard'), NcSelect: stub('NcSelect'), NcTextArea: stub('NcTextArea'), NcTextField: stub('NcTextField') }))
 vi.mock('@conduction/nextcloud-vue', () => ({ CnDialog: stub('CnDialog'), CnMarkdownEditor: stub('CnMarkdownEditor') }))
 vi.mock('../../src/components/LabelSelect.vue', () => ({ default: stub('LabelSelect') }))
-const portalApi = vi.hoisted(() => ({ invoices: vi.fn(), contracts: vi.fn(), orders: vi.fn(), signDocument: vi.fn() }))
+const portalApi = vi.hoisted(() => ({ invoices: vi.fn(), contracts: vi.fn(), orders: vi.fn(), signDocument: vi.fn(), tenantConfig: vi.fn() }))
 vi.mock('../../src/portal/portalApi.js', () => ({ portalApi }))
 const socialApi = vi.hoisted(() => ({ createPost: vi.fn(), fetchAccounts: vi.fn(), movePost: vi.fn(), updatePost: vi.fn() }))
 vi.mock('../../src/services/socialApi.js', () => socialApi)
@@ -104,6 +104,23 @@ describe('PortalDashboard', () => {
 		expect([none.availableTabs, portalApi.invoices.mock.calls.length, portalApi.contracts.mock.calls.length, portalApi.orders.mock.calls.length]).toEqual([[], 0, 1, 0])
 		none.activeTab = 'odd'
 		expect(none.tableCaption).toBe('My documents')
+	})
+
+	it('offers only the record types the tenant switched on when no features are given', async () => {
+		portalApi.tenantConfig.mockResolvedValueOnce({ enabledFeatures: ['invoices', 'contracts', 'requests', 'documents', 'profile'] })
+		portalApi.invoices.mockResolvedValueOnce({ items: [{ id: 'f1' }] })
+		const d = context(PortalDashboard, { features: null })
+		await PortalDashboard.mounted.call(d)
+		await tick()
+		expect([d.availableTabs.map((tab) => tab.key), d.activeTab, d.rows, portalApi.orders.mock.calls.length]).toEqual([['invoices', 'contracts'], 'invoices', [{ id: 'f1' }], 0])
+	})
+
+	it('offers the three record types when the tenant configuration cannot be read', async () => {
+		portalApi.tenantConfig.mockRejectedValueOnce(new Error('offline'))
+		portalApi.invoices.mockResolvedValueOnce({ items: [] })
+		const d = context(PortalDashboard, { features: null })
+		await PortalDashboard.mounted.call(d)
+		expect(d.availableTabs.map((tab) => tab.key)).toEqual(['invoices', 'contracts', 'orders'])
 	})
 
 	it('says when a tab cannot be loaded', async () => {
