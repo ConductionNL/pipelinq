@@ -17,7 +17,7 @@
  *
  * @link https://www.conduction.nl
  *
- * @spec openspec/changes/contract-contact-ref/specs/pipelinq-contracts/spec.md
+ * @spec openspec/specs/pipelinq-contracts/spec.md
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @spec openspec/changes/contract-contact-ref/specs/pipelinq-contracts/spec.md
+ * @spec openspec/specs/pipelinq-contracts/spec.md
  */
 class SalesContractContactRefSchemaTest extends TestCase {
 
