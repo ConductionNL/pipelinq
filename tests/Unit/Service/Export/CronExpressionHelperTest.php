@@ -114,6 +114,22 @@ class CronExpressionHelperTest extends TestCase {
 	}//end testInvalidExpressionNeverDue()
 
 	/**
+	 * A weekly schedule on any one weekday reads as that day in words, so the
+	 * schedule dialog can say "Every Monday at 07:00 to Team leads" (REQ-RPD-003).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+	 */
+	public function testAWeeklyScheduleNamesItsDay(): void {
+		$this->assertSame('Every Monday at 07:00', $this->cron->describe(expression: '0 7 * * 1', locale: 'en'));
+		$this->assertSame('Elke maandag om 07:00', $this->cron->describe(expression: '0 7 * * 1', locale: 'nl'));
+		$this->assertSame('Every Saturday at 18:30', $this->cron->describe(expression: '30 18 * * 6'));
+		$this->assertSame('Every Sunday at 03:00', $this->cron->describe(expression: '0 3 * * 7'));
+		$this->assertSame('0 7 * * 1-5', $this->cron->describe(expression: '0 7 * * 1-5'), 'a range is not one weekday');
+	}//end testAWeeklyScheduleNamesItsDay()
+
+	/**
 	 * The human-readable describe() returns non-empty text in both locales.
 	 *
 	 * @return void
