@@ -208,11 +208,11 @@ class InvoiceSequenceServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testNumbersDrawnInOneProcessNeverRepeatDespiteTheConfigCache(): void {
-		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$service   = new InMemoryInvoiceSequenceService(
-			$this->createMock(IDBConnection::class),
+			$this->createMock(originalClassName: IDBConnection::class),
 			$appConfig,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(originalClassName: LoggerInterface::class)
 		);
 		// The per-process cache: filled on first read, updated only by setValueInt.
 		$cache = [];
@@ -235,18 +235,18 @@ class InvoiceSequenceServiceTest extends TestCase {
 
 		$first = [$service->next(), $service->next(), $service->next()];
 		$this->assertSame(
-			[
+			expected: [
 				sprintf('%04d-%06d', (int)date('Y'), 1),
 				sprintf('%04d-%06d', (int)date('Y'), 2),
 				sprintf('%04d-%06d', (int)date('Y'), 3),
 			],
-			$first
+			actual: $first
 		);
 
 		// A counter left over from last year, read stale from the cache: reset, then 1, 2.
 		$service->store = ['receipt_invoice_counter' => 873, 'receipt_invoice_counter_year' => ((int)date('Y') - 1)];
 		$cache          = ['receipt_invoice_counter' => 0];
-		$this->assertSame(sprintf('%04d-%06d', (int)date('Y'), 1), $service->next());
-		$this->assertSame(sprintf('%04d-%06d', (int)date('Y'), 2), $service->next());
+		$this->assertSame(expected: sprintf('%04d-%06d', (int)date('Y'), 1), actual: $service->next());
+		$this->assertSame(expected: sprintf('%04d-%06d', (int)date('Y'), 2), actual: $service->next());
 	}//end testNumbersDrawnInOneProcessNeverRepeatDespiteTheConfigCache()
 }//end class
