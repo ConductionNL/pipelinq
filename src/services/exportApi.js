@@ -90,7 +90,7 @@ export const exportApi = {
 	 *
 	 * @param {string} expression The cron expression.
 	 * @return {Promise<object>} { expression, description, valid }.
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
 	 */
 	describeSchedule(expression) {
 		return request(`/schedule/describe?expression=${encodeURIComponent(expression)}`, 'GET')

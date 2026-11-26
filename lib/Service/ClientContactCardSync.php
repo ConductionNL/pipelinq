@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-26-example-set-zuiddrecht/tasks.md#task-2.5
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use RuntimeException;
 /**
  * Writes a Contacts card per client under the client's own uid.
  *
- * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-26-example-set-zuiddrecht/tasks.md#task-2.5
  */
 class ClientContactCardSync implements ClientContactCardSyncInterface {
 
@@ -78,7 +78,7 @@ class ClientContactCardSync implements ClientContactCardSyncInterface {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $dryRun is the command's --dry-run option.
 	 *
-	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-26-example-set-zuiddrecht/tasks.md#task-2.5
 	 */
 	#[Override]
 	public function run(bool $dryRun=false): array {
@@ -105,7 +105,7 @@ class ClientContactCardSync implements ClientContactCardSyncInterface {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $dryRun is the command's --dry-run option.
 	 *
-	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-26-example-set-zuiddrecht/tasks.md#task-2.5
 	 */
 	private function syncOne(array $client, bool $dryRun): array {
 		$entry = [

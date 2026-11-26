@@ -1141,7 +1141,7 @@ class ExportJobControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md
 	 */
 	public function testDescribeScheduleAnswersInDutchForADutchUser(): void {
 		$this->authenticate(uid: 'analyst');
@@ -1161,7 +1161,7 @@ class ExportJobControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md
 	 */
 	public function testDescribeScheduleFallsBackToEnglishAndFlagsAnInvalidExpression(): void {
 		$this->authenticate(uid: 'analyst');
@@ -1180,7 +1180,7 @@ class ExportJobControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md
 	 */
 	public function testDescribeScheduleIsRefusedWithoutTheExportRole(): void {
 		$this->authenticate(uid: 'regular-user', isAdmin: false);
