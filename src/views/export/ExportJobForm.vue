@@ -555,6 +555,7 @@ export default {
 		 * Persist the job via the shared object store.
 		 *
 		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-upload-with-retries-req-bie-008
+		 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
 		 */
 		async save() {
 			if (this.delivery === 'mail' && this.recipients.length === 0) {
@@ -576,6 +577,12 @@ export default {
 				}
 				if (this.isEdit) {
 					payload.id = this.jobId
+				} else {
+					// The schema requires who made the job and when; the server's own
+					// createJob stamps both, and a job saved through the object store
+					// must carry them too or OpenRegister refuses it (found live).
+					payload.createdBy = window.OC?.getCurrentUser?.()?.uid ?? ''
+					payload.createdAt = new Date().toISOString()
 				}
 				await this.objectStore.saveObject('exportJob', payload)
 				showSuccess(this.t('pipelinq', 'Export job saved'))
