@@ -99,7 +99,39 @@ class SeedPartyKinds implements IRepairStep {
 			'maxPerRecord' => 0,
 			'active' => true,
 		],
+		[
+			'code' => 'burger',
+			'label' => 'Burger',
+			'description' => 'A resident the organisation serves: what kind of party a client is.',
+			'identityShapes' => ['naturalPerson'],
+			'maxPerRecord' => 0,
+			'active' => true,
+		],
+		[
+			'code' => 'bedrijf',
+			'label' => 'Bedrijf',
+			'description' => 'A business the organisation serves: what kind of party a client is.',
+			'identityShapes' => ['organization'],
+			'maxPerRecord' => 0,
+			'active' => true,
+		],
 	];
+
+	/**
+	 * The record type under which a client's own kind is chosen. The client
+	 * form offers the kinds this acceptance names; an administrator adds a
+	 * kind to the vocabulary and to this acceptance, and no release is needed.
+	 *
+	 * @var string
+	 */
+	public const CLIENT_KIND_RECORD_TYPE = 'pipelinq:client:kind';
+
+	/**
+	 * The kinds a client is offered until an administrator changes the acceptance.
+	 *
+	 * @var array<int, string>
+	 */
+	private const CLIENT_KINDS = ['burger', 'bedrijf'];
 
 	/**
 	 * Constructor.
@@ -188,5 +220,40 @@ class SeedPartyKinds implements IRepairStep {
 		$output->info(
 			sprintf('Party kinds: %d seeded, %d already declared.', $seeded, (count(self::KINDS) - count($missing)))
 		);
+
+		$this->seedClientAcceptance(register: $register, output: $output);
 	}//end run()
+
+	/**
+	 * Declare which kinds a client is offered, once: an acceptance an
+	 * administrator has written or changed is never touched again.
+	 *
+	 * @param string  $register The register id.
+	 * @param IOutput $output   Output.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/client-management/spec.md#requirement-a-client-records-what-kind-of-party-it-is
+	 */
+	private function seedClientAcceptance(string $register, IOutput $output): void {
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'partyKindAcceptance_schema', '');
+		if ($schema === '' || $this->registry->acceptanceFor(recordType: self::CLIENT_KIND_RECORD_TYPE) !== null) {
+			return;
+		}
+
+		try {
+			$this->objectService->saveObject(
+				object: ['recordType' => self::CLIENT_KIND_RECORD_TYPE, 'kinds' => self::CLIENT_KINDS],
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+				_rbac: false,
+				_multitenancy: false
+			);
+			$output->info('Party kinds: the kinds a client is offered are declared.');
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'SeedPartyKinds: could not declare the kinds a client is offered',
+				['exception' => $e->getMessage()]
+			);
+		}
+	}//end seedClientAcceptance()
 }//end class

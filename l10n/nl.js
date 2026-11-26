@@ -10266,6 +10266,8 @@ OC.L10N.register(
         "Source lead": "Bronlead",
         "The won lead this contract was made from. Optional; set by Create contract on the lead.": "De gewonnen lead waarvan dit contract is gemaakt. Optioneel; Contract maken op de lead vult het in.",
         "Other details": "Overige gegevens",
+        "Kind of party": "Soort partij",
+        "Choose a kind": "Kies een soort",
         "Close your portal account": "Uw portaalaccount sluiten",
         "This confirmation link is incomplete. Open the link from the email again.": "Deze bevestigingslink is onvolledig. Open de link uit de e-mail opnieuw.",
         "After closing you can no longer sign in, and every open session ends. Records the law requires us to keep are kept.": "Na het sluiten kunt u niet meer inloggen en worden alle open sessies beëindigd. Gegevens die wij wettelijk moeten bewaren, blijven bewaard.",

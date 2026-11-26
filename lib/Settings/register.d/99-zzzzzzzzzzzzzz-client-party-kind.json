@@ -1,0 +1,25 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "specify-capability-rows 6.1 (row clients-party-kind, requirement 'A client records what kind of party it is'). A client names its kind of party from the vocabulary the administrator keeps (partyKind), which SeedPartyKinds gives the kinds burger (citizen) and bedrijf (business); the client form offers the kinds the acceptance 'pipelinq:client:kind' names. Stored as a link to the partyKind object, so the page and the list read its label and the list filters on it. Additive. Sorted after the last client fragment so its version is the merged one."
+  },
+  "components": {
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "version": "1.9.0",
+        "properties": {
+          "partyKind": {
+            "type": "string",
+            "title": "Kind of party",
+            "description": "What kind of party the client is, such as a citizen or a business, from the party kinds the administrator keeps.",
+            "format": "uuid",
+            "$ref": "partyKind",
+            "facetable": true
+          }
+        }
+      }
+    }
+  }
+}

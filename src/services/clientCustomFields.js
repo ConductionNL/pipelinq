@@ -53,6 +53,7 @@ export const SHIPPED_CLIENT_PROPERTIES = [
 	'notes',
 	'organisationPath',
 	'parentOrganisation',
+	'partyKind',
 	'phone',
 	'phones',
 	'place',

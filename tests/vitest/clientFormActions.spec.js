@@ -282,6 +282,20 @@ describe('ClientForm.onSave', () => {
 		expect(ctx.$emit).toHaveBeenCalledWith('save', expect.objectContaining({ id: 'c-9', contractNumber: null }))
 	})
 
+	it('saves the chosen kind of party, and clears a stored kind that was unset', () => {
+		const ctx = context()
+		ctx.partyKind = 'k-bedrijf'
+		ctx.form = { ...ctx.form, name: 'Acme', type: 'organization' }
+		ctx.onSave()
+		expect(ctx.$emit).toHaveBeenCalledWith('save', expect.objectContaining({ partyKind: 'k-bedrijf' }))
+
+		const edited = context({ client: { id: 'c-9', partyKind: 'k-bedrijf' } })
+		edited.partyKind = null
+		edited.form = { ...edited.form, name: 'Acme', type: 'organization' }
+		edited.onSave()
+		expect(edited.$emit).toHaveBeenCalledWith('save', expect.objectContaining({ id: 'c-9', partyKind: null }))
+	})
+
 	it('types an unknown kind as a person', () => {
 		const ctx = context()
 		ctx.form = { ...ctx.form, name: 'X', type: 'robot' }

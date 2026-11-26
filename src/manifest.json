@@ -2162,6 +2162,13 @@
 						"hidden": true
 					},
 					{
+						"key": "partyKind",
+						"label": "Kind of party",
+						"labelField": "label",
+						"sortable": false,
+						"hidden": true
+					},
+					{
 						"key": "churnRisk.level",
 						"label": "Risk",
 						"widget": "badge",
@@ -2870,6 +2877,15 @@
 								{
 									"path": "description",
 									"label": "Description"
+								},
+								{
+									"path": "partyKind",
+									"label": "Kind of party",
+									"resolve": {
+										"register": "pipelinq",
+										"schema": "partyKind",
+										"labelField": "label"
+									}
 								}
 							]
 						}
@@ -2915,6 +2931,15 @@
 										"register": "pipelinq",
 										"schema": "priceList",
 										"labelField": "title"
+									}
+								},
+								{
+									"path": "partyKind",
+									"label": "Kind of party",
+									"resolve": {
+										"register": "pipelinq",
+										"schema": "partyKind",
+										"labelField": "label"
 									}
 								}
 							]
