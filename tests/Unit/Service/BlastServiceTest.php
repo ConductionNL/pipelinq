@@ -486,7 +486,7 @@ class BlastServiceTest extends TestCase {
 		$this->assertSame(1, $persisted['totals']['delivered']);
 		$this->assertSame(1, $persisted['totals']['bounced']);
 		$this->assertSame(0, $persisted['totals']['opened']);
-		$this->assertSame('sent', $persisted['status'], 'no delivery is queued any more, so the mailing is sent');
+		$this->assertSame(expected: 'sent', actual: $persisted['status'], message: 'no delivery is queued any more, so the mailing is sent');
 	}//end testUpdateBlastTotalsRecountsByStatus()
 
 	/**
@@ -518,7 +518,7 @@ class BlastServiceTest extends TestCase {
 			$this->service->updateBlastTotals('blast-s');
 
 			$persisted = end($this->objectService->saved);
-			$this->assertSame($expected, $persisted['status'], $name);
+			$this->assertSame(expected: $expected, actual: $persisted['status'], message: $name);
 		}
 	}//end testUpdateBlastTotalsSettlesASendingBlast()
 
@@ -803,7 +803,7 @@ class BlastServiceTest extends TestCase {
 		];
 
 		$final = $this->sendCompliant(
-			[
+			blast: [
 				'uuid' => 'blast-nov',
 				'name' => 'November newsletter',
 				'segmentId' => 'seg-1',
@@ -816,9 +816,9 @@ class BlastServiceTest extends TestCase {
 			]
 		);
 
-		$this->assertSame('November news', $final['sentSubject']);
-		$this->assertSame('<p>Hello</p>', $final['sentHtml']);
-		$this->assertSame('Hello', $final['sentText']);
+		$this->assertSame(expected: 'November news', actual: $final['sentSubject']);
+		$this->assertSame(expected: '<p>Hello</p>', actual: $final['sentHtml']);
+		$this->assertSame(expected: 'Hello', actual: $final['sentText']);
 	}//end testABlastWithEmptySnapshotFieldsTakesTheTemplatesContent()
 
 	/**

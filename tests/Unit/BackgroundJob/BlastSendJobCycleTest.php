@@ -146,9 +146,9 @@ class BlastSendJobCycleTest extends TestCase {
 	 * @return SystemServiceAccount The account.
 	 */
 	private function systemAccount(): SystemServiceAccount {
-		$this->system = $this->createMock(IUser::class);
+		$this->system = $this->createMock(originalClassName: IUser::class);
 
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$session->method('getUser')->willReturnCallback(fn (): ?IUser => $this->active);
 		$session->method('setVolatileActiveUser')->willReturnCallback(
 			function (?IUser $user): void {
@@ -156,10 +156,10 @@ class BlastSendJobCycleTest extends TestCase {
 			}
 		);
 
-		$users = $this->createMock(IUserManager::class);
+		$users = $this->createMock(originalClassName: IUserManager::class);
 		$users->method('get')->willReturn($this->system);
 
-		return new SystemServiceAccount(userManager: $users, userSession: $session, random: $this->createMock(ISecureRandom::class));
+		return new SystemServiceAccount(userManager: $users, userSession: $session, random: $this->createMock(originalClassName: ISecureRandom::class));
 	}//end systemAccount()
 
 	/**
@@ -238,26 +238,26 @@ class BlastSendJobCycleTest extends TestCase {
 	 */
 	public function testUnderCronTheCycleRunsAsTheSystemAccount(): void {
 		$actors = [];
-		$blasts = $this->createMock(BlastServiceInterface::class);
+		$blasts = $this->createMock(originalClassName: BlastServiceInterface::class);
 		$blasts->method('dispatchBlastDeliveries')->willReturnCallback(
 			function (string $blastId) use (&$actors): int {
 				$actors[] = $this->active;
 				return 1;
 			}
 		);
-		$job = $this->job(container: $this->containerWith([['uuid' => 'b-1']]), blasts: $blasts);
+		$job = $this->job(container: $this->containerWith(rows: [['uuid' => 'b-1']]), blasts: $blasts);
 
 		(new \ReflectionMethod($job, 'run'))->invoke($job, null);
 
-		$this->assertSame([$this->system], $actors);
-		$this->assertNull($this->active);
+		$this->assertSame(expected: [$this->system], actual: $actors);
+		$this->assertNull(actual: $this->active);
 
-		$caller       = $this->createMock(IUser::class);
+		$caller       = $this->createMock(originalClassName: IUser::class);
 		$this->active = $caller;
 		(new \ReflectionMethod($job, 'run'))->invoke($job, null);
 
-		$this->assertSame([$this->system, $caller], $actors);
-		$this->assertSame($caller, $this->active);
+		$this->assertSame(expected: [$this->system, $caller], actual: $actors);
+		$this->assertSame(expected: $caller, actual: $this->active);
 	}//end testUnderCronTheCycleRunsAsTheSystemAccount()
 
 	/**

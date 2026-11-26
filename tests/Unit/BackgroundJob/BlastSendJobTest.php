@@ -153,13 +153,13 @@ class BlastSendJobTest extends TestCase {
 	 * @return SystemServiceAccount The account.
 	 */
 	private function signedInSystemAccount(): SystemServiceAccount {
-		$session = $this->createMock(IUserSession::class);
-		$session->method('getUser')->willReturn($this->createMock(IUser::class));
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn($this->createMock(originalClassName: IUser::class));
 
 		return new SystemServiceAccount(
-			userManager: $this->createMock(IUserManager::class),
+			userManager: $this->createMock(originalClassName: IUserManager::class),
 			userSession: $session,
-			random: $this->createMock(ISecureRandom::class)
+			random: $this->createMock(originalClassName: ISecureRandom::class)
 		);
 	}//end signedInSystemAccount()
 
@@ -333,7 +333,7 @@ class BlastSendJobTest extends TestCase {
 		$container->method('get')->willReturn($failing);
 		$this->logger->expects($this->once())->method('warning')
 			->with('BlastSendJob.loadSendingBlasts: findAll failed', ['exception' => 'register offline']);
-		$job = new BlastSendJob($this->timeFactory, $this->appConfig, $container, $this->blastService, $this->webhookProcessor, $this->logger, $this->signedInSystemAccount());
+		$job = new BlastSendJob(time: $this->timeFactory, appConfig: $this->appConfig, container: $container, blastService: $this->blastService, webhookProcessor: $this->webhookProcessor, logger: $this->logger, systemAccount: $this->signedInSystemAccount());
 		$this->assertSame([], $load->invoke($job));
 	}//end testSendingBlastsAreReadExactly()
 }//end class
