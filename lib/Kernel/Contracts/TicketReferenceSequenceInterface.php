@@ -31,7 +31,7 @@ namespace OCA\Pipelinq\Kernel\Contracts;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
+ * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
  */
 interface TicketReferenceSequenceInterface {
 
@@ -43,7 +43,7 @@ interface TicketReferenceSequenceInterface {
 	 *
 	 * @throws \RuntimeException If a unique ticket reference cannot be allocated after retries.
 	 *
-	 * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
+	 * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
 	 */
 	public function next(): string;
 }//end interface

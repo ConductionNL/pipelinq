@@ -34,7 +34,7 @@ export async function previewTemplate(templateId) {
  * @param {string} templateId The template id.
  * @param {{segmentId?: string, listId?: string}} audience The chosen segment or mailing list.
  * @return {Promise<Array<{variable: string, count: number}>>} The gaps; empty when nothing is missing or no audience is chosen.
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
  */
 export async function emptyVariables(templateId, audience = {}) {
 	const segmentId = audience.segmentId || ''

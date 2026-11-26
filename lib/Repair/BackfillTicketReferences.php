@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/ticket-leaf-closed-reference-assignee/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-26-ticket-leaf-closed-reference-assignee/tasks.md#task-3.1
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Throwable;
  * already has a reference, or is not a request or complaint, is left alone, so
  * a second run writes nothing.
  *
- * @spec openspec/changes/ticket-leaf-closed-reference-assignee/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-26-ticket-leaf-closed-reference-assignee/tasks.md#task-3.1
  */
 class BackfillTicketReferences implements IRepairStep {
 	use FirstAdminUser;
@@ -81,7 +81,7 @@ class BackfillTicketReferences implements IRepairStep {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/ticket-leaf-closed-reference-assignee/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-26-ticket-leaf-closed-reference-assignee/tasks.md#task-3.1
 	 */
 	#[Override]
 	public function getName(): string {
@@ -95,7 +95,7 @@ class BackfillTicketReferences implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/ticket-leaf-closed-reference-assignee/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-26-ticket-leaf-closed-reference-assignee/tasks.md#task-3.1
 	 */
 	#[Override]
 	public function run(IOutput $output): void {

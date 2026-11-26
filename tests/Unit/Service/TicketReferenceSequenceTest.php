@@ -81,7 +81,7 @@ final class InMemoryTicketReferenceSequence extends TicketReferenceSequence {
 /**
  * Tests for TicketReferenceSequence.
  *
- * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
+ * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
  */
 class TicketReferenceSequenceTest extends TestCase {
 	/**

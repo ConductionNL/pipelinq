@@ -5,7 +5,7 @@
  *
  * The client for GET /api/templates/{id}/empty-variables.
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
  */
 
 import axios from '@nextcloud/axios'

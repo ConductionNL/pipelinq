@@ -234,7 +234,7 @@ class BlastSendJobCycleTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
+	 * @spec openspec/changes/archive/2026-11-26-marketing-mail-templates/tasks.md#task-2.7
 	 */
 	public function testUnderCronTheCycleRunsAsTheSystemAccount(): void {
 		$actors = [];

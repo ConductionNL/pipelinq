@@ -94,7 +94,7 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	 * @param SystemServiceAccount $systemAccount The account the cycle runs as when nobody is signed in (cron).
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
-	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
+	 * @spec openspec/changes/archive/2026-11-26-marketing-mail-templates/tasks.md#task-2.7
 	 */
 	public function __construct(
 		ITimeFactory $time,
@@ -133,7 +133,7 @@ class BlastSendJob extends TimedJob implements BlastSendJobInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
+	 * @spec openspec/changes/archive/2026-11-26-marketing-mail-templates/tasks.md#task-2.7
 	 */
 	private function cycle(): void {
 		$this->logger->info('BlastSendJob: starting cycle');

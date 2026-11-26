@@ -224,7 +224,7 @@ class TicketLeafProviderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-host-app-can-read-a-partys-closed-tickets-too
+	 * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-host-app-can-read-a-partys-closed-tickets-too
 	 */
 	public function testClosedAndAllTicketsCarryReferenceAndAssigneeName(): void {
 		$closed = $this->provider()->byMasterEntity(refs: ['m-slagerij'], status: 'closed');
@@ -245,7 +245,7 @@ class TicketLeafProviderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-host-app-can-read-a-partys-closed-tickets-too
+	 * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-host-app-can-read-a-partys-closed-tickets-too
 	 */
 	public function testTheStatusFilterHoldsAndAnUnknownOneIsRefused(): void {
 		$this->storeFiltersStatus = false;
