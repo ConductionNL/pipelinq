@@ -67,6 +67,26 @@ class PortalRequestController extends PortalApiController {
 	}//end __construct()
 
 	/**
+	 * The categories a client may file a request under.
+	 *
+	 * @return JSONResponse `{categories: [{key, name, description}]}`.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-files-a-request-in-the-portal-and-follows-it
+	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
+	public function categories(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$this->requireSession();
+				return [['categories' => $this->requests->openCategories()], Http::STATUS_OK];
+			}
+		);
+	}//end categories()
+
+	/**
 	 * List the customer's requests.
 	 *
 	 * @return JSONResponse The paginated requests.

@@ -131,4 +131,14 @@ interface PortalRequestServiceInterface {
 		array $attachments,
 		string $categoryId,
 	): array;
+
+	/**
+	 * The categories a client may file a request under: the active ticket
+	 * categories a desk opened to clients.
+	 *
+	 * @return array<int, array{key: string, name: string, description: string}> The categories.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-files-a-request-in-the-portal-and-follows-it
+	 */
+	public function openCategories(): array;
 }//end interface

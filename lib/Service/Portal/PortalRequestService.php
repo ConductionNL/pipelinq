@@ -38,6 +38,7 @@ use OCA\Pipelinq\Util\NullableRowIdOf;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
+use Override;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -273,7 +274,7 @@ class PortalRequestService implements PortalRequestServiceInterface {
 		$accountId = (string)$this->idOf(object: $account);
 		$this->assertWithinRateLimit(accountId: $accountId);
 		$this->assertAttachmentsWithinLimit(attachments: $attachments);
-		$this->assertCategoryExposed(categoryId: $categoryId);
+		(new OpenRequestCategories(reader: $this->reader))->assertOpen(categoryId: $categoryId);
 
 		$record = $this->ticketHead(message: $message, account: $account)
 			+ ['category' => $categoryId, 'status' => 'new', 'channel' => 'portal', 'reporterAccountId' => $accountId]
@@ -619,32 +620,17 @@ class PortalRequestService implements PortalRequestServiceInterface {
 	}//end assertAttachmentsWithinLimit()
 
 	/**
-	 * Reject a category that is not customer-exposed.
+	 * The categories a client may file a request under: the active ticket
+	 * categories a desk opened to clients, by name.
 	 *
-	 * A category is acceptable when no category catalogue is configured (open
-	 * intake) or when the catalogue marks it exposeToCustomer: true. An
-	 * internal-only category is rejected with 422.
+	 * @return array<int, array{key: string, name: string, description: string}> The categories.
 	 *
-	 * @param string $categoryId The chosen category id.
-	 *
-	 * @return void
-	 *
-	 * @throws PortalException When the category is internal-only.
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-files-a-request-in-the-portal-and-follows-it
 	 */
-	private function assertCategoryExposed(string $categoryId): void {
-		if ($this->reader->hasSchema(schemaKey: 'requestCategory') === false) {
-			return;
-		}
-
-		$category = $this->reader->find('requestCategory', $categoryId);
-		if ($category === null || ($category['exposeToCustomer'] ?? false) !== true) {
-			throw new PortalException(
-				Http::STATUS_UNPROCESSABLE_ENTITY,
-				'categoryNotAvailable',
-				'Deze categorie is niet beschikbaar.'
-			);
-		}
-	}//end assertCategoryExposed()
+	#[Override]
+	public function openCategories(): array {
+		return (new OpenRequestCategories(reader: $this->reader))->all();
+	}//end openCategories()
 
 	/**
 	 * Dispatch a generic request-submitted event for the SLA engine to pick up.

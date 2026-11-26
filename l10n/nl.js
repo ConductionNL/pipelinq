@@ -10265,6 +10265,7 @@ OC.L10N.register(
         "Could not make the contract.": "Het contract kon niet worden gemaakt.",
         "Source lead": "Bronlead",
         "The won lead this contract was made from. Optional; set by Create contract on the lead.": "De gewonnen lead waarvan dit contract is gemaakt. Optioneel; Contract maken op de lead vult het in.",
+        "Choose a category": "Kies een categorie",
         "Other details": "Overige gegevens",
         "Kind of party": "Soort partij",
         "Choose a kind": "Kies een soort",
