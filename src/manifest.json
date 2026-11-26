@@ -2921,6 +2921,13 @@
 						}
 					},
 					{
+						"id": "client-other-details",
+						"type": "ClientOtherDetailsWidget",
+						"title": "Other details",
+						"showTitle": false,
+						"_note": "The fields an administrator added to the client schema in OpenRegister, read from the schema at runtime (specify-capability-rows 37.1). It draws its own card, and nothing while no added field holds a value."
+					},
+					{
 						"id": "client-cases",
 						"type": "record-list",
 						"title": "Cases",
@@ -3807,6 +3814,7 @@
 									"widgetIds": [
 										"client-person-card",
 										"client-organisation-card",
+										"client-other-details",
 										"client-cases",
 										"client-tickets",
 										"client-latest-moments",

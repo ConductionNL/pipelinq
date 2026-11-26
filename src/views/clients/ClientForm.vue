@@ -148,6 +148,11 @@
 						:placeholder="t('pipelinq', 'Select a timezone')"
 						data-testid="client-timezone-select" />
 				</div>
+				<ClientCustomFieldInputs
+					v-if="customFields.length"
+					:fields="customFields"
+					:values="customValues"
+					@update:values="(v) => (customValues = v)" />
 			</div>
 		</details>
 	</div>
@@ -309,6 +314,14 @@
 				data-testid="client-notes-input" />
 		</div>
 
+		<fieldset v-if="customFields.length" class="client-form__other" data-testid="client-other-details">
+			<legend>{{ t('pipelinq', 'Other details') }}</legend>
+			<ClientCustomFieldInputs
+				:fields="customFields"
+				:values="customValues"
+				@update:values="(v) => (customValues = v)" />
+		</fieldset>
+
 		<div v-if="showActions" class="client-form__actions">
 			<NcButton
 				variant="primary"
@@ -330,8 +343,10 @@ import { getLanguage, translate } from '@nextcloud/l10n'
 import { generateOcsUrl, generateUrl } from '@nextcloud/router'
 import { NcButton, NcCheckboxRadioSwitch, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
 import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
+import ClientCustomFieldInputs from '../../components/ClientCustomFieldInputs.vue'
 import LabelSelect from '../../components/LabelSelect.vue'
 import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
+import { customClientFields, customFieldValuesOf, customFieldValuesToSave } from '../../services/clientCustomFields.js'
 import { findClientDuplicate } from '../../services/clientDuplicates.js'
 import {
 	clientFormFrom,
@@ -431,6 +446,7 @@ export default {
 	name: 'ClientForm',
 	components: {
 		AlertOutline,
+		ClientCustomFieldInputs,
 		LabelSelect,
 		NcButton,
 		NcCheckboxRadioSwitch,
@@ -508,6 +524,11 @@ export default {
 
 			searchingUsers: false,
 			timezoneOptions: supportedTimezones(),
+
+			/** The fields an administrator added to the client schema, read at runtime. */
+			customFields: [],
+			/** Their values in this form, by key. */
+			customValues: {},
 		}
 	},
 
@@ -595,8 +616,14 @@ export default {
 		client: populateFormWatcher(),
 	},
 
+	/**
+	 * Load the languages and the fields an administrator added to the client schema.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/client-management/spec.md#requirement-a-field-an-administrator-adds-to-the-client-schema-shows-on-the-client-pages
+	 */
 	mounted() {
 		this.loadLanguages()
+		this.loadCustomFields()
 	},
 
 	methods: {
@@ -627,6 +654,28 @@ export default {
 		 */
 		populateForm(data) {
 			this.form = clientFormFrom(data)
+			this.customValues = customFieldValuesOf(this.customFields, data)
+		},
+
+		/**
+		 * Read the client schema as OpenRegister serves it now and offer the
+		 * fields an administrator added to it, so a new field needs no release.
+		 * Without the schema the form keeps its own fields only.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/specify-capability-rows/specs/client-management/spec.md#requirement-a-field-an-administrator-adds-to-the-client-schema-shows-on-the-client-pages
+		 */
+		async loadCustomFields() {
+			try {
+				// Loaded here, not at the top: the store pulls in the whole
+				// nextcloud-vue surface, which the form itself does not need.
+				const { useObjectStore } = await import('../../store/modules/object.js')
+				const schema = await useObjectStore().fetchSchema('client')
+				this.customFields = customClientFields(schema)
+			} catch {
+				this.customFields = []
+			}
+			this.customValues = customFieldValuesOf(this.customFields, this.client?.id ? this.client : null)
 		},
 
 		/**
@@ -697,7 +746,10 @@ export default {
 			if (!this.isValid) {
 				return
 			}
-			const data = { ...this.form }
+			const data = {
+				...this.form,
+				...customFieldValuesToSave(this.customFields, this.customValues, !!this.client?.id),
+			}
 			if (this.client?.id) {
 				data.id = this.client.id
 			}
@@ -715,6 +767,13 @@ export default {
 
 .client-form {
 	max-width: 800px;
+}
+
+.client-form__other {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 16px;
+	margin-bottom: 16px;
 }
 
 .client-form--board {
