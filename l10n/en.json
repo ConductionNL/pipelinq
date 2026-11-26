@@ -10359,6 +10359,14 @@
         "Draft contract made.": "Draft contract made.",
         "Could not make the contract.": "Could not make the contract.",
         "Source lead": "Source lead",
-        "The won lead this contract was made from. Optional; set by Create contract on the lead.": "The won lead this contract was made from. Optional; set by Create contract on the lead."
+        "The won lead this contract was made from. Optional; set by Create contract on the lead.": "The won lead this contract was made from. Optional; set by Create contract on the lead.",
+        "Repeat": "Repeat",
+        "How often the task comes back. When it is due, the next one is made, due one interval later.": "How often the task comes back. When it is due, the next one is made, due one interval later.",
+        "Does not repeat": "Does not repeat",
+        "Every month": "Every month",
+        "Next occurrence": "Next occurrence",
+        "The task made when this repeating task came due.": "The task made when this repeating task came due.",
+        "Previous occurrence": "Previous occurrence",
+        "The repeating task this task was made from.": "The repeating task this task was made from."
     }
 }

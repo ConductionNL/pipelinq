@@ -1,0 +1,43 @@
+{
+  "$comment": "specify-capability-rows 11.1 (row work-recurring-task): a task with a repeat schedule comes back on that schedule. A task may repeat every day, week or month; when its due date comes, the scheduled task job (TaskRecurrence) makes the next occurrence, due one interval on, and links the two through nextOccurrence / previousOccurrence so it is made once. Sorted after every other crmTask fragment so the version it stamps is the merged one: crmTask 1.2.1 -> 1.3.0. Additive, optional.",
+  "components": {
+    "schemas": {
+      "crmTask": {
+        "slug": "crmTask",
+        "version": "1.3.0",
+        "properties": {
+          "repeat": {
+            "type": "string",
+            "title": "Repeat",
+            "description": "How often the task comes back. When it is due, the next one is made, due one interval later.",
+            "enum": ["", "daily", "weekly", "monthly", null],
+            "default": "",
+            "facetable": true,
+            "x-enum-labels": {
+              "": "Does not repeat",
+              "daily": "Every day",
+              "weekly": "Every week",
+              "monthly": "Every month"
+            }
+          },
+          "nextOccurrence": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "crmTask",
+            "title": "Next occurrence",
+            "description": "The task made when this repeating task came due.",
+            "visible": false
+          },
+          "previousOccurrence": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "crmTask",
+            "title": "Previous occurrence",
+            "description": "The repeating task this task was made from.",
+            "visible": false
+          }
+        }
+      }
+    }
+  }
+}

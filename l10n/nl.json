@@ -10407,6 +10407,14 @@
         "Draft contract made.": "Conceptcontract gemaakt.",
         "Could not make the contract.": "Het contract kon niet worden gemaakt.",
         "Source lead": "Bronlead",
-        "The won lead this contract was made from. Optional; set by Create contract on the lead.": "De gewonnen lead waarvan dit contract is gemaakt. Optioneel; Contract maken op de lead vult het in."
+        "The won lead this contract was made from. Optional; set by Create contract on the lead.": "De gewonnen lead waarvan dit contract is gemaakt. Optioneel; Contract maken op de lead vult het in.",
+        "Repeat": "Herhalen",
+        "How often the task comes back. When it is due, the next one is made, due one interval later.": "Hoe vaak de taak terugkomt. Als hij moet zijn afgerond, komt de volgende, een interval later.",
+        "Does not repeat": "Herhaalt niet",
+        "Every month": "Elke maand",
+        "Next occurrence": "Volgende keer",
+        "The task made when this repeating task came due.": "De taak die werd gemaakt toen deze herhalende taak moest zijn afgerond.",
+        "Previous occurrence": "Vorige keer",
+        "The repeating task this task was made from.": "De herhalende taak waarvan deze taak is gemaakt."
     }
 }
