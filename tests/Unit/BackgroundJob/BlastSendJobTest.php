@@ -333,7 +333,15 @@ class BlastSendJobTest extends TestCase {
 		$container->method('get')->willReturn($failing);
 		$this->logger->expects($this->once())->method('warning')
 			->with('BlastSendJob.loadSendingBlasts: findAll failed', ['exception' => 'register offline']);
-		$job = new BlastSendJob(time: $this->timeFactory, appConfig: $this->appConfig, container: $container, blastService: $this->blastService, webhookProcessor: $this->webhookProcessor, logger: $this->logger, systemAccount: $this->signedInSystemAccount());
+		$job = new BlastSendJob(
+			time: $this->timeFactory,
+			appConfig: $this->appConfig,
+			container: $container,
+			blastService: $this->blastService,
+			webhookProcessor: $this->webhookProcessor,
+			logger: $this->logger,
+			systemAccount: $this->signedInSystemAccount()
+		);
 		$this->assertSame([], $load->invoke($job));
 	}//end testSendingBlastsAreReadExactly()
 }//end class
