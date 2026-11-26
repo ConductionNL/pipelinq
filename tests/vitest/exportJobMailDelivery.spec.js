@@ -7,7 +7,7 @@
  * groups, and the schedule in words with who it goes to. The object store,
  * export API, sharee search and toasts are mocked.
  *
- * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+ * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

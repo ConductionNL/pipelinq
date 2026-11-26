@@ -5,7 +5,7 @@
  * Every stat tile that compares with the previous period says which way is
  * good and what to show when there is no earlier period to compare with.
  *
- * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+ * @spec openspec/specs/report-periods-and-delivery/spec.md
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
