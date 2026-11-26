@@ -91,13 +91,6 @@ class PortalRequestService implements PortalRequestServiceInterface {
 	private const STATUS_AWAITING_CUSTOMER = 'awaiting_customer';
 
 	/**
-	 * The vocabulary a request's category key comes from.
-	 *
-	 * @var string
-	 */
-	private const CATEGORY_SCHEMA = 'ticketCategory';
-
-	/**
 	 * Ticket status a customer reply moves a waiting ticket back to.
 	 *
 	 * @var string
@@ -280,7 +273,7 @@ class PortalRequestService implements PortalRequestServiceInterface {
 		$accountId = (string)$this->idOf(object: $account);
 		$this->assertWithinRateLimit(accountId: $accountId);
 		$this->assertAttachmentsWithinLimit(attachments: $attachments);
-		$this->assertCategoryExposed(categoryId: $categoryId);
+		(new OpenRequestCategories(reader: $this->reader))->assertOpen(categoryId: $categoryId);
 
 		$record = $this->ticketHead(message: $message, account: $account)
 			+ ['category' => $categoryId, 'status' => 'new', 'channel' => 'portal', 'reporterAccountId' => $accountId]
@@ -634,58 +627,8 @@ class PortalRequestService implements PortalRequestServiceInterface {
 	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-files-a-request-in-the-portal-and-follows-it
 	 */
 	public function openCategories(): array {
-		if ($this->reader->hasSchema(schemaKey: self::CATEGORY_SCHEMA) === false) {
-			return [];
-		}
-
-		$open = [];
-		foreach ($this->reader->findAll(self::CATEGORY_SCHEMA) as $category) {
-			$key = trim((string)($category['key'] ?? ''));
-			if ($key === '' || ($category['exposeToCustomer'] ?? false) !== true || ($category['active'] ?? true) === false) {
-				continue;
-			}
-
-			$open[$key] = [
-				'key' => $key,
-				'name' => (string)($category['name'] ?? $key),
-				'description' => (string)($category['description'] ?? ''),
-			];
-		}
-
-		usort($open, static fn (array $left, array $right): int => strcmp($left['name'], $right['name']));
-		return $open;
+		return (new OpenRequestCategories(reader: $this->reader))->all();
 	}//end openCategories()
-
-	/**
-	 * Reject a category a client may not file under.
-	 *
-	 * Once a desk has opened any category to clients, a request names one of
-	 * those. While none is open the intake stays open, as it was before
-	 * categories could be opened, so a portal whose desk has not sorted its
-	 * categories yet still takes requests.
-	 *
-	 * @param string $categoryId The chosen category key.
-	 *
-	 * @return void
-	 *
-	 * @throws PortalException 422 categoryNotAvailable for any other category.
-	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-files-a-request-in-the-portal-and-follows-it
-	 */
-	private function assertCategoryExposed(string $categoryId): void {
-		$open = array_column($this->openCategories(), 'key');
-		if ($open === []) {
-			return;
-		}
-
-		if (in_array($categoryId, $open, true) === false) {
-			throw new PortalException(
-				Http::STATUS_UNPROCESSABLE_ENTITY,
-				'categoryNotAvailable',
-				'Deze categorie is niet beschikbaar.'
-			);
-		}
-	}//end assertCategoryExposed()
 
 	/**
 	 * Dispatch a generic request-submitted event for the SLA engine to pick up.

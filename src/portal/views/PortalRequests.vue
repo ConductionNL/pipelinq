@@ -188,6 +188,12 @@ export default {
 			}
 		},
 
+		/**
+		 * File the request with the chosen category, then read the list again.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-files-a-request-in-the-portal-and-follows-it
+		 */
 		async submit() {
 			this.error = ''
 			this.submitMessage = ''
