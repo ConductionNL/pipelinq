@@ -486,7 +486,41 @@ class BlastServiceTest extends TestCase {
 		$this->assertSame(1, $persisted['totals']['delivered']);
 		$this->assertSame(1, $persisted['totals']['bounced']);
 		$this->assertSame(0, $persisted['totals']['opened']);
+		$this->assertSame('sent', $persisted['status'], 'no delivery is queued any more, so the mailing is sent');
 	}//end testUpdateBlastTotalsRecountsByStatus()
+
+	/**
+	 * A sending blast stays sending while a delivery is queued or none was made,
+	 * reads failed when every delivery failed, and a blast that is not sending
+	 * keeps its status.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
+	 */
+	public function testUpdateBlastTotalsSettlesASendingBlast(): void {
+		$cases = [
+			'still queued' => ['sending', [['status' => 'sent'], ['status' => 'queued']], 'sending'],
+			'nothing made yet' => ['sending', [], 'sending'],
+			'all failed' => ['sending', [['status' => 'failed'], ['status' => 'failed']], 'failed'],
+			'one went out' => ['sending', [['status' => 'failed'], ['status' => 'bounced']], 'sent'],
+			'paused' => ['paused', [['status' => 'sent']], 'paused'],
+		];
+
+		foreach ($cases as $name => [$status, $rows, $expected]) {
+			$this->objectService->store['blast-s'] = ['uuid' => 'blast-s', 'status' => $status, 'totals' => []];
+			$this->objectService->deliveries = array_map(
+				static fn (array $row, int $i): array => ($row + ['uuid' => 'd'.$i, 'blastId' => 'blast-s']),
+				$rows,
+				array_keys($rows)
+			);
+
+			$this->service->updateBlastTotals('blast-s');
+
+			$persisted = end($this->objectService->saved);
+			$this->assertSame($expected, $persisted['status'], $name);
+		}
+	}//end testUpdateBlastTotalsSettlesASendingBlast()
 
 	/**
 	 * transitionQueuedDeliveries flips queued rows for a contact to

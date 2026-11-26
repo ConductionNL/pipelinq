@@ -627,12 +627,47 @@ class BlastService implements BlastServiceInterface {
 
 		$payload = $blast;
 		$payload['totals'] = $totals;
+		if (($blast['status'] ?? '') === 'sending') {
+			$payload['status'] = $this->sendingOutcome(deliveries: $deliveries, totals: $totals);
+		}
+
 		$this->saveObject(
 			payload: $payload,
 			schemaSlug: $this->getBlastSchemaSlug(),
 			id: $this->extractId(payload: $blast),
 		);
 	}//end updateBlastTotals()
+
+	/**
+	 * Where a sending blast stands once its deliveries are counted.
+	 *
+	 * It keeps `sending` while a delivery is still queued (or none was made
+	 * yet). When none is queued it is `sent` if any delivery went out, and
+	 * `failed` when every one failed, so a finished mailing no longer reads as
+	 * sending for ever.
+	 *
+	 * @param array<int, array<string, mixed>> $deliveries The blast's deliveries.
+	 * @param array<string, int>               $totals     Their counts per status.
+	 *
+	 * @return string `sending`, `sent` or `failed`.
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
+	 */
+	private function sendingOutcome(array $deliveries, array $totals): string {
+		if ($deliveries === [] || $totals['queued'] > 0) {
+			return 'sending';
+		}
+
+		$outcome = 'failed';
+		foreach ($deliveries as $delivery) {
+			if ((string)($delivery['status'] ?? '') !== 'failed') {
+				$outcome = 'sent';
+				break;
+			}
+		}
+
+		return $outcome;
+	}//end sendingOutcome()
 
 	/**
 	 * Transition every queued BlastDelivery for one contact on one Blast.
