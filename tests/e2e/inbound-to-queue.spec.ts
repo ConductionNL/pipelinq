@@ -113,11 +113,78 @@ async function ticketsOn(page: Page, threadKey: string): Promise<Array<Record<st
 	return (res.body?.results as Array<Record<string, unknown>>) ?? []
 }
 
+/**
+ * Call an OCS provisioning route from inside the page as the signed-in admin.
+ *
+ * @param page   The page to run in.
+ * @param method The HTTP verb.
+ * @param url    The OCS url.
+ * @param form   The form fields.
+ *
+ * @return The status.
+ */
+async function ocs(page: Page, method: string, url: string, form: Record<string, string> = {}): Promise<number> {
+	return await page.evaluate(
+		async ({ method, url, form }) => {
+			const res = await fetch(url, {
+				method,
+				headers: {
+					'OCS-APIRequest': 'true',
+					'Content-Type': 'application/x-www-form-urlencoded',
+					requesttoken:
+						document.querySelector('head[data-requesttoken]')?.getAttribute('data-requesttoken') ?? '',
+				},
+				body: method === 'GET' ? undefined : new URLSearchParams(form).toString(),
+			})
+			return res.status
+		},
+		{ method, url, form },
+	)
+}
+
+/** The messaging service account the instance had before this spec, restored afterwards. */
+let previousMessagingAccount: string | null = null
+
+/**
+ * Make sure the SMS and WhatsApp webhooks have a messaging service account to
+ * write as: a dedicated account in the messaging group, picked in the admin
+ * setting. Without one the webhook answers 503 and writes nothing, by design.
+ *
+ * @param page The page to run in.
+ *
+ * @return Nothing.
+ */
+async function useMessagingAccount(page: Page): Promise<void> {
+	const current = await api(page, 'GET', '/index.php/apps/pipelinq/api/messaging/service-account')
+	previousMessagingAccount = String(current.body.userId ?? '')
+	if (current.body.usable === true) {
+		return
+	}
+
+	const userId = 'e2e-messaging-service'
+	const group = String(current.body.group ?? 'pipelinq-messaging-service')
+	await ocs(page, 'POST', '/ocs/v2.php/cloud/groups', { groupid: group })
+	await ocs(page, 'POST', '/ocs/v2.php/cloud/users', { userid: userId, password: `E2e-${STAMP}-Messaging!` })
+	await ocs(page, 'PUT', `/ocs/v2.php/cloud/users/${userId}/enable`)
+	expect(await ocs(page, 'POST', `/ocs/v2.php/cloud/users/${userId}/groups`, { groupid: group })).toBeLessThan(400)
+	const saved = await api(page, 'PUT', '/index.php/apps/pipelinq/api/messaging/service-account', { userId })
+	expect(saved.status, JSON.stringify(saved.body).slice(0, 300)).toBeLessThan(400)
+	expect(saved.body.usable, 'the messaging service account is usable').toBe(true)
+}
+
 test.describe('inbound WhatsApp to the Queue', () => {
 	test.setTimeout(120000)
 
+	test.afterEach(async ({ page }) => {
+		if (previousMessagingAccount !== null) {
+			await api(page, 'PUT', '/index.php/apps/pipelinq/api/messaging/service-account', { userId: previousMessagingAccount })
+			previousMessagingAccount = null
+		}
+	})
+
 	test('a WhatsApp question lands in the Queue, a STOP opens no ticket', async ({ page }) => {
 		await openApp(page)
+		await useMessagingAccount(page)
 		const providerId = await seed(page, 'channelProvider', {
 			kind: 'whatsapp-cloud-api',
 			vendor: 'meta',
@@ -129,8 +196,8 @@ test.describe('inbound WhatsApp to the Queue', () => {
 		})
 		const asker = `3161${String(STAMP).slice(-7)}`
 		const stopper = `3162${String(STAMP).slice(-7)}`
-		const contactId = await seed(page, 'contact', { name: `Fatima Bakker ${STAMP}`, phone: `+${asker}` })
-		await seed(page, 'contact', { name: `Piet Stop ${STAMP}`, phone: `+${stopper}` })
+		const contactId = await seed(page, 'contact', { name: `Fatima Bakker ${STAMP}`, phone: `+${asker}`, contactsUid: `e2e-inbound-asker-${STAMP}` })
+		await seed(page, 'contact', { name: `Piet Stop ${STAMP}`, phone: `+${stopper}`, contactsUid: `e2e-inbound-stopper-${STAMP}` })
 
 		const question = `Is my permit ready? ${STAMP}`
 		expect(await deliver(page, providerId, asker, question)).toBeLessThan(400)
@@ -145,8 +212,13 @@ test.describe('inbound WhatsApp to the Queue', () => {
 		expect(tickets[0].status).toBe('new')
 		expect(tickets[0].assignee ?? null).toBeNull()
 
+		// The Queue lists the longest-waiting first, so the new ticket is found
+		// through the list's own search box, by the title it was stored with.
+		const title = String(tickets[0].title ?? '')
+		expect(title, 'the ticket has a title').not.toBe('')
 		await gotoAppRoute(page, '/queue')
-		await expect(page.getByText(question.slice(0, 40)).first()).toBeVisible({ timeout: 20000 })
+		await page.getByPlaceholder('Search in this list').fill(String(STAMP))
+		await expect(page.getByRole('row').filter({ hasText: title.slice(0, 12) }).first()).toBeVisible({ timeout: 20000 })
 
 		const stopped = await api(page, 'GET', `${OBJECTS}/ticket?_search=${encodeURIComponent(`Piet Stop ${STAMP}`)}&_limit=5`)
 		expect((stopped.body?.results as unknown[]) ?? []).toHaveLength(0)
