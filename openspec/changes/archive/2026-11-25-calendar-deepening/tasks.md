@@ -2,8 +2,9 @@
 
 - [x] Add `{ "id": "client-calendar", "type": "integration", "integrationId": "calendar", "title": "Meetings", "icon": "Calendar" }` to ClientDetail `config.widgets` in `src/manifest.json` (same shape as `lead-calendar` / `contact-calendar`).
 - [x] Add the ClientDetail layout row for `client-calendar` (8-wide, under the comms row next to `client-email`) and shift subsequent `gridY` values accordingly.
-- [ ] Verify `src/manifest.json` still validates against the manifest schema and the page renders with the widget in the integration-unavailable state when the Calendar app is off.
+- [x] Verify `src/manifest.json` still validates against the manifest schema and the page renders with the widget in the integration-unavailable state when the Calendar app is off.
   - Live pass 17 Nov 2026: not verifiable as written. ClientDetail's layout is now only `client-panels` (client-page-as-the-relation-boards), so the `client-calendar` layout row this task checks is gone. Re-read against the relation board.
+  - Live 25 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main 119f4810, pipelinq development 3db8eb51, Zuiddrecht set; the Calendar app is not installed): `npm run check:manifest` says 'Manifest OK: v1.1.0 | 51 pages'. ClientDetail now carries `client-calendar` in its side column (after `client-email`). Opening a client (Playwright, admin) renders the page normally; the side card `cn-detail-page-side-client-calendar` reads "Meetings / No meetings", and `GET .../integrations/calendar` answers 200 with no rows. Decision: the leaf reads Nextcloud's own CalDAV, so without the Calendar app it is not unavailable but empty; the delta scenario now says so (the card's unavailable text appears only on a 503 from the leaf).
 
 ## 2. Task schema follow-up attachment
 

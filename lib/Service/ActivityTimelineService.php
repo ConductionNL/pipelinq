@@ -248,7 +248,7 @@ class ActivityTimelineService implements ActivityTimelineServiceInterface {
 	 *
 	 * @return array<int,array<string,mixed>> The items, each event once.
 	 *
-	 * @spec openspec/changes/calendar-deepening/tasks.md#4-timeline-merge
+	 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-leaf-linked-events-appear-on-the-record-timeline
 	 */
 	public function withoutDuplicateEvents(array $activities): array {
 		$leafUids = $this->calendarLeafUids(activities: $activities);

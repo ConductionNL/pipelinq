@@ -20,7 +20,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+ * @spec openspec/specs/email-calendar-sync/spec.md#requirement-follow-up-reminders-driven-by-the-calendar-leaf
  */
 
 declare(strict_types=1);
@@ -30,7 +30,7 @@ namespace OCA\Pipelinq\BackgroundJob;
 /**
  * The object service, register and window of one reminder pass.
  *
- * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+ * @spec openspec/specs/email-calendar-sync/spec.md#requirement-follow-up-reminders-driven-by-the-calendar-leaf
  */
 final class FollowUpSweep {
 
@@ -42,7 +42,7 @@ final class FollowUpSweep {
 	 * @param int    $now           The current timestamp.
 	 * @param int    $windowEnd     The timestamp the window ends at.
 	 *
-	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+	 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-follow-up-reminders-driven-by-the-calendar-leaf
 	 */
 	public function __construct(
 		public readonly object $objectService,

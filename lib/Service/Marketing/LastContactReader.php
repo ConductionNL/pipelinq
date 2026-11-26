@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/segment-last-contact-signal/specs/marketing-integrated-campaigns/spec.md#requirement-a-customers-last-contact-is-a-derived-segment-field
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-customers-last-contact-is-a-derived-segment-field
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ use OCA\Pipelinq\Service\TicketService;
 /**
  * LastContactReader: the latest contact moment of one client.
  *
- * @spec openspec/changes/segment-last-contact-signal/specs/marketing-integrated-campaigns/spec.md#requirement-a-customers-last-contact-is-a-derived-segment-field
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-customers-last-contact-is-a-derived-segment-field
  */
 class LastContactReader {
 
@@ -38,7 +38,7 @@ class LastContactReader {
 	 *
 	 * @param ListObjectStore $store Register-scoped object plumbing.
 	 *
-	 * @spec openspec/changes/segment-last-contact-signal/specs/marketing-integrated-campaigns/spec.md#requirement-a-customers-last-contact-is-a-derived-segment-field
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-customers-last-contact-is-a-derived-segment-field
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -55,7 +55,7 @@ class LastContactReader {
 	 *
 	 * @return string|null The `occurredAt` of the newest moment, or null when none is dated.
 	 *
-	 * @spec openspec/changes/segment-last-contact-signal/specs/marketing-integrated-campaigns/spec.md#requirement-a-customers-last-contact-is-a-derived-segment-field
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-customers-last-contact-is-a-derived-segment-field
 	 */
 	public function forClient(string $clientId): ?string {
 		$rows = $this->store->findAll(

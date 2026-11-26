@@ -195,6 +195,7 @@ import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import { fetchRegisteredObjects } from '../../services/objectFetch.js'
 import { resolveObjectType } from '../../services/pipelineUtils.js'
 import { initializeStores } from '../../store/store.js'
+import { looksLikePhoneNumber } from '../../utils/ticketPhoneSearch.js'
 import { toText } from '../../utils/widgetText.js'
 
 const RESULT_LIMIT = 20
@@ -402,13 +403,44 @@ export default {
 			const query = this.searchQuery.trim()
 			const ticket = ++this.searchTicket
 			try {
-				const clients = await this.fetchRaw('client', { _search: query, _limit: RESULT_LIMIT })
+				const clients = looksLikePhoneNumber(query)
+					? await this.clientsByPhone(query)
+					: await this.fetchRaw('client', { _search: query, _limit: RESULT_LIMIT })
 				if (ticket === this.searchTicket) {
 					this.clients = clients
 				}
 			} catch (err) {
 				console.error('FindClientWidget search error:', err)
 			}
+		},
+
+		/**
+		 * The clients whose phone number is the one typed, however either was
+		 * written ("0612345678" finds "+31 6 12345678" and "06 12 34 56 78").
+		 * The number is normalised and matched by the server, as for a ringing
+		 * call. When that lookup is refused (no CRM rights) the typed text is
+		 * searched as it is.
+		 *
+		 * @param {string} query The phone number as typed.
+		 * @return {Promise<Array<object>>} The matching clients, at most RESULT_LIMIT.
+		 * @spec openspec/changes/specify-capability-rows/specs/dashboard/spec.md#requirement-a-client-can-be-found-by-name-email-or-phone-outside-the-client-list
+		 */
+		async clientsByPhone(query) {
+			const response = await fetch(generateUrl('/apps/pipelinq/api/cti/screen-pop'), {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+					'OCS-APIREQUEST': 'true',
+				},
+				body: JSON.stringify({ fromNumber: query }),
+			})
+			if (!response.ok) {
+				return this.fetchRaw('client', { _search: query, _limit: RESULT_LIMIT })
+			}
+			const data = await response.json()
+			const matches = Array.isArray(data?.matches) ? data.matches : []
+			return matches.filter((match) => match && match._matchType === 'client').slice(0, RESULT_LIMIT)
 		},
 
 		/**

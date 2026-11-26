@@ -31,6 +31,11 @@ use OCA\Pipelinq\Service\Export\ExportRunService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use OCA\Pipelinq\Service\SystemServiceAccount;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
+use OCP\Security\ISecureRandom;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 
@@ -132,6 +137,7 @@ class ExportSchedulerCatchUpTest extends TestCase {
 			runs: $runs,
 			cron: new CronExpressionHelper(),
 			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			systemAccount: $this->signedInAccount(),
 		);
 		if ($previous !== null) {
 			$job->setLastRun((int)strtotime($previous . ' UTC'));
@@ -140,4 +146,20 @@ class ExportSchedulerCatchUpTest extends TestCase {
 		(new ReflectionMethod($job, 'run'))->invoke($job, null);
 		return $enqueued;
 	}//end tick()
+
+	/**
+	 * A system account whose session already has a user, so jobs run as that user.
+	 *
+	 * @return SystemServiceAccount The account.
+	 */
+	private function signedInAccount(): SystemServiceAccount {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn($this->createMock(originalClassName: IUser::class));
+
+		return new SystemServiceAccount(
+			userManager: $this->createMock(originalClassName: IUserManager::class),
+			userSession: $session,
+			random: $this->createMock(originalClassName: ISecureRandom::class)
+		);
+	}//end signedInAccount()
 }//end class

@@ -20,7 +20,7 @@ The repair step SHALL create the shipped default pipelines only when the registe
 
 ### Requirement: Mock pipelines can be removed when nothing is on them
 
-`occ pipelinq:pipelines:remove-mocks` SHALL remove each known mock pipeline that no lead and no ticket is on. Known mocks are the mock register's pipelines by slug, and the shipped defaults and demo seed's pipelines by exact title and description. The command SHALL count objects past RBAC and organisation scoping. It SHALL keep and report a mock that has objects on it, report a removal OpenRegister refuses, and report more than one default pipeline. With `--dry-run` it SHALL remove nothing.
+`occ pipelinq:pipelines:remove-mocks` SHALL remove each known mock pipeline that no lead and no ticket is on. Known mocks are the mock register's pipelines and the register seed's default Sales pipeline (`pipelinq-default-sales-pipeline`) by slug, and the shipped defaults and demo seed's pipelines by exact title and description. The command SHALL count objects past RBAC and organisation scoping. It SHALL keep and report a mock that has objects on it, report a removal OpenRegister refuses, and report more than one default pipeline. With `--dry-run` it SHALL remove nothing.
 
 #### Scenario: Unused mocks go, the drawn pipelines stay
 @e2e exclude maintenance command; covered by MockPipelineCleanupServiceTest::testRemovesUnusedMocksAndKeepsTheSetsPipelines
@@ -39,3 +39,9 @@ The repair step SHALL create the shipped default pipelines only when the registe
 - **GIVEN** a pipeline titled "Sales Pipeline" with a description its owner wrote
 - **WHEN** the command runs
 - **THEN** it is left alone
+
+#### Scenario: The seeded Sales pipeline goes when unused
+@e2e exclude maintenance command; covered by MockPipelineCleanupServiceTest::testTheSeededDefaultSalesPipelineIsAMock
+- **GIVEN** the register seed's default "Sales" pipeline with nothing on it, and Verkoop marked default
+- **WHEN** the command runs
+- **THEN** "Sales" is removed, Verkoop is the only default left, and a new lead without a pipeline lands on Verkoop

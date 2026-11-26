@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+ * @spec openspec/specs/email-calendar-sync/spec.md#requirement-follow-up-reminders-driven-by-the-calendar-leaf
  */
 
 declare(strict_types=1);

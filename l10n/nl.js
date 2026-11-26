@@ -10257,7 +10257,14 @@ OC.L10N.register(
         "Could not pass this ticket on.": "Kon dit ticket niet doorzetten.",
         "Handover note": "Overdrachtsnotitie",
         "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note.": "Wat de collega aan wie het ticket is doorgezet moet weten, geschreven bij de overdracht. Staat onder de overdracht op het tabblad Geschiedenis; leeg als de laatste overdracht geen notitie had.",
-        "Product not found": "Product niet gevonden"
+        "Product not found": "Product niet gevonden",
+        "Create contract": "Contract maken",
+        "Create a contract from this lead?": "Een contract maken van deze lead?",
+        "A draft contract with its own contract number is made for this lead's client and value.": "Er komt een conceptcontract met een eigen contractnummer voor de klant en de waarde van deze lead.",
+        "Draft contract made.": "Conceptcontract gemaakt.",
+        "Could not make the contract.": "Het contract kon niet worden gemaakt.",
+        "Source lead": "Bronlead",
+        "The won lead this contract was made from. Optional; set by Create contract on the lead.": "De gewonnen lead waarvan dit contract is gemaakt. Optioneel; Contract maken op de lead vult het in."
     },
     "nplurals=2; plural=(n != 1);"
 )

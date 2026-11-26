@@ -29,6 +29,11 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use OCA\Pipelinq\Service\SystemServiceAccount;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
+use OCP\Security\ISecureRandom;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -70,7 +75,13 @@ class ExportWorkerJobTest extends TestCase {
 	 * @return void
 	 */
 	private function pass(): void {
-		$job = new ExportWorkerJob($this->createMock(ITimeFactory::class), $this->runs, $this->execution, $this->logger);
+		$job = new ExportWorkerJob(
+			time: $this->createMock(originalClassName: ITimeFactory::class),
+			runs: $this->runs,
+			execution: $this->execution,
+			logger: $this->logger,
+			systemAccount: $this->signedInAccount()
+		);
 		$run = new \ReflectionMethod($job, 'run');
 		$run->setAccessible(true);
 		$run->invoke($job, null);
@@ -170,4 +181,20 @@ class ExportWorkerJobTest extends TestCase {
 
 		$this->pass();
 	}//end testAFailedListingIsLoggedAndStops()
+
+	/**
+	 * A system account whose session already has a user, so jobs run as that user.
+	 *
+	 * @return SystemServiceAccount The account.
+	 */
+	private function signedInAccount(): SystemServiceAccount {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn($this->createMock(originalClassName: IUser::class));
+
+		return new SystemServiceAccount(
+			userManager: $this->createMock(originalClassName: IUserManager::class),
+			userSession: $session,
+			random: $this->createMock(originalClassName: ISecureRandom::class)
+		);
+	}//end signedInAccount()
 }//end class

@@ -6902,6 +6902,30 @@
 						}
 					},
 					{
+						"id": "create-contract",
+						"type": "api-call",
+						"label": "Create contract",
+						"icon": "FileSign",
+						"method": "POST",
+						"url": "/apps/pipelinq/api/contracts",
+						"payload": {
+							"title": "@object.title",
+							"clientRef": "@object.client",
+							"value": "@object.value",
+							"sourceLeadRef": "@objectId"
+						},
+						"confirm": true,
+						"confirmTitle": "Create a contract from this lead?",
+						"confirmMessage": "A draft contract with its own contract number is made for this lead's client and value.",
+						"successMessage": "Draft contract made.",
+						"errorMessage": "Could not make the contract.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "won"
+						}
+					},
+					{
 						"id": "close-lost",
 						"type": "api-call",
 						"label": "Close as lost",
@@ -12672,7 +12696,8 @@
 				"app": "pipelinq",
 				"rowRoute": "FlowDetail",
 				"filterMenu": true,
-				"filterMenuFields": [{ "key": "owner", "label": "Owner", "referenceType": "nextcloud-user" }]
+				"filterMenuFields": [{ "key": "owner", "label": "Owner", "referenceType": "nextcloud-user" }],
+				"filterLabels": { "owner": { "label": "Owner" } }
 			},
 			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. An ordinary index over the named `flows` source (config.entitySource) rather than the deprecated `flows` page type, reading OpenRegister's one native flow store (ADR-065), scoped to this app by config.app. rowRoute names the FlowDetail page (a route name, not a path): a named-source page has no register and schema, so without it a row click opens nothing and Edit falls back to the source's own /flows path."
 		},

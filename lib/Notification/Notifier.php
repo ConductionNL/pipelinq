@@ -246,7 +246,7 @@ class Notifier implements INotifier {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/calendar-deepening/tasks.md#3-followupreminderjob
+	 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-follow-up-reminders-driven-by-the-calendar-leaf
 	 */
 	private function applyReminderSubject(INotification $notification, array $context): void {
 		['l' => $l, 'params' => $params, 'title' => $title] = $context;

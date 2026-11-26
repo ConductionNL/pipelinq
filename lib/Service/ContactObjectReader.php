@@ -92,6 +92,35 @@ class ContactObjectReader {
 	}//end fetch()
 
 	/**
+	 * One page of the clients or contacts the acting user may read.
+	 *
+	 * @param string $objectType The object type (client or contact).
+	 * @param int    $limit      The page size.
+	 * @param int    $offset     How many objects to pass over.
+	 *
+	 * @return list<array<string, mixed>>|null The objects, or null when the type is not allowed or not configured.
+	 *
+	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
+	 */
+	public function page(string $objectType, int $limit, int $offset): ?array {
+		if (in_array($objectType, self::OBJECT_TYPES, true) === false) {
+			return null;
+		}
+
+		$target = $this->syncTarget(objectType: $objectType);
+		if ($target === null) {
+			return null;
+		}
+
+		[$registerId, $schemaId] = $target;
+		$found = $this->objectService->findAll(
+			['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => $limit, 'offset' => $offset]
+		);
+
+		return array_map(fn (mixed $result): array => $this->serializeResult(result: $result), array_values($found));
+	}//end page()
+
+	/**
 	 * The contact register and the object type's schema; null (logged) when either is not configured.
 	 *
 	 * @param string $objectType The object type.

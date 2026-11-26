@@ -71,7 +71,7 @@ class DefaultPipelineService {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 * @spec openspec/specs/pipeline/spec.md
-	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-the-default-pipelines-are-only-created-in-an-empty-register
+	 * @spec openspec/specs/pipeline/spec.md#requirement-the-default-pipelines-are-only-created-in-an-empty-register
 	 */
 	public function createDefaultPipelines(): void {
 		try {
@@ -87,7 +87,7 @@ class DefaultPipelineService {
 	 * @return void
 	 *
 	 * @spec openspec/specs/pipeline/spec.md
-	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-the-default-pipelines-are-only-created-in-an-empty-register
+	 * @spec openspec/specs/pipeline/spec.md#requirement-the-default-pipelines-are-only-created-in-an-empty-register
 	 */
 	private function createDefaultPipelinesAsCaller(): void {
 		$registerId = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
@@ -115,7 +115,7 @@ class DefaultPipelineService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/only-the-drawn-pipelines/specs/pipeline/spec.md#requirement-the-default-pipelines-are-only-created-in-an-empty-register
+	 * @spec openspec/specs/pipeline/spec.md#requirement-the-default-pipelines-are-only-created-in-an-empty-register
 	 */
 	private function createWhenEmpty(string $registerId, string $schemaId): void {
 		$objectService = $this->getObjectService();
