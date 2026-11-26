@@ -513,7 +513,7 @@ class PortalRequestServiceTest extends TestCase {
 		foreach (['woo', 'oud', ''] as $refused) {
 			try {
 				$this->service->submit(account: $account, tenantId: 'tenant-a', subject: 'Subject', body: 'Body', attachments: [], categoryId: $refused);
-				$this->fail('Expected categoryNotAvailable for "' . $refused . '"');
+				$this->fail(message: 'Expected categoryNotAvailable for "' . $refused . '"');
 			} catch (PortalException $e) {
 				$this->assertSame(expected: 422, actual: $e->getStatus());
 			}
