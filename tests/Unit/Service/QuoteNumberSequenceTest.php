@@ -58,14 +58,23 @@ final class InMemoryQuoteNumberSequence extends QuoteNumberSequence {
 	}
 
 	/**
-	 * Seed the in-memory counter at 1 if absent.
+	 * The in-memory counter, or null when it has no row yet.
 	 *
-	 * @return int 1 when this call set the value to 1, else 0.
+	 * @return int|null The stored value.
 	 */
-	protected function seedCounter(): int {
-		$seeded = (($this->store[static::COUNTER_KEY] ?? 0) === 0);
-		$this->store[static::COUNTER_KEY] = ($this->store[static::COUNTER_KEY] ?? 1);
-		return (int)$seeded;
+	protected function readCounter(): ?int {
+		return $this->store[static::COUNTER_KEY] ?? null;
+	}
+
+	/**
+	 * Zero the in-memory counter when it has a row.
+	 *
+	 * @return void
+	 */
+	protected function resetCounter(): void {
+		if (isset($this->store[static::COUNTER_KEY]) === true) {
+			$this->store[static::COUNTER_KEY] = 0;
+		}
 	}
 }
 
