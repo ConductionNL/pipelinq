@@ -14,6 +14,7 @@
 import BookingConfirmationPage from '../views/portal/BookingConfirmationPage.vue'
 import BookingPortal from '../views/portal/BookingPortal.vue'
 import PublicSurveyForm from '../views/surveys/PublicSurveyForm.vue'
+import PortalAccountClose from './views/PortalAccountClose.vue'
 import PortalDashboard from './views/PortalDashboard.vue'
 import PortalDelegations from './views/PortalDelegations.vue'
 import PortalExport from './views/PortalExport.vue'
@@ -32,6 +33,9 @@ export const portalRoutes = [
 		component: PortalPasswordReset,
 		meta: { public: true },
 	},
+	// The link in the account-closing email: its token is the authorisation,
+	// so the page is public (a closed account has no session to show).
+	{ path: '/account-close', component: PortalAccountClose, meta: { public: true } },
 	{ path: '/widget', component: PortalWidget, meta: { public: true } },
 	// Public appointment-booking portal (member 06) — no portal session required.
 	{ path: '/book/:serviceSlug', component: BookingPortal, meta: { public: true } },

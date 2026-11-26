@@ -48,8 +48,16 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Warn a minute before the session lapses and sign out when it has.
+		 * An unknown expiry (none stored) is not a lapsed one: the guard
+		 * treats it as signed in, so the timer must not sign the client out.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-logs-in-to-the-portal-with-an-account-of-their-own
+		 */
 		tick() {
-			if (!getToken()) {
+			if (!getToken() || getExpiry() === 0) {
 				this.visible = false
 				return
 			}
