@@ -751,6 +751,43 @@ class BlastServiceTest extends TestCase {
 	}//end testSendingBlastKeepsTheContentItIsSentWith()
 
 	/**
+	 * OpenRegister answers every declared property, an empty one as null. A
+	 * blast read back with `sentSubject`, `sentHtml` and `sentText` null still
+	 * takes the template's content when it starts sending (found live: no blast
+	 * ever kept its content).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
+	 */
+	public function testABlastWithEmptySnapshotFieldsTakesTheTemplatesContent(): void {
+		$this->objectService->store['tmpl-nov'] = [
+			'uuid' => 'tmpl-nov',
+			'subject' => 'November news',
+			'bodyHtml' => '<p>Hello</p>',
+			'bodyText' => 'Hello',
+		];
+
+		$final = $this->sendCompliant(
+			[
+				'uuid' => 'blast-nov',
+				'name' => 'November newsletter',
+				'segmentId' => 'seg-1',
+				'templateId' => 'tmpl-nov',
+				'channel' => 'email',
+				'status' => 'draft',
+				'sentSubject' => null,
+				'sentHtml' => null,
+				'sentText' => null,
+			]
+		);
+
+		$this->assertSame('November news', $final['sentSubject']);
+		$this->assertSame('<p>Hello</p>', $final['sentHtml']);
+		$this->assertSame('Hello', $final['sentText']);
+	}//end testABlastWithEmptySnapshotFieldsTakesTheTemplatesContent()
+
+	/**
 	 * A snapshot already on the blast is never overwritten by the current template.
 	 *
 	 * @return void

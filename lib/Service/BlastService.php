@@ -1886,16 +1886,19 @@ class BlastService implements BlastServiceInterface {
 	 *
 	 * Taken once, when the blast starts sending, from the template it uses, so
 	 * changing or deleting that template later never changes what the blast
-	 * shows it sent. A blast that already holds a snapshot keeps it.
+	 * shows it sent. A blast that already holds a snapshot keeps it. OpenRegister
+	 * answers every declared property, an empty one as null, so a snapshot is a
+	 * value, not a key.
 	 *
 	 * @param array<string, mixed> $blast The blast payload.
 	 *
 	 * @return array<string, mixed> The payload with `sentSubject`, `sentHtml` and `sentText`.
 	 *
 	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004
+	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
 	 */
 	private function withSentContent(array $blast): array {
-		if (array_key_exists('sentSubject', $blast) === true || array_key_exists('sentHtml', $blast) === true) {
+		if (($blast['sentSubject'] ?? null) !== null || ($blast['sentHtml'] ?? null) !== null) {
 			return $blast;
 		}
 

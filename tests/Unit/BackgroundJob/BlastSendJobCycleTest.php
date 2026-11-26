@@ -25,8 +25,13 @@ namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 use OCA\Pipelinq\BackgroundJob\BlastSendJob;
 use OCA\Pipelinq\Kernel\Contracts\BlastServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\WebhookProcessorServiceInterface;
+use OCA\Pipelinq\Service\SystemServiceAccount;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
+use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -42,6 +47,7 @@ use RuntimeException;
  * @uses   \OCA\Pipelinq\Util\EntityPayload
  * @uses   \OCA\Pipelinq\Util\SerialisedPayload
  * @uses   \OCA\Pipelinq\Util\ContainerObjectServiceLookup
+ * @uses   \OCA\Pipelinq\Service\SystemServiceAccount
  */
 class BlastSendJobCycleTest extends TestCase {
 
@@ -58,6 +64,20 @@ class BlastSendJobCycleTest extends TestCase {
 	 * @var list<array{0: string, 1: string, 2: array<string, mixed>}>
 	 */
 	private array $logs = [];
+
+	/**
+	 * The session's active user; null while nobody is signed in (cron).
+	 *
+	 * @var IUser|null
+	 */
+	private ?IUser $active = null;
+
+	/**
+	 * The pipelinq system account the job switches to.
+	 *
+	 * @var IUser|null
+	 */
+	private ?IUser $system = null;
 
 	/**
 	 * Build the job over the in-memory config, a container and the two services.
@@ -116,8 +136,31 @@ class BlastSendJobCycleTest extends TestCase {
 			($blasts ?? $this->createMock(BlastServiceInterface::class)),
 			($webhooks ?? $this->createMock(WebhookProcessorServiceInterface::class)),
 			$logger,
+			$this->systemAccount(),
 		);
 	}//end job()
+
+	/**
+	 * A system account over a session whose active user this test tracks.
+	 *
+	 * @return SystemServiceAccount The account.
+	 */
+	private function systemAccount(): SystemServiceAccount {
+		$this->system = $this->createMock(IUser::class);
+
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturnCallback(fn (): ?IUser => $this->active);
+		$session->method('setVolatileActiveUser')->willReturnCallback(
+			function (?IUser $user): void {
+				$this->active = $user;
+			}
+		);
+
+		$users = $this->createMock(IUserManager::class);
+		$users->method('get')->willReturn($this->system);
+
+		return new SystemServiceAccount(userManager: $users, userSession: $session, random: $this->createMock(ISecureRandom::class));
+	}//end systemAccount()
 
 	/**
 	 * A container whose ObjectService returns the given sending rows.
@@ -182,6 +225,40 @@ class BlastSendJobCycleTest extends TestCase {
 		$this->assertSame(['dispatched' => 3, 'webhookEventsDrained' => 1], $this->logs[1][2]);
 		$this->assertArrayNotHasKey(BlastSendJob::WEBHOOK_QUEUE_KEY, $this->store);
 	}//end testARunLogsTheStartAndTheCountsOfACompletedCycle()
+
+	/**
+	 * Under cron nobody is signed in: the cycle reads and dispatches the blasts
+	 * as the pipelinq system account and leaves the session as it found it
+	 * (found live: an anonymous read of a blast is refused, so no mailing was
+	 * ever sent). A signed-in caller keeps its own identity.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
+	 */
+	public function testUnderCronTheCycleRunsAsTheSystemAccount(): void {
+		$actors = [];
+		$blasts = $this->createMock(BlastServiceInterface::class);
+		$blasts->method('dispatchBlastDeliveries')->willReturnCallback(
+			function (string $blastId) use (&$actors): int {
+				$actors[] = $this->active;
+				return 1;
+			}
+		);
+		$job = $this->job(container: $this->containerWith([['uuid' => 'b-1']]), blasts: $blasts);
+
+		(new \ReflectionMethod($job, 'run'))->invoke($job, null);
+
+		$this->assertSame([$this->system], $actors);
+		$this->assertNull($this->active);
+
+		$caller       = $this->createMock(IUser::class);
+		$this->active = $caller;
+		(new \ReflectionMethod($job, 'run'))->invoke($job, null);
+
+		$this->assertSame([$this->system, $caller], $actors);
+		$this->assertSame($caller, $this->active);
+	}//end testUnderCronTheCycleRunsAsTheSystemAccount()
 
 	/**
 	 * Without OpenRegister there is nothing to dispatch, and that is said at debug level.
