@@ -210,6 +210,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <!-- After InitializeSettings, which imports the ticket phoneE164 property it fills (contact-moments-phone-lookup). -->
             <step>OCA\Pipelinq\Repair\BackfillTicketPhoneE164</step>
             <!--
+                After InitializeSettings, which imports the ticket reference property
+                it fills (ticket-leaf-closed-reference-assignee): a request or
+                complaint stored before reference numbers existed draws one.
+                Idempotent: a ticket that has a reference is not saved.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillTicketReferences</step>
+            <!--
                 After InitializeSettings, which imports 97-task-name.json: the
                 name comes from crmTask's objectNameField, so a save before the
                 import would hydrate the uuid again. Saves inside OpenRegister's
