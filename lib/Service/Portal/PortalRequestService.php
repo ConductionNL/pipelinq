@@ -38,6 +38,7 @@ use OCA\Pipelinq\Util\NullableRowIdOf;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
+use Override;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -626,7 +627,7 @@ class PortalRequestService implements PortalRequestServiceInterface {
 	 *
 	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-files-a-request-in-the-portal-and-follows-it
 	 */
-	#[\Override]
+	#[Override]
 	public function openCategories(): array {
 		return (new OpenRequestCategories(reader: $this->reader))->all();
 	}//end openCategories()
