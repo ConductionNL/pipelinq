@@ -87,12 +87,13 @@ afterEach(() => {
 })
 
 describe('portal routes', () => {
-	it('opens on the dashboard and keeps sign-in, reset, widget, booking and survey public', () => {
+	it('opens on the dashboard and keeps sign-in, reset, account closing, widget, booking and survey public', () => {
 		expect(portalRoutes[0]).toEqual({ path: '/', redirect: '/dashboard' })
 		const isPublic = Object.fromEntries(portalRoutes.filter((r) => r.component).map((r) => [r.path, r.meta?.public === true]))
 		expect(isPublic).toEqual({
 			'/login': true,
 			'/password-reset': true,
+			'/account-close': true,
 			'/widget': true,
 			'/book/:serviceSlug': true,
 			'/booking-confirmation/:bookingId': true,

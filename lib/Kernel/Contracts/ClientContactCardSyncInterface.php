@@ -52,7 +52,7 @@ interface ClientContactCardSyncInterface {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $dryRun is the command's --dry-run option.
 	 *
-	 * @spec openspec/changes/example-set-zuiddrecht/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-26-example-set-zuiddrecht/tasks.md#task-2.5
 	 */
 	public function run(bool $dryRun=false): array;
 }//end interface

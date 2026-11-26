@@ -346,9 +346,15 @@ class PortalAuthService implements PortalAuthServiceInterface {
 	/**
 	 * Mint the full session, record the login and return the authenticated result.
 	 *
+	 * The answer carries the session's expiry: the portal keeps it beside the
+	 * token and warns before it lapses, and without it the portal read the
+	 * session as already expired and signed the client out at once.
+	 *
 	 * @param PortalLoginRun $run The login in progress.
 	 *
-	 * @return array{status: string, mfaRequired: bool, accountId: string, token: string, sessionId: string}
+	 * @return array{status: string, mfaRequired: bool, accountId: string, token: string, sessionId: string, expiresAt: string|null}
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-logs-in-to-the-portal-with-an-account-of-their-own
 	 */
 	private function startSession(PortalLoginRun $run): array {
 		$created = $this->sessions->createSession(
@@ -366,6 +372,7 @@ class PortalAuthService implements PortalAuthServiceInterface {
 			'accountId' => $run->accountId,
 			'token' => $created['token'],
 			'sessionId' => (string)$this->repository->idOf(object: $created['session']),
+			'expiresAt' => ($created['session']['expiresAt'] ?? null),
 		];
 	}//end startSession()
 

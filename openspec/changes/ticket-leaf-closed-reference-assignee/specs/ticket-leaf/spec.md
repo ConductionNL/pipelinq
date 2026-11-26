@@ -9,6 +9,7 @@ The ticket leaf SHALL answer the tickets of the clients that map to each master 
 else the uid) and `resolvedAt`. An unknown status filter SHALL answer 400.
 
 #### Scenario: DqOrganisatie Tickets
+@e2e exclude an in-process contract dossiq calls, no HTTP or UI surface of pipelinq's own: covered by tests/Unit/Service/TicketLeafProviderTest.php and tests/Unit/Settings/ZuiddrechtBuurtoostTicketsTest.php
 
 - **GIVEN** Buurtvereniging Oost with one ticket in progress and two resolved
 - **WHEN** dossiq reads its tickets with `all`

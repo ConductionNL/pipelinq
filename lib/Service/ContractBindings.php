@@ -245,6 +245,8 @@ use OCA\Pipelinq\Kernel\Contracts\SurveyInvitationSenderInterface;
 use OCA\Pipelinq\Kernel\Contracts\SurveyResponseServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\SystemTagServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TaskNameBackfillServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\TaskRecurrenceInterface;
+use OCA\Pipelinq\Service\ScheduledTask\TaskRecurrence;
 use OCA\Pipelinq\Kernel\Contracts\TeamLoadServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TemplateApprovalSyncServiceInterface;
 use OCA\Pipelinq\Kernel\Contracts\TicketPhoneNumberInterface;
@@ -671,6 +673,7 @@ final class ContractBindings {
 	private function registerMyWorkContracts(IRegistrationContext $context): void {
 		$context->registerServiceAlias(RecentActivityServiceInterface::class, RecentActivityService::class);
 		$context->registerServiceAlias(WorklistServiceInterface::class, WorklistService::class);
+		$context->registerServiceAlias(TaskRecurrenceInterface::class, TaskRecurrence::class);
 	}//end registerMyWorkContracts()
 
 	/**

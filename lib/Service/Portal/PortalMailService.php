@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
@@ -81,6 +82,31 @@ class PortalMailService {
 	): bool {
 		return $this->send(recipient: $recipient, subject: $subject, body: $this->tokenLinkBody(intro: $intro, link: [$route, $token]));
 	}//end sendTokenLink()
+
+	/**
+	 * Send a mail that carries a signed download link to a portal document.
+	 *
+	 * The link is the absolute address of the portal's document download
+	 * route; the signed token is all it needs, so it opens from the mail
+	 * without a portal session.
+	 *
+	 * @param string $recipient The recipient email.
+	 * @param string $subject   The localised subject.
+	 * @param string $intro     The localised intro line.
+	 * @param string $token     The signed download token.
+	 *
+	 * @return bool True when the message was accepted for delivery.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-downloads-everything-the-portal-holds-about-them
+	 */
+	public function sendDownloadLink(string $recipient, string $subject, string $intro, string $token): bool {
+		$url = $this->urlGenerator->linkToRouteAbsolute(
+			AppIdentity::APP_ID . '.portalDocument.download',
+			['token' => $token]
+		);
+
+		return $this->send(recipient: $recipient, subject: $subject, body: $intro . "\n\n" . $url);
+	}//end sendDownloadLink()
 
 	/**
 	 * The body of a tokenised action link mail: the intro, the link and the ignore line.

@@ -16,6 +16,7 @@
   - Written, runs in nightly: the code and its Vitest are in development and the Playwright spec is written; not yet verified against a live instance (BUILDER-LANE UNBLOCK rule 3, 24 Nov 2026).
   - Verify: Playwright `tests/e2e/inbound-to-queue.spec.ts` posts a signed mock webhook and finds the ticket on `/queue` with channel whatsapp
   - `tests/e2e/inbound-to-queue.spec.ts` is written: it seeds a WhatsApp provider with a known secret and a contact, posts a signed delivery and a STOP, and reads the ticket through the API and on `/queue`. Not run against a live instance yet, so this stays unticked.
+  - Live 26 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main e07d9e1b): 1 passed. Red first, all in the spec: contacts now need `contactsUid`; the webhook answers 503 without a messaging service account, so the spec now makes a dedicated account in `pipelinq-messaging-service`, picks it in the admin setting and puts the previous one back afterwards; and the Queue lists the longest-waiting first, so the spec finds the new ticket through the list's search box. The app needed no change: the signed delivery opened one conversation and one open WhatsApp ticket with no assignee, and the STOP opened none.
 
 ## 3. Ticket mailboxes
 

@@ -100,6 +100,25 @@ class PortalContractServiceTest extends TestCase {
 	}//end testContractsOfTheOwnContactOrClientAreReturned()
 
 	/**
+	 * A stored sales contract names its parties in `clientRef` and
+	 * `contactRef`; those make it the account's own, and another client's
+	 * reference does not.
+	 *
+	 * @return void
+	 */
+	public function testContractsNamingTheAccountInTheirReferencesAreReturned(): void {
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'ct-a', 'linkedOrganisationId' => 'org-a']);
+
+		$this->reader->seed('salesContract', 'c-client-ref', ['clientRef' => 'org-a', 'startDate' => '2026-02-01']);
+		$this->reader->seed('salesContract', 'c-contact-ref', ['clientRef' => 'org-x', 'contactRef' => 'ct-a', 'startDate' => '2026-03-01']);
+		$this->reader->seed('salesContract', 'c-other-ref', ['clientRef' => 'org-x', 'contactRef' => 'ct-x', 'startDate' => '2026-04-01']);
+
+		$page = $this->service->getForAccount($account);
+
+		$this->assertSame(expected: ['c-contact-ref', 'c-client-ref'], actual: array_column($page['items'], 'id'));
+	}//end testContractsNamingTheAccountInTheirReferencesAreReturned()
+
+	/**
 	 * A contract presents its number (falling back to the reference), dates,
 	 * value and status.
 	 *

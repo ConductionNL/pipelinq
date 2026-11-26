@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-11-26-reports-compare-periods-and-scheduled-delivery/tasks.md#task-2.3
  */
 
 declare(strict_types=1);
@@ -68,7 +68,7 @@ class ReportMailRun {
 	 * @param NotificationService $notifications Tells the owner about a failed send.
 	 * @param LoggerInterface     $logger        The logger.
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
 	 */
 	public function __construct(
 		private IUserManager $userManager,
@@ -89,7 +89,7 @@ class ReportMailRun {
 	 *
 	 * @return list<string> The user ids.
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
 	 */
 	public function recipientIds(mixed $recipients): array {
 		$ids = [];
@@ -119,7 +119,7 @@ class ReportMailRun {
 	 *
 	 * @return array<string, mixed> The run outcome.
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
 	 */
 	public function deliver(array $job, array $destination): array {
 		$outcomes = [];

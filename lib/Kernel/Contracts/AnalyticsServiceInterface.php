@@ -135,7 +135,7 @@ interface AnalyticsServiceInterface {
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-dashboard/tasks.md#task-2.2
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-001
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-001
 	 */
 	public function getOverview(string $period = self::DEFAULT_PERIOD): array;
 

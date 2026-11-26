@@ -10410,6 +10410,20 @@
         "The won lead this contract was made from. Optional; set by Create contract on the lead.": "De gewonnen lead waarvan dit contract is gemaakt. Optioneel; Contract maken op de lead vult het in.",
         "Other details": "Overige gegevens",
         "Kind of party": "Soort partij",
-        "Choose a kind": "Kies een soort"
+        "Choose a kind": "Kies een soort",
+        "Close your portal account": "Uw portaalaccount sluiten",
+        "This confirmation link is incomplete. Open the link from the email again.": "Deze bevestigingslink is onvolledig. Open de link uit de e-mail opnieuw.",
+        "After closing you can no longer sign in, and every open session ends. Records the law requires us to keep are kept.": "Na het sluiten kunt u niet meer inloggen en worden alle open sessies beëindigd. Gegevens die wij wettelijk moeten bewaren, blijven bewaard.",
+        "Close my account for good": "Mijn account definitief sluiten",
+        "Your account is closed. You can no longer sign in.": "Uw account is gesloten. U kunt niet meer inloggen.",
+        "Could not close your account.": "Uw account kon niet worden gesloten.",
+        "Repeat": "Herhalen",
+        "How often the task comes back. When it is due, the next one is made, due one interval later.": "Hoe vaak de taak terugkomt. Als hij moet zijn afgerond, komt de volgende, een interval later.",
+        "Does not repeat": "Herhaalt niet",
+        "Every month": "Elke maand",
+        "Next occurrence": "Volgende keer",
+        "The task made when this repeating task came due.": "De taak die werd gemaakt toen deze herhalende taak moest zijn afgerond.",
+        "Previous occurrence": "Vorige keer",
+        "The repeating task this task was made from.": "De herhalende taak waarvan deze taak is gemaakt."
     }
 }
