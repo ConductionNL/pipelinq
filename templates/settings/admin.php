@@ -7,6 +7,8 @@ $appId = OCA\Pipelinq\AppInfo\Application::APP_ID;
 // comment in templates/index.php for why all three are required.
 Util::addScript($appId, $appId . '-shared-vendor');
 Util::addScript($appId, $appId . '-shared-nc-vue');
+// nextcloud-vue's stylesheet, copied to css/ by the build (webpack.config.js).
+Util::addStyle($appId, 'nextcloud-vue');
 Util::addScript($appId, $appId . '-settings');
 ?>
 <div id="pipelinq-settings" data-config="<?php p($_['config'] ?? '{}'); ?>"></div>

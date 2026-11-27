@@ -71,6 +71,8 @@ abstract class AbstractPipelinqWidget implements IWidget {
 		// vendor → nc-vue → widget JS, which is the dependency order.
 		Util::addScript(AppIdentity::APP_ID, AppIdentity::APP_ID . '-shared-vendor');
 		Util::addScript(AppIdentity::APP_ID, AppIdentity::APP_ID . '-shared-nc-vue');
+		// nextcloud-vue's stylesheet, copied to css/ by the build (webpack.config.js).
+		Util::addStyle(AppIdentity::APP_ID, 'nextcloud-vue');
 		Util::addScript(AppIdentity::APP_ID, AppIdentity::APP_ID . '-' . $this->scriptEntry());
 		Util::addStyle(AppIdentity::APP_ID, 'dashboardWidgets');
 	}//end load()

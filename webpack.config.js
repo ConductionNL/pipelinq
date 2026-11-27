@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
+const fs = require('fs')
 const path = require('path')
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
@@ -317,5 +318,25 @@ if (!isDev) {
 	// process — the dominant memory consumer here. Disable it for the build.
 	webpackConfig.cache = false
 }
+
+// nextcloud-vue's stylesheet goes to css/nextcloud-vue.css, which every page
+// loading the -shared-nc-vue chunk links (templates/index.php, portal.php,
+// settings/admin.php, AbstractPipelinqWidget::load()) instead of the bundles
+// inserting ~1.1 MB of CSS text: a linked sheet stays parsed between page
+// loads. The file is what '@conduction/nextcloud-vue/css/index.css' @imports.
+class LibraryStylesheetCopy {
+
+	apply(compiler) {
+		compiler.hooks.afterEmit.tap('LibraryStylesheetCopy', () => {
+			const entry = require.resolve('@conduction/nextcloud-vue/css/index.css')
+			const imported = /@import\s+['"]([^'"]+)['"]/.exec(fs.readFileSync(entry, 'utf8'))
+			const source = imported ? path.resolve(path.dirname(entry), imported[1]) : entry
+			fs.mkdirSync(path.join(__dirname, 'css'), { recursive: true })
+			fs.copyFileSync(source, path.join(__dirname, 'css', 'nextcloud-vue.css'))
+		})
+	}
+
+}
+webpackConfig.plugins.push(new LibraryStylesheetCopy())
 
 module.exports = webpackConfig

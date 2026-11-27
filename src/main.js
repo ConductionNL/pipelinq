@@ -65,8 +65,9 @@ import {
 } from './utils/structureProfile.js'
 import { seedVatClassLabels } from './utils/vatClassLabels.js'
 
-// Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
-import '@conduction/nextcloud-vue/css/index.css'
+// Library CSS is not imported here: the build copies it to css/nextcloud-vue.css
+// and each page that loads the -shared-nc-vue chunk links it, so the browser
+// keeps it parsed between loads instead of the bundle inserting ~1.1 MB of text.
 // gridstack is a REQUIRED peer of @conduction/nextcloud-vue that no consumer
 // declares, and the stylesheet is the silent half of it. Pipelinq ships
 // `type: "dashboard"` manifest pages, and gridstack v12 sizes every grid item

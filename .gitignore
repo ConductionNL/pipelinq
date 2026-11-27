@@ -10,6 +10,8 @@
 
 # Build artifacts
 /js/
+# nextcloud-vue's stylesheet, copied by webpack.config.js (LibraryStylesheetCopy)
+/css/nextcloud-vue.css
 
 # Documentation
 /docs/node_modules/
