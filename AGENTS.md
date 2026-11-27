@@ -85,7 +85,7 @@ Work is specified before it is built, with [OpenSpec](openspec/config.yaml):
 
 - **Code is generic and named by what it does.** Proposals in this repo build
   features as generic code (for example `ReportMailDelivery`, usable by any export
-  job, in `openspec/changes/reports-compare-periods-and-scheduled-delivery/proposal.md`).
+  job, in `openspec/changes/archive/2026-11-26-reports-compare-periods-and-scheduled-delivery/proposal.md`).
   `.procedure-code-baseline.json` pins the count of procedure-named files; a growing
   count fails the quality gate, so put procedure specifics in configuration.
 - **Pages are manifest config.** The app shell renders from `src/manifest.json`. New
