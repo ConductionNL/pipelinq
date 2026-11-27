@@ -52,7 +52,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.5.40-unstable.20261125102502</version>
+    <version>0.5.44-unstable.20261127030029</version>
     <!-- @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-001, #REQ-PLAT-002 -->
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
@@ -209,6 +209,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\NormaliseTicketTitle</step>
             <!-- After InitializeSettings, which imports the ticket phoneE164 property it fills (contact-moments-phone-lookup). -->
             <step>OCA\Pipelinq\Repair\BackfillTicketPhoneE164</step>
+            <!--
+                After InitializeSettings, which imports the ticket reference property
+                it fills (ticket-leaf-closed-reference-assignee): a request or
+                complaint stored before reference numbers existed draws one.
+                Idempotent: a ticket that has a reference is not saved.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillTicketReferences</step>
             <!--
                 After InitializeSettings, which imports 97-task-name.json: the
                 name comes from crmTask's objectNameField, so a save before the

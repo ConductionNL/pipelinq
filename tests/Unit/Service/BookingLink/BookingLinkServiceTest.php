@@ -304,6 +304,35 @@ class BookingLinkServiceTest extends TestCase {
 	}//end testABusyHourIsNotOfferedAndABookingLandsInTheCalendar()
 
 	/**
+	 * Nextcloud's calendar search gives a property allowed once as one
+	 * [value, parameters] pair, not a list of pairs; such an event blocks its
+	 * hour too (it used to fail the slots page with a 500).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/appointment-booking/spec.md#requirement-a-user-can-send-a-booking-link-that-offers-the-free-slots-in-their-own-calendar
+	 */
+	public function testAnEventInNextcloudsSearchShapeBlocksItsHour(): void {
+		$zone = new DateTimeZone(self::ZONE);
+		$this->events['personal'] = [[
+			'DTSTART' => [new DateTimeImmutable('2026-11-24 11:00', $zone), []],
+			'DTEND'   => [new DateTimeImmutable('2026-11-24 12:00', $zone), []],
+			'SUMMARY' => [['Overleg team', []]],
+		], [
+			'DTSTART' => [new DateTimeImmutable('2026-11-24 14:00', $zone), []],
+			'DTEND'   => [new DateTimeImmutable('2026-11-24 15:00', $zone), []],
+			'STATUS'  => ['CANCELLED', []],
+		]];
+
+		$starts = self::starts(slots: $this->service()->slots(token: self::TOKEN, date: '2026-11-24'));
+
+		$this->assertNotContains(needle: '11:00', haystack: $starts);
+		$this->assertNotContains(needle: '11:30', haystack: $starts);
+		$this->assertContains(needle: '10:00', haystack: $starts);
+		$this->assertContains(needle: '14:00', haystack: $starts);
+	}//end testAnEventInNextcloudsSearchShapeBlocksItsHour()
+
+	/**
 	 * A busy hour cannot be booked, even when the booker sends it.
 	 *
 	 * @return void

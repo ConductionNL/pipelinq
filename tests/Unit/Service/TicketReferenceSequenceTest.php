@@ -58,24 +58,30 @@ final class InMemoryTicketReferenceSequence extends TicketReferenceSequence {
 	}
 
 	/**
-	 * Seed the in-memory counter at 1 if absent.
+	 * The in-memory counter, or null when it has no row yet.
 	 *
-	 * @return int 1 when this call set the value to 1, else 0.
+	 * @return int|null The stored value.
 	 */
-	protected function seedCounter(): int {
-		if (($this->store[static::COUNTER_KEY] ?? 0) !== 0) {
-			return 0;
-		}
+	protected function readCounter(): ?int {
+		return $this->store[static::COUNTER_KEY] ?? null;
+	}
 
-		$this->store[static::COUNTER_KEY] = 1;
-		return 1;
+	/**
+	 * Zero the in-memory counter when it has a row.
+	 *
+	 * @return void
+	 */
+	protected function resetCounter(): void {
+		if (isset($this->store[static::COUNTER_KEY]) === true) {
+			$this->store[static::COUNTER_KEY] = 0;
+		}
 	}
 }
 
 /**
  * Tests for TicketReferenceSequence.
  *
- * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
+ * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
  */
 class TicketReferenceSequenceTest extends TestCase {
 	/**

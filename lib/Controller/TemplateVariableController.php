@@ -20,7 +20,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use OCP\IRequest;
 /**
  * GET /api/templates/{id}/empty-variables: the recipients without a value, per variable.
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
  */
 class TemplateVariableController extends Controller {
 	/**
@@ -65,7 +65,7 @@ class TemplateVariableController extends Controller {
 	 *
 	 * @return JSONResponse `{recipients, variables, gaps: [{variable, count}]}`, 401, 403 or 404.
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	#[NoAdminRequired]
 	public function emptyVariables(string $id): JSONResponse {

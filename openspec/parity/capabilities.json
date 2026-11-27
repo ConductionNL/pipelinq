@@ -1168,7 +1168,7 @@
 				"change": [
 					"openspec/changes/leaf-integration-broadening",
 					"openspec/changes/client-page-as-the-relation-boards",
-					"openspec/changes/ticket-leaf-closed-reference-assignee",
+					"openspec/changes/archive/2026-11-26-ticket-leaf-closed-reference-assignee",
 					"openspec/changes/archive/2026-11-25-tickets-list-by-party"
 				]
 			},
@@ -4777,10 +4777,10 @@
 				"evidence": "lib/Service/TemplateRenderer.php",
 				"owner": "ConductionNL/pipelinq",
 				"change": [
-					"openspec/changes/marketing-mail-templates",
+					"openspec/changes/archive/2026-11-26-marketing-mail-templates",
 					"openspec/changes/marketing-articles-move-to-portaliq"
 				],
-				"requirement": "openspec/changes/marketing-mail-templates/specs/marketing-mail-templates :: A template holds a reusable mail (REQ-MMT-001)"
+				"requirement": "openspec/specs/marketing-mail-templates :: A template holds a reusable mail (REQ-MMT-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/save-marketing-emails-as-templates \"If you want to use the layout of a regular marketing email ... multiple times, you can save it as a template\". Marketing Hub Professional, Enterprise; sales email templates are on all plans.",
@@ -7189,8 +7189,8 @@
 				"state": "built",
 				"evidence": "lib/Service/AnalyticsService.php:465",
 				"owner": "ConductionNL/pipelinq",
-				"change": "openspec/changes/reports-compare-periods-and-scheduled-delivery",
-				"requirement": "openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery :: A report KPI shows the previous period beside the current one (REQ-RPD-001)"
+				"change": "openspec/changes/archive/2026-11-26-reports-compare-periods-and-scheduled-delivery",
+				"requirement": "openspec/specs/report-periods-and-delivery :: A report KPI shows the previous period beside the current one (REQ-RPD-001)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/compare-date-ranges-in-the-custom-report-builder \"use the Date part and Compare by filters to compare multiple time range types side-by-side. For example, you can compare this year to last year\". Marketing, Sales, Service or Data Hub Professional, Enterprise.",
@@ -7258,8 +7258,8 @@
 				"state": "specified",
 				"evidence": "lib/BackgroundJob/ExportSchedulerJob.php runs due export jobs, but ExportDestinationService::TYPES has only warehouse and file-store destinations (s3, azure_data_lake, gcs, bigquery, snowflake, sftp, postgres); no mail delivery, so nothing lands in an inbox (re-measured 2026-10-30)",
 				"owner": "ConductionNL/pipelinq",
-				"change": "openspec/changes/reports-compare-periods-and-scheduled-delivery",
-				"requirement": "openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery :: A scheduled report can be delivered by mail (REQ-RPD-002)"
+				"change": "openspec/changes/archive/2026-11-26-reports-compare-periods-and-scheduled-delivery",
+				"requirement": "openspec/specs/report-periods-and-delivery :: A scheduled report can be delivered by mail (REQ-RPD-002)"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/dashboard/email-or-export-reports-and-dashboards \"You can also schedule recurring report emails on a daily, weekly, or monthly basis\", sent by email, Slack or Google Chat. All products and plans.",
@@ -7923,7 +7923,7 @@
 				"readOn": "2026-09-26",
 				"spec": "openspec/specs/first-time-setup",
 				"requirement": "openspec/specs/first-time-setup :: REQ-SETUP-PIP-008 — Optional Demo-Data Seed",
-				"change": "openspec/changes/example-set-zuiddrecht"
+				"change": "openspec/changes/archive/2026-11-26-example-set-zuiddrecht"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/import-and-export/sample-import-files offers \"Contacts sample spreadsheet: XLSX or CSV\" and other sample files to import; a new account holds one sample contact (Maria Johnson, per https://community.hubspot.com/t5/APIs-Integrations/Best-way-to-populate-test-account-with-sample-data-for/m-p/536437/highlight/true). No one-click example data set. Note: Was unknown.",

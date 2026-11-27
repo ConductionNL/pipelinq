@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
+ * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use OCA\Pipelinq\Kernel\Contracts\TicketReferenceSequenceInterface;
 /**
  * Race-safe ticket reference allocator.
  *
- * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
+ * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
  */
 class TicketReferenceSequence extends InvoiceSequenceService implements TicketReferenceSequenceInterface {
 	/**

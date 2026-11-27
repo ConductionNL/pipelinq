@@ -6,7 +6,7 @@
  * The newsletter wizard starts from a template on its first step and saves
  * its content as a new template on the content step.
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-003
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-003
  */
 
 import axios from '@nextcloud/axios'

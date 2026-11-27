@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-001
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-001
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Throwable;
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-001
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-001
  */
 class TemplateInUseGuard implements IEventListener {
 
@@ -81,7 +81,7 @@ class TemplateInUseGuard implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-001
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-001
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectDeletingEvent) === false) {
@@ -113,7 +113,7 @@ class TemplateInUseGuard implements IEventListener {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-001
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-001
 	 */
 	private function isTemplate(ObjectEntity $object): bool {
 		$schema = (string)$object->getSchema();
@@ -130,7 +130,7 @@ class TemplateInUseGuard implements IEventListener {
 	 * @return string|null The mailing's name, a placeholder when the mailings
 	 *                     cannot be read, or null when none uses it.
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-001
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-001
 	 */
 	private function scheduledMailingUsing(string $templateId): ?string {
 		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');

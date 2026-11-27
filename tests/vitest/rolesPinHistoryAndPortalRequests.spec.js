@@ -423,7 +423,7 @@ describe('PortalRequests', () => {
 		portalApi.requests.mockResolvedValue({ items: [] })
 		await p.submit()
 		expect(portalApi.submitRequest).toHaveBeenCalledWith({ subject: 'Bin', body: 'Not emptied', categoryId: 'waste', attachments: [] })
-		expect([p.submitMessage, p.form, p.submitting]).toEqual(['Your request has been submitted (Q-9). Expected response: 2 days.', { subject: '', body: '', categoryId: 'waste' }, false])
+		expect([p.submitMessage, p.form, p.submitting]).toEqual(['Your request has been submitted (Q-9). Expected response: 2 days.', { subject: '', body: '', categoryId: '' }, false])
 		portalApi.submitRequest.mockRejectedValueOnce({ errorCode: 'rateLimited', message: 'x' })
 		await p.submit()
 		expect(p.error).toBe('Please wait 60 minutes before submitting another request.')

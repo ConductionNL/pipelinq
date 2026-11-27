@@ -486,7 +486,41 @@ class BlastServiceTest extends TestCase {
 		$this->assertSame(1, $persisted['totals']['delivered']);
 		$this->assertSame(1, $persisted['totals']['bounced']);
 		$this->assertSame(0, $persisted['totals']['opened']);
+		$this->assertSame(expected: 'sent', actual: $persisted['status'], message: 'no delivery is queued any more, so the mailing is sent');
 	}//end testUpdateBlastTotalsRecountsByStatus()
+
+	/**
+	 * A sending blast stays sending while a delivery is queued or none was made,
+	 * reads failed when every delivery failed, and a blast that is not sending
+	 * keeps its status.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-26-marketing-mail-templates/tasks.md#task-2.7
+	 */
+	public function testUpdateBlastTotalsSettlesASendingBlast(): void {
+		$cases = [
+			'still queued' => ['sending', [['status' => 'sent'], ['status' => 'queued']], 'sending'],
+			'nothing made yet' => ['sending', [], 'sending'],
+			'all failed' => ['sending', [['status' => 'failed'], ['status' => 'failed']], 'failed'],
+			'one went out' => ['sending', [['status' => 'failed'], ['status' => 'bounced']], 'sent'],
+			'paused' => ['paused', [['status' => 'sent']], 'paused'],
+		];
+
+		foreach ($cases as $name => [$status, $rows, $expected]) {
+			$this->objectService->store['blast-s'] = ['uuid' => 'blast-s', 'status' => $status, 'totals' => []];
+			$this->objectService->deliveries = array_map(
+				static fn (array $row, int $i): array => ($row + ['uuid' => 'd'.$i, 'blastId' => 'blast-s']),
+				$rows,
+				array_keys($rows)
+			);
+
+			$this->service->updateBlastTotals('blast-s');
+
+			$persisted = end($this->objectService->saved);
+			$this->assertSame(expected: $expected, actual: $persisted['status'], message: $name);
+		}
+	}//end testUpdateBlastTotalsSettlesASendingBlast()
 
 	/**
 	 * transitionQueuedDeliveries flips queued rows for a contact to
@@ -719,7 +753,7 @@ class BlastServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-004
 	 */
 	public function testSendingBlastKeepsTheContentItIsSentWith(): void {
 		$this->objectService->store['tmpl-oct'] = [
@@ -751,11 +785,48 @@ class BlastServiceTest extends TestCase {
 	}//end testSendingBlastKeepsTheContentItIsSentWith()
 
 	/**
+	 * OpenRegister answers every declared property, an empty one as null. A
+	 * blast read back with `sentSubject`, `sentHtml` and `sentText` null still
+	 * takes the template's content when it starts sending (found live: no blast
+	 * ever kept its content).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-26-marketing-mail-templates/tasks.md#task-2.7
+	 */
+	public function testABlastWithEmptySnapshotFieldsTakesTheTemplatesContent(): void {
+		$this->objectService->store['tmpl-nov'] = [
+			'uuid' => 'tmpl-nov',
+			'subject' => 'November news',
+			'bodyHtml' => '<p>Hello</p>',
+			'bodyText' => 'Hello',
+		];
+
+		$final = $this->sendCompliant(
+			blast: [
+				'uuid' => 'blast-nov',
+				'name' => 'November newsletter',
+				'segmentId' => 'seg-1',
+				'templateId' => 'tmpl-nov',
+				'channel' => 'email',
+				'status' => 'draft',
+				'sentSubject' => null,
+				'sentHtml' => null,
+				'sentText' => null,
+			]
+		);
+
+		$this->assertSame(expected: 'November news', actual: $final['sentSubject']);
+		$this->assertSame(expected: '<p>Hello</p>', actual: $final['sentHtml']);
+		$this->assertSame(expected: 'Hello', actual: $final['sentText']);
+	}//end testABlastWithEmptySnapshotFieldsTakesTheTemplatesContent()
+
+	/**
 	 * A snapshot already on the blast is never overwritten by the current template.
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-004
 	 */
 	public function testAnExistingSnapshotIsKept(): void {
 		$this->objectService->store['tmpl-oct'] = ['uuid' => 'tmpl-oct', 'subject' => 'New subject', 'bodyHtml' => '<p>new</p>', 'bodyText' => 'new'];

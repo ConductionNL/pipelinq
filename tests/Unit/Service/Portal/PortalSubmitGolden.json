@@ -44,12 +44,12 @@
             ],
             [
                 "hasSchema",
-                "requestCategory"
+                "ticketCategory"
             ],
             [
-                "find",
-                "requestCategory",
-                "cat-1"
+                "findAll",
+                "ticketCategory",
+                []
             ],
             [
                 "findAll",
@@ -130,12 +130,12 @@
             ],
             [
                 "hasSchema",
-                "requestCategory"
+                "ticketCategory"
             ],
             [
-                "find",
-                "requestCategory",
-                "cat-hidden"
+                "findAll",
+                "ticketCategory",
+                []
             ]
         ],
         "refused": [
@@ -156,12 +156,12 @@
             ],
             [
                 "hasSchema",
-                "requestCategory"
+                "ticketCategory"
             ],
             [
-                "find",
-                "requestCategory",
-                "cat-gone"
+                "findAll",
+                "ticketCategory",
+                []
             ]
         ],
         "refused": [
@@ -182,7 +182,7 @@
             ],
             [
                 "hasSchema",
-                "requestCategory"
+                "ticketCategory"
             ],
             [
                 "findAll",
@@ -248,12 +248,12 @@
             ],
             [
                 "hasSchema",
-                "requestCategory"
+                "ticketCategory"
             ],
             [
-                "find",
-                "requestCategory",
-                "cat-1"
+                "findAll",
+                "ticketCategory",
+                []
             ],
             [
                 "findAll",
@@ -317,12 +317,12 @@
             ],
             [
                 "hasSchema",
-                "requestCategory"
+                "ticketCategory"
             ],
             [
-                "find",
-                "requestCategory",
-                "cat-1"
+                "findAll",
+                "ticketCategory",
+                []
             ],
             [
                 "findAll",
@@ -386,12 +386,12 @@
             ],
             [
                 "hasSchema",
-                "requestCategory"
+                "ticketCategory"
             ],
             [
-                "find",
-                "requestCategory",
-                "cat-1"
+                "findAll",
+                "ticketCategory",
+                []
             ],
             [
                 "findAll",
@@ -455,12 +455,12 @@
             ],
             [
                 "hasSchema",
-                "requestCategory"
+                "ticketCategory"
             ],
             [
-                "find",
-                "requestCategory",
-                "cat-1"
+                "findAll",
+                "ticketCategory",
+                []
             ],
             [
                 "findAll",

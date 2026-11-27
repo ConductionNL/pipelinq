@@ -16,6 +16,7 @@ const api = vi.hoisted(() => ({
 	request: vi.fn(),
 	replyRequest: vi.fn(),
 	submitRequest: vi.fn(),
+	requestCategories: vi.fn(),
 }))
 vi.mock('../../src/portal/portalApi.js', () => ({ portalApi: api }))
 
@@ -140,6 +141,29 @@ describe('the portal requests page', () => {
 			'Your request has been submitted (V-2). Expected response: 5 days.',
 		)
 		expect(wrapper.find('#portal-subject').element.value).toBe('')
+	})
+
+	it('offers the categories open to clients and files the request under the chosen one', async () => {
+		api.requestCategories.mockResolvedValue({ categories: [{ key: 'afval', name: 'Afval' }, { key: 'overlast', name: 'Overlast' }] })
+		api.submitRequest.mockResolvedValue({ requestId: 'V-3', estimatedResponseTime: '24 uur' })
+		const wrapper = await mountPage()
+		const select = wrapper.find('#portal-category')
+		expect(select.findAll('option').map((o) => o.text())).toEqual(['Choose a category', 'Afval', 'Overlast'])
+		expect(select.attributes('required')).toBeDefined()
+
+		await wrapper.find('#portal-subject').setValue('Container')
+		await wrapper.find('#portal-body').setValue('Niet geleegd')
+		await select.setValue('overlast')
+		await wrapper.findAll('form').at(-1).trigger('submit')
+		await flushPromises()
+		expect(api.submitRequest).toHaveBeenCalledWith({ subject: 'Container', body: 'Niet geleegd', categoryId: 'overlast', attachments: [] })
+		expect(select.element.value).toBe('')
+	})
+
+	it('asks for no category while none is open to clients', async () => {
+		api.requestCategories.mockRejectedValue(new Error('down'))
+		const wrapper = await mountPage()
+		expect(wrapper.find('#portal-category').exists()).toBe(false)
 	})
 
 	it('names a rate limit or the server reason when submitting fails, and marks the fields', async () => {

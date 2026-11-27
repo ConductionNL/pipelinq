@@ -35,7 +35,7 @@ use RuntimeException;
 /**
  * A new request or complaint is stored with its reference number.
  *
- * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
+ * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
  */
 class TicketReferenceCreatingListenerTest extends TestCase {
 	/**

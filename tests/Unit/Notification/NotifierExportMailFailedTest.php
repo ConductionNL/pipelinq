@@ -17,7 +17,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery
+ * @spec openspec/changes/archive/2026-11-26-reports-compare-periods-and-scheduled-delivery
  */
 
 declare(strict_types=1);

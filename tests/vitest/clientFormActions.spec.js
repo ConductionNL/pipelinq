@@ -262,6 +262,40 @@ describe('ClientForm.onSave', () => {
 		expect(ctx.$emit).toHaveBeenCalledWith('save', { ...ctx.form, id: 'c-9', '@type': 'schema:Person' })
 	})
 
+	it('saves the value typed in a field an administrator added to the client schema', () => {
+		const ctx = context()
+		ctx.customFields = [{ key: 'contractNumber', label: 'Contract number', kind: 'text', options: [] }, { key: 'employees', label: 'Employees', kind: 'number', options: [] }]
+		ctx.customValues = { contractNumber: 'RC-2026-017', employees: '' }
+		ctx.form = { ...ctx.form, name: 'Acme', type: 'organization' }
+		ctx.onSave()
+		const [[, data]] = ctx.$emit.mock.calls
+		expect(data.contractNumber).toBe('RC-2026-017')
+		expect(data).not.toHaveProperty('employees')
+	})
+
+	it('clears an added field emptied on an existing client', () => {
+		const ctx = context({ client: { id: 'c-9' } })
+		ctx.customFields = [{ key: 'contractNumber', label: 'Contract number', kind: 'text', options: [] }]
+		ctx.customValues = { contractNumber: '  ' }
+		ctx.form = { ...ctx.form, name: 'Acme', type: 'organization' }
+		ctx.onSave()
+		expect(ctx.$emit).toHaveBeenCalledWith('save', expect.objectContaining({ id: 'c-9', contractNumber: null }))
+	})
+
+	it('saves the chosen kind of party, and clears a stored kind that was unset', () => {
+		const ctx = context()
+		ctx.partyKind = 'k-bedrijf'
+		ctx.form = { ...ctx.form, name: 'Acme', type: 'organization' }
+		ctx.onSave()
+		expect(ctx.$emit).toHaveBeenCalledWith('save', expect.objectContaining({ partyKind: 'k-bedrijf' }))
+
+		const edited = context({ client: { id: 'c-9', partyKind: 'k-bedrijf' } })
+		edited.partyKind = null
+		edited.form = { ...edited.form, name: 'Acme', type: 'organization' }
+		edited.onSave()
+		expect(edited.$emit).toHaveBeenCalledWith('save', expect.objectContaining({ id: 'c-9', partyKind: null }))
+	})
+
 	it('types an unknown kind as a person', () => {
 		const ctx = context()
 		ctx.form = { ...ctx.form, name: 'X', type: 'robot' }

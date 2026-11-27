@@ -300,7 +300,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse `{expression, description, valid}`.
 	 *
-	 * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md
 	 */
 	#[NoAdminRequired]
 	public function describeSchedule(): JSONResponse {

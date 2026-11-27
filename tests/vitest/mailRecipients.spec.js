@@ -4,7 +4,7 @@
  *
  * The recipients of a mailed report: picker options to stored recipients and back.
  *
- * @spec openspec/changes/reports-compare-periods-and-scheduled-delivery/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
+ * @spec openspec/specs/report-periods-and-delivery/spec.md#REQ-RPD-003
  */
 
 import { describe, expect, it } from 'vitest'

@@ -122,6 +122,14 @@ class PortalSubmitGoldenTest extends TestCase {
 		$reader->method('findAll')->willReturnCallback(
 			function (string $schemaKey, array $filters = []) use ($case): array {
 				$this->trace[] = ['findAll', $schemaKey, $filters];
+				if ($schemaKey === 'ticketCategory') {
+					// The vocabulary: cat-1 is open to clients, cat-hidden carries a non-boolean flag.
+					return [
+						['key' => 'cat-1', 'name' => 'Category one', 'exposeToCustomer' => true],
+						['key' => 'cat-hidden', 'name' => 'Hidden', 'exposeToCustomer' => 'yes'],
+					];
+				}
+
 				return ($case['existing'] ?? []);
 			}
 		);

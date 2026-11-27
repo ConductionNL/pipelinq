@@ -627,12 +627,47 @@ class BlastService implements BlastServiceInterface {
 
 		$payload = $blast;
 		$payload['totals'] = $totals;
+		if (($blast['status'] ?? '') === 'sending') {
+			$payload['status'] = $this->sendingOutcome(deliveries: $deliveries, totals: $totals);
+		}
+
 		$this->saveObject(
 			payload: $payload,
 			schemaSlug: $this->getBlastSchemaSlug(),
 			id: $this->extractId(payload: $blast),
 		);
 	}//end updateBlastTotals()
+
+	/**
+	 * Where a sending blast stands once its deliveries are counted.
+	 *
+	 * It keeps `sending` while a delivery is still queued (or none was made
+	 * yet). When none is queued it is `sent` if any delivery went out, and
+	 * `failed` when every one failed, so a finished mailing no longer reads as
+	 * sending for ever.
+	 *
+	 * @param array<int, array<string, mixed>> $deliveries The blast's deliveries.
+	 * @param array<string, int>               $totals     Their counts per status.
+	 *
+	 * @return string `sending`, `sent` or `failed`.
+	 *
+	 * @spec openspec/changes/archive/2026-11-26-marketing-mail-templates/tasks.md#task-2.7
+	 */
+	private function sendingOutcome(array $deliveries, array $totals): string {
+		if ($deliveries === [] || $totals['queued'] > 0) {
+			return 'sending';
+		}
+
+		$outcome = 'failed';
+		foreach ($deliveries as $delivery) {
+			if ((string)($delivery['status'] ?? '') !== 'failed') {
+				$outcome = 'sent';
+				break;
+			}
+		}
+
+		return $outcome;
+	}//end sendingOutcome()
 
 	/**
 	 * Transition every queued BlastDelivery for one contact on one Blast.
@@ -1158,7 +1193,7 @@ class BlastService implements BlastServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The recipient rows.
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	public function audienceRecipients(string $segmentId, string $listId, string $channel): array {
 		if ($segmentId === '' && $listId === '') {
@@ -1886,16 +1921,19 @@ class BlastService implements BlastServiceInterface {
 	 *
 	 * Taken once, when the blast starts sending, from the template it uses, so
 	 * changing or deleting that template later never changes what the blast
-	 * shows it sent. A blast that already holds a snapshot keeps it.
+	 * shows it sent. A blast that already holds a snapshot keeps it. OpenRegister
+	 * answers every declared property, an empty one as null, so a snapshot is a
+	 * value, not a key.
 	 *
 	 * @param array<string, mixed> $blast The blast payload.
 	 *
 	 * @return array<string, mixed> The payload with `sentSubject`, `sentHtml` and `sentText`.
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-004
+	 * @spec openspec/changes/archive/2026-11-26-marketing-mail-templates/tasks.md#task-2.7
 	 */
 	private function withSentContent(array $blast): array {
-		if (array_key_exists('sentSubject', $blast) === true || array_key_exists('sentHtml', $blast) === true) {
+		if (($blast['sentSubject'] ?? null) !== null || ($blast['sentHtml'] ?? null) !== null) {
 			return $blast;
 		}
 

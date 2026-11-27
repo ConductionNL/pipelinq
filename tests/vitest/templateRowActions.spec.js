@@ -5,7 +5,7 @@
  * A template row can be copied and deleted (the server refuses a delete while
  * a scheduled mailing uses it); a segment row keeps neither action.
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-001
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-001
  */
 
 import fs from 'fs'

@@ -169,6 +169,7 @@ export const portalApi = {
 	contracts: (page = 1) => get(`/contracts?page=${page}`),
 	orders: (page = 1) => get(`/orders?page=${page}`),
 	requests: (page = 1) => get(`/requests?page=${page}`),
+	requestCategories: () => get('/request-categories'),
 	request: (id) => get(`/requests/${encodeURIComponent(id)}`),
 	submitRequest: (payload) => post('/requests', payload),
 	replyRequest: (id, message) =>
@@ -183,4 +184,5 @@ export const portalApi = {
 		portalFetch({ method: 'DELETE', path: `/delegations/${encodeURIComponent(id)}` }),
 	requestExport: () => post('/exports'),
 	requestClose: () => post('/accounts/close'),
+	confirmClose: (token) => post('/accounts/close/confirm', { token }),
 }

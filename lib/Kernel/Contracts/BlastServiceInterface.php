@@ -64,7 +64,7 @@ interface BlastServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The recipient rows (`contactId`, `email`, optional `unsubscribeUrl`).
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	public function audienceRecipients(string $segmentId, string $listId, string $channel): array;
 
