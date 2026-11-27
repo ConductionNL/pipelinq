@@ -51,4 +51,5 @@
 
 ## 6. Specs
 
-- [ ] 6.1 After the build, sync the deltas into `openspec/specs/marketing-ui/spec.md` and `openspec/specs/marketing-segmentation/spec.md`
+- [x] 6.1 After the build, sync the deltas into `openspec/specs/marketing-ui/spec.md` and `openspec/specs/marketing-segmentation/spec.md`
+  - Synced 27 Nov 2026: the four ADDED requirements are appended to the two base specs as written, and the two base-spec notes that still named the removed `SegmentRuleNode.vue` now name `CnConditionGroupEditor`. On archive the deltas are already in the base specs; move the change without syncing again.
