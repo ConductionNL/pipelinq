@@ -24,7 +24,8 @@
 ## 4. After merge
 
 - [ ] 4.1 Run the e2e spec against an instance with both apps, then archive this change into `admin-settings`.
-- [ ] 4.2 Follow-up issue: declare SMS, WhatsApp, payment providers and BI export sinks as one row per family that pipelinq reports on, since the contract keeps per-object families out (design D5.4, contract D12).
+- [x] 4.2 Follow-up issue: declare SMS, WhatsApp, payment providers and BI export sinks as one row per family that pipelinq reports on, since the contract keeps per-object families out (design D5.4, contract D12).
+  - Filed as #4194 (27 Nov 2026): one `reportedOnly` row per family (sms, whatsapp, payment, bi-export, mail-transports), each reporting the worst status of its objects; the open question there is `limited` or `error` for a family whose objects disagree.
 - [x] 4.3 Raise design D5 amendments 1 to 3 on hydra `connection-registry`. Taken in hydra#673.
 
 ## 5. Contract amendments (hydra#673)
