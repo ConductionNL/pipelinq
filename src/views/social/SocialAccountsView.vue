@@ -192,20 +192,14 @@ export default {
 		 * @spec openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake/spec.md#requirement-facebook-and-instagram-messages-reach-the-queue-req-itq-004
 		 */
 		messagesLabel(account) {
-			switch (messagingLine(account)?.state) {
-			case 'receiving':
-				return t('pipelinq', 'Messages: receiving')
-			case 'relink':
-				return t('pipelinq', 'Messages: reconnect needed')
-			case 'paused':
-				return t('pipelinq', 'Messages: paused, the read budget is used up')
-			case 'retrying':
-				return t('pipelinq', 'Messages: not reachable, trying again')
-			case 'waiting':
-				return t('pipelinq', 'Messages: waiting on Meta')
-			default:
-				return ''
+			const labels = {
+				receiving: t('pipelinq', 'Messages: receiving'),
+				relink: t('pipelinq', 'Messages: reconnect needed'),
+				paused: t('pipelinq', 'Messages: paused, the read budget is used up'),
+				retrying: t('pipelinq', 'Messages: not reachable, trying again'),
+				waiting: t('pipelinq', 'Messages: waiting on Meta'),
 			}
+			return labels[messagingLine(account)?.state] || ''
 		},
 
 		/**
