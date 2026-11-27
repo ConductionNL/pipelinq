@@ -195,6 +195,25 @@ describe('the My work page', () => {
 		expect(widget('my-saved-views').type).toBe('saved-views')
 	})
 
+	// REQ-MW-150 (board PqMijnWerk): the page's own saved views store the bar.
+	it('saves My work\'s bar as OpenRegister saved views of this page, counted through the worklist', () => {
+		const content = widget('my-saved-views').content
+		expect(content.scope).toBe('pipelinq/my-work')
+		expect(content.route).toBeUndefined()
+		expect(content.workspace.keys).toEqual(['lens', 'showDone', 'priority', 'pipeline', 'scope', 'member'])
+		// Every stored key reaches the count, the same parameters the lists read.
+		for (const key of content.workspace.keys) {
+			expect(content.workspace.count.url).toContain(`@workspace.${key}`)
+		}
+		expect(content.workspace.count.url.startsWith('/apps/pipelinq/api/worklist/items?')).toBe(true)
+		expect(content.workspace.count.responsePath).toBe('items')
+		// Each key is one the page's controls write.
+		const written = JSON.stringify(page.config.widgets).match(/"writes":"@workspace\.([a-zA-Z]+)"/g).map((w) => w.split('.')[1].replace('"', ''))
+		for (const key of content.workspace.keys) {
+			expect(written).toContain(key)
+		}
+	})
+
 	// Board PqMijnWerk: a 300px side column titled as side cards, and the
 	// three ticket lists headed by what they hold instead of a link.
 	it('draws the side column at the board width, with side-card titles', () => {

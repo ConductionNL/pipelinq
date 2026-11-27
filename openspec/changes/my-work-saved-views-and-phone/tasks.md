@@ -4,7 +4,7 @@ Moved from `my-work-roadmap` (archived 25 Nov 2026) with their numbers.
 
 ## 7. Saved views (REQ-MW-150)
 
-- [ ] 7.1 `CnSavedViewsControl` from nextcloud-vue on My work, storing type, Show completed, priority, pipeline and scope; the "Saved views" panel with counts as on `PqMijnWerk`.
+- [x] 7.1 `CnSavedViewsControl` from nextcloud-vue on My work, storing type, Show completed, priority, pipeline and scope; the "Saved views" panel with counts as on `PqMijnWerk`.
 
 ## 9. Phone (REQ-MW-170)
 

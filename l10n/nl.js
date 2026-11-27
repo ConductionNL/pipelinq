@@ -7985,7 +7985,7 @@ OC.L10N.register(
         "Start here": "Begin hier",
         "This ticket has waited {subject.occurredAt|days} days. The agreement is an answer within 2 working days.": "Dit ticket wacht al {subject.occurredAt|days} dagen. De afspraak is een antwoord binnen 2 werkdagen.",
         "Waiting longest first": "Langst wachtend eerst",
-        "You have no saved views yet. Save a view on the tickets list.": "Je hebt nog geen opgeslagen weergaven. Sla een weergave op in de ticketlijst.",
+        "You have no saved views yet. Set the filters and choose Save view.": "Je hebt nog geen opgeslagen weergaven. Zet de filters en kies Weergave opslaan.",
         "agreement: 2 working days": "afspraak 2 werkdagen",
         "€ {value}": "€ {value}",
         "On the linked case": "Over de gekoppelde zaak",
