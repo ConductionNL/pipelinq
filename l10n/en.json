@@ -10377,6 +10377,11 @@
         "Next occurrence": "Next occurrence",
         "The task made when this repeating task came due.": "The task made when this repeating task came due.",
         "Previous occurrence": "Previous occurrence",
-        "The repeating task this task was made from.": "The repeating task this task was made from."
+        "The repeating task this task was made from.": "The repeating task this task was made from.",
+        "Messages: not reachable, trying again": "Messages: not reachable, trying again",
+        "Messages: paused, the read budget is used up": "Messages: paused, the read budget is used up",
+        "Messages: receiving": "Messages: receiving",
+        "Messages: reconnect needed": "Messages: reconnect needed",
+        "Messages: waiting on Meta": "Messages: waiting on Meta"
     }
 }

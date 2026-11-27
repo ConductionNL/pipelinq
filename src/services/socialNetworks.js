@@ -62,6 +62,42 @@ const PUBLICATION_CHIPS = {
 	skipped: { label: 'Skipped', color: 'var(--color-text-maxcontrast)' },
 }
 
+/** The networks whose visitor messages the social inbox reads (Meta's Graph API). */
+export const MESSAGING_NETWORKS = ['facebook', 'instagram']
+
+/**
+ * The messaging states the Social accounts page tells apart. Every
+ * `socialAccount.messagingStatus` the inbox can store maps to one of these;
+ * a refusal from the broker or from Meta, and an account not read yet, read
+ * as `waiting`: messages arrive once the broker admits the conversations
+ * call and Meta grants the messaging permissions.
+ */
+const MESSAGING_STATES = {
+	receiving: 'receiving',
+	relink_needed: 'relink',
+	budget_exhausted: 'paused',
+	unavailable: 'retrying',
+}
+
+/**
+ * What an account's Messages line says, or null when its network has no
+ * messages to read.
+ *
+ * @param {object} account The `socialAccount` record.
+ * @return {{state: string, reason: string}|null} The state
+ *   (`receiving`, `relink`, `paused`, `retrying` or `waiting`) and the stored
+ *   reason, or null for a network without messages.
+ * @spec openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake/spec.md#requirement-facebook-and-instagram-messages-reach-the-queue-req-itq-004
+ */
+export function messagingLine(account) {
+	if (!MESSAGING_NETWORKS.includes(account?.network)) {
+		return null
+	}
+	const state = MESSAGING_STATES[account?.messagingStatus] || 'waiting'
+	const reason = state === 'receiving' ? '' : String(account?.messagingStatusReason || '')
+	return { state, reason }
+}
+
 /** The failure codes a Retry button should be offered for. */
 export const RETRYABLE_FAILURES = ['rejected_by_network', 'unavailable']
 

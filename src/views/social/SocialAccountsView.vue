@@ -76,6 +76,17 @@
 					<span v-if="reasonFor(account)" class="social-accounts__reason">
 						{{ reasonFor(account) }}
 					</span>
+					<span
+						v-if="messages(account)"
+						class="social-accounts__messages"
+						:data-testid="'social-account-messages-' + accountId(account)">
+						{{ messagesLabel(account) }}
+					</span>
+					<span
+						v-if="messages(account) && messages(account).reason"
+						class="social-accounts__reason">
+						{{ messages(account).reason }}
+					</span>
 				</div>
 
 				<div class="social-accounts__actions">
@@ -110,7 +121,7 @@ import {
 	startBrokerConnection,
 } from '../../services/socialApi.js'
 import { networkIcon } from '../../services/socialNetworkIcons.js'
-import { accountStatusChip, networkLimits } from '../../services/socialNetworks.js'
+import { accountStatusChip, messagingLine, networkLimits } from '../../services/socialNetworks.js'
 
 export default {
 	name: 'SocialAccountsView',
@@ -159,6 +170,42 @@ export default {
 		 */
 		chip(status) {
 			return accountStatusChip(status)
+		},
+
+		/**
+		 * The Messages line of a Facebook page or Instagram business account:
+		 * whether its visitor messages reach the queue, apart from posting.
+		 *
+		 * @param {object} account The account.
+		 * @return {{state: string, reason: string}|null} The line, or null for a network without messages.
+		 * @spec openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake/spec.md#requirement-facebook-and-instagram-messages-reach-the-queue-req-itq-004
+		 */
+		messages(account) {
+			return messagingLine(account)
+		},
+
+		/**
+		 * The Messages line as words.
+		 *
+		 * @param {object} account The account.
+		 * @return {string} The translated line, or an empty string.
+		 * @spec openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake/spec.md#requirement-facebook-and-instagram-messages-reach-the-queue-req-itq-004
+		 */
+		messagesLabel(account) {
+			switch (messagingLine(account)?.state) {
+			case 'receiving':
+				return t('pipelinq', 'Messages: receiving')
+			case 'relink':
+				return t('pipelinq', 'Messages: reconnect needed')
+			case 'paused':
+				return t('pipelinq', 'Messages: paused, the read budget is used up')
+			case 'retrying':
+				return t('pipelinq', 'Messages: not reachable, trying again')
+			case 'waiting':
+				return t('pipelinq', 'Messages: waiting on Meta')
+			default:
+				return ''
+			}
 		},
 
 		/**
@@ -451,6 +498,7 @@ export default {
 }
 
 .social-accounts__meta,
+.social-accounts__messages,
 .social-accounts__reason {
 	color: var(--color-text-maxcontrast);
 	font-size: 0.9em;
