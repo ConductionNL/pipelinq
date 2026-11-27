@@ -10,10 +10,9 @@ import Settings from './views/settings/Settings.vue'
 import pinia from './pinia.js'
 import { initializeStores } from './store/store.js'
 
-// Library CSS. The admin page is its own entry and gets none from main.js:
-// without this import it had 59 library rules against 7,779 on the app pages,
-// so the library's settings sections and cards drew unstyled.
-import '@conduction/nextcloud-vue/css/index.css'
+// Library CSS: templates/settings/admin.php links css/nextcloud-vue.css (copied
+// there by the build). The admin page is its own entry and gets none from
+// main.js; without it the library's settings sections and cards drew unstyled.
 
 // The library's own catalogue (version card, shell chrome). main.js registers
 // it for the app pages; this entry is a separate bundle.
