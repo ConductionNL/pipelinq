@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e coverage for the ticket-leaf scenarios
- * (openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md).
+ * (openspec/specs/ticket-leaf/spec.md).
  *
  * A request and a complaint are created through OpenRegister's objects API, as
  * any client of the register would. The counter is shared by the whole

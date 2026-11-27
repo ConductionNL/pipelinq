@@ -20,7 +20,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
+ * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
+ * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
  */
 class TicketReferenceCreatingListener implements IEventListener {
 	/**
@@ -70,7 +70,7 @@ class TicketReferenceCreatingListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
+	 * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-ticket-carries-a-reference-number
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatingEvent) === false) {

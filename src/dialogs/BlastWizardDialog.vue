@@ -1105,7 +1105,7 @@ export default {
 		 *
 		 * @param {object|null} template The template picked, or null to clear it.
 		 *
-		 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-003
+		 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-003
 		 */
 		startFromTemplate(template) {
 			if (template?.channel) {
@@ -1117,7 +1117,7 @@ export default {
 		/**
 		 * Save the content step's template under a new name, then use the copy.
 		 *
-		 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-003
+		 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-003
 		 */
 		async saveContentAsTemplate() {
 			this.saveTemplateError = ''
@@ -1345,7 +1345,7 @@ export default {
 		 * A failed count shows nothing rather than a wrong number.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+		 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 		 */
 		async loadEmptyVariables() {
 			this.emptyVariableGaps = []

@@ -20,7 +20,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use OCA\Pipelinq\Kernel\Contracts\ComplianceServiceInterface;
  * without a value, so it counts every recipient. The `{{articles}}` marker is
  * a block, not a recipient's value, and is left out.
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
  */
 class EmptyVariableCounter {
 	/**
@@ -97,7 +97,7 @@ class EmptyVariableCounter {
 	 * @return array{recipients: int, variables: array<int, string>, gaps: array<int, array{variable: string, count: int}>}|null
 	 *         The report, or null for an unknown template.
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	public function report(string $templateId, string $segmentId, string $listId): ?array {
 		$template = $this->templates->getTemplateById(templateId: $templateId);
@@ -127,7 +127,7 @@ class EmptyVariableCounter {
 	 *
 	 * @return array<int, string> The variable names.
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	public function usedVariables(array $template): array {
 		$text = '';
@@ -153,7 +153,7 @@ class EmptyVariableCounter {
 	 *
 	 * @return array<int, array{variable: string, count: int}> The gaps, in template order.
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	public function count(array $template, array $recipients): array {
 		$gaps = [];

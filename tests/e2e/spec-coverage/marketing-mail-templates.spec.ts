@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e coverage for the marketing-mail-templates scenarios
- * (openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md).
+ * (openspec/specs/marketing-mail-templates/spec.md).
  *
  * Each test makes its own template (and, where needed, a contact with email
  * consent, a segment and a mailing) through pipelinq's API and OpenRegister's

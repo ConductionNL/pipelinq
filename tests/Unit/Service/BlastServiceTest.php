@@ -496,7 +496,7 @@ class BlastServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
+	 * @spec openspec/changes/archive/2026-11-26-marketing-mail-templates/tasks.md#task-2.7
 	 */
 	public function testUpdateBlastTotalsSettlesASendingBlast(): void {
 		$cases = [
@@ -753,7 +753,7 @@ class BlastServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-004
 	 */
 	public function testSendingBlastKeepsTheContentItIsSentWith(): void {
 		$this->objectService->store['tmpl-oct'] = [
@@ -792,7 +792,7 @@ class BlastServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
+	 * @spec openspec/changes/archive/2026-11-26-marketing-mail-templates/tasks.md#task-2.7
 	 */
 	public function testABlastWithEmptySnapshotFieldsTakesTheTemplatesContent(): void {
 		$this->objectService->store['tmpl-nov'] = [
@@ -826,7 +826,7 @@ class BlastServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-004
 	 */
 	public function testAnExistingSnapshotIsKept(): void {
 		$this->objectService->store['tmpl-oct'] = ['uuid' => 'tmpl-oct', 'subject' => 'New subject', 'bodyHtml' => '<p>new</p>', 'bodyText' => 'new'];

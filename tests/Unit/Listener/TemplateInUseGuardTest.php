@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-001
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-001
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use RuntimeException;
 /**
  * A template a scheduled mailing uses cannot be deleted (REQ-MMT-001).
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-001
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-001
  */
 class TemplateInUseGuardTest extends TestCase {
 

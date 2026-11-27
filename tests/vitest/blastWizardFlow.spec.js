@@ -345,7 +345,7 @@ describe('submit', () => {
 
 describe('recipients without a value', () => {
 	/**
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	it('counts the gaps for the chosen template and segment, and again when the content step opens', async () => {
 		articles.emptyVariables.mockResolvedValue([{ variable: 'city', count: 12 }])

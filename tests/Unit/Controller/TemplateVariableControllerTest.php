@@ -12,7 +12,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
  */
 
 declare(strict_types=1);

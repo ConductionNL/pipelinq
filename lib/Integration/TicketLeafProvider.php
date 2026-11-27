@@ -117,7 +117,7 @@ class TicketLeafProvider implements TicketLeafProviderInterface {
 	 * @return array<string, mixed> `status` plus either `tickets` (a list per reference, every
 	 *   asked reference present) or `error`.
 	 *
-	 * @spec openspec/changes/ticket-leaf-closed-reference-assignee/specs/ticket-leaf/spec.md#requirement-a-host-app-can-read-a-partys-closed-tickets-too
+	 * @spec openspec/specs/ticket-leaf/spec.md#requirement-a-host-app-can-read-a-partys-closed-tickets-too
 	 */
 	public function byMasterEntity(array $refs, string $status = 'open'): array {
 		if (in_array($status, self::STATUS_FILTERS, true) === false) {

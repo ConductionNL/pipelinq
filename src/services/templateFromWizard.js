@@ -36,7 +36,7 @@ const CONTENT_FIELDS = [
  * @param {string} name The name the marketer gives the new template.
  * @return {object} The `POST /api/templates` body: the content fields present, under the trimmed name.
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-003
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-003
  */
 export function templateCopyPayload(template, name) {
 	const payload = { name: String(name ?? '').trim() }
@@ -57,7 +57,7 @@ export function templateCopyPayload(template, name) {
  * @return {Promise<object>} The template the server created.
  * @throws {Error} When the name is empty, with the message the wizard shows.
  *
- * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-003
+ * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-003
  */
 export async function saveAsTemplate(template, name) {
 	if (String(name ?? '').trim() === '') {

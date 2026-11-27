@@ -197,7 +197,7 @@ class TemplateRendererTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	public function testPersonalisedGreetingUsesThePreferredName(): void {
 		$rendered = $this->buildRenderer()->render(
@@ -215,7 +215,7 @@ class TemplateRendererTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	public function testMarkupInAValueIsEscapedUnlessTripleBraced(): void {
 		$renderer = $this->buildRenderer();
@@ -235,7 +235,7 @@ class TemplateRendererTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	public function testAVariableWithoutAValueRendersEmpty(): void {
 		$rendered = $this->buildRenderer()->render(

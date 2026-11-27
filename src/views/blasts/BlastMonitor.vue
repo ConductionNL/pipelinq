@@ -126,7 +126,7 @@
 				</p>
 			</section>
 
-			<!-- @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004 -->
+			<!-- @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-004 -->
 			<section v-if="hasSentContent" class="blast-monitor__card blast-monitor__sent">
 				<header class="blast-monitor__timeline-head">
 					<h3>{{ t('pipelinq', 'Sent content') }}</h3>

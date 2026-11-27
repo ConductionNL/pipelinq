@@ -651,7 +651,7 @@ class BlastService implements BlastServiceInterface {
 	 *
 	 * @return string `sending`, `sent` or `failed`.
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
+	 * @spec openspec/changes/archive/2026-11-26-marketing-mail-templates/tasks.md#task-2.7
 	 */
 	private function sendingOutcome(array $deliveries, array $totals): string {
 		if ($deliveries === [] || $totals['queued'] > 0) {
@@ -1193,7 +1193,7 @@ class BlastService implements BlastServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The recipient rows.
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-002
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-002
 	 */
 	public function audienceRecipients(string $segmentId, string $listId, string $channel): array {
 		if ($segmentId === '' && $listId === '') {
@@ -1929,8 +1929,8 @@ class BlastService implements BlastServiceInterface {
 	 *
 	 * @return array<string, mixed> The payload with `sentSubject`, `sentHtml` and `sentText`.
 	 *
-	 * @spec openspec/changes/marketing-mail-templates/specs/marketing-mail-templates/spec.md#REQ-MMT-004
-	 * @spec openspec/changes/marketing-mail-templates/tasks.md#task-2.7
+	 * @spec openspec/specs/marketing-mail-templates/spec.md#REQ-MMT-004
+	 * @spec openspec/changes/archive/2026-11-26-marketing-mail-templates/tasks.md#task-2.7
 	 */
 	private function withSentContent(array $blast): array {
 		if (($blast['sentSubject'] ?? null) !== null || ($blast['sentHtml'] ?? null) !== null) {

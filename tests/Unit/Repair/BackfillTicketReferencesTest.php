@@ -42,7 +42,7 @@ use RuntimeException;
  * @uses   \OCA\Pipelinq\Service\TicketService
  * @uses   \OCA\Pipelinq\Mcp\McpAnswer
  *
- * @spec openspec/changes/ticket-leaf-closed-reference-assignee/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-26-ticket-leaf-closed-reference-assignee/tasks.md#task-3.1
  */
 class BackfillTicketReferencesTest extends TestCase {
 
