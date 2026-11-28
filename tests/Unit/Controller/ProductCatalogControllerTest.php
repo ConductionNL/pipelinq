@@ -40,6 +40,7 @@ use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\ProductCatalogService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\OCS\OCSBadRequestException;
+use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -395,6 +396,30 @@ class ProductCatalogControllerTest extends TestCase {
 		$this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
 		$this->assertSame(expected: ['error' => 'Product not found'], actual: $response->getData());
 	}//end testResolvePriceRefusesAProductTheCallerCannotRead()
+
+	/**
+	 * A quote or lead line names its variant by code: the code reaches the
+	 * resolver, and a code the product does not carry answers 404, so the
+	 * line form keeps the price it had.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#29.1
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceForAReaderPassesTheVariantCodeAndRefusesAnUnknownOne(): void {
+		$this->loginAs(uid: 'sales-rep', isPos: false);
+		$this->withParams(params: ['productId' => 'p-shirt', 'quantity' => 2, 'variantSku' => 'WS-L']);
+		$stored = ['id' => 'p-shirt', 'unitPrice' => 25.0, 'variants' => [['sku' => 'WS-M', 'unitPrice' => 27.5]]];
+		$this->reader->method('read')->willReturn($stored);
+		$this->service->expects($this->once())
+			->method('resolveEffectivePrice')
+			->with($stored, 2.0, 'WS-L', null, null)
+			->willThrowException(new OCSNotFoundException('Variant niet gevonden.'));
+
+		$response = $this->controller->resolvePrice();
+
+		$this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
+	}//end testResolvePriceForAReaderPassesTheVariantCodeAndRefusesAnUnknownOne()
 
 	/**
 	 * The till prices the product object it sends, and reads nothing.
