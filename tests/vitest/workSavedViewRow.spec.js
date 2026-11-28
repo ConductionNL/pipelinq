@@ -6,7 +6,7 @@
  * manifest: the pages its evidence names still save (and, on Tickets, share)
  * OpenRegister saved views through nextcloud-vue.
  *
- * @spec openspec/changes/my-work-saved-views-and-phone/tasks.md#3-close
+ * @spec openspec/changes/archive/2026-11-28-my-work-saved-views-and-phone/tasks.md#3-close
  */
 
 import { readFileSync } from 'node:fs'
@@ -44,11 +44,12 @@ function findRow(node, id) {
 const row = findRow(read('openspec/parity/capabilities.json'), 'work-saved-view')
 
 describe('capability row work-saved-view', () => {
-	it('reads built by pipelinq, pointing at this change and REQ-MW-150', () => {
+	it('reads built by pipelinq, pointing at the my-work spec and REQ-MW-150', () => {
 		expect(row).not.toBeNull()
 		expect(row.built.state).toBe('built')
 		expect(row.built.owner).toBe('ConductionNL/pipelinq')
-		expect(row.built.change).toBe('openspec/changes/my-work-saved-views-and-phone')
+		expect(row.built.spec).toBe('openspec/specs/my-work')
+		expect(row.built.change).toBeUndefined()
 		expect(row.built.requirement.some((r) => r.includes('REQ-MW-150'))).toBe(true)
 		expect(row.built.plan).toBeUndefined()
 	})

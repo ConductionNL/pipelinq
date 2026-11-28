@@ -4288,9 +4288,9 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Tickets (save and share from the toolbar) and My work (Saved views panel)",
 				"readOn": "2026-11-28",
-				"change": "openspec/changes/my-work-saved-views-and-phone",
+				"spec": "openspec/specs/my-work",
 				"requirement": [
-					"openspec/changes/my-work-saved-views-and-phone/specs/my-work :: Saved views on My work (REQ-MW-150)",
+					"openspec/specs/my-work :: Saved views on My work (REQ-MW-150)",
 					"nextcloud-vue:openspec/changes/saved-views-shared-by-role/specs/saved-views-ui :: Share a view with a group",
 					"nextcloud-vue:openspec/changes/saved-views-shared-by-role/specs/saved-views-ui :: Shared views listed beside own views"
 				]

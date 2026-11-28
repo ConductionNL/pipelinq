@@ -17,4 +17,5 @@ Moved from `my-work-roadmap` (archived 25 Nov 2026) with their numbers.
 
 - [x] 3.1 Set `built.state` of `work-saved-view` in `openspec/parity/capabilities.json` when block 7 lands.
   - Done (28 Nov 2026): the row reads built, owned by pipelinq, with the Tickets toolbar save-and-share (`allowSavedViews`, `savedViewShare`) and the My work `my-saved-views` widget as evidence and REQ-MW-150 as its requirement. Test: `tests/vitest/workSavedViewRow.spec.js`.
-- [ ] 3.2 Archive this change into `openspec/specs/my-work` once both blocks are built.
+- [x] 3.2 Archive this change into `openspec/specs/my-work` once both blocks are built.
+  - Done 28 Nov 2026: REQ-MW-150 and REQ-MW-170 added to `openspec/specs/my-work` (23 -> 27 REQ- mentions, the change's 4 carried over).

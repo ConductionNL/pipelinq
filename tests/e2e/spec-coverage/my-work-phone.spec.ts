@@ -13,7 +13,7 @@
  * the header holds the title and one Actions button whose menu offers New
  * ticket and New contact.
  *
- * @spec openspec/changes/my-work-saved-views-and-phone/specs/my-work/spec.md#requirement-phone-view-keeps-headers-and-filters-in-reach-req-mw-170
+ * @spec openspec/changes/archive/2026-11-28-my-work-saved-views-and-phone/specs/my-work/spec.md#requirement-phone-view-keeps-headers-and-filters-in-reach-req-mw-170
  */
 import type { APIRequestContext } from '@playwright/test'
 
