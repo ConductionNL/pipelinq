@@ -9,6 +9,7 @@
 
 ## 2. pipelinq mobile timer
 - [ ] 2.1 A `type: "custom"` or manifest page `MobileTimer` per PqMobiel that mounts the time-tracker leaf's capture widget with Start, Pause and Stop at least 48x48 px, the client or lead to book on, and the offline line with `pendingCount` (REQ-002, REQ-003) (V1)
+  - Blocked (28 Nov 2026): the time-tracker leaf has no capture widget and no time-entry write. In `@conduction/nextcloud-vue` 2.235.2 the leaf is `CnTimeTrackerTab` / `CnTimeTrackerCard` (`src/integrations/builtin/time-tracker.js`): it lists the TimeManager clients, tasks and time entries linked to an object, links an existing one (`POST .../time-tracker`) and creates a client (`POST .../time-tracker/new`, body `{ name }`). There is no Start, Pause or Stop, and no endpoint that writes a time entry with a start and a duration. 2.1, 2.2 and 2.4 need that capture first: a time-entry create on OpenRegister's `TimeProvider` and a capture component in nextcloud-vue. 2.3 and 2.5 follow the page.
 - [ ] 2.2 Route the leaf's capture writes through `useOfflineQueue('pipelinq-time')`; no pipelinq `timeEntry` schema (REQ-001) (V1)
 - [ ] 2.3 `img/manifest.webmanifest` (name, icons, `display: standalone`, `start_url` the timer page) linked from the page template so the page can be added to the home screen (REQ-003) (V1)
 - [ ] 2.4 Optional GPS: when the user enables it in their pipelinq user settings modal and grants permission, attach latitude and longitude to the capture's metadata (REQ-004) (V1)
