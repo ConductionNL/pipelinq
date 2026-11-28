@@ -4283,17 +4283,17 @@
 			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "CnIndexPage keeps filters, search and sort in the route query so a filtered list can be shared as a link; its saved-views control (nextcloud-vue 2.57.1 src/components/CnIndexPage/CnIndexPage.vue:112-117 CnSavedViewsControl) is opt-in via allowSavedViews, default false (:1720-1722), and no page in src/manifest.json or src/manifest.d sets it (grep at development cfe0a0a51). src/services/viewService.js reads OpenRegister views only to pick a pipeline's source in PipelineFormDialog",
-				"owner": "ConductionNL/nextcloud-vue",
-				"reachedOn": "any index page (shareable URL only); save-view control reached on nothing",
-				"readOn": "2026-09-28",
-				"change": "nextcloud-vue/saved-views-shared-by-role",
+				"state": "built",
+				"evidence": "src/manifest.json Tickets config.allowSavedViews and config.savedViewShare (save a filtered tickets list as an OpenRegister saved view and share the open one from the toolbar, board PqTicketsSelectie; tests/vitest/ticketsShareSavedView.spec.js) and MyWork widget my-saved-views of type saved-views (the bar's filters saved as views of My work with their item counts, REQ-MW-150; tests/vitest/myWorkPage.spec.js); both render nextcloud-vue's CnSavedViewsControl over OpenRegister saved views, pipelinq keeps no store of its own",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "Tickets (save and share from the toolbar) and My work (Saved views panel)",
+				"readOn": "2026-11-28",
+				"change": "openspec/changes/my-work-saved-views-and-phone",
 				"requirement": [
+					"openspec/changes/my-work-saved-views-and-phone/specs/my-work :: Saved views on My work (REQ-MW-150)",
 					"nextcloud-vue:openspec/changes/saved-views-shared-by-role/specs/saved-views-ui :: Share a view with a group",
 					"nextcloud-vue:openspec/changes/saved-views-shared-by-role/specs/saved-views-ui :: Shared views listed beside own views"
-				],
-				"plan": "openspec/changes/my-work-saved-views-and-phone"
+				]
 			},
 			"note": "lead: the shared saved-views control is one manifest flag away (allowSavedViews) on Clients, Tickets, Leads and Tasks. Re-read 2026-09-28 (OpenSpec pass, wave-5 correction round 6): rating partial holds at nextcloud-vue 2.57.1; evidence refreshed from 2.56.0. Specified in ConductionNL/nextcloud-vue openspec/changes/saved-views-shared-by-role (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
