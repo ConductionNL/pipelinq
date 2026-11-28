@@ -29,12 +29,14 @@ use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\Pipelinq\Kernel\AppIdentity;
 use OCA\Pipelinq\Service\LinePricing\LeadLinePricer;
+use OCA\Pipelinq\Service\LinePricing\LeadLineVariantCheck;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
 
 /**
- * Prices a lead line from the client's price lists before it is written.
+ * Prices a lead line from the client's price lists before it is written, and
+ * refuses a line that names a variant code its product does not carry.
  *
  * @template-implements IEventListener<Event>
  *
@@ -44,14 +46,17 @@ class LeadLinePricingListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param LeadLinePricer $pricer    Decides the line's price.
-	 * @param IAppConfig     $appConfig Holds the lead line schema id.
+	 * @param LeadLinePricer       $pricer    Decides the line's price.
+	 * @param IAppConfig           $appConfig Holds the lead line schema id.
+	 * @param LeadLineVariantCheck $variants  Refuses a variant code the product lacks.
 	 *
 	 * @spec openspec/changes/products-price-lists/tasks.md#task-1.4
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#29.1
 	 */
 	public function __construct(
 		private readonly LeadLinePricer $pricer,
 		private readonly IAppConfig $appConfig,
+		private readonly LeadLineVariantCheck $variants,
 	) {
 	}//end __construct()
 
@@ -85,6 +90,7 @@ class LeadLinePricingListener implements IEventListener {
 	 * @return void
 	 *
 	 * @spec openspec/changes/products-price-lists/specs/product-price-lists/spec.md#requirement-a-quote-line-is-priced-from-the-matching-list-req-ppl-002
+	 * @spec openspec/changes/specify-capability-rows/specs/product-catalog/spec.md#requirement-a-product-keeps-attributes-and-variants-with-their-own-code-and-price
 	 */
 	private function priceLine(ObjectCreatingEvent|ObjectUpdatingEvent $event, ObjectEntity $entity, ?array $old): void {
 		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'leadProduct_schema', '');
@@ -93,6 +99,13 @@ class LeadLinePricingListener implements IEventListener {
 		}
 
 		$line    = array_merge((array)$entity->getObject(), $event->getModifiedData());
+		$refusal = $this->variants->refusal(line: $line);
+		if ($refusal !== null) {
+			$event->setErrors(['message' => $refusal]);
+			$event->stopPropagation();
+			return;
+		}
+
 		$figures = $this->pricer->figures(line: $line, old: $old);
 		if ($figures !== []) {
 			$event->setModifiedData(array_merge($event->getModifiedData(), $figures));
