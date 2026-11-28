@@ -254,7 +254,8 @@ pipelinq to link to the panel.
 #### Scenario: A deep link from another app opens the focused panel
 
 - GIVEN another app's page renders a link to
-  `generateUrl('/apps/pipelinq/kcc/agent-panel', { callId: '42' })`
+  `generateUrl('/apps/pipelinq/kcc/agent-panel?callId={callId}', { callId: '42' })`
+  (`generateUrl()` fills placeholders only; it appends no query of its own)
 - WHEN the link is followed
 - THEN pipelinq opens with call `42` focused, and the origin app required
   no pipelinq component or iframe to produce the link
