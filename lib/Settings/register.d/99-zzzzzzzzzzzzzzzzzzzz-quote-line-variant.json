@@ -1,0 +1,45 @@
+{
+    "$comment": "specify-capability-rows 29.1: a quote line can name one of its product's variants by code (variantSku), like a lead line. A product picked onto a quote line asks the price resolver (POST /api/products/resolve-price, open to anyone who may read the product) for the unit price at the line's quantity and variant, and asks again when either changes; a price the user types stays theirs (nextcloud-vue CnChildRecordsField addFrom.resolve). The VAT rate stays the quote's own. The resolver answers 404 for a code the product does not carry. salesQuote 1.2.0 -> 1.3.0, salesQuoteLine 1.1.0 -> 1.2.0.",
+    "components": {
+        "schemas": {
+            "salesQuote": {
+                "slug": "salesQuote",
+                "version": "1.3.0",
+                "properties": {
+                    "lines": {
+                        "addFrom": {
+                            "resolve": {
+                                "url": "/apps/pipelinq/api/products/resolve-price",
+                                "method": "POST",
+                                "body": {
+                                    "productId": "@row.product",
+                                    "quantity": "@row.quantity",
+                                    "variantSku": "@row.variantSku"
+                                },
+                                "map": {
+                                    "unitPrice": "unitPrice"
+                                },
+                                "when": [
+                                    "quantity",
+                                    "variantSku"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "salesQuoteLine": {
+                "slug": "salesQuoteLine",
+                "version": "1.2.0",
+                "properties": {
+                    "variantSku": {
+                        "type": "string",
+                        "title": "Variant code",
+                        "description": "The code of the product's variant this line is for. Empty means the product itself.",
+                        "maxLength": 64
+                    }
+                }
+            }
+        }
+    }
+}
