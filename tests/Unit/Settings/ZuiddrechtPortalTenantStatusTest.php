@@ -58,11 +58,11 @@ class ZuiddrechtPortalTenantStatusTest extends TestCase {
 		}
 
 		self::assertSame(
-			['default' => 'live', 'westervliet' => 'live', 'oosterhaven' => 'draft'],
-			$statuses
+			expected: ['default' => 'live', 'westervliet' => 'live', 'oosterhaven' => 'draft'],
+			actual: $statuses
 		);
 		foreach ($statuses as $status) {
-			self::assertContains($status, $allowed);
+			self::assertContains(needle: $status, haystack: $allowed);
 		}
 	}//end testTheSetSeedsTwoLivePortalsAndOneDraft()
 }//end class
