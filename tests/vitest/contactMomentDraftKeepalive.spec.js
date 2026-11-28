@@ -7,7 +7,7 @@
  * request that creates, overwrites or removes the draft, and remembers the
  * id of a draft it created.
  *
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
  */
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 

@@ -20,7 +20,7 @@
  * Everything here is free of Vue so the timing and the session handling can
  * be tested with fake timers.
  *
- * @spec openspec/changes/contact-moments-keep-draft/specs/contact-moment-drafts/spec.md#requirement-a-manual-contact-moment-is-kept-as-a-private-draft-req-cmd2-001
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/specs/contact-moment-drafts/spec.md#requirement-a-manual-contact-moment-is-kept-as-a-private-draft-req-cmd2-001
  */
 
 /** The object type a draft lives in: the contact moment's own. */
@@ -64,7 +64,7 @@ export const DRAFT_FIELDS = [
  * @param {object} form The quick log form.
  * @param {{clientId: (string|null), requestId: (string|null), defaults: (object|undefined)}} context Where the quick log was opened, and its presets.
  * @return {boolean} True when there is nothing to keep.
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
  * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-4
  */
 export function isDraftFormEmpty(form, context = {}) {
@@ -143,7 +143,7 @@ function filledFields(form) {
  *
  * @param {object} form The quick log form.
  * @return {object} The draft ticket.
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.1
  */
 export function buildDraftTicket(form) {
 	return {
@@ -165,7 +165,7 @@ export function buildDraftTicket(form) {
  * @param {object} form The quick log form.
  * @param {{author: string, now: Date}} context Who saves, and when.
  * @return {object} The ticket fields.
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
  */
 export function buildContactMoment(form, context) {
 	return {
@@ -182,7 +182,7 @@ export function buildContactMoment(form, context) {
  * @param {object} draft The draft ticket.
  * @return {string} The ISO moment, or an empty string.
  *
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
  */
 export function draftChangedAt(draft) {
 	return draft?.['@self']?.updated || draft?.['@self']?.created || ''
@@ -193,7 +193,7 @@ export function draftChangedAt(draft) {
  *
  * @param {object} draft The draft ticket.
  * @return {object} The form fields the draft holds.
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
  */
 export function draftFormFrom(draft) {
 	return filledFields(draft)
@@ -212,7 +212,7 @@ export function draftFormFrom(draft) {
  * @param {Array<object>} drafts The draft tickets OpenRegister returned.
  * @param {{author: string, clientId: (string|null|undefined), requestId: (string|null), now: Date}} context Who and where.
  * @return {object|null} The newest matching draft, or null.
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
  * @spec openspec/changes/archive/2026-11-12-contact-log-dialog-keeps-draft/tasks.md#task-4
  */
 export function pickDraft(drafts, context) {
@@ -281,7 +281,7 @@ function isSameReference(a, b) {
  *
  * @param {object|null} body The refusal body, `{ message, findings }`.
  * @return {string} The text to show, or an empty string.
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
  */
 export function refusalText(body) {
 	const parts = []
@@ -305,7 +305,7 @@ export function refusalText(body) {
  *
  * @param {object|null} error The store's error object (it carries `status`), or a Response.
  * @return {boolean} True for an ended session.
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.4
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.4
  */
 export function isSessionEnded(error) {
 	const status = Number(error?.status)
@@ -321,7 +321,7 @@ export function isSessionEnded(error) {
  * @param {function(string, object): Promise<Response>} fetchImpl The fetch to use.
  * @param {string} url The csrftoken endpoint.
  * @return {Promise<boolean>} True when a new token was installed.
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.4
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.4
  */
 export async function refreshRequestToken(fetchImpl, url) {
 	try {
@@ -353,7 +353,7 @@ export async function refreshRequestToken(fetchImpl, url) {
  * right away (used on hidden, with keepalive). Writes never overlap: a change
  * that arrives while one is in flight is written after it.
  *
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
  */
 export class DraftAutosaver {
 	/**
@@ -379,7 +379,7 @@ export class DraftAutosaver {
 	 *
 	 * @param {object|null} payload The draft to write, or null to remove it.
 	 * @return {void}
-	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 	 */
 	schedule(payload) {
 		if (this.stopped) {
@@ -398,7 +398,7 @@ export class DraftAutosaver {
 	 *
 	 * @param {{keepalive: boolean}} [options] Send with keepalive, for a closing tab.
 	 * @return {Promise<void>} Resolves when the write is done.
-	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 	 */
 	async flush({ keepalive = false } = {}) {
 		this.clearTimer()
@@ -433,7 +433,7 @@ export class DraftAutosaver {
 	 * Wait for a write that is already on its way.
 	 *
 	 * @return {Promise<void>} Resolves when nothing is in flight.
-	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
 	 */
 	async settle() {
 		if (this.running) {
@@ -445,7 +445,7 @@ export class DraftAutosaver {
 	 * Drop anything pending and write nothing more.
 	 *
 	 * @return {void}
-	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 	 */
 	stop() {
 		this.stopped = true
@@ -457,7 +457,7 @@ export class DraftAutosaver {
 	 * Resume after `stop()`, for a save that failed and keeps the form open.
 	 *
 	 * @return {void}
-	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 	 */
 	resume() {
 		this.stopped = false
@@ -465,7 +465,7 @@ export class DraftAutosaver {
 
 	/**
 	 * @return {void}
-	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 	 */
 	clearTimer() {
 		if (this.timer !== null) {

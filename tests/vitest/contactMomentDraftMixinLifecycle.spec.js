@@ -8,7 +8,7 @@
  * hidden or the form closes, the store writes that create, overwrite and
  * remove the draft, and the fallbacks of a failed load or finish.
  *
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
  */
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 

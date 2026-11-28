@@ -12,8 +12,8 @@
  * in OpenRegister's status `draft` (decisions 180 and 216). So the tests
  * here assert what is sent to the ticket endpoints, never a draft schema.
  *
- * @spec openspec/changes/contact-moments-keep-draft/specs/contact-moment-drafts/spec.md#requirement-a-manual-contact-moment-is-kept-as-a-private-draft-req-cmd2-001
- * @spec openspec/changes/contact-moments-keep-draft/specs/contact-moment-drafts/spec.md#requirement-an-expired-session-does-not-lose-the-text-req-cmd2-002
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/specs/contact-moment-drafts/spec.md#requirement-a-manual-contact-moment-is-kept-as-a-private-draft-req-cmd2-001
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/specs/contact-moment-drafts/spec.md#requirement-an-expired-session-does-not-lose-the-text-req-cmd2-002
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
