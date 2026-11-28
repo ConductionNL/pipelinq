@@ -156,7 +156,7 @@ class SocialAccountControllerTest extends TestCase {
 	 * Listing the accounts reports each network's readiness to integriq, and
 	 * the list answers exactly what the service returned.
 	 *
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 *
 	 * @return void
 	 */
@@ -185,7 +185,7 @@ class SocialAccountControllerTest extends TestCase {
 	/**
 	 * A refused caller triggers no report: the readiness was never read.
 	 *
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 *
 	 * @return void
 	 */

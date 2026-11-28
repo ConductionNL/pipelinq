@@ -12,7 +12,7 @@
  * Pure: the URL builder and the navigation are passed in, so the module runs
  * under vitest's node environment with nothing mocked.
  *
- * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
+ * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
  */
 
 /**
@@ -30,7 +30,7 @@ export const INTEGRIQ_CONNECTIONS_PATH =
  *
  * @param {{generateUrl: function(string): string, assign: function(string): void}} deps Builds the instance URL and navigates to it.
  * @return {{openIntegriqConnections: function(): void}} The handler, keyed by its manifest name.
- * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
+ * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
  */
 export function createConnectionHandlers({ generateUrl, assign }) {
 	return {
@@ -38,7 +38,7 @@ export function createConnectionHandlers({ generateUrl, assign }) {
 		 * Leave for integriq's Connections overview, preset and linking.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
+		 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
 		 */
 		openIntegriqConnections() {
 			assign(generateUrl(INTEGRIQ_CONNECTIONS_PATH))

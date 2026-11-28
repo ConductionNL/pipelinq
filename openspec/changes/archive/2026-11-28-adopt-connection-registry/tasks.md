@@ -23,7 +23,8 @@
 
 ## 4. After merge
 
-- [ ] 4.1 Run the e2e spec against an instance with both apps, then archive this change into `admin-settings`.
+- [x] 4.1 Run the e2e spec against an instance with both apps, then archive this change into `admin-settings`.
+  - Live 28 Nov 2026 (sandbox NC 34 + MariaDB, OpenRegister main 90e8e364, integriq development, pipelinq development 75603614, CI seed): `tests/e2e/integrations-page.spec.ts` 6/6 passed in Chromium (ten declared connections in order, settings entry preset to pipelinq, Berichtenbox not configured with its four keys, Add integration to integriq, CTI test reaches the cti row, Social accounts reports every network). Archived into `openspec/specs/admin-settings` (REQ-AS-130 to REQ-AS-132).
 - [x] 4.2 Follow-up issue: declare SMS, WhatsApp, payment providers and BI export sinks as one row per family that pipelinq reports on, since the contract keeps per-object families out (design D5.4, contract D12).
   - Filed as #4194 (27 Nov 2026): one `reportedOnly` row per family (sms, whatsapp, payment, bi-export, mail-transports), each reporting the worst status of its objects; the open question there is `limited` or `error` for a family whose objects disagree.
 - [x] 4.3 Raise design D5 amendments 1 to 3 on hydra `connection-registry`. Taken in hydra#673.

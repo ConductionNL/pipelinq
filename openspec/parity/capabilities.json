@@ -959,7 +959,7 @@
 			"area": "automation",
 			"overlay": null,
 			"specs": [
-				"adopt-connection-registry",
+				"admin-settings",
 				"crm-mcp-tool-surface",
 				"dashboard",
 				"marketing-api",
@@ -7642,10 +7642,10 @@
 				"state": "built",
 				"evidence": "lib/Service/ConnectionReportService.php",
 				"owner": "ConductionNL/integriq",
-				"change": "adopt-connection-registry",
+				"spec": "openspec/specs/admin-settings",
 				"requirement": [
-					"openspec/changes/adopt-connection-registry/specs/admin-settings :: REQ-AS-131: An admin reads pipelinq's connections on an Integrations page over integriq's registry",
-					"openspec/changes/adopt-connection-registry/specs/admin-settings :: REQ-AS-130: Pipelinq declares its outside connections in one static file"
+					"openspec/specs/admin-settings :: REQ-AS-131: An admin reads pipelinq's connections on an Integrations page over integriq's registry",
+					"openspec/specs/admin-settings :: REQ-AS-130: Pipelinq declares its outside connections in one static file"
 				]
 			},
 			"evidence": {
