@@ -4170,7 +4170,7 @@
 				"owner": "ConductionNL/shillinq",
 				"spec": "openspec/specs/time-approval-workflow",
 				"requirement": "openspec/specs/time-approval-workflow :: Approved time entries are emitted to shillinq's time-intake",
-				"change": "openspec/changes/the-billing-time-entry-is-a-satellite"
+				"change": "openspec/changes/archive/2026-11-28-the-billing-time-entry-is-a-satellite"
 			},
 			"evidence": {
 				"hubspot-crm": "Only through a third party app: https://ecosystem.hubspot.com/marketplace/listing/hubclock-by-thread-integrations-552213 StopWatch \"Automatically Calculated Billings Based on Tracked Time\" (Unlimited plan) and PSOhub \"Import your automated timesheets and expense reports directly into invoices\" (https://www.psohub.com/en/hubspot-time-tracking). No native time to invoice flow in the knowledge base. Note: Was no; marketplace apps provide it.",

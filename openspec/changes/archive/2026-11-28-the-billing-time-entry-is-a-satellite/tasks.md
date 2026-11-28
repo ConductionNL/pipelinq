@@ -30,9 +30,9 @@
 
 ## 5. Next
 
-- [ ] 5.1 Move `hours`, `date`, `user` and `description` onto humaniq's
+- [x] 5.1 (moved to change `billing-hours-live-in-humaniq`, task 1.1, 28 Nov 2026) Move `hours`, `date`, `user` and `description` onto humaniq's
       `TimeEntry` so they live once, and make `BillingCategoryWidget` a
       `requiredApp: humaniq` widget that joins the two — the same pattern this
       app already uses to read planninq's `project`.
-- [ ] 5.2 Migrate existing rows: one humaniq `TimeEntry` per billing line, and
+- [x] 5.2 (moved to change `billing-hours-live-in-humaniq`, task 2.1, 28 Nov 2026) Migrate existing rows: one humaniq `TimeEntry` per billing line, and
       the line's `timeEntry` pointed at it.
