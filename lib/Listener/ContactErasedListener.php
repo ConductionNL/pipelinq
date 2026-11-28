@@ -81,7 +81,7 @@ class ContactErasedListener implements IEventListener {
 	 * @return void
 	 *
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-contact-erasure-keeps-the-opt-out-in-integriq-req-cii-005
-	 * @spec openspec/changes/erase-on-soft-delete/specs/consent-in-integriq/spec.md#requirement-a-soft-delete-erases-the-contact-in-integriq-req-cii-008
+	 * @spec openspec/specs/consent-in-integriq/spec.md#requirement-a-soft-delete-erases-the-contact-in-integriq-req-cii-008
 	 */
 	public function handle(Event $event): void {
 		$object = $this->erasedObject(event: $event);
@@ -108,7 +108,7 @@ class ContactErasedListener implements IEventListener {
 	 *
 	 * @return ObjectEntity|null The object, or null.
 	 *
-	 * @spec openspec/changes/erase-on-soft-delete/specs/consent-in-integriq/spec.md#requirement-a-soft-delete-erases-the-contact-in-integriq-req-cii-008
+	 * @spec openspec/specs/consent-in-integriq/spec.md#requirement-a-soft-delete-erases-the-contact-in-integriq-req-cii-008
 	 */
 	private function erasedObject(Event $event): ?ObjectEntity {
 		if ($event instanceof ObjectDeletedEvent) {
