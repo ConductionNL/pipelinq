@@ -8,7 +8,7 @@
  * the contact select following the client, the subject error once the field
  * was left, Save staying disabled while invalid, and Cancel.
  *
- * @spec openspec/changes/contact-moments-keep-draft/specs/contact-moment-drafts/spec.md#requirement-a-manual-contact-moment-is-kept-as-a-private-draft-req-cmd2-001
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/specs/contact-moment-drafts/spec.md#requirement-a-manual-contact-moment-is-kept-as-a-private-draft-req-cmd2-001
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

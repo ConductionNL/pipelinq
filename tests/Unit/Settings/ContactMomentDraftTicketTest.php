@@ -13,7 +13,7 @@
  * @category Tests
  * @package  OCA\Pipelinq\Tests\Unit\Settings
  *
- * @spec openspec/changes/contact-moments-keep-draft/specs/contact-moment-drafts/spec.md#requirement-a-manual-contact-moment-is-kept-as-a-private-draft-req-cmd2-001
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/specs/contact-moment-drafts/spec.md#requirement-a-manual-contact-moment-is-kept-as-a-private-draft-req-cmd2-001
  */
 
 declare(strict_types=1);

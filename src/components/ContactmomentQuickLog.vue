@@ -357,7 +357,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 		 */
 		draftContext() {
 			return {
@@ -447,7 +447,7 @@ export default {
 		 * its own message instead of the raw error.
 		 *
 		 * @param {Error} error The failure `saveContactMoment` threw.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.4
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.4
 		 */
 		keepFormAfterFailure(error) {
 			if (error?.sessionEnded) {

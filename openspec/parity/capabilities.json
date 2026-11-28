@@ -10556,15 +10556,15 @@
 			"feature": "contactmomenten-rapportage",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "a telephony call creates a pending contact moment server side as soon as it rings (lib/Service/CtiService.php:239 \"Create a pending contactmoment ticket\"), so that record survives a closed browser; the manual form src/components/ContactmomentQuickLog.vue (mounted at src/manifest.json:2144) keeps its input only in component data, with no local or server draft",
+				"state": "built",
+				"evidence": "src/mixins/contactMomentDraftMixin.js keeps the quick log as a ticket in OpenRegister status draft and finishes it through the owner action; lib/Settings/register.d/99-zzz-contact-moment-drafts.json sets draftLifetimeDays 7 and draftsListed false on ticket. Checked live 28 Nov 2026 (discard, seven-day expiry, newTicket on Save only)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail quick log; CTI screen pop",
 				"readOn": "2026-09-26",
-				"change": "contact-moments-keep-draft",
+				"spec": "openspec/specs/contact-moment-drafts",
 				"requirement": [
-					"openspec/changes/contact-moments-keep-draft/specs/contact-moment-drafts :: A manual contact moment is kept as a private draft (REQ-CMD2-001)",
-					"openspec/changes/contact-moments-keep-draft/specs/contact-moment-drafts :: An expired session does not lose the text (REQ-CMD2-002)"
+					"openspec/specs/contact-moment-drafts :: A manual contact moment is kept as a private draft (REQ-CMD2-001)",
+					"openspec/specs/contact-moment-drafts :: An expired session does not lose the text (REQ-CMD2-002)"
 				]
 			},
 			"note": "a half typed manual contact moment is lost when the tab closes or the session expires. Specified 2026-09-28 in openspec/changes/contact-moments-keep-draft (OpenSpec pass).",

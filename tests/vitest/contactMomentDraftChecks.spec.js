@@ -5,7 +5,7 @@
  * The contact moment draft's two checks, branch by branch: whether a quick
  * log form holds anything worth a draft, and which draft is offered back.
  *
- * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
  */
 import { describe, expect, it } from 'vitest'
 import { isDraftFormEmpty, pickDraft } from '../../src/services/contactMomentDraft.js'

@@ -74,14 +74,14 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 		 */
 		author() {
 			return window.OC?.getCurrentUser?.()?.uid || null
 		},
 
 		/**
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
 		 */
 		offeredDraftTime() {
 			const changed = draftChangedAt(this.offeredDraft)
@@ -113,7 +113,7 @@ export default {
 		form: {
 			deep: true,
 			/**
-			 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+			 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 			 */
 			handler() {
 				this.scheduleDraft()
@@ -142,7 +142,7 @@ export default {
 	/**
 	 * Keep what was typed when the form closes without saving.
 	 *
-	 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 	 */
 	beforeUnmount() {
 		document.removeEventListener('visibilitychange', this.onVisibilityChange)
@@ -176,7 +176,7 @@ export default {
 		 * Write the form's state after the quiet time, or remove the draft
 		 * when the form holds nothing the agent typed.
 		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 		 */
 		scheduleDraft() {
 			if (!this.draftWatching || !this.author || !this.autosaver) {
@@ -197,7 +197,7 @@ export default {
 		 * @param {object} data The ticket fields.
 		 * @return {Promise<object>} The saved ticket.
 		 * @throws {Error} The failure, with `sessionEnded` set for an ended session.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
 		 */
 		async saveContactMoment(data) {
 			// Nothing may write the draft back while the contact moment is saved,
@@ -235,7 +235,7 @@ export default {
 		 *
 		 * @param {object} data The ticket fields.
 		 * @return {Promise<object>} The saved ticket.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
 		 */
 		async createContactMoment(data) {
 			const store = useObjectStore()
@@ -257,7 +257,7 @@ export default {
 		 * @param {string} id The draft's id.
 		 * @param {object} data The ticket fields.
 		 * @return {Promise<object>} The saved ticket.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
 		 */
 		async finishDraft(id, data) {
 			const response = await fetch(
@@ -290,7 +290,7 @@ export default {
 		 * agent's own, and an administrator's list can hold other people's,
 		 * so the owner is asked for and checked again in `pickDraft`.
 		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
 		 */
 		async loadDraft() {
 			if (!this.author) {
@@ -322,7 +322,7 @@ export default {
 		/**
 		 * Put the draft's fields back in the form.
 		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
 		 */
 		restoreDraft() {
 			this.applyDraftForm(draftFormFrom(this.offeredDraft))
@@ -333,7 +333,7 @@ export default {
 		/**
 		 * Throw the draft away and keep the form as it opened.
 		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
 		 */
 		async discardDraft() {
 			this.offeredDraft = null
@@ -345,7 +345,7 @@ export default {
 		/**
 		 * Remove the server draft, if there is one.
 		 *
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.3
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.3
 		 */
 		async dropDraft() {
 			this.autosaver.stop()
@@ -361,7 +361,7 @@ export default {
 		 *
 		 * @param {object} payload The draft.
 		 * @param {{keepalive: boolean}} options Keepalive for a closing tab.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 		 */
 		async writeDraft(payload, { keepalive }) {
 			if (keepalive) {
@@ -381,7 +381,7 @@ export default {
 		 * Remove the draft because the form was emptied.
 		 *
 		 * @param {{keepalive: boolean}} options Keepalive for a closing tab.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 		 */
 		async removeDraft({ keepalive }) {
 			if (!this.draftId) {
@@ -400,7 +400,7 @@ export default {
 		 * The write a closing tab still delivers.
 		 *
 		 * @param {{method: string, id: (string|null), payload: (object|null)}} write POST, PUT or DELETE; the draft's id, when it exists; and the draft.
-		 * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
+		 * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/tasks.md#task-1.2
 		 */
 		async sendDraftKeepalive(write) {
 			const { method, id, payload } = write

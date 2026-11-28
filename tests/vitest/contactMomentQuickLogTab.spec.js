@@ -10,7 +10,7 @@
  * and the body section is gone, so one page never runs two autosaving
  * quick logs for the same client.
  *
- * @spec openspec/changes/contact-moments-keep-draft/specs/contact-moment-drafts/spec.md#requirement-a-manual-contact-moment-is-kept-as-a-private-draft-req-cmd2-001
+ * @spec openspec/changes/archive/2026-11-28-contact-moments-keep-draft/specs/contact-moment-drafts/spec.md#requirement-a-manual-contact-moment-is-kept-as-a-private-draft-req-cmd2-001
  */
 
 import fs from 'fs'
