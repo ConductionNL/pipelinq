@@ -1,0 +1,202 @@
+{
+    "_meta": {
+        "spdx-license": "EUPL-1.2",
+        "spdx-copyright": "2026 Conduction B.V.",
+        "description": "openspec change requests-web-chat-and-bot (D2, D5). A web chat channel is a declaration an administrator keeps: the websites it may run on, a greeting, the text the window shows when nobody is available, whether the assistant answers first, how long a handed-over chat waits for a colleague, and whether the window shows the colleague's first name. It is off by default. The channel token is random and not secret: it is part of the line pasted into the website. Only administrators write channels; the public chat routes read a channel through pipelinq's own lookup, without RBAC, and only an active one. The chatWaiting rule on ticket notifies the same recipients as newTicket, in Nextcloud and as a web push, when a chat is handed over, because a chat waits in seconds, not hours. A website chat is a channelConversation with channel chat; this fragment adds what such a chat needs: its web chat channel, a hash of the visitor's chat secret (never the secret, never an IP address), the ticket it was handed over to and when, the time of its last message, the assistant's conversation token and how many answers in a row the assistant gave without a source."
+    },
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "webChatChannel"
+                ]
+            }
+        },
+        "schemas": {
+            "webChatChannel": {
+                "slug": "webChatChannel",
+                "title": "Web chat channel",
+                "version": "1.0.0",
+                "description": "A chat on the organisation's website: where it may run, what it says, and whether the assistant answers first.",
+                "type": "object",
+                "required": [
+                    "name",
+                    "channelToken"
+                ],
+                "authorization": {
+                    "read": [
+                        "admin",
+                        "sales"
+                    ],
+                    "create": [
+                        "admin"
+                    ],
+                    "update": [
+                        "admin"
+                    ],
+                    "delete": [
+                        "admin"
+                    ]
+                },
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "The name colleagues know the channel by, such as the website it runs on.",
+                        "maxLength": 255
+                    },
+                    "allowedOrigins": {
+                        "type": "array",
+                        "title": "Websites",
+                        "description": "The exact origins (scheme, host and port) the chat may run on, such as https://www.example.org.",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 255
+                        }
+                    },
+                    "greeting": {
+                        "type": "string",
+                        "title": "Greeting",
+                        "description": "The first line the window shows a visitor.",
+                        "maxLength": 500
+                    },
+                    "offlineText": {
+                        "type": "string",
+                        "title": "Text when nobody is available",
+                        "description": "What the window says when no colleague is available, above the form for an email address.",
+                        "maxLength": 500
+                    },
+                    "assistantEnabled": {
+                        "type": "boolean",
+                        "title": "The assistant answers first",
+                        "description": "Whether the assistant answers a visitor before a colleague is asked.",
+                        "default": false
+                    },
+                    "waitSeconds": {
+                        "type": "integer",
+                        "title": "Seconds a chat waits for a colleague",
+                        "description": "How long a handed-over chat waits for a colleague before the visitor is asked for an email address.",
+                        "minimum": 30,
+                        "maximum": 3600,
+                        "default": 180
+                    },
+                    "showAgentFirstName": {
+                        "type": "boolean",
+                        "title": "Show the colleague's first name",
+                        "description": "Whether the visitor sees the first name of the colleague who answers.",
+                        "default": false
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "title": "On",
+                        "description": "Whether the chat runs on the channel's websites. A new channel is off.",
+                        "default": false,
+                        "facetable": true
+                    },
+                    "channelToken": {
+                        "type": "string",
+                        "title": "Channel token",
+                        "description": "Random, not secret: part of the line pasted into the website.",
+                        "maxLength": 64,
+                        "pattern": "^[A-Za-z0-9]{16,64}$"
+                    }
+                }
+            },
+            "ticket": {
+                "slug": "ticket",
+                "x-openregister-notifications": {
+                    "chatWaiting": {
+                        "trigger": {
+                            "type": "created",
+                            "filter": {
+                                "field": "channel",
+                                "operator": "equals",
+                                "value": "chat"
+                            }
+                        },
+                        "enabled": true,
+                        "originApp": "pipelinq",
+                        "channels": [
+                            "nc-notification",
+                            "web-push"
+                        ],
+                        "recipients": [
+                            {
+                                "kind": "groups",
+                                "groups": [
+                                    "sales"
+                                ]
+                            },
+                            {
+                                "kind": "field",
+                                "field": "assignee"
+                            }
+                        ],
+                        "subject": {
+                            "nl": "Een chat wacht: {{title}}",
+                            "en": "A chat is waiting: {{title}}"
+                        },
+                        "actions": [
+                            {
+                                "label": {
+                                    "en": "Open",
+                                    "nl": "Openen"
+                                },
+                                "primary": true,
+                                "target": {
+                                    "kind": "object-detail"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            "channelConversation": {
+                "slug": "channelConversation",
+                "properties": {
+                    "webChatChannel": {
+                        "type": "string",
+                        "title": "Web chat channel",
+                        "description": "The web chat channel a website chat came in on.",
+                        "facetable": true
+                    },
+                    "visitorSecretHash": {
+                        "type": "string",
+                        "title": "Visitor secret hash",
+                        "description": "A hash of the chat secret the visitor's window holds. The secret itself is never stored.",
+                        "maxLength": 128
+                    },
+                    "ticket": {
+                        "type": "string",
+                        "title": "Ticket",
+                        "description": "The ticket a handed-over chat is on."
+                    },
+                    "handedOverAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Handed over at",
+                        "description": "When the chat was handed to a colleague through the Queue."
+                    },
+                    "lastMessageAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Last message at",
+                        "description": "When the last message in the chat was sent, by either side."
+                    },
+                    "assistantToken": {
+                        "type": "string",
+                        "title": "Assistant conversation token",
+                        "description": "The token the assistant keeps this chat's context under."
+                    },
+                    "unsourcedAnswers": {
+                        "type": "integer",
+                        "title": "Answers in a row without a source",
+                        "description": "How many assistant answers in a row had no source; at two the chat goes to a colleague.",
+                        "minimum": 0,
+                        "default": 0
+                    }
+                }
+            }
+        }
+    }
+}

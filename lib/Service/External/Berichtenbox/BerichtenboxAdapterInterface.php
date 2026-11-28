@@ -46,7 +46,7 @@
  * @link https://pipelinq.nl
  * @link https://www.logius.nl/diensten/berichtenbox
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
+ * @spec openspec/specs/berichtenbox/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -55,6 +55,8 @@
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\External\Berichtenbox;
+
+use SensitiveParameter;
 
 /**
  * Berichtenbox / Logius BBK 1.7 adapter port.
@@ -77,7 +79,7 @@ namespace OCA\Pipelinq\Service\External\Berichtenbox;
  *     an openconnector-routed binding if the tenant centralises
  *     credentials there.
  *
- * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
+ * @spec openspec/specs/berichtenbox/spec.md
  */
 interface BerichtenboxAdapterInterface {
 	/**
@@ -120,7 +122,10 @@ interface BerichtenboxAdapterInterface {
 	 * @return BerichtenboxResult The mailbox-status outcome.
 	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
-	public function checkMailbox(string $bsn): BerichtenboxResult;
+	public function checkMailbox(
+		#[SensitiveParameter]
+		string $bsn,
+	): BerichtenboxResult;
 
 	/**
 	 * Whether the adapter is dormant — i.e. wired but not contacting

@@ -33,6 +33,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\Pipelinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * A ticket is assigned to the signed-in user, under their RBAC.
@@ -94,15 +95,15 @@ class TicketAssignControllerTest extends TestCase {
 	public function testAssignsTheSignedInUser(): void {
 		$controller = $this->controller();
 		$this->objects->method('find')->willReturn($this->ticket());
-		$this->objects->expects($this->once())->method('saveObject')->with(
-			$this->callback(static fn (array $object): bool => $object['assignee'] === 'alice'
+		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $object): bool => $object['assignee'] === 'alice'
 				&& $object['ticketType'] === 'complaint'
 				&& $object['title'] === 'Late delivery'),
-			$this->anything(),
-			'20',
-			'40',
-			't-1',
-		)->willReturn($this->ticket());
+				'extend' => $this->anything(),
+				'register' => '20',
+				'schema' => '40',
+				'uuid' => 't-1',
+			]))->willReturn($this->ticket());
 
 		$response = $controller->assignToMe(id: 't-1');
 
@@ -147,4 +148,63 @@ class TicketAssignControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $controller->assignToMe(id: 't-1')->getStatus());
 	}//end testNoSessionIsUnauthorized()
+
+	/**
+	 * Take the oldest skips what is assigned or closed and assigns the first open one.
+	 *
+	 * @return void
+	 */
+	public function testAssignOldestTakesTheFirstOpenUnassignedTicket(): void {
+		$controller = $this->controller();
+		$this->objects->expects($this->once())->method('findAll')->with(
+			$this->callback(static fn (array $config): bool => $config['sort'] === ['occurredAt' => 'asc']
+				&& $config['filters'] === ['register' => '20', 'schema' => '40'])
+		)->willReturn(
+			[
+				['id' => 't-1', 'title' => 'Taken', 'status' => 'new', 'assignee' => 'bob'],
+				['id' => 't-2', 'title' => 'Done', 'status' => 'resolved'],
+				['id' => 't-3', 'title' => 'Waiting', 'status' => 'in_progress', '@self' => ['id' => 't-3']],
+				['id' => 't-4', 'title' => 'Newer', 'status' => 'new'],
+			]
+		);
+		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $object): bool => $object['assignee'] === 'alice'
+				&& $object['title'] === 'Waiting'
+				&& isset($object['@self']) === false),
+				'extend' => $this->anything(),
+				'register' => '20',
+				'schema' => '40',
+				'uuid' => 't-3',
+			]))->willReturn($this->ticket());
+
+		$response = $controller->assignOldest();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['id' => 't-3', 'assignee' => 'alice'], $response->getData());
+	}//end testAssignOldestTakesTheFirstOpenUnassignedTicket()
+
+	/**
+	 * An empty queue answers 404 and writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testAssignOldestWithAnEmptyQueueIsNotFound(): void {
+		$controller = $this->controller();
+		$this->objects->method('findAll')->willReturn([['id' => 't-1', 'status' => 'closed']]);
+		$this->objects->expects($this->never())->method('saveObject');
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $controller->assignOldest()->getStatus());
+	}//end testAssignOldestWithAnEmptyQueueIsNotFound()
+
+	/**
+	 * Without a session Take the oldest reads nothing.
+	 *
+	 * @return void
+	 */
+	public function testAssignOldestWithoutSessionIsUnauthorized(): void {
+		$controller = $this->controller(uid: null);
+		$this->objects->expects($this->never())->method('findAll');
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $controller->assignOldest()->getStatus());
+	}//end testAssignOldestWithoutSessionIsUnauthorized()
 }//end class

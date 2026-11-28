@@ -36,9 +36,11 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\ProductCatalogController;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
+use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\ProductCatalogService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\OCS\OCSBadRequestException;
+use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -79,11 +81,19 @@ class ProductCatalogControllerTest extends TestCase {
 	 */
 	private IUserSession $session;
 
+	/**
+	 * Reads the client with the caller's rights.
+	 *
+	 * @var CallerObjectReader&MockObject
+	 */
+	private CallerObjectReader $reader;
+
 	protected function setUp(): void {
 		$this->request = $this->createMock(IRequest::class);
 		$this->service = $this->createMock(ProductCatalogService::class);
 		$this->policy = $this->createMock(PosAccessPolicy::class);
 		$this->session = $this->createMock(IUserSession::class);
+		$this->reader = $this->createMock(CallerObjectReader::class);
 
 		$this->controller = new ProductCatalogController($this->request,
 			$this->service,
@@ -91,6 +101,7 @@ class ProductCatalogControllerTest extends TestCase {
 			$this->policy,
 			$this->l10n(),
 			$this->createMock(LoggerInterface::class),
+			$this->reader,
 		);
 	}//end setUp()
 
@@ -181,6 +192,7 @@ class ProductCatalogControllerTest extends TestCase {
 			$policy,
 			$this->l10n(),
 			$this->createMock(LoggerInterface::class),
+			$this->reader,
 		);
 	}//end controllerWithRealService()
 
@@ -322,6 +334,113 @@ class ProductCatalogControllerTest extends TestCase {
 	}//end testResolvePriceForbiddenForNonPosUser()
 
 	/**
+	 * Anyone who may read the product may resolve its price: a non-POS caller
+	 * naming the product by id gets the STORED product priced, read with the
+	 * caller's own rights, never the payload it sent.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-1
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceForAReaderPricesTheStoredProduct(): void {
+		$this->loginAs(uid: 'sales-rep', isPos: false);
+		$this->withParams(params: ['productId' => ' p-1 ', 'product' => ['unitPrice' => 0.01], 'quantity' => 12]);
+		$stored = ['id' => 'p-1', 'unitPrice' => 18.5, 'vatClass' => 'low'];
+		$this->reader->expects($this->once())->method('read')->with('p-1', 'product_schema')->willReturn($stored);
+		$this->service->expects($this->once())
+			->method('resolveEffectivePrice')
+			->with($stored, 12.0, null, null, null)
+			->willReturn(['unitPrice' => 16.25, 'source' => 'tier', 'taxRate' => 9]);
+
+		$response = $this->controller->resolvePrice();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: 16.25, actual: $response->getData()['unitPrice']);
+	}//end testResolvePriceForAReaderPricesTheStoredProduct()
+
+	/**
+	 * A non-POS caller may also name the product through the id of the product object.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-1
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceForAReaderTakesTheIdOfTheProductObject(): void {
+		$this->loginAs(uid: 'sales-rep', isPos: false);
+		$this->withParams(params: ['product' => ['@self' => ['id' => 'p-2'], 'unitPrice' => 1.0], 'quantity' => 1]);
+		$stored = ['id' => 'p-2', 'unitPrice' => 40.0];
+		$this->reader->expects($this->once())->method('read')->with('p-2', 'product_schema')->willReturn($stored);
+		$this->service->expects($this->once())
+			->method('resolveEffectivePrice')
+			->with($stored, 1.0, null, null, null)
+			->willReturn(['unitPrice' => 40.0]);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $this->controller->resolvePrice()->getStatus());
+	}//end testResolvePriceForAReaderTakesTheIdOfTheProductObject()
+
+	/**
+	 * A product the caller cannot read is not found, and nothing is priced.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-1
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceRefusesAProductTheCallerCannotRead(): void {
+		$this->loginAs(uid: 'sales-rep', isPos: false);
+		$this->withParams(params: ['productId' => 'p-hidden', 'quantity' => 1]);
+		$this->reader->method('read')->willReturn(null);
+		$this->service->expects($this->never())->method('resolveEffectivePrice');
+
+		$response = $this->controller->resolvePrice();
+
+		$this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'Product not found'], actual: $response->getData());
+	}//end testResolvePriceRefusesAProductTheCallerCannotRead()
+
+	/**
+	 * A quote or lead line names its variant by code: the code reaches the
+	 * resolver, and a code the product does not carry answers 404, so the
+	 * line form keeps the price it had.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#29.1
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceForAReaderPassesTheVariantCodeAndRefusesAnUnknownOne(): void {
+		$this->loginAs(uid: 'sales-rep', isPos: false);
+		$this->withParams(params: ['productId' => 'p-shirt', 'quantity' => 2, 'variantSku' => 'WS-L']);
+		$stored = ['id' => 'p-shirt', 'unitPrice' => 25.0, 'variants' => [['sku' => 'WS-M', 'unitPrice' => 27.5]]];
+		$this->reader->method('read')->willReturn($stored);
+		$this->service->expects($this->once())
+			->method('resolveEffectivePrice')
+			->with($stored, 2.0, 'WS-L', null, null)
+			->willThrowException(new OCSNotFoundException('Variant niet gevonden.'));
+
+		$response = $this->controller->resolvePrice();
+
+		$this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
+	}//end testResolvePriceForAReaderPassesTheVariantCodeAndRefusesAnUnknownOne()
+
+	/**
+	 * The till prices the product object it sends, and reads nothing.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-products-quote-from-lead/tasks.md#task-1
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceForAPosOperatorPricesThePayload(): void {
+		$this->loginAs();
+		$this->withParams(params: ['productId' => 'p-1', 'product' => ['unitPrice' => 7.0], 'quantity' => 1]);
+		$this->reader->expects($this->never())->method('read');
+		$this->service->expects($this->once())
+			->method('resolveEffectivePrice')
+			->with(['unitPrice' => 7.0], 1.0, null, null, null)
+			->willReturn(['unitPrice' => 7.0]);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $this->controller->resolvePrice()->getStatus());
+	}//end testResolvePriceForAPosOperatorPricesThePayload()
+
+	/**
 	 * @return void
 	 */
 	public function testResolvePriceForwardsQuantityAndVariantSku(): void {
@@ -353,6 +472,62 @@ class ProductCatalogControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame(8.0, $response->getData()['unitPrice']);
 	}//end testResolvePriceForwardsQuantityAndVariantSku()
+
+	/**
+	 * A client id is read with the caller's rights and handed to the resolver with the currency.
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceReadsTheClientAndPassesItWithTheCurrency(): void {
+		$this->loginAs();
+		$this->withParams(['product' => ['id' => 'p-1'], 'quantity' => 2, 'clientId' => ' c-9 ', 'currency' => 'eur']);
+		$client = ['id' => 'c-9', 'segment' => 'public-sector'];
+		$this->reader->expects($this->once())->method('read')->with('c-9', 'client_schema')->willReturn($client);
+
+		$this->service->expects($this->once())
+			->method('resolveEffectivePrice')
+			->with(['id' => 'p-1'], 2.0, null, $client, 'eur')
+			->willReturn(['unitPrice' => 95.0, 'source' => 'price-list', 'priceListTitle' => 'Overheid 2027']);
+
+		$response = $this->controller->resolvePrice();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('Overheid 2027', $response->getData()['priceListTitle']);
+	}//end testResolvePriceReadsTheClientAndPassesItWithTheCurrency()
+
+	/**
+	 * A client the caller cannot read is not found, and nothing is priced.
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceRefusesAClientTheCallerCannotRead(): void {
+		$this->loginAs();
+		$this->withParams(['product' => ['id' => 'p-1'], 'quantity' => 1, 'clientId' => 'c-other']);
+		$this->reader->method('read')->willReturn(null);
+		$this->service->expects($this->never())->method('resolveEffectivePrice');
+
+		$response = $this->controller->resolvePrice();
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertSame(['error' => 'Client not found'], $response->getData());
+	}//end testResolvePriceRefusesAClientTheCallerCannotRead()
+
+	/**
+	 * Without a client id no client is read and the resolver gets none.
+	 *
+	 * @return void
+	 */
+	public function testResolvePriceWithoutAClientReadsNone(): void {
+		$this->loginAs();
+		$this->withParams(['product' => ['unitPrice' => 5.0], 'quantity' => 1, 'clientId' => '']);
+		$this->reader->expects($this->never())->method('read');
+		$this->service->expects($this->once())
+			->method('resolveEffectivePrice')
+			->with(['unitPrice' => 5.0], 1.0, null, null, null)
+			->willReturn(['unitPrice' => 5.0]);
+
+		$this->assertSame(Http::STATUS_OK, $this->controller->resolvePrice()->getStatus());
+	}//end testResolvePriceWithoutAClientReadsNone()
 
 	// ---- resolvePrice (money contract, real service) ------------------------
 

@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-130-pipelinq-declares-its-outside-connections-in-one-static-file
+ * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-130-pipelinq-declares-its-outside-connections-in-one-static-file
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -267,8 +267,8 @@ class ConnectionsDeclarationTest extends TestCase {
 	 */
 	public function testEverySettingsLinkLandsOnSomethingThatExists(): void {
 		$anchors = [
-			'/settings/admin/pipelinq#section-cti' => 'src/views/settings/CtiPage.vue',
-			'/settings/admin/pipelinq#section-mail-transports' => 'src/views/settings/DeliverabilitySettings.vue',
+			'/settings/admin/pipelinq?tab=connections#section-cti' => 'src/views/settings/CtiSettings.vue',
+			'/settings/admin/pipelinq?tab=marketing#section-mail-transports' => 'src/views/settings/DeliverabilitySettings.vue',
 		];
 		$socialFragment = (string)file_get_contents($this->root() . '/src/manifest.d/78-social-publishing.json');
 		$linked         = 0;

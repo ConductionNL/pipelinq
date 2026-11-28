@@ -49,8 +49,12 @@
 			</table>
 		</div>
 
+		<p class="lead-contact-roles__note">
+			{{ t('pipelinq', 'Roles: decision maker, influencer, gatekeeper, champion, evaluator, end user.') }}
+		</p>
+
 		<div class="lead-contact-roles__footer">
-			<NcButton variant="secondary" @click="showAddDialog = true">
+			<NcButton class="cn-button--tonal" variant="secondary" @click="showAddDialog = true">
 				{{ t('pipelinq', 'Add contact role') }}
 			</NcButton>
 		</div>
@@ -70,16 +74,10 @@
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import AddContactRoleDialog from '../dialogs/AddContactRoleDialog.vue'
+import { crmRoleLabel, crmRoleOptions, sortByCrmRole } from '../services/crmRoles.js'
+import { linkedEntityName } from '../services/relationshipPayloads.js'
 import { useObjectStore } from '../store/modules/object.js'
 
-const CRM_ROLES = [
-	{ value: 'beslisser', label: 'Beslisser (Decision Maker)', order: 1 },
-	{ value: 'beinvloeder', label: 'Beinvloeder (Influencer)', order: 2 },
-	{ value: 'gatekeeper', label: 'Gatekeeper', order: 3 },
-	{ value: 'kampioen', label: 'Kampioen (Champion)', order: 4 },
-	{ value: 'evaluator', label: 'Evaluator', order: 5 },
-	{ value: 'gebruiker', label: 'Gebruiker (End User)', order: 6 },
-]
 
 export default {
 	name: 'LeadContactRoles',
@@ -109,28 +107,24 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-5
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-7
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-7
 		 */
 		roleOptions() {
-			return CRM_ROLES
+			return crmRoleOptions()
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-9
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-9
 		 */
 		sortedContactRoles() {
-			return [...this.contactRoles].sort((a, b) => {
-				const aOrder = CRM_ROLES.find((r) => r.value === a.type)?.order || 99
-				const bOrder = CRM_ROLES.find((r) => r.value === b.type)?.order || 99
-				return aOrder - bOrder
-			})
+			return sortByCrmRole(this.contactRoles)
 		},
 	},
 
@@ -140,7 +134,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-2
 		 */
 		async fetchRoles() {
 			this.loading = true
@@ -168,22 +162,10 @@ export default {
 
 		/**
 		 * @param {string} entityId Identifier of the linked entity.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-4
 		 */
 		async loadEntityName(entityId) {
-			try {
-				const entity = await this.objectStore.fetchObject(
-					'contact',
-					entityId,
-				)
-				if (entity) {
-					this.entityNameCache[entityId] = entity.name || entityId
-				} else {
-					this.entityNameCache[entityId] = t('pipelinq', '[Deleted]')
-				}
-			} catch {
-				this.entityNameCache[entityId] = entityId
-			}
+			this.entityNameCache[entityId] = await linkedEntityName(this.objectStore, { id: entityId, type: 'contact' })
 		},
 
 		getEntityName(entityId) {
@@ -192,16 +174,15 @@ export default {
 
 		/**
 		 * @param {string} roleType The stored role type.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-3
 		 */
 		getRoleLabel(roleType) {
-			const role = CRM_ROLES.find((r) => r.value === roleType)
-			return role ? role.label : roleType
+			return crmRoleLabel(roleType)
 		},
 
 		/**
 		 * @param {string} query The search term typed by the user.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-8
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-8
 		 */
 		async searchContacts(query) {
 			if (this.searchTimeout) {
@@ -229,7 +210,7 @@ export default {
 
 		/**
 		 * @param {object} form The role to add.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-1
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-1
 		 */
 		async addRole(form) {
 			if (!form || !form.toContact || !form.type) {
@@ -259,7 +240,7 @@ export default {
 
 		/**
 		 * @param {object} role The role to remove.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-6
+		 * @spec openspec/changes/archive/2026-05-31-reverse-2026-05-26-fe-leads-ui/tasks.md#task-6
 		 */
 		async removeRole(role) {
 			if (!confirm(t('pipelinq', 'Remove this contact role from the lead?'))) {
@@ -287,6 +268,11 @@ export default {
 	text-align: center;
 }
 
+.lead-contact-roles__note {
+	color: var(--color-text-maxcontrast);
+	margin-top: 8px;
+}
+
 .lead-contact-roles__footer {
 	margin-top: 12px;
 }
@@ -312,133 +298,29 @@ export default {
 }
 
 .role-badge--beslisser {
-	background: #dbeafe;
-	color: #1e40af;
+	background: var(--color-primary-element-light, #dbeafe);
+	color: var(--color-primary-element-light-text, #1e40af);
 }
 
 .role-badge--beinvloeder {
-	background: #fef3c7;
-	color: #92400e;
+	background: var(--color-warning-light, #fef3c7);
+	color: var(--color-warning-text, #92400e);
 }
 
 .role-badge--gatekeeper {
-	background: #fce7f3;
-	color: #9d174d;
+	background: var(--color-background-dark, #fce7f3);
+	color: var(--color-main-text, #9d174d);
 }
 
 .role-badge--kampioen {
-	background: #dcfce7;
-	color: #166534;
+	background: var(--color-success-light, #dcfce7);
+	color: var(--color-success-text, #166534);
 }
 
 .role-actions {
 	display: flex;
 	gap: 4px;
 }
-
-.viewTableContainer {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	box-shadow: 0 2px 4px var(--color-box-shadow);
-	border: 1px solid var(--color-border);
-}
-
-.viewTable {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.viewTable th,
-.viewTable td {
-	padding: 8px 12px;
-	text-align: start;
-	border-bottom: 1px solid var(--color-border);
-	vertical-align: middle;
-}
-
-.viewTable th {
-	background-color: var(--color-background-dark);
-	font-weight: 500;
-	color: var(--color-text-maxcontrast);
-	font-size: 13px;
-}
-
-.viewTableRow {
-	transition: background-color 0.2s ease;
-}
-
-.viewTableRow:hover {
-	background: var(--color-background-hover);
-}
-
-/* Dialog styles */
-.create-overlay {
-	position: fixed;
-	top: 0;
-	inset-inline: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 10000;
-}
-
-.create-dialog {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius-large);
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-	width: 500px;
-	max-width: 90vw;
-	max-height: 85vh;
-	overflow-y: auto;
-}
-
-.create-dialog__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 16px 20px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.create-dialog__header h3 {
-	margin: 0;
-}
-
-.create-dialog__body {
-	padding: 20px;
-}
-
-.form-group {
-	margin-bottom: 12px;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 4px;
-	font-weight: bold;
-	font-size: 13px;
-}
-
-.form-group textarea {
-	width: 100%;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	resize: vertical;
-}
-
-.form-actions {
-	display: flex;
-	gap: 8px;
-	margin-top: 16px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.viewTableRow {
-		transition: none;
-	}
-}
 </style>
+
+<style scoped src="./viewTable.css"></style>

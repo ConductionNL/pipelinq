@@ -92,19 +92,66 @@ class KvkApiClientTest extends TestCase {
 	}//end legacyOnlyGetCallback()
 
 	/**
-	 * Test search returns empty for empty API key.
+	 * Without an API key the OpenRegister KvK source still answers: it holds
+	 * its own credentials (or is the mock on a demo instance). Only the direct
+	 * KvK path needs the key, so that path is skipped and nothing is called.
 	 *
 	 * @return void
 	 */
-	public function testSearchReturnsEmptyForEmptyApiKey(): void {
-		$clientService = $this->createMock(IClientService::class);
-		$logger = $this->createMock(LoggerInterface::class);
-		$resultMapper = new KvkResultMapper();
+	public function testSearchWithoutApiKeyUsesOpenRegisterAndSkipsTheDirectPath(): void {
+		$legacyHit = false;
+		$response = $this->createMock(IResponse::class);
+		$response->method('getStatusCode')->willReturn(200);
+		$response->method('getBody')->willReturn(json_encode(['results' => [['kvkNummer' => '69599084', 'naam' => 'Conduction B.V.', 'type' => 'hoofdvestiging']]]));
 
-		$client = new KvkApiClient($clientService, $this->appConfigMock(), $logger, $resultMapper, $this->urlGen());
+		$httpClient = $this->createMock(IClient::class);
+		$httpClient->method('get')->willReturnCallback(
+			static function (string $uri, array $options = []) use (&$legacyHit, $response): IResponse {
+				if (str_contains($uri, 'integrations/kvk') === true) {
+					return $response;
+				}
+
+				$legacyHit = true;
+				throw new \RuntimeException('no key: the direct path must not be called');
+			}
+		);
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->method('newClient')->willReturn($httpClient);
+
+		$client = new KvkApiClient($clientService, $this->appConfigMock(), $this->createMock(LoggerInterface::class), new KvkResultMapper(), $this->urlGen());
+		$results = $client->search('', ['sbiCodes' => ['56', '47']]);
+
+		$this->assertFalse($legacyHit);
+		$this->assertCount(1, $results);
+		$this->assertSame('69599084', $results[0]['kvkNumber']);
+	}//end testSearchWithoutApiKeyUsesOpenRegisterAndSkipsTheDirectPath()
+
+	/**
+	 * Without an API key and without the OpenRegister source, nothing is found
+	 * and the direct KvK path is not called.
+	 *
+	 * @return void
+	 */
+	public function testSearchWithoutApiKeyAndWithoutOpenRegisterIsEmpty(): void {
+		$legacyHit = false;
+		$httpClient = $this->createMock(IClient::class);
+		$httpClient->method('get')->willReturnCallback(
+			static function (string $uri, array $options = []) use (&$legacyHit): IResponse {
+				if (str_contains($uri, 'integrations/kvk') === false) {
+					$legacyHit = true;
+				}
+
+				throw new \RuntimeException('unavailable');
+			}
+		);
+		$clientService = $this->createMock(IClientService::class);
+		$clientService->method('newClient')->willReturn($httpClient);
+
+		$client = new KvkApiClient($clientService, $this->appConfigMock(), $this->createMock(LoggerInterface::class), new KvkResultMapper(), $this->urlGen());
 
 		$this->assertSame([], $client->search('', ['sbiCodes' => ['62']]));
-	}//end testSearchReturnsEmptyForEmptyApiKey()
+		$this->assertFalse($legacyHit);
+	}//end testSearchWithoutApiKeyAndWithoutOpenRegisterIsEmpty()
 
 	/**
 	 * Test search returns empty for empty SBI codes.

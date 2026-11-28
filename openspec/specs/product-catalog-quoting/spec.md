@@ -6,7 +6,7 @@ status: done
 
 ## Purpose
 
-@e2e exclude draft/unbuilt spec — quote generation and PDF export not yet implemented; no UI surface to test
+The smallest working quote is built (products-quote-from-lead, archived 2026-11-25): lines from the catalogue priced by the resolver, a PDF rendered through filinq, mailed and logged (REQ-QSLICE-001 to 004, `tests/e2e/quote-from-lead.spec.ts`). The requirements marked [Enterprise] (quote entity lifecycle, versions, acceptance, conversion to an order) are not built.
 
 Extend the existing product catalog with quote generation capabilities: line items with quantities and discounts, quote lifecycle management, and PDF proposal generation. For government context, maps to "producten en diensten" offerings with formal pricing.
 
@@ -20,7 +20,9 @@ The existing product-catalog spec covers product entities and categories. This s
 **Competitor context:** Krayin CRM provides a full Quote module with QuoteItems, billing/shipping addresses, and person/user linkage. EspoCRM's Advanced Pack adds quote generation with PDF templates. Twenty CRM does not have native quoting. This spec positions Pipelinq as competitive with Krayin while leveraging Nextcloud's Docudesk for PDF generation and NL Design tokens for government-branded output.
 
 ---
+
 ## Requirements
+
 ### Requirement: Quote entity [Enterprise]
 The system MUST provide a Quote entity stored as an OpenRegister object in the `pipelinq` register, using the `schema:Offer` type annotation. Each Quote is linked to a lead and contains metadata for the proposal lifecycle.
 
@@ -302,9 +304,9 @@ The system MUST provide dedicated list and detail views for managing quotes, acc
 ### Requirement: Quote-to-order conversion [Enterprise]
 The system MUST support converting accepted quotes into actionable records for order fulfillment or case creation.
 
-#### Scenario: Convert accepted quote to case
+#### Scenario: Convert accepted quote to a request
 - GIVEN a quote in status "geaccepteerd"
-- WHEN the user clicks "Omzetten naar zaak"
+- WHEN the user clicks "Omzetten naar verzoek"
 - THEN the system MUST create a new request (verzoek) in Pipelinq
 - AND the request MUST contain: client reference, contact reference, quote reference, and description composed from the quote title and line items
 - AND the request MUST be linked to the original lead
@@ -417,7 +419,7 @@ The system MUST provide admin-configurable settings for the quoting module.
 The system MUST support searching and cross-referencing quotes across the CRM.
 
 #### Scenario: Search by quote number
-- GIVEN the global search or quote list search
+- GIVEN Nextcloud's unified search; pipelinq has no quote list of its own, and a lead lists its quotes on its Offertes tab (board `PqLead`)
 - WHEN the user searches for "OFF-2026-004"
 - THEN all quotes matching the partial number MUST be returned
 
@@ -461,6 +463,110 @@ When the `quote` schema is registered (per the Quote entity requirement of this 
 - THEN the "Send to invoicing" action MUST NOT be rendered
 - AND a direct endpoint call MUST be refused with a not-available error
 - `@e2e exclude` Enterprise-tier, unbuilt quote schema — no runtime surface in this change.
+
+### Requirement: The quote page shows every field of the quote card and a history in words
+
+The quote detail page MUST show all eight fields of the Offerte card without a "Show all fields" fold, and its History card MUST describe each entry in words on compact rows.
+
+#### Scenario: a draft quote
+
+@e2e exclude Asserted in tests/vitest/quotesBoardLook.spec.js; the pixel check against board PqOfferte covers the drawn cards.
+
+- GIVEN a draft quote made from a lead
+- WHEN the user opens the quote
+- THEN the Offerte card shows Lead, Klant, Contact, Titel, Verzenddatum, Vervaldatum, Toegewezen aan and Betalingstermijn
+- AND the History card lists "Aangemaakt door" with the author for the creation and "Bijgewerkt" for a change
+- AND a status change to sent, accepted, rejected or ordered reads as that status
+
+### Requirement: The quote form edits the lines as a table
+
+The quote form MUST show the quote's lines as a table in the form, where a line is added from a product search, its description, quantity, unit price and discount are changed in place, and the line total and the subtotal excl. VAT are shown as they change. The lines MUST be saved as their own quote line objects after the quote, and a line's total MUST be stored on the line.
+
+#### Scenario: A discounted line
+
+- GIVEN a quote in its form
+- WHEN the salesperson adds Adviesuur at 100, quantity 2, discount 10%
+- THEN the line total MUST read 180,00
+- AND after saving, the quote line MUST be stored with total 180 and the quote as its quote
+
+#### Scenario: The subtotal
+
+- GIVEN the lines 180,00 and 45,00
+- THEN the table MUST show "Subtotal excl. VAT" 225,00
+
+### Requirement: The server keeps the quote totals with its lines
+
+When a quote line is created, changed or deleted, the system MUST write the quote's subtotal (per line quantity times unit price, less the discount in percent), its VAT at the quote's VAT rate (21% when the quote names none) and its total, rounded to cents. A quote without lines MUST have 0 for all three.
+
+#### Scenario: A line is added
+
+- GIVEN a quote at 9% VAT with a line of 2 x 100 less 10%
+- WHEN a line of 1 x 20 is added
+- THEN the quote MUST read subtotal 200,00, VAT 18,00 and total 218,00
+
+#### Scenario: The last line is removed
+
+- GIVEN a quote with one line
+- WHEN that line is deleted
+- THEN the quote MUST read subtotal, VAT and total 0,00
+
+### Requirement: A line is filled from the catalogue (REQ-QSLICE-001)
+
+Adding a line to a lead MUST let the user pick a product and MUST fill the unit price, unit and VAT rate from the price resolver for the entered quantity. The user MUST be able to overwrite the unit price.
+
+#### Scenario: Tier price
+
+- **GIVEN** the product "Advies" has a tier of 10 euro per hour from 20 hours and 12 euro below that
+- **WHEN** Sanne adds 25 hours of "Advies" to the lead
+- **THEN** the line shows unit price 10 euro and the tier label
+
+#### Scenario: Negotiated price
+
+- **GIVEN** the same line
+- **WHEN** Sanne changes the unit price to 9 euro
+- **THEN** the line keeps 9 euro and shows no tier label
+
+### Requirement: A quote is sent as a PDF and logged (REQ-QSLICE-002)
+
+"Send quote" on a lead MUST render the lead's lines to a PDF through filinq, store the PDF in the sender's Files, mail it to the lead's contact or, without a contact email, the client, and log an outbound contact moment carrying the quote number, the total and a link to the file. When filinq is not installed the action MUST NOT be shown.
+
+#### Scenario: Send to the contact
+
+- **GIVEN** the lead "Nieuw kantoor" has two lines and a contact with an email address
+- **WHEN** Sanne chooses "Send quote", picks the quote template and a valid-until date
+- **THEN** the contact receives a mail with the PDF attached, and the lead's timeline shows an outbound contact moment "Offerte OFF-2026-0042"
+
+#### Scenario: No recipient
+
+- **GIVEN** the lead has no contact and the client has no email
+- **WHEN** Sanne chooses "Send quote"
+- **THEN** a message asks her to add an email address and nothing is sent or logged
+
+#### Scenario: filinq absent
+
+- **GIVEN** filinq is not installed
+- **WHEN** Sanne opens the lead
+- **THEN** no "Send quote" action is shown
+
+### Requirement: The quote shows VAT per rate (REQ-QSLICE-003)
+
+The quote MUST show, for each VAT rate present on the lines, the net amount, the VAT and the gross amount, and the totals excluding and including VAT.
+
+#### Scenario: Two rates
+
+- **GIVEN** a lead has one line of 1000 euro at 21 percent and one of 500 euro at 9 percent
+- **WHEN** the quote is rendered
+- **THEN** it shows VAT 210.00 and 45.00, total excluding VAT 1500.00 and total including VAT 1755.00
+
+### Requirement: A sent quote does not change afterwards (REQ-QSLICE-004)
+
+Editing a line after sending MUST NOT alter the stored PDF, and sending again MUST create a new quote number.
+
+#### Scenario: Second send
+
+- **GIVEN** Sanne sent OFF-2026-0042 and then changed a quantity
+- **WHEN** she sends the quote again
+- **THEN** a new PDF is created as OFF-2026-0043 and OFF-2026-0042 is unchanged
 
 ## Dependencies
 - Product catalog spec (Product and ProductCategory entities)

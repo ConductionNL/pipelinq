@@ -1,0 +1,22 @@
+# Tasks: contact-moments-keep-draft
+
+Reworked on 12 October 2026 onto OpenRegister's draft status (decisions 180, 201 and 216). Depends on OpenRegister's change `draft-owner-activation-and-lifetime`.
+
+- [x] 1.1 The draft is a `ticket` of type `interaction` in status `draft`; the `ticket` schema sets `draftLifetimeDays: 7` and `draftsListed: false`. No draft schema, no cleanup job in pipelinq
+  - Built: `lib/Settings/register.d/99-zzz-contact-moment-drafts.json`, `appinfo/info.xml` version bumped so the register re-imports
+  - Test: `tests/Unit/Settings/ContactMomentDraftTicketTest.php` loads the register with the real `ConfigFileLoaderService` and validates the autosaved draft and the saved contact moment against the merged ticket schema, each with a control
+  - Verify: register import logs no `PARTIAL IMPORT`; `occ config` shows both keys on `ticket` (live pass, decision 139)
+- [x] 1.2 Autosave in `ContactmomentQuickLog.vue`: two seconds after the last change, and on hidden with `keepalive`; an emptied form deletes the draft
+  - Test: `tests/vitest/contactMomentDraft.spec.js` with fake timers: one write after typing stops, an overwrite after the next change, none for an empty form
+- [x] 1.3 Restore banner on mount with Restore draft and Discard; Save makes the draft definitive through OpenRegister's owner action
+  - Test: `tests/vitest/contactMomentDraft.spec.js`: offer, restore, one POST to `/activate` with the whole form and no second ticket, a 422 keeps the form and the draft, a gone draft is saved as a new contact moment, Discard deletes the draft ticket, a colleague's draft is never offered
+  - [x] Verify: Playwright `tests/e2e/contact-moment-draft.spec.ts`: type, close the page, reopen ClientDetail, the draft is not in the client's ticket list, restore, save, same id and status active: written, runs in nightly (live pass, decision 139)
+    - Live pass 17 Nov 2026: not run to a pass. ClientDetail no longer mounts `ContactmomentQuickLog`: the relation-board layout renders only `client-panels`, and the header's Log contact opens a generic form without drafts, so the spec finds no `contactmoment-quicklog`. Needs a decision: mount the quick log on the board, or move the draft into the Log contact form.
+    - Decided 24 Nov 2026: mount the quick log on the board. `ContactmomentQuickLogWidget` (registry, `sectionWidget`) sits on top of the Contact moments tab of `client-panels`, above the contact moment list; the body section is removed so one page never runs two autosaving quick logs. The header's Log contact stays the generic form. The spec opens the tab before it types. Test: `tests/vitest/contactMomentQuickLogTab.spec.js`.
+- [x] 1.4 Session expiry: on 401 or 412 keep the form, show the message, fetch a fresh token and retry on Save
+  - Test: `tests/vitest/contactMomentDraft.spec.js`, for the plain save and for the owner action
+- [x] 1.5 Strings in all six locales and a section in `docs/Features/contactmomenten.md`
+  - Verify: `npm run test:l10n` exit 0
+- [x] 1.6 Live: with OpenRegister's branch deployed, a draft ticket on the archival `ticket` schema is discarded and removed for good; `occ background-job:execute` for `DraftExpiryJob` removes a draft older than seven days; the `newTicket` notification arrives on Save and not on the first autosave (live pass, decision 139)
+  - Live 28 Nov 2026 (sandbox NC 34.0.6 + MariaDB, OpenRegister main 4d96808d, pipelinq development 459782d5; users agent1 and bob in `sales`): the `ticket` schema carries `draftLifetimeDays: 7` and `draftsListed: false` after the register import. An autosaved draft (`@self.status: draft`, owner agent1) is in no ticket list for agent1 or bob. Discard: `DELETE` answers 204, a read 404, and the row is gone from the magic table (no soft-deleted copy). Expiry: a draft with `_updated` eight days back is removed by `occ background-job:execute --force-execute` of `DraftExpiryJob`, a fresh draft stays. Notification: after autosave and a cron run neither user has a notification and three never-saved drafts never get one; after Save through `/activate` with the quick log's `{object: ...}` body (same id, status active, assignee and occurredAt set), the next cron run delivers "Nieuw ticket: ..." to the assignee and the `sales` group.
+  - Seen on the way, not this change: `incomingCall` renders its subject as "Inkomende oproep van {{client}}" when the telephone ticket has no client.

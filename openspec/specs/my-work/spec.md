@@ -61,38 +61,34 @@ Within each temporal group, items MUST be sorted by priority first, then by due 
 #### Scenario: Items without due date positioning
 @e2e exclude requires items without due dates
 - WHEN items exist without a due date
-- THEN they MUST be grouped in the "No Due Date" section
+- THEN they MUST be grouped in the "Wacht op mij" section
 
 ---
 
-### Requirement: Temporal Grouping [MVP]
+### Requirement: Grouping by what to do [MVP]
 
-Items MUST be organized into four temporal groups displayed top to bottom: Overdue, Due This Week, Upcoming, No Due Date. Empty groups MUST be hidden.
+Items MUST be organised into three groups, top to bottom, by what the user has to do: "Vandaag beantwoorden", "Wacht op mij" and "Wacht op de klant". Each row MUST show its own term, such as "1 dag over tijd". Empty groups MUST be hidden.
 
-#### Scenario: Overdue group
+#### Scenario: The term is today or has passed
 @e2e exclude requires items with past due dates
-- WHEN a lead has expectedCloseDate in the past
-- THEN it MUST appear in the "Overdue" group with "N days overdue" displayed
+- WHEN an item's term is today or has passed
+- THEN it MUST appear in "Vandaag beantwoorden", under the hint "termijn is vandaag of verstreken"
+- AND a term that has passed MUST read "N dagen over tijd" on the row
 
-#### Scenario: Due This Week group
-@e2e exclude requires items due this week
-- WHEN a lead has expectedCloseDate within the current calendar week (today through Sunday)
-- THEN it MUST appear in the "Due This Week" group
+#### Scenario: The customer has reacted
+@e2e exclude requires items with a customer reaction
+- WHEN the customer has reacted, or the next step is the user's and the term is later
+- THEN the item MUST appear in "Wacht op mij", under the hint "de klant heeft gereageerd"
 
-#### Scenario: Upcoming group
-@e2e exclude requires future-dated items
-- WHEN a lead has expectedCloseDate after the current week
-- THEN it MUST appear in the "Upcoming" group
+#### Scenario: The customer has to act
+@e2e exclude requires items waiting on the customer
+- WHEN an item has status waiting for the customer
+- THEN it MUST appear in "Wacht op de klant", under the hint "niets te doen tot ze reageren"
 
-#### Scenario: No Due Date group
+#### Scenario: An item without a term
 @e2e exclude requires items without due dates
-- WHEN an item has no due date set
-- THEN it MUST appear in the "No Due Date" group (last group)
-
-#### Scenario: Section item counts
-@e2e exclude requires assigned items
-- WHEN a group contains items
-- THEN the group header MUST display its item count (e.g., "Overdue (2)")
+- WHEN an item has no term and is not waiting for the customer
+- THEN it MUST appear in "Wacht op mij"
 
 #### Scenario: Empty group behavior
 @e2e exclude requires controlled data state
@@ -120,17 +116,17 @@ The system MUST allow filtering by entity type: All (default), Leads, Requests.
 
 ### Requirement: Overdue Item Highlighting [MVP]
 
-Overdue items MUST be visually distinct with red indicators and "N days overdue" text.
+Overdue items MUST be visually distinct with red indicators and "N dagen over tijd" text.
 
 #### Scenario: Overdue visual treatment
 @e2e exclude requires overdue items
 - WHEN an item is overdue
-- THEN it MUST display a red visual indicator and "N days overdue" in red text
+- THEN it MUST display a red visual indicator and "N dagen over tijd" in red text
 
 #### Scenario: Due today is not overdue
 @e2e exclude requires item due today
 - WHEN an item is due today
-- THEN it MUST appear in "Due This Week" (not Overdue)
+- THEN it MUST appear in "Vandaag beantwoorden", without "over tijd"
 - AND it SHOULD show "Due today" as a warning indicator
 
 ---
@@ -291,6 +287,254 @@ completed items.
 - WHEN the agent opens My Work
 - THEN both appear under Tickets, one badged as a complaint, one as a request
 
+### Requirement: My work lists all my items in one list
+
+`GET /api/worklist/items` MUST return the session user's open tickets (requests, complaints, reports, contact moments), leads that are not in a closed stage, and open follow-up tasks in one shape: `{ kind, id, title, priority, channel, clientName, routeName, record, dueAt, bucket, dueGroup }`.
+- `bucket` is `waiting-on-customer` for a ticket waiting on the customer, `answer-today` for an item due today or earlier, and `waiting-on-me` otherwise.
+- `dueGroup` is `late`, `today`, `week`, `later` or `none`.
+- `?bucket=`, `?lens=tickets|leads|tasks`, `?sort=deadline|waiting|newest|priority` and `?done=1` narrow and order the items.
+- `?format=csv` downloads them.
+
+My work's three lists MUST read this endpoint. On a phone the page MUST draw one list grouped by `dueGroup`.
+
+#### Scenario: A lead and a follow-up stand in the lists with the tickets
+- GIVEN Pieter has a request due yesterday, a lead closing yesterday, and a follow-up due in three days
+- WHEN My work opens
+- THEN "Vandaag beantwoorden" lists the lead and the request, each with its kind pill
+- AND "Wacht op mij" lists the follow-up
+
+#### Scenario: The phone groups by due
+- GIVEN the same items
+- WHEN My work opens 375px wide
+- THEN one list shows "Te laat" with the lead and the request, then "Deze week" with the follow-up
+
+### Requirement: KPI summary tiles on My work (REQ-MW-090)
+
+**Feature tier**: V1
+
+My work SHALL show a row of four tiles headed "Your week so far", taken from board `PqMijnWerk`: "Answered", "Within the deadline", "Average answer time" and "Converted to a case". Each tile MUST count only the current user's own tickets over the current calendar week, and MUST carry a one-line note under the value (answered today, the team's figure, the agreed answer time, where converted cases went). The tiles MUST NOT show team or organisation totals unless the user switched scope (REQ-MW-180).
+
+#### Scenario: The tiles show the user's own week
+- **GIVEN** the agent answered 14 tickets this week, 4 of them today, and 13 of the 14 within their deadline
+- **WHEN** the agent opens My work
+- **THEN** "Your week so far" shows "Answered" 14 with the note "4 today"
+- **AND** "Within the deadline" shows 93% with the team's percentage as its note
+
+#### Scenario: A week with nothing answered yet
+- **GIVEN** it is Monday morning and the agent has answered nothing this week
+- **WHEN** the agent opens My work
+- **THEN** "Answered" shows 0 and "Average answer time" shows a dash, not 0 days
+- **AND** no tile is styled as an error
+
+#### Scenario: A filter does not change the week
+- **GIVEN** the agent selects the "Leads" type filter
+- **WHEN** the list narrows to leads
+- **THEN** the four tiles keep their values, because they describe the week, not the list
+
+### Requirement: Quick actions on My work (REQ-MW-100)
+
+**Feature tier**: V1
+
+My work SHALL offer "New ticket" and "New contact" in its header, as on board `PqMijnWerk`, and no "New lead". Each MUST open the existing create dialog of that entity as a modal over My work, with the assignee set to the current user where the entity has one. After a ticket is saved, the list MUST refresh and include it.
+
+#### Scenario: A ticket created from My work lands on My work
+- **GIVEN** the agent is on My work
+- **WHEN** the agent chooses "New ticket", fills in the subject and saves
+- **THEN** the new ticket's assignee is the agent
+- **AND** My work shows the new ticket without a page reload
+
+#### Scenario: A new contact does not change the list
+- **GIVEN** the agent is on My work
+- **WHEN** the agent chooses "New contact" and saves a contact
+- **THEN** the contact's detail page opens
+- **AND** the My work list is unchanged, because a contact is not work
+
+#### Scenario: My work has no lead button
+- **GIVEN** a user who may create leads
+- **WHEN** the user opens My work
+- **THEN** "New lead" is not shown in the header
+
+### Requirement: Recent activity on my items (REQ-MW-110)
+
+**Feature tier**: V1
+
+My work SHALL include a collapsible "Recent activity" section listing the 10 most recent changes to items assigned to the current user, read from OpenRegister's audit trail of those objects. Each entry MUST show the type badge, the item's title, a relative time ("2 h ago") and what changed when the audit trail names it. The collapsed or open state MUST be remembered per user. No board draws this section yet.
+
+#### Scenario: Changes on my items since yesterday
+- **GIVEN** a colleague changed the status of a ticket assigned to the agent two hours ago
+- **WHEN** the agent opens My work
+- **THEN** "Recent activity" lists that ticket with "2 h ago" and the status change
+
+#### Scenario: An entry opens its item
+- **GIVEN** "Recent activity" lists a lead
+- **WHEN** the agent clicks the entry
+- **THEN** the lead's detail page opens
+
+#### Scenario: Collapsed stays collapsed
+- **GIVEN** the agent collapsed "Recent activity"
+- **WHEN** the agent reloads My work
+- **THEN** the section is still collapsed
+
+#### Scenario: Nothing changed
+- **GIVEN** no item assigned to the agent changed in the last 30 days
+- **WHEN** the agent opens "Recent activity"
+- **THEN** it reads "No recent activity on your items"
+
+### Requirement: Upcoming follow-ups read at a glance (REQ-MW-120)
+
+**Feature tier**: V1
+
+A follow-up is a `crmTask` assigned to the current user; My work already lists them under the "Follow-ups" filter. A follow-up row SHALL show when it is planned, as on board `PqMijnWerk`: the time for a follow-up planned today ("planned 14:00"), and a relative day otherwise ("Tomorrow", "In 3 days"). A follow-up planned today MUST be marked "Follow-up today". An open follow-up past its deadline MUST sit in the Overdue group with "N days overdue". The system MUST NOT add a second follow-up date to the lead schema.
+
+#### Scenario: A call-back planned this afternoon
+- **GIVEN** a follow-up task "Call back about the parking permit" with deadline today 14:00, assigned to the agent
+- **WHEN** the agent opens My work
+- **THEN** the row reads "planned 14:00" and is marked "Follow-up today"
+
+#### Scenario: A follow-up later this week
+- **GIVEN** a follow-up task due in three days
+- **WHEN** the agent opens My work
+- **THEN** the row reads "In 3 days"
+
+#### Scenario: A missed follow-up
+- **GIVEN** a follow-up task whose deadline was two days ago and which is not completed
+- **WHEN** the agent opens My work
+- **THEN** the row is in the Overdue group and reads "2 days overdue"
+
+### Requirement: Upcoming meetings from the calendar (REQ-MW-130)
+
+**Feature tier**: V1
+
+My work SHOULD show an "Upcoming meetings" section with the current user's calendar events of the next 7 days that are linked to a Pipelinq client, contact or lead, read through `OCP\Calendar\IManager` from the user's own calendars only. Each entry MUST show the title, the date and time, and the linked record's name. When the Calendar app is not installed, or no linked event falls in the window, the section MUST be hidden without an error. No board draws this section yet.
+
+#### Scenario: A meeting with a client this week
+- **GIVEN** the agent has a calendar event on Thursday whose description links client "Bakkerij De Jong"
+- **WHEN** the agent opens My work
+- **THEN** "Upcoming meetings" lists the event with its date, time and "Bakkerij De Jong"
+
+#### Scenario: Another user's calendar stays out
+- **GIVEN** a colleague has a linked event in their own calendar
+- **WHEN** the agent opens My work
+- **THEN** that event is not listed
+
+#### Scenario: No Calendar app
+- **GIVEN** the Nextcloud Calendar app is not installed
+- **WHEN** the agent opens My work
+- **THEN** "Upcoming meetings" is not shown and no error appears
+
+### Requirement: Notification summary on My work (REQ-MW-140)
+
+**Feature tier**: V1
+
+My work SHALL show a badge in its header with the number of unread Pipelinq notifications of the current user (assignments, stage or status changes, notes), read through `OCP\Notification\IManager`. Opening the badge MUST list them with a type icon, the summary, a relative time and a link to the item. Opening a notification MUST mark it read and lower the count. With no unread notifications the badge MUST NOT be shown. No board draws this badge yet.
+
+#### Scenario: Two unread assignments
+- **GIVEN** two tickets were assigned to the agent since they last opened their notifications
+- **WHEN** the agent opens My work
+- **THEN** the header badge shows 2
+
+#### Scenario: Reading one lowers the count
+- **GIVEN** the badge shows 2
+- **WHEN** the agent opens the list and clicks one notification
+- **THEN** its item opens, the notification is marked read, and the badge shows 1
+
+#### Scenario: Nothing unread
+- **GIVEN** the agent has no unread Pipelinq notifications
+- **WHEN** the agent opens My work
+- **THEN** no badge is shown
+
+### Requirement: Customisable layout (REQ-MW-160)
+
+**Feature tier**: Enterprise
+
+`pipelinq/PqMijnWerkIndelen` draws this panel.
+
+The user SHALL be able to hide and reorder the sections of My work ("Your week so far", "Saved views", the work list, "Upcoming meetings", "Recent activity") from a layout panel, stored per user through `/api/settings/user`. "Terug naar de standaardindeling" MUST restore the order of board `PqMijnWerk`. The work list itself MUST NOT be hideable. No board draws the layout panel yet.
+
+#### Scenario: Hide a section
+- **GIVEN** the agent opens the layout panel
+- **WHEN** the agent switches off "Recent activity"
+- **THEN** the section disappears and stays hidden after a reload
+
+#### Scenario: Move a section up
+- **GIVEN** the agent opens the layout panel
+- **WHEN** the agent moves "Upcoming meetings" above the work list
+- **THEN** My work shows it above the list, also after a reload
+
+#### Scenario: Back to the default
+- **GIVEN** the agent changed the layout
+- **WHEN** the agent chooses "Terug naar de standaardindeling"
+- **THEN** every section is visible again in the board's order
+
+### Requirement: Role-based content (REQ-MW-180)
+
+**Feature tier**: V1
+
+My work SHALL show only the user's own items by default. A user in a group that Pipelinq's settings name as a team manager group MUST get a scope switch "My items / Team"; "Team" MUST list the open items of every member of the manager's team and switch the tiles (REQ-MW-090) to team figures, with a list of members and their open count. A Pipelinq admin MUST also get "Organisation", listing every open item. Every scope MUST still read under the user's own OpenRegister permissions. A saved view can carry a scope, as the board's "Permits, whole team" does.
+
+#### Scenario: An agent sees only their own items
+- **GIVEN** a user in no manager group
+- **WHEN** the user opens My work
+- **THEN** no scope switch is shown and every item is assigned to the user
+
+#### Scenario: A manager looks at the team
+- **GIVEN** a manager of a team of four
+- **WHEN** the manager switches to "Team"
+- **THEN** the list holds the open items of all four, and each member is listed with their open count
+
+#### Scenario: A manager narrows to one member
+- **GIVEN** the manager is on "Team"
+- **WHEN** the manager clicks one member
+- **THEN** the list holds only that member's items, and a "Back to team" control returns to the full team
+
+#### Scenario: An admin looks at the organisation
+- **GIVEN** a Pipelinq admin
+- **WHEN** the admin switches to "Organisation"
+- **THEN** the list holds every open item the admin may read
+
+### Requirement: Auto-refresh and a refresh button (REQ-MW-190)
+
+**Feature tier**: V1
+
+My work SHALL fetch its items again every 5 minutes while the page is open, without a page reload and without moving the scroll position, and SHALL offer a refresh button in its header that fetches at once. During a fetch the button MUST spin; the list MUST NOT be covered. When fetching fails and the data is older than 10 minutes, a warning MUST read "Data may be outdated. Last updated: <time>" with a retry button.
+
+#### Scenario: New work arrives on its own
+- **GIVEN** the agent has My work open
+- **WHEN** a ticket is assigned to the agent and 5 minutes pass
+- **THEN** the ticket appears in the list and the scroll position is unchanged
+
+#### Scenario: Refresh now
+- **GIVEN** the agent is on My work
+- **WHEN** the agent clicks the refresh button
+- **THEN** the items are fetched at once and the button spins until they arrive
+
+#### Scenario: The connection dropped
+- **GIVEN** fetching has failed for 11 minutes
+- **WHEN** the agent looks at My work
+- **THEN** the warning names the time of the last good fetch and offers "Retry"
+
+### Requirement: Priority and pipeline filters (REQ-MW-200)
+
+**Feature tier**: V1
+
+Next to the type filter, My work SHALL offer a priority filter (urgent, high, normal, low; several at once) and a pipeline filter for leads. The pipeline filter MUST leave tickets and follow-ups in the list unless the type filter removes them. The filter control MUST show how many filters are active ("Filters (3)") and offer "Clear filters", which returns to all types, all priorities and all pipelines. Grouping and sorting MUST stay as they are.
+
+#### Scenario: Urgent and high only
+- **GIVEN** the agent's items have mixed priorities
+- **WHEN** the agent selects "Urgent" and "High"
+- **THEN** only urgent and high items are listed, still in their groups
+
+#### Scenario: One pipeline
+- **GIVEN** the agent has leads in two pipelines and also tickets
+- **WHEN** the agent selects pipeline "Sales"
+- **THEN** only leads of "Sales" are listed among the leads, and the tickets stay
+
+#### Scenario: Three filters, then clear
+- **GIVEN** the agent set type "Leads", priority "Urgent" and pipeline "Sales"
+- **WHEN** the agent looks at the filter control
+- **THEN** it reads "Filters (3)"
+- **AND** after "Clear filters" every item is listed again
+
 ## UI Layout Reference
 
 The My Work view follows the wireframe in DESIGN-REFERENCES.md section 3.5:
@@ -299,20 +543,15 @@ The My Work view follows the wireframe in DESIGN-REFERENCES.md section 3.5:
 Header: "My Work"  [Filter: All | Leads | Requests]  [Show completed toggle]
 Subheader: "Leads (5) . Requests (3)  --  8 items total"
 
-[Overdue (2)]
+[Vandaag beantwoorden]  termijn is vandaag of verstreken
   - Item card (red highlight)
-  - Item card (red highlight)
-
-[Due This Week (3)]
-  - Item card
-  - Item card
   - Item card
 
-[Upcoming (2)]
+[Wacht op mij]  de klant heeft gereageerd
   - Item card
   - Item card
 
-[No Due Date (1)]
+[Wacht op de klant]  niets te doen tot ze reageren
   - Item card
 ```
 
@@ -331,7 +570,7 @@ Subheader: "Leads (5) . Requests (3)  --  8 items total"
 - Full `MyWork.vue` view exists at `src/views/MyWork.vue` with route `/my-work` (name `MyWork`) in `src/router/index.js`.
 - **REQ-MW-010 (Personal Workload View):** Fully implemented. Fetches leads and requests assigned to `OC.currentUser` via OpenRegister API. Shows entity type badge (LEAD/REQ), title, stage/status, pipeline name, value (leads only), due date, and priority badge.
 - **REQ-MW-020 (Sorting):** Implemented within each group -- items sorted by priority (urgent > high > normal > low), then by due date ascending.
-- **REQ-MW-030 (Temporal Grouping):** Fully implemented. Four groups: Overdue, Due This Week, Upcoming, No Due Date. Empty groups are hidden. Group headers include item count.
+- **REQ-MW-030 (Grouping by what to do):** Not built. The code groups by due date (Overdue, Due This Week, Upcoming, No Due Date); `pipelinq/PqMijnWerk` draws the three groups this spec now names.
 - **REQ-MW-040 (Filtering):** Implemented. Filter buttons for All, Leads, Requests. Item counts update with filter.
 - **REQ-MW-050 (Overdue Highlighting):** Implemented. Overdue items have red left border (`work-card--overdue`), red text showing "N days overdue". "Due today" warning is shown.
 - **REQ-MW-060 (Item Navigation):** Implemented. Clicking a card navigates to `LeadDetail` or `RequestDetail` via `$router.push`. Cards are keyboard accessible with `tabindex="0"` and `@keydown.enter`.

@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
 use Psr\Log\LoggerInterface;
@@ -46,14 +46,14 @@ class InvoiceSequenceService {
 	 *
 	 * @var string
 	 */
-	private const COUNTER_KEY = 'receipt_invoice_counter';
+	protected const COUNTER_KEY = 'receipt_invoice_counter';
 
 	/**
 	 * App-config key holding the year the counter belongs to.
 	 *
 	 * @var string
 	 */
-	private const COUNTER_YEAR_KEY = 'receipt_invoice_counter_year';
+	protected const COUNTER_YEAR_KEY = 'receipt_invoice_counter_year';
 
 	/**
 	 * Maximum number of transaction retries on a serialization conflict.
@@ -99,7 +99,7 @@ class InvoiceSequenceService {
 			try {
 				$next = $this->compareAndIncrement(year: $year);
 				if ($next > 0) {
-					return sprintf('%04d-%06d', $year, $next);
+					return $this->format(year: $year, number: $next);
 				}
 			} catch (\Throwable $e) {
 				$this->logger->warning(
@@ -111,6 +111,18 @@ class InvoiceSequenceService {
 
 		throw new RuntimeException('Could not allocate a unique invoice number.');
 	}//end next()
+
+	/**
+	 * Write a claimed counter value as the number handed out.
+	 *
+	 * @param int $year The calendar year.
+	 * @param int $number The claimed counter value.
+	 *
+	 * @return string The number, e.g. "2026-000042".
+	 */
+	protected function format(int $year, int $number): string {
+		return sprintf('%04d-%06d', $year, $number);
+	}//end format()
 
 	/**
 	 * Atomically claim the next counter value via a compare-and-set UPDATE.
@@ -130,37 +142,78 @@ class InvoiceSequenceService {
 	 * @spec openspec/specs/pos-receipt-engine/spec.md
 	 */
 	private function compareAndIncrement(int $year): int {
-		$storedYear = $this->appConfig->getValueInt(Application::APP_ID, self::COUNTER_YEAR_KEY, 0);
-		$current = $this->appConfig->getValueInt(Application::APP_ID, self::COUNTER_KEY, 0);
+		$storedYear = $this->appConfig->getValueInt(AppIdentity::APP_ID, static::COUNTER_YEAR_KEY, 0);
 
-		// New year (or first ever use): reset the sequence. The stored counter
-		// is zeroed so the compare-and-set below (expected: 0) matches and the
-		// first invoice of the new year becomes ...-000001. setValueInt is a no-op
-		// when the value already matches, so a concurrent caller that already
-		// reset is harmless.
+		// New year (or first ever use): reset the sequence so the first number
+		// of the year becomes 1. A concurrent caller that already reset is
+		// harmless: the compare-and-set below still lets only one caller win.
 		if ($storedYear !== $year) {
-			$this->appConfig->setValueInt(Application::APP_ID, self::COUNTER_YEAR_KEY, $year);
-			$this->appConfig->setValueInt(Application::APP_ID, self::COUNTER_KEY, 0);
-			$current = 0;
+			$this->appConfig->setValueInt(AppIdentity::APP_ID, static::COUNTER_YEAR_KEY, $year);
+			$this->resetCounter();
+		}
+
+		// Read the counter from the database, never from IAppConfig: its cache
+		// is filled once per process and does not see the compare-and-set
+		// writes, so a second allocation in the same process would read the
+		// old value and hand out the same number again.
+		$current = $this->readCounter();
+		if ($current === null) {
+			return $this->seedCounter();
 		}
 
 		$next = ($current + 1);
-		$affected = $this->casCounter(expected: $current, next: $next);
-		if ($affected === 1) {
+		if ($this->casCounter(expected: $current, next: $next) === 1) {
 			return $next;
-		}
-
-		// The row did not yet exist (no prior value): seed it atomically. If
-		// another caller seeded it first the seed affects 0 rows and we retry.
-		if ($current === 0) {
-			$seeded = $this->seedCounter();
-			if ($seeded === 1) {
-				return 1;
-			}
 		}
 
 		return 0;
 	}//end compareAndIncrement()
+
+	/**
+	 * The counter as stored in the database, or null when it has no row yet.
+	 *
+	 * @return int|null The stored counter value.
+	 *
+	 * @spec openspec/specs/pos-receipt-engine/spec.md
+	 */
+	protected function readCounter(): ?int {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('configvalue')
+			->from('appconfig')
+			->where($qb->expr()->eq('appid', $qb->createNamedParameter(AppIdentity::APP_ID)))
+			->andWhere($qb->expr()->eq('configkey', $qb->createNamedParameter(static::COUNTER_KEY)));
+
+		$result = $qb->executeQuery();
+		$value  = $result->fetchOne();
+		$result->closeCursor();
+
+		if ($value === false || $value === null) {
+			return null;
+		}
+
+		return (int)$value;
+	}//end readCounter()
+
+	/**
+	 * Set the stored counter back to 0 for a new year, in the database.
+	 *
+	 * Written straight to the table, not through IAppConfig, whose cache may
+	 * still hold an older value and then skip the write. When the row does not
+	 * exist yet the next allocation seeds it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/pos-receipt-engine/spec.md
+	 */
+	protected function resetCounter(): void {
+		$qb = $this->db->getQueryBuilder();
+		$qb->update('appconfig')
+			->set('configvalue', $qb->createNamedParameter('0'))
+			->where($qb->expr()->eq('appid', $qb->createNamedParameter(AppIdentity::APP_ID)))
+			->andWhere($qb->expr()->eq('configkey', $qb->createNamedParameter(static::COUNTER_KEY)));
+
+		$qb->executeStatement();
+	}//end resetCounter()
 
 	/**
 	 * Conditional UPDATE of the counter row: set to $next only if it equals
@@ -175,29 +228,31 @@ class InvoiceSequenceService {
 		$qb = $this->db->getQueryBuilder();
 		$qb->update('appconfig')
 			->set('configvalue', $qb->createNamedParameter((string)$next))
-			->where($qb->expr()->eq('appid', $qb->createNamedParameter(Application::APP_ID)))
-			->andWhere($qb->expr()->eq('configkey', $qb->createNamedParameter(self::COUNTER_KEY)))
+			->where($qb->expr()->eq('appid', $qb->createNamedParameter(AppIdentity::APP_ID)))
+			->andWhere($qb->expr()->eq('configkey', $qb->createNamedParameter(static::COUNTER_KEY)))
 			->andWhere($qb->expr()->eq('configvalue', $qb->createNamedParameter((string)$expected)));
 
 		return $qb->executeStatement();
 	}//end casCounter()
 
 	/**
-	 * Insert the counter row at value 1 if it does not yet exist.
+	 * Create the counter row at value 1 when it does not exist yet.
 	 *
-	 * Uses appConfig as the canonical writer (it INSERTs the row); the wrapping
-	 * compareAndIncrement retry handles the case where a concurrent caller seeds
-	 * first. Returns 1 when this call established the value 1, else 0.
+	 * Uses appConfig as the canonical writer (it INSERTs the typed row). Called
+	 * only when readCounter() found no row; the next() retry handles a
+	 * concurrent caller that seeds first. Returns 1 when this call established
+	 * the value 1, else 0.
 	 *
 	 * @return int 1 if this call set the value to 1, else 0.
+	 *
+	 * @spec openspec/specs/pos-receipt-engine/spec.md
 	 */
 	protected function seedCounter(): int {
-		$existing = $this->appConfig->getValueInt(Application::APP_ID, self::COUNTER_KEY, 0);
-		if ($existing !== 0) {
+		if ($this->readCounter() !== null) {
 			return 0;
 		}
 
-		$this->appConfig->setValueInt(Application::APP_ID, self::COUNTER_KEY, 1);
+		$this->appConfig->setValueInt(AppIdentity::APP_ID, static::COUNTER_KEY, 1);
 
 		return 1;
 	}//end seedCounter()

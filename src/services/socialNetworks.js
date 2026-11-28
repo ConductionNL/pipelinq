@@ -5,7 +5,7 @@
  * What the interface needs to know about each social network.
  *
  * Pure and dependency-free, so it can be unit-tested offline the way
- * `articleStatus.js` is.
+ * `templateArticlePicker.js` is.
  *
  * THE LIMITS ARE A MIRROR, NOT A SECOND OPINION. Every number here is the
  * same number the matching PHP adapter's `bodyLimit()` returns, and the
@@ -14,7 +14,7 @@
  * a composer that says a post fits and a server that refuses it, which is the
  * one failure this whole module exists to prevent.
  *
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 
 /** Every network the `socialAccount.network` enum declares, in its order. */
@@ -62,6 +62,42 @@ const PUBLICATION_CHIPS = {
 	skipped: { label: 'Skipped', color: 'var(--color-text-maxcontrast)' },
 }
 
+/** The networks whose visitor messages the social inbox reads (Meta's Graph API). */
+export const MESSAGING_NETWORKS = ['facebook', 'instagram']
+
+/**
+ * The messaging states the Social accounts page tells apart. Every
+ * `socialAccount.messagingStatus` the inbox can store maps to one of these;
+ * a refusal from the broker or from Meta, and an account not read yet, read
+ * as `waiting`: messages arrive once the broker admits the conversations
+ * call and Meta grants the messaging permissions.
+ */
+const MESSAGING_STATES = {
+	receiving: 'receiving',
+	relink_needed: 'relink',
+	budget_exhausted: 'paused',
+	unavailable: 'retrying',
+}
+
+/**
+ * What an account's Messages line says, or null when its network has no
+ * messages to read.
+ *
+ * @param {object} account The `socialAccount` record.
+ * @return {{state: string, reason: string}|null} The state
+ *   (`receiving`, `relink`, `paused`, `retrying` or `waiting`) and the stored
+ *   reason, or null for a network without messages.
+ * @spec openspec/changes/requests-inbound-to-queue/specs/inbound-ticket-intake/spec.md#requirement-facebook-and-instagram-messages-reach-the-queue-req-itq-004
+ */
+export function messagingLine(account) {
+	if (!MESSAGING_NETWORKS.includes(account?.network)) {
+		return null
+	}
+	const state = MESSAGING_STATES[account?.messagingStatus] || 'waiting'
+	const reason = state === 'receiving' ? '' : String(account?.messagingStatusReason || '')
+	return { state, reason }
+}
+
 /** The failure codes a Retry button should be offered for. */
 export const RETRYABLE_FAILURES = ['rejected_by_network', 'unavailable']
 
@@ -75,7 +111,7 @@ export const RETRYABLE_FAILURES = ['rejected_by_network', 'unavailable']
  *
  * @param {string} network The network name.
  * @return {{label: string, bodyLimit: number, maxMedia: number}} Its limits.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+ * @spec openspec/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 export function networkLimits(network) {
 	const known = NETWORKS[network]
@@ -90,7 +126,7 @@ export function networkLimits(network) {
  *
  * @param {string} status The stored `status` value.
  * @return {{label: string, color: string}} The chip.
- * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+ * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
  */
 export function accountStatusChip(status) {
 	return { ...(STATUS_CHIPS[status] || STATUS_CHIPS.pending) }
@@ -101,7 +137,7 @@ export function accountStatusChip(status) {
  *
  * @param {string} status The stored `status` value.
  * @return {{label: string, color: string}} The chip.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 export function publicationStatusChip(status) {
 	return { ...(PUBLICATION_CHIPS[status] || PUBLICATION_CHIPS.pending) }
@@ -116,7 +152,7 @@ export function publicationStatusChip(status) {
  *
  * @param {object} publication The publication row.
  * @return {boolean} True when a retry may help.
- * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+ * @spec openspec/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
  */
 export function isRetryable(publication) {
 	return (
@@ -134,7 +170,7 @@ export function isRetryable(publication) {
  *
  * @param {object} row A ranking row from `GET /api/social-performance`.
  * @return {string} The rate, or a hyphen.
- * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+ * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
  */
 export function formatEngagementRate(row) {
 	const rate = row?.engagementRate

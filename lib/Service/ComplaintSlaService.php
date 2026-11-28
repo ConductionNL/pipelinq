@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -51,6 +51,13 @@ class ComplaintSlaService {
 		'billing',
 		'other',
 	];
+
+	/**
+	 * The legal answer term for a complaint: six weeks from receipt (Awb 9:11).
+	 *
+	 * @var string
+	 */
+	public const LEGAL_ANSWER_TERM = '+6 weeks';
 
 	/**
 	 * Constructor.
@@ -86,7 +93,7 @@ class ComplaintSlaService {
 
 		$key = 'complaint_sla_' . $category;
 		$value = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			$key,
 			'',
 		);
@@ -130,6 +137,35 @@ class ComplaintSlaService {
 
 		return $result;
 	}//end calculateDeadline()
+
+	/**
+	 * The answer deadline of a complaint: its category's configured term when
+	 * that is shorter than the legal answer term, else the legal term of six
+	 * weeks, counted from receipt.
+	 *
+	 * @param string            $category The complaint category; empty or unknown has no term of its own.
+	 * @param DateTimeInterface $received When the complaint was received.
+	 *
+	 * @return DateTimeImmutable The deadline.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/klachtenregistratie/spec.md#requirement-a-complaint-is-held-to-the-legal-answer-term-by-default
+	 */
+	public function answerDeadline(string $category, DateTimeInterface $received): DateTimeImmutable {
+		$start = new DateTimeImmutable($received->format('Y-m-d\TH:i:sP'));
+		$legal = $start->modify(self::LEGAL_ANSWER_TERM);
+		assert($legal !== false);
+
+		if (in_array($category, self::VALID_CATEGORIES, true) === false) {
+			return $legal;
+		}
+
+		$own = $this->calculateDeadline(category: $category, from: $start);
+		if ($own !== null && $own < $legal) {
+			return $own;
+		}
+
+		return $legal;
+	}//end answerDeadline()
 
 	/**
 	 * Determine whether a complaint is overdue.

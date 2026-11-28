@@ -5,6 +5,12 @@
  * for the complaint registration workflow.
  */
 
+import {
+	PRIORITY_LABELS,
+	statusLifecycle,
+	VALID_PRIORITIES,
+} from './statusLifecycle.js'
+
 const STATUS_TRANSITIONS = {
 	new: ['in_progress'],
 	in_progress: ['resolved', 'rejected'],
@@ -26,19 +32,41 @@ const STATUS_COLORS = {
 	rejected: '#e9322d',
 }
 
-const PRIORITY_LABELS = {
-	low: t('pipelinq', 'Low'),
-	normal: t('pipelinq', 'Normal'),
-	high: t('pipelinq', 'High'),
-	urgent: t('pipelinq', 'Urgent'),
-}
-
 const PRIORITY_COLORS = {
 	low: '#999',
 	normal: 'var(--color-text-maxcontrast)',
 	high: '#e9a400',
 	urgent: '#e9322d',
 }
+
+/**
+ * The lifecycle lookups — allowed and valid transitions, terminal statuses,
+ * status and priority labels and colours — answered from the tables above.
+ *
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-12
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-10
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-9
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-8
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-5
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-11
+ */
+export const {
+	getAllowedTransitions,
+	isValidTransition,
+	isTerminalStatus,
+	getStatusLabel,
+	getStatusColor,
+	getPriorityLabel,
+	getPriorityColor,
+	isValidPriority,
+} = statusLifecycle({
+	transitions: STATUS_TRANSITIONS,
+	statusLabels: STATUS_LABELS,
+	statusColors: STATUS_COLORS,
+	priorityColors: PRIORITY_COLORS,
+})
 
 const CATEGORY_LABELS = {
 	service: t('pipelinq', 'Service'),
@@ -57,98 +85,18 @@ const CHANNEL_LABELS = {
 	other: t('pipelinq', 'Other'),
 }
 
-const VALID_PRIORITIES = ['low', 'normal', 'high', 'urgent']
 const VALID_CATEGORIES = ['service', 'product', 'communication', 'billing', 'other']
 const VALID_CHANNELS = ['phone', 'email', 'web', 'counter', 'letter', 'other']
-
-/**
- * Get allowed target statuses for a given current status.
- *
- * @param {string} currentStatus The status the record is in now.
- * @return {string[]}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-1
- */
-export function getAllowedTransitions(currentStatus) {
-	return STATUS_TRANSITIONS[currentStatus] || []
-}
-
-/**
- * Check if a status transition is valid.
- *
- * @param {string} from Current status
- * @param {string} to Target status
- * @return {boolean}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-12
- */
-export function isValidTransition(from, to) {
-	if (from === to) return true
-	return getAllowedTransitions(from).includes(to)
-}
-
-/**
- * Check if a status is terminal (no further transitions allowed).
- *
- * @param {string} status The status to test.
- * @return {boolean}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-10
- */
-export function isTerminalStatus(status) {
-	return getAllowedTransitions(status).length === 0
-}
 
 /**
  * Check if a transition requires resolution text.
  *
  * @param {string} targetStatus The status being transitioned to.
  * @return {boolean}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-13
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-13
  */
 export function requiresResolution(targetStatus) {
 	return targetStatus === 'resolved' || targetStatus === 'rejected'
-}
-
-/**
- * Get human-readable label for a status.
- *
- * @param {string} status The stored status value.
- * @return {string}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-9
- */
-export function getStatusLabel(status) {
-	return STATUS_LABELS[status] || status
-}
-
-/**
- * Get color for a status.
- *
- * @param {string} status The stored status value.
- * @return {string}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-8
- */
-export function getStatusColor(status) {
-	return STATUS_COLORS[status] || '#999'
-}
-
-/**
- * Get human-readable label for a priority.
- *
- * @param {string} priority The stored priority value.
- * @return {string}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-5
- */
-export function getPriorityLabel(priority) {
-	return PRIORITY_LABELS[priority] || priority
-}
-
-/**
- * Get color for a priority.
- *
- * @param {string} priority The stored priority value.
- * @return {string}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-4
- */
-export function getPriorityColor(priority) {
-	return PRIORITY_COLORS[priority] || 'var(--color-text-maxcontrast)'
 }
 
 /**
@@ -156,7 +104,7 @@ export function getPriorityColor(priority) {
  *
  * @param {string} category The stored category value.
  * @return {string}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-2
  */
 export function getCategoryLabel(category) {
 	return CATEGORY_LABELS[category] || category
@@ -167,21 +115,10 @@ export function getCategoryLabel(category) {
  *
  * @param {string} channel The stored channel value.
  * @return {string}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-3
  */
 export function getChannelLabel(channel) {
 	return CHANNEL_LABELS[channel] || channel
-}
-
-/**
- * Check if a priority value is valid.
- *
- * @param {string} priority The priority value to test.
- * @return {boolean}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-11
- */
-export function isValidPriority(priority) {
-	return VALID_PRIORITIES.includes(priority)
 }
 
 /**
@@ -190,7 +127,7 @@ export function isValidPriority(priority) {
  * @param {string|null} slaDeadline ISO 8601 deadline
  * @param {string} status Current complaint status
  * @return {'met'|'on_track'|'approaching'|'overdue'|null}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-7
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-7
  */
 export function getSlaIndicator(slaDeadline, status) {
 	if (!slaDeadline) return null
@@ -220,7 +157,7 @@ export function getSlaIndicator(slaDeadline, status) {
  *
  * @param {'met'|'on_track'|'approaching'|'overdue'|null} indicator The SLA indicator, or null when the record has no SLA.
  * @return {string}
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-6
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-fe-services/tasks.md#task-6
  */
 export function getSlaColor(indicator) {
 	switch (indicator) {

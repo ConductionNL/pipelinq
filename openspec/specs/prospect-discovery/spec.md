@@ -552,8 +552,9 @@ The created client MUST carry `type: organization` and the prospect's KVK
 number, and MUST be created through the contact-first path so the required
 `contactsUid` is provisioned — a direct object save is rejected without it.
 
-A lead is NOT created here. A lead now requires a client, so the client has to
-exist first; creating the lead is a separate step from the client itself.
+A lead is NOT created here. Adding a prospect makes a client; creating a lead
+for it is a separate step. A lead does not need a client (decision 207), but a
+lead for this prospect links the client made here.
 
 #### Scenario: Single prospect conversion
 - GIVEN a prospect with fit score 85 in the discovery widget
@@ -754,6 +755,32 @@ The system SHALL offer a Prospects page at `/prospects` that lists the discovere
 - GIVEN no ideal customer profile is configured
 - WHEN the user opens the Prospects page
 - THEN the page SHALL say that no Ideal Customer Profile is configured instead of showing an empty table
+
+### Requirement: The prospects list offers lenses, a Filter menu and a search
+
+The prospects page MUST offer the lenses All, Good fit (a score above 70) and New this week (registered in the KVK register in the last seven days) with their counts, a Filter menu on the place, and a search on company, SBI code and place, all narrowing the list.
+
+#### Scenario: good fit
+
+- GIVEN three companies scoring 40, 75 and 90
+- WHEN the user chooses Good fit
+- THEN the list shows the two companies scoring 75 and 90
+
+#### Scenario: search a place
+
+- GIVEN companies in Utrecht and Veenendaal
+- WHEN the user searches "veenendaal"
+- THEN the list shows the company in Veenendaal
+
+### Requirement: The profile card lists its facts with Edit profile
+
+The ideal customer profile card MUST list each set criterion, keywords included, as a label over its value, and offer Edit profile.
+
+#### Scenario: keywords
+
+- GIVEN a profile with the keywords horeca and retail
+- WHEN the prospects page opens
+- THEN the card lists "Keywords: horeca, retail" after the other criteria
 
 ## Current Implementation Status
 

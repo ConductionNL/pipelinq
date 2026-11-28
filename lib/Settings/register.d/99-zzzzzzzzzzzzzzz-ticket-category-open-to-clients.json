@@ -1,0 +1,23 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "specify-capability-rows 20.1 (row portal-file-request, requirement 'A client files a request in the portal and follows it'). A ticket category says whether clients may file a request under it in the customer portal. Off by default, so no category is offered until a desk opens it. Additive."
+  },
+  "components": {
+    "schemas": {
+      "ticketCategory": {
+        "slug": "ticketCategory",
+        "version": "1.1.0",
+        "properties": {
+          "exposeToCustomer": {
+            "type": "boolean",
+            "title": "Open to clients",
+            "description": "Whether clients may file a request under this category in the customer portal.",
+            "default": false
+          }
+        }
+      }
+    }
+  }
+}

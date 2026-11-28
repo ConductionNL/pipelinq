@@ -3,11 +3,15 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * A freshly opened New lead form shows no "Title is required" or "Client is
+ * A freshly opened New lead form shows no "Title is required" or "Pipeline is
  * required" until the field was touched or a save was attempted
  * (pipelinq-audit-admin-forms-pos).
  *
+ * A client is optional (decision 207, 12 October 2026): the form never asks
+ * for one, and a lead saves without it.
+ *
  * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md
+ * @spec openspec/specs/lead-management/spec.md#requirement-lead-crud-mvp
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
@@ -29,7 +33,7 @@ vi.mock('../../src/store/modules/object.js', () => ({
 vi.mock('../../src/store/modules/leadSources.js', () => ({
 	useLeadSourcesStore: () => ({
 		fetchSources: vi.fn(async () => []),
-		sources: [],
+		sourceNames: [],
 	}),
 }))
 vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({
@@ -94,7 +98,8 @@ describe('LeadForm errors wait for the user', () => {
 		wrapper.vm.onSave()
 		await flushPromises()
 		expect(titleHelper(wrapper)).toBe('Title is required')
-		expect(wrapper.text()).toContain('Client is required')
+		expect(wrapper.text()).toContain('Pipeline is required')
+		expect(wrapper.text()).not.toContain('Client is required')
 		expect(wrapper.emitted('save')).toBeUndefined()
 	})
 
@@ -106,5 +111,49 @@ describe('LeadForm errors wait for the user', () => {
 		wrapper.vm.form.title = ''
 		await flushPromises()
 		expect(titleHelper(wrapper)).toBe('Title is required')
+	})
+})
+
+describe('LeadForm saves a lead without a client', () => {
+	it('saves with a title and a pipeline, and sends no client', async () => {
+		const wrapper = mountForm()
+		await flushPromises()
+		wrapper.vm.form.title = 'Website enquiry'
+		wrapper.vm.form.pipeline = 'p1'
+		await flushPromises()
+
+		expect(wrapper.vm.isValid).toBeTruthy()
+		wrapper.vm.onSave()
+		await flushPromises()
+
+		const saved = wrapper.emitted('save')
+		expect(saved).toHaveLength(1)
+		expect(saved[0][0]).toMatchObject({
+			title: 'Website enquiry',
+			pipeline: 'p1',
+		})
+		// No key at all: an empty client must not be written as null or ''.
+		expect(Object.keys(saved[0][0])).not.toContain('client')
+		expect(Object.keys(saved[0][0])).not.toContain('contact')
+		expect(wrapper.findAll('.field-error')).toHaveLength(0)
+	})
+
+	it('tells the user the client may stay empty', async () => {
+		const wrapper = mountForm()
+		await flushPromises()
+		expect(wrapper.find('[data-testid="lead-form-client-hint"]').text()).toBe(
+			'Leave empty to save the lead without a client.',
+		)
+	})
+
+	it('keeps a chosen client on the saved lead', async () => {
+		const wrapper = mountForm()
+		await flushPromises()
+		wrapper.vm.form.title = 'Renewal'
+		wrapper.vm.form.pipeline = 'p1'
+		wrapper.vm.onClientChange('c1')
+		wrapper.vm.onSave()
+		await flushPromises()
+		expect(wrapper.emitted('save')[0][0].client).toBe('c1')
 	})
 })

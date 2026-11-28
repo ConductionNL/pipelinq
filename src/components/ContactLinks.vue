@@ -1,19 +1,30 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- Copyright (C) 2026 Conduction B.V. -->
 <!-- @spec openspec/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001 -->
+<!-- @spec openspec/changes/specify-capability-rows/tasks.md#task-36.1 -->
 <template>
-	<ul v-if="links.length" class="contact-links" data-testid="contact-links">
-		<li v-for="link in links" :key="link.kind">
+	<ul v-if="links.length"
+		class="contact-links"
+		:class="{ 'contact-links--buttons': variant === 'buttons' }"
+		data-testid="contact-links">
+		<li v-for="link in links" :key="link.kind" class="contact-links__item">
 			<a
 				class="contact-links__link"
+				:class="{ button: variant === 'buttons' }"
 				:href="link.href"
+				:title="variant === 'buttons' ? link.value : null"
 				:data-testid="'contact-link-' + link.kind">
-				<component :is="link.icon" :size="20" class="contact-links__icon" />
-				<span class="contact-links__text">
+				<component :is="link.icon" :size="variant === 'buttons' ? 16 : 20" class="contact-links__icon" />
+				<span v-if="variant === 'buttons'" class="contact-links__label">{{ link.buttonLabel }}</span>
+				<span v-else class="contact-links__text">
 					<span class="contact-links__label">{{ link.label }}</span>
 					<span class="contact-links__value">{{ link.value }}</span>
 				</span>
 			</a>
+			<CtiClickToDialButton
+				v-if="link.kind === 'phone'"
+				:targetNumber="link.href.slice('tel:'.length)"
+				:showNumber="false" />
 		</li>
 	</ul>
 </template>
@@ -22,6 +33,7 @@
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import MapMarkerOutline from 'vue-material-design-icons/MapMarkerOutline.vue'
 import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
+import CtiClickToDialButton from './CtiClickToDialButton.vue'
 import { mailtoHref, mapHref, telHref } from '../services/contactLinks.js'
 
 /**
@@ -29,11 +41,15 @@ import { mailtoHref, mapHref, telHref } from '../services/contactLinks.js'
  * top of the detail page so they are one tap away on a phone. Each link
  * keeps the value as the user typed it; only the target is normalised.
  * A value that cannot be a link (no digits, not an address) is left out.
+ * Beside the number sits the click-to-dial button, shown only when the
+ * agent can place a call through the telephony platform.
  *
  * @spec openspec/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
  */
 export default {
 	name: 'ContactLinks',
+
+	components: { CtiClickToDialButton },
 
 	props: {
 		/** Phone number as typed. */
@@ -53,6 +69,16 @@ export default {
 			type: String,
 			default: '',
 		},
+
+		/**
+		 * `buttons` draws each link as an outlined button with a verb (Call
+		 * them, Email them, Directions) and the value as its tooltip, as the
+		 * client page's contact strip draws them (PqKlant).
+		 */
+		variant: {
+			type: String,
+			default: 'links',
+		},
 	},
 
 	computed: {
@@ -68,6 +94,7 @@ export default {
 					kind: 'phone',
 					href: tel,
 					label: t('pipelinq', 'Call'),
+					buttonLabel: t('pipelinq', 'Call them'),
 					value: this.phone,
 					icon: PhoneOutline,
 				})
@@ -78,6 +105,7 @@ export default {
 					kind: 'email',
 					href: mail,
 					label: t('pipelinq', 'Mail'),
+					buttonLabel: t('pipelinq', 'Email them'),
 					value: this.email,
 					icon: EmailOutline,
 				})
@@ -88,6 +116,7 @@ export default {
 					kind: 'address',
 					href: map,
 					label: t('pipelinq', 'Directions'),
+					buttonLabel: t('pipelinq', 'Directions'),
 					value: this.address,
 					icon: MapMarkerOutline,
 				})
@@ -99,6 +128,40 @@ export default {
 </script>
 
 <style scoped>
+.contact-links__item {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.contact-links--buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+}
+
+/* `button` is the class the theme's link rules leave out, so a link drawn
+   as a button keeps this ink and no underline. */
+.contact-links--buttons .contact-links__link {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	box-sizing: border-box;
+	height: 38px;
+	min-height: 0;
+	margin: 0;
+	padding: 0 14px;
+	border: 1px solid var(--color-border-maxcontrast);
+	border-radius: var(--border-radius-element, 8px);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
 .contact-links {
 	display: flex;
 	flex-wrap: wrap;

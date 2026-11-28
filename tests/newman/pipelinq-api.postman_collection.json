@@ -886,6 +886,241 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Segments: access (segment-groups-its-rules 4.2)",
+      "item": [
+        {
+          "name": "GET /segments: the admin reads how many segments are stored",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/segments?page=1&limit=1",
+            "header": [
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// @spec openspec/changes/segment-groups-its-rules/tasks.md#4.2",
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('The list reports a total', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.pagination.total).to.be.a('number');",
+                  "  pm.collectionVariables.set('segmentTotalBefore', json.pagination.total);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ocs/v2.php/cloud/user: the next request really is a non-admin",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ocs/v2.php/cloud/user?format=json",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{nonAdminUsername}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{nonAdminPassword}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "OCS-APIRequest",
+                "value": "true"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// WITHOUT THIS THE 403 BELOW WAS A LIE. {{nonAdminUsername}} and",
+                  "// {{nonAdminPassword}} were referenced by the next request and",
+                  "// defined by nothing — not by the collection, not by the shared",
+                  "// workflow's fallback --env-vars. Postman then sent an",
+                  "// Authorization header that authenticates nobody, Nextcloud fell",
+                  "// back to the session cookie Newman's jar had picked up from the",
+                  "// preceding ADMIN requests, and the call ran as the admin.",
+                  "// Measured on a fresh NC32: HTTP 200. The test named 'non-admin",
+                  "// is refused' performed, successfully, the admin write it exists",
+                  "// to prove is refused.",
+                  "//",
+                  "// A status code cannot tell you who asked. Ask the server.",
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('The server reports the caller as {{nonAdminUsername}}', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.ocs.data.id).to.eql(pm.variables.replaceIn('{{nonAdminUsername}}'));",
+                  "});",
+                  "pm.test('That caller is NOT in the admin group', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.ocs.data.groups).to.not.include('admin');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /segments: non-privileged user gets 403",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/segments",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{nonAdminUsername}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{nonAdminPassword}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Newman non-privileged segment\", \"description\": \"Must not be stored\", \"entityType\": \"client\", \"rules\": {\"operator\": \"AND\", \"conditions\": [{\"field\": \"city\", \"operator\": \"equals\", \"value\": \"Zuiddrecht\"}]}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// @spec openspec/changes/segment-groups-its-rules/tasks.md#4.2",
+                  "pm.test('Status code is 403 for a non-privileged user', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test('The refusal returns no segment', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.not.have.property('id');",
+                  "  pm.expect(json).to.not.have.property('segment');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ocs/v2.php/cloud/user: back on the admin identity",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ocs/v2.php/cloud/user?format=json",
+            "header": [
+              {
+                "key": "OCS-APIRequest",
+                "value": "true"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// The preceding folder deliberately authenticated as a non-admin,",
+                  "// and Newman's cookie jar is per-host, not per-request: whatever",
+                  "// authenticated last owns the session. POST /setup/action/... below",
+                  "// writes, so re-assert the identity rather than assuming the",
+                  "// collection-level basic auth took the session back.",
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('The server reports the caller as {{username}} again', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.ocs.data.id).to.eql(pm.variables.replaceIn('{{username}}'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /segments: nothing was stored by the refused create",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/segments?page=1&limit=1",
+            "header": [
+              {
+                "key": "OCS-APIREQUEST",
+                "value": "true"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// @spec openspec/changes/segment-groups-its-rules/tasks.md#4.2",
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('The total is unchanged', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.pagination.total).to.eql(Number(pm.collectionVariables.get('segmentTotalBefore')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -21,16 +21,16 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-006
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-006
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
-use OCA\Pipelinq\Service\Portal\PortalRequestService;
-use OCA\Pipelinq\Service\Portal\PortalTenantService;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestGuardInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalRequestServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\PortalTenantServiceInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
@@ -44,26 +44,47 @@ use Psr\Log\LoggerInterface;
  *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
+ * @spec openspec/specs/platform-properties/spec.md#REQ-PLAT-005
  */
 class PortalRequestController extends PortalApiController {
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param PortalRequestGuardInterface $guard The portal guard.
 	 * @param LoggerInterface $logger The logger.
-	 * @param PortalRequestService $requests The request service.
-	 * @param PortalTenantService $tenant The tenant service.
+	 * @param PortalRequestServiceInterface $requests The request service.
+	 * @param PortalTenantServiceInterface $tenant The tenant service.
 	 */
 	public function __construct(
 		IRequest $request,
-		PortalRequestGuard $guard,
+		PortalRequestGuardInterface $guard,
 		LoggerInterface $logger,
-		private PortalRequestService $requests,
-		private PortalTenantService $tenant,
+		private PortalRequestServiceInterface $requests,
+		private PortalTenantServiceInterface $tenant,
 	) {
 		parent::__construct(request: $request, guard: $guard, logger: $logger);
 	}//end __construct()
+
+	/**
+	 * The categories a client may file a request under.
+	 *
+	 * @return JSONResponse `{categories: [{key, name, description}]}`.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-files-a-request-in-the-portal-and-follows-it
+	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
+	public function categories(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$this->requireSession();
+				return [['categories' => $this->requests->openCategories()], Http::STATUS_OK];
+			}
+		);
+	}//end categories()
 
 	/**
 	 * List the customer's requests.

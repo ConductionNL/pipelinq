@@ -42,6 +42,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for BookingService.
@@ -197,13 +198,11 @@ class BookingServiceTest extends TestCase {
 
 		$captured = null;
 		$object->expects($this->once())->method('saveObject')->willReturnCallback(
-			function (
-				array|object $bookingObject,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$captured): ObjectEntityInterface {
+			function (array|object $bookingObject, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = $bookingObject;
 				return self::entity(['@self' => ['id' => 'b-new']]);
 			}
@@ -252,13 +251,11 @@ class BookingServiceTest extends TestCase {
 
 		$captured = null;
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $bookingObject,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$captured): ObjectEntityInterface {
+			function (array|object $bookingObject, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = $bookingObject;
 				return self::entity(['@self' => ['id' => 'b-pending']]);
 			}
@@ -324,13 +321,11 @@ class BookingServiceTest extends TestCase {
 
 		$saved = [];
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$saved): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				// First call = new booking (uuid null); second = update of original.
 				if ($uuid === null) {
 					$saved['new'] = $payload;
@@ -411,13 +406,11 @@ class BookingServiceTest extends TestCase {
 
 		$saved = null;
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$saved): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saved = $payload;
 				return self::entity(['@self' => ['id' => 'b-free']]);
 			}
@@ -600,13 +593,11 @@ class BookingServiceTest extends TestCase {
 
 		$saved = null;
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$saved): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saved = $payload;
 				return self::entity(['@self' => ['id' => 'b-staff']]);
 			}
@@ -696,13 +687,11 @@ class BookingServiceTest extends TestCase {
 			}
 		);
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$saves): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saves): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$saves[] = ['payload' => $payload, 'schema' => $schema, 'uuid' => $uuid];
 				return self::entity(['@self' => ['id' => ($uuid ?? 'new')]]);
 			}
@@ -847,13 +836,11 @@ class BookingServiceTest extends TestCase {
 
 		$captured = null;
 		$object->method('saveObject')->willReturnCallback(
-			function (
-				array|object $payload,
-				?array $extend = [],
-				string|int|null $register = null,
-				string|int|null $schema = null,
-				?string $uuid = null,
-			) use (&$captured): ObjectEntityInterface {
+			function (array|object $payload, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$captured): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				$captured = $payload;
 				return self::entity(['@self' => ['id' => 'b-pending']]);
 			}

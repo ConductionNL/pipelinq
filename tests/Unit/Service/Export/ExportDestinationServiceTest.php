@@ -41,6 +41,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for ExportDestinationService, including real credential resolution.
@@ -107,17 +108,13 @@ class ExportDestinationServiceTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('find')->willReturnCallback(
-			function (
-				$id,
-				$_extend = [],
-				$files = false,
-				$register = null,
-				$schema = null,
-				$_rbac = true,
-				$_multitenancy = true,
-				$_render = true,
-				$_audit = true,
-			) use ($recorder, $destination, $sourceResult) {
+			function ($id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true) use ($recorder, $destination, $sourceResult) {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
+				$_render = $options?->render ?? true;
+				$_audit = $options?->audit ?? true;
 				$recorder->calls[] = ['id' => $id, 'register' => $register, 'schema' => $schema, '_render' => $_render];
 
 				// `integriq`, not `openconnector`: service() wires a resolver

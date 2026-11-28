@@ -715,7 +715,6 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 			'activity',
 			'bookings',
 			'messaging-conversation',
-			'contactmoment-quick-log',
 		]) {
 			await expect(page.locator(`[data-section-id="${id}"]`)).toHaveCount(1)
 		}

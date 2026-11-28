@@ -12,7 +12,7 @@ Enable multi-language support for Pipelinq's register objects, allowing users to
 
 ## Requirements
 
-### REQ-I18N-001: Language-Tagged Fields
+### Requirement: Language-tagged fields (REQ-I18N-001)
 The following Pipelinq-specific fields MUST support multi-language content via OpenRegister's `translatable` flag:
 
 **Pipelines:**
@@ -38,7 +38,7 @@ The following Pipelinq-specific fields MUST support multi-language content via O
 - THEN the system MUST store the multi-language value
 - AND display the name in the user's preferred language
 
-### REQ-I18N-002: Language Fallback Chain
+### Requirement: Language fallback chain (REQ-I18N-002)
 The system MUST follow the Nextcloud user's language preference with a defined fallback chain: user language -> app default language -> nl -> en -> first available. The system MUST display a fallback indicator when showing non-preferred language.
 
 #### Scenario: Fallback to Dutch when preferred language unavailable
@@ -48,7 +48,7 @@ The system MUST follow the Nextcloud user's language preference with a defined f
 - THEN the system MUST display the Dutch (nl) translation as the fallback
 - AND a fallback indicator MUST be shown
 
-### REQ-I18N-003: Frontend Language Switching
+### Requirement: Frontend language switching (REQ-I18N-003)
 The system MUST show a language selector on detail pages when translated content exists. The system MUST preserve current language selection across navigation within the app, and language switching MUST NOT require page reload.
 
 #### Scenario: Switch language on pipeline detail page
@@ -57,7 +57,7 @@ The system MUST show a language selector on detail pages when translated content
 - THEN the pipeline name MUST update to the English translation without a page reload
 - AND navigating to another page and back MUST preserve the English language selection
 
-### REQ-I18N-004: API Language Support
+### Requirement: API language support (REQ-I18N-004)
 API responses MUST accept `Accept-Language` header and MUST include `Content-Language` header. The `?lang=nl` query parameter MUST override Accept-Language. Listing endpoints MUST return content in requested language with fallback.
 
 #### Scenario: API returns content in requested language
@@ -66,7 +66,6 @@ API responses MUST accept `Accept-Language` header and MUST include `Content-Lan
 - THEN the response MUST return the product name as "Consultation"
 - AND the response MUST include the header `Content-Language: en`
 
-## Requirements
 
 ### Requirement: App UI MUST provide complete Dutch and English translations per ADR-005
 
@@ -378,6 +377,38 @@ All strings in the Pipelinq admin settings panel (configuration, pipeline settin
 - **GIVEN** an admin performing configuration import
 - **WHEN** the operation succeeds or fails
 - **THEN** the feedback message SHALL be translated: "Configuratie succesvol opnieuw geïmporteerd" (Dutch) / "Configuration re-imported successfully" (English)
+
+### Requirement: i18n translation keys MUST be English source strings
+
+Every `t('pipelinq', ...)` / `n('pipelinq', ...)` call site's literal key MUST be an English
+source string, never Dutch (or any other non-English) prose. Locale files MUST map the English
+key to a localized value for the corresponding locale — Dutch text belongs in `l10n/nl.json`'s
+**value**, never as the key used in source.
+
+#### Scenario: Dutch UI text is sourced from an English key
+
+- **GIVEN** a component that previously called `t('pipelinq', 'Boekhoudkundige status')`
+- **WHEN** the component is fixed per this change
+- **THEN** the call site becomes `t('pipelinq', 'Bookkeeping status')`
+- **AND** `l10n/nl.json` maps `"Bookkeeping status": "Boekhoudkundige status"`
+- **AND** the rendered Dutch-locale UI text is unchanged from before the fix
+
+@e2e exclude i18n key-hygiene refactor with no behavior change for the shipped Dutch locale;
+verified by the locale-file reconciliation in tasks.md section 3 and a manual Dutch-locale
+before/after comparison in tasks.md 4.2.
+
+#### Scenario: Non-Dutch locales stop showing raw Dutch text
+
+- **GIVEN** a call site whose key was Dutch prose with no corresponding `en.json`/`de.json`/etc.
+  translation reachable through the correct key (because the key itself was Dutch)
+- **WHEN** the component is fixed per this change
+- **THEN** the English-locale UI shows the English translation instead of raw Dutch text
+- **AND** `de`/`es`/`fr`/`it` locales show either a real translation or an English fallback,
+  never the original Dutch string
+
+@e2e exclude i18n key-hygiene refactor verified by manual English-locale comparison in tasks.md
+4.3; no stable Playwright fixture exists for locale-switching across these specific POS/BRP/
+project/kassakoppeling screens.
 
 ## Current Implementation Status
 Partially implemented. App UI translations are in place with ~395 translation keys covering both Dutch (`l10n/nl.json`) and English (`l10n/en.json`), plus companion JS files (`en.js`, `nl.js`). CRM terminology is consistently translated (Client->Klant, Contact->Contactpersoon, Request->Verzoek, Stage->Fase, etc.). Parameterized strings use `{placeholder}` syntax correctly.

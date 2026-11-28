@@ -24,26 +24,23 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Export\ExportAccessPolicy;
-use OCA\Pipelinq\Service\Export\ExportDestinationService;
-use OCA\Pipelinq\Service\Export\ExportJobService;
+use OCA\Pipelinq\Controller\Support\ExportAdminAction;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\ExportAccessPolicyInterface;
+use OCA\Pipelinq\Kernel\Contracts\ExportDestinationServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ExportJobServiceInterface;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\AppFramework\OCS\OCSBadRequestException;
-use OCP\AppFramework\OCS\OCSForbiddenException;
-use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -57,30 +54,32 @@ use Psr\Log\LoggerInterface;
  *  two related resources (destinations and jobs); each method delegates to a
  *  service and shares one error-handling helper.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
 class ExportJobController extends Controller {
+	use ExportAdminAction;
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ExportJobService $jobs The job service.
-	 * @param ExportDestinationService $destinations The destination service.
-	 * @param ExportAccessPolicy $policy The export access policy.
+	 * @param ExportJobServiceInterface $jobs The job service.
+	 * @param ExportDestinationServiceInterface $destinations The destination service.
+	 * @param ExportAccessPolicyInterface $policy The export access policy.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		IRequest $request,
-		private ExportJobService $jobs,
-		private ExportDestinationService $destinations,
-		private ExportAccessPolicy $policy,
+		private ExportJobServiceInterface $jobs,
+		private ExportDestinationServiceInterface $destinations,
+		private ExportAccessPolicyInterface $policy,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -88,7 +87,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The destinations.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
 	 */
 	#[NoAdminRequired]
 	public function listDestinations(): JSONResponse {
@@ -103,7 +102,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The created destination.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-01
 	 */
 	#[NoAdminRequired]
 	public function createDestination(): JSONResponse {
@@ -157,7 +156,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The test result.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-02
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-02
 	 */
 	#[NoAdminRequired]
 	public function testDestination(string $id): JSONResponse {
@@ -172,7 +171,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The jobs.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	#[NoAdminRequired]
 	public function listJobs(): JSONResponse {
@@ -197,7 +196,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The created job.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-01
 	 */
 	#[NoAdminRequired]
 	public function createJob(): JSONResponse {
@@ -253,7 +252,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The test result (sample, errors).
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-003-01
 	 */
 	#[NoAdminRequired]
 	public function testRun(string $id): JSONResponse {
@@ -273,7 +272,7 @@ class ExportJobController extends Controller {
 	 *
 	 * @return JSONResponse The enabled job.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 	 */
 	#[NoAdminRequired]
 	public function enableJob(string $id): JSONResponse {
@@ -294,17 +293,39 @@ class ExportJobController extends Controller {
 	}//end disableJob()
 
 	/**
+	 * A cron expression in words, for the schedule dialog (`?expression=0 2 * * *`).
+	 *
+	 * Answers in the user's language when it is Dutch, else in English, with
+	 * `valid: false` when the expression is not a 5-field cron expression.
+	 *
+	 * @return JSONResponse `{expression, description, valid}`.
+	 *
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md
+	 */
+	#[NoAdminRequired]
+	public function describeSchedule(): JSONResponse {
+		$expression = trim((string)$this->request->getParam('expression', ''));
+		$locale = 'en';
+		if (str_starts_with($this->l10n->getLanguageCode(), 'nl') === true) {
+			$locale = 'nl';
+		}
+
+		return $this->requireExportAdmin(
+			action: function () use ($expression, $locale): array {
+				$description = $this->jobs->describeSchedule(expression: $expression, locale: $locale);
+				return ['expression' => $expression, 'description' => $description, 'valid' => ($description !== '')];
+			},
+			label: 'describeSchedule'
+		);
+	}//end describeSchedule()
+
+	/**
 	 * The acting user UID (empty when no session).
 	 *
 	 * @return string The UID.
 	 */
 	private function actingUser(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
+		return $this->exportGate()->userId();
 	}//end actingUser()
 
 	/**
@@ -318,43 +339,4 @@ class ExportJobController extends Controller {
 
 		return $params;
 	}//end bodyParams()
-
-	/**
-	 * Require export-admin / analyst authorization, then run the action with
-	 * shared error handling.
-	 *
-	 * Returns 401 when unauthenticated, 403 when not an export admin/analyst,
-	 * 404 / 422 from the service's OCS exceptions, 500 otherwise.
-	 *
-	 * @param callable $action The action.
-	 * @param string $label Log label.
-	 *
-	 * @return JSONResponse The response.
-	 */
-	private function requireExportAdmin(callable $action, string $label): JSONResponse {
-		$uid = $this->actingUser();
-		if ($uid === '') {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->policy->isExportAdmin(userId: $uid) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Insufficient permissions')], Http::STATUS_FORBIDDEN);
-		}
-
-		try {
-			return new JSONResponse($action());
-		} catch (OCSNotFoundException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-		} catch (OCSForbiddenException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-		} catch (OCSBadRequestException $e) {
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
-		} catch (\Throwable $e) {
-			$this->logger->error('ExportJobController::' . $label . ' failed', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['error' => $this->l10n->t('An unexpected error occurred')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
-	}//end requireExportAdmin()
 }//end class

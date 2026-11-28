@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
+use OCA\Pipelinq\Kernel\Contracts\SystemTagServiceInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -29,9 +30,9 @@ use RuntimeException;
  * Generic service for managing SystemTag-based configurable lists.
  * Used for lead sources and request channels.
  *
- * @spec openspec/changes/reverse-2026-05-26-be-tags/tasks.md
+ * @spec openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md
  */
-class SystemTagService {
+class SystemTagService implements SystemTagServiceInterface {
 	/**
 	 * Constructor.
 	 *
@@ -50,7 +51,7 @@ class SystemTagService {
 	 * @param string $objectType The object type to get tags for.
 	 *
 	 * @return array<array{id: int, name: string}> The tags.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-9
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md#task-9
 	 */
 	public function getTags(string $objectType): array {
 		$tagIds = $this->tagCrudService->getTagIdsForType(objectType: $objectType);
@@ -75,7 +76,7 @@ class SystemTagService {
 	 * @return array{id: int, name: string} The created tag.
 	 *
 	 * @throws RuntimeException If tag name already exists for this type.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-7
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md#task-7
 	 */
 	public function addTag(string $objectType, string $name): array {
 		$name = trim($name);
@@ -85,7 +86,7 @@ class SystemTagService {
 
 		$this->validateTagNameUnique(
 			objectType: $objectType,
-			name: $name
+			tag: ['id' => null, 'name' => $name]
 		);
 
 		$tag = $this->tagCrudService->createOrReuseSystemTag(name: $name);
@@ -110,7 +111,7 @@ class SystemTagService {
 	 * @param int $tagId The tag ID to remove.
 	 *
 	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-10
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md#task-10
 	 */
 	public function removeTag(string $objectType, int $tagId): void {
 		$this->tagCrudService->unassignAndCleanup(
@@ -131,32 +132,52 @@ class SystemTagService {
 	 * @return array{id: int, name: string} The renamed tag.
 	 *
 	 * @throws RuntimeException If new name already exists for this type.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-11
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md#task-11
 	 */
 	public function renameTag(string $objectType, int $tagId, string $newName): array {
-		$newName = trim($newName);
-		if ($newName === '') {
+		return $this->applyRename(objectType: $objectType, tag: ['id' => $tagId, 'name' => self::nonEmptyName(name: $newName)]);
+	}//end renameTag()
+
+	/**
+	 * The trimmed tag name.
+	 *
+	 * @param string $name The requested name.
+	 *
+	 * @return string The trimmed name.
+	 *
+	 * @throws InvalidArgumentException When the name is empty.
+	 */
+	private static function nonEmptyName(string $name): string {
+		$name = trim($name);
+		if ($name === '') {
 			throw new InvalidArgumentException('Tag name cannot be empty');
 		}
 
-		$this->validateTagNameUnique(
-			objectType: $objectType,
-			name: $newName,
-			excludeId: $tagId
-		);
+		return $name;
+	}//end nonEmptyName()
+
+	/**
+	 * Rename a tag to a validated, trimmed name and log it.
+	 *
+	 * @param string $objectType The object type.
+	 * @param array{id: int, name: string} $tag The tag ID and its new name.
+	 *
+	 * @return array{id: int, name: string} The renamed tag.
+	 *
+	 * @throws RuntimeException If new name already exists for this type.
+	 */
+	private function applyRename(string $objectType, array $tag): array {
+		$this->validateTagNameUnique(objectType: $objectType, tag: $tag);
 
 		$this->tagCrudService->renameSystemTag(
-			tagId: $tagId,
-			newName: $newName
+			tagId: $tag['id'],
+			newName: $tag['name']
 		);
 
-		$this->logger->info("Pipelinq: Renamed {$objectType} tag ID {$tagId} to: {$newName}");
+		$this->logger->info("Pipelinq: Renamed {$objectType} tag ID {$tag['id']} to: {$tag['name']}");
 
-		return [
-			'id' => $tagId,
-			'name' => $newName,
-		];
-	}//end renameTag()
+		return $tag;
+	}//end applyRename()
 
 	/**
 	 * Ensure default tags exist for an object type (idempotent).
@@ -165,7 +186,7 @@ class SystemTagService {
 	 * @param string[] $defaults List of default tag names.
 	 *
 	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-8
+	 * @spec   openspec/changes/archive/2026-06-14-reverse-2026-05-26-be-tags/tasks.md#task-8
 	 */
 	public function ensureDefaults(string $objectType, array $defaults): void {
 		$existing = $this->getTags(objectType: $objectType);
@@ -191,21 +212,21 @@ class SystemTagService {
 	 * Validate that a tag name is unique within the given object type.
 	 *
 	 * @param string $objectType The object type.
-	 * @param string $name The tag name to check.
-	 * @param ?int $excludeId Optional tag ID to exclude from the check.
+	 * @param array{id: int|null, name: string} $tag The tag name to check, and the tag ID to exclude from the check (or null).
 	 *
 	 * @return void
 	 *
 	 * @throws RuntimeException If the tag name already exists.
 	 */
-	private function validateTagNameUnique(string $objectType, string $name, ?int $excludeId = null): void {
+	private function validateTagNameUnique(string $objectType, array $tag): void {
+		$excludeId = $tag['id'];
 		$existing = $this->getTags(objectType: $objectType);
-		foreach ($existing as $tag) {
-			if ($excludeId !== null && $tag['id'] === $excludeId) {
+		foreach ($existing as $other) {
+			if ($excludeId !== null && $other['id'] === $excludeId) {
 				continue;
 			}
 
-			if (strcasecmp($tag['name'], $name) === 0) {
+			if (strcasecmp($other['name'], $tag['name']) === 0) {
 				throw new RuntimeException('This tag already exists');
 			}
 		}

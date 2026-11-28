@@ -83,6 +83,69 @@ import {
 	getBillingHandoffAvailability,
 	sendToBilling,
 } from '../../services/billingHandoffApi.js'
+import { sectionObjectId } from '../../utils/sectionContext.js'
+
+/**
+ * @param {object} result A synced result.
+ * @return {string} The draft invoice made, or the one Shillinq already had.
+ */
+function syncedMessage(result) {
+	return result.duplicated
+		? t(
+				'pipelinq',
+				'Already sent — Shillinq returned the existing draft invoice {number}.',
+				{ number: result.invoiceNumber },
+			)
+		: t(
+				'pipelinq',
+				'Sent to billing — draft invoice {number} created ({count} entries).',
+				{
+					number: result.invoiceNumber,
+					count: result.entryCount,
+				},
+			)
+}
+
+/**
+ * @param {object} result An unmapped result.
+ * @return {string} Shillinq's message, or what it could not resolve.
+ */
+function unmappedMessage(result) {
+	return (
+		result.message
+		|| t(
+			'pipelinq',
+			'Shillinq could not resolve this client or a rate. Check the Shillinq organisation reference on this client.',
+		)
+	)
+}
+
+/**
+ * @param {object} result Any other result.
+ * @return {string} Its message, or that the send failed.
+ */
+function failedMessage(result) {
+	return (
+		result.message
+		|| t('pipelinq', 'Could not send this batch to billing.')
+	)
+}
+
+/**
+ * The line each result status shows; any other status reads as failed.
+ */
+const RESULT_MESSAGES = new Map([
+	['synced', syncedMessage],
+	['empty', () => t(
+		'pipelinq',
+		'No approved, un-billed hours in this period.',
+	)],
+	['conflict', () => t(
+		'pipelinq',
+		'This batch is already being processed by Shillinq — try again shortly.',
+	)],
+	['unmapped', unmappedMessage],
+])
 
 const DEFAULT_AVAILABILITY = {
 	available: false,
@@ -141,13 +204,7 @@ export default {
 		 * @spec openspec/specs/time-approval-workflow/spec.md
 		 */
 		resolvedId() {
-			if (this.clientId) {
-				return this.clientId
-			}
-			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
-			return (bag && bag.objectId) || ''
+			return this.clientId || sectionObjectId(this.cnSectionContext)
 		},
 
 		/**
@@ -196,46 +253,8 @@ export default {
 			if (!this.lastResult) {
 				return ''
 			}
-			switch (this.lastResult.status) {
-				case 'synced':
-					return this.lastResult.duplicated
-						? t(
-								'pipelinq',
-								'Already sent — Shillinq returned the existing draft invoice {number}.',
-								{ number: this.lastResult.invoiceNumber },
-							)
-						: t(
-								'pipelinq',
-								'Sent to billing — draft invoice {number} created ({count} entries).',
-								{
-									number: this.lastResult.invoiceNumber,
-									count: this.lastResult.entryCount,
-								},
-							)
-				case 'empty':
-					return t(
-						'pipelinq',
-						'No approved, un-billed hours in this period.',
-					)
-				case 'conflict':
-					return t(
-						'pipelinq',
-						'This batch is already being processed by Shillinq — try again shortly.',
-					)
-				case 'unmapped':
-					return (
-						this.lastResult.message
-						|| t(
-							'pipelinq',
-							'Shillinq could not resolve this client or a rate. Check the Shillinq organisation reference on this client.',
-						)
-					)
-				default:
-					return (
-						this.lastResult.message
-						|| t('pipelinq', 'Could not send this batch to billing.')
-					)
-			}
+			const message = RESULT_MESSAGES.get(this.lastResult.status) ?? failedMessage
+			return message(this.lastResult)
 		},
 	},
 

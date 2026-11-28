@@ -136,10 +136,12 @@ class DossierQuestionSchemaTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheVersionsMoved(): void {
-		$this->assertSame('1.4.0', $this->ticket()['version']);
+		// At least 1.4.0: later ticket changes move it on (1.5.0, ticket reference).
+		$this->assertTrue(version_compare($this->ticket()['version'], '1.4.0', '>='));
 
 		$register = json_decode((string)file_get_contents(dirname(__DIR__, 3) . '/lib/Settings/pipelinq_register.json'), true);
-		$this->assertSame('1.9.0', $register['info']['version']);
+		// At least 1.9.0: later register changes move the version on (1.10.0, decision 207).
+		$this->assertTrue(version_compare($register['info']['version'], '1.9.0', '>='), 'register version ' . $register['info']['version']);
 		$this->assertStringContainsString('1.9.0:', $register['info']['x-changelog']);
 	}//end testTheVersionsMoved()
 

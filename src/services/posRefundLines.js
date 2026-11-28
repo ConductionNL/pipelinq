@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 
+import { collectionRows } from './collectionRows.js'
+
 /**
  * Loaders for a POS refund's lines, shared by the PosRefundDetail grid
  * widgets.
@@ -24,7 +26,7 @@ export async function fetchRefundLines(store, refundId) {
 		return []
 	}
 	await store.fetchCollection('posRefundLine', { refund: refundId, _limit: 500 })
-	return (store.getCollection('posRefundLine')?.results || []).filter(
+	return collectionRows(store.getCollection('posRefundLine')).filter(
 		(line) => line.refund === refundId,
 	)
 }
@@ -46,7 +48,7 @@ export async function fetchOriginalLines(store, transactionId) {
 		transaction: transactionId,
 		_limit: 500,
 	})
-	return (store.getCollection('posTransactionLine')?.results || []).filter(
+	return collectionRows(store.getCollection('posTransactionLine')).filter(
 		(line) => line.transaction === transactionId,
 	)
 }

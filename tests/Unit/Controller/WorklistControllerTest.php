@@ -228,4 +228,116 @@ class WorklistControllerTest extends TestCase {
 		$this->assertSame('Worklist unavailable', $payload['message']);
 		$this->assertStringNotContainsString('boom', $payload['message']);
 	}
+
+	/**
+	 * `?scope=` and `?member=` reach the service; without them the scope is `mine`.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testMineForwardsScopeAndMember(): void {
+		$this->authenticateAs(uid: 'manager');
+		$this->request->method('getParam')->willReturnMap(
+			[
+				['limit', '', ''],
+				['scope', '', 'team'],
+				['member', '', 'bob'],
+			]
+		);
+
+		$this->service->expects($this->once())
+			->method('getMine')
+			->with('manager', null, 'team', 'bob')
+			->willReturn(['items' => [], 'total' => 0, 'leadCount' => 0, 'requestCount' => 0]);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $this->buildController()->mine()->getStatus());
+	}
+
+	/**
+	 * No scope in the request reads as the user's own work.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testMineDefaultsToOwnWork(): void {
+		$this->authenticateAs(uid: 'alice');
+		$this->request->method('getParam')->willReturn('');
+
+		$this->service->expects($this->once())
+			->method('getMine')
+			->with('alice', null, 'mine', '')
+			->willReturn(['items' => [], 'total' => 0, 'leadCount' => 0, 'requestCount' => 0]);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $this->buildController()->mine()->getStatus());
+	}
+
+	/**
+	 * A scope the user may not choose answers 400 with a static message.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testMineRefusesAScopeTheUserMayNotChoose(): void {
+		$this->authenticateAs(uid: 'alice');
+		$this->request->method('getParam')->willReturnMap(
+			[
+				['limit', '', ''],
+				['scope', '', 'organisation'],
+				['member', '', ''],
+			]
+		);
+		$this->service->method('getMine')->willThrowException(new \InvalidArgumentException('Unknown scope'));
+
+		$response = $this->buildController()->mine();
+		$this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
+		$this->assertSame(expected: 'Invalid scope', actual: $response->getData()['message']);
+	}
+
+	/**
+	 * The items endpoint hands the list and lens to the service, refuses an
+	 * unknown list, and downloads as CSV.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testItemsForwardsListAndLensAndDownloads(): void {
+		$this->authenticateAs('pieter');
+		$params = ['bucket' => 'answer-today', 'lens' => 'leads', 'sort' => 'priority', 'done' => 'true', 'format' => ''];
+		$this->request->method('getParam')->willReturnCallback(
+			static function (string $key, mixed $default = null) use (&$params): mixed {
+				return ($params[$key] ?? $default);
+			}
+		);
+		$item = ['kind' => 'lead', 'id' => 'l1', 'title' => 'Catering', 'priority' => 'normal', 'dueAt' => '2026-10-09', 'bucket' => 'answer-today'];
+		$this->service->expects($this->exactly(2))->method('items')
+			->with(
+				'pieter',
+				[
+					'bucket'   => 'answer-today',
+					'lens'     => 'leads',
+					'sort'     => 'priority',
+					'done'     => true,
+					'scope'    => 'mine',
+					'member'   => '',
+					'priority' => '',
+					'pipeline' => '',
+				]
+			)
+			->willReturn(['items' => [$item], 'total' => 1]);
+
+		$json = $this->buildController()->items();
+		self::assertSame(200, $json->getStatus());
+		self::assertSame(1, $json->getData()['total']);
+
+		$params['format'] = 'csv';
+		$file = $this->buildController()->items();
+		self::assertStringContainsString("lead,Catering,normal,2026-10-09,answer-today", $file->render());
+
+		$params['bucket'] = 'nope';
+		self::assertSame(400, $this->buildController()->items()->getStatus());
+	}//end testItemsForwardsListAndLensAndDownloads()
 }

@@ -9,10 +9,11 @@ pipelinq's part of hydra `woo-citizen-journey` J4.2 and J4.3.
 ### Requirement: A resident reads their question, the dossier it was about and the answers (REQ-QDP-001)
 
 The Vragen page SHALL show the question the resident selects. Its detail SHALL
-show the subject, the status and when it was asked, a timeline with the
-question, every answer and every reply, each with its moment, and the
-documents of the dossier as they were when the resident asked, each with its
-public link when it had one. Every answer the employee saves SHALL be kept with
+show the subject, the status and when it was asked, a timeline under the heading
+"Uw vraag en de antwoorden" with the question, every answer and every reply, each
+with its moment, and under "Documenten bij uw dossier" the documents of the
+dossier as they were when the resident asked, each with its public link when it
+had one. Every answer the employee saves SHALL be kept with
 its moment in `portalAnswers`. Internal notes SHALL never be shown.
 
 #### Scenario: Two answers and a reply
@@ -83,7 +84,7 @@ Gesloten. On `myQuestions`, `converted` MUST read "Omgezet in een Woo-verzoek".
 
 #### Scenario: A question waits for the resident
 - **GIVEN** a question with status `awaiting_customer`
-- **WHEN** the resident opens "Mijn vragen"
+- **WHEN** the resident opens the question, or sees it in "Uw andere vragen"
 - **THEN** the status MUST read "Wacht op uw reactie"
 
 ### Requirement: The answer notice says the question was answered
@@ -109,3 +110,19 @@ own heading, "Replies from the customer", never under "Answer to the customer".
 - **GIVEN** a ticket filed today
 - **WHEN** an employee opens "All tickets"
 - **THEN** it MUST be on the first page
+
+### Requirement: A question asked on the contact page needs its text and is dated
+
+The `askQuestion` action SHALL name its subject and its question in `requiredFields`, so the portal asks both as required, and SHALL name `occurredAt` as its `createdAtField`, so the ticket carries the moment it was asked and Mijn vragen shows it under "Gesteld".
+
+#### Scenario: The question is required
+@e2e exclude declaration contract; covered by PortalContributionProviderTest::testAContactQuestionNeedsItsTextAndIsDated
+- **GIVEN** a resident opens the question form on the contact page
+- **WHEN** the form is drawn
+- **THEN** "Uw vraag" carries no "niet verplicht" mark and an empty question is refused
+
+#### Scenario: The question is dated
+@e2e exclude the stamp is written by portaliq; covered by PortalContributionProviderTest and portaliq CreateBodyTest
+- **GIVEN** a resident sends a question from the contact page
+- **WHEN** she opens Mijn vragen
+- **THEN** "Gesteld" shows the day she asked it

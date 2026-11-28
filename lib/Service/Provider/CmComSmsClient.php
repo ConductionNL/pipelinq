@@ -19,15 +19,12 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Provider;
-
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * CmComSmsClient — CM.com SMS via the OpenRegister dispatch leaf.
@@ -35,90 +32,38 @@ use Psr\Log\LoggerInterface;
  * Vendor key: `cm-com`. CM.com's status callbacks use a shared-secret
  * HMAC over the raw body.
  *
- * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+ * @spec openspec/specs/whatsapp-sms-channel-adapter/spec.md
  */
-class CmComSmsClient implements SmsProviderClientInterface {
-	use MessageDispatchTrait;
-
+class CmComSmsClient extends LeafSmsClient {
 	/**
 	 * CM.com messages send path, relative to the source base URL.
 	 *
 	 * @var string
 	 */
-	private const SEND_PATH = 'messages';
+	protected const SEND_PATH = 'messages';
 
 	/**
-	 * Constructor.
+	 * The key of the message id in the dispatch answer.
 	 *
-	 * @param ContainerInterface $container DI container.
-	 * @param LoggerInterface $logger Logger.
-	 * @param array<string, mixed> $credentials Decoded credentials.
-	 * @param string $fromNumber Sender E.164 / account id.
-	 * @param string $webhookSecret Shared HMAC secret.
-	 * @param string|null $sourceId openconnector source id.
-	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+	 * @var string
 	 */
-	public function __construct(
-		private ContainerInterface $container,
-		private LoggerInterface $logger,
-		private array $credentials,
-		private string $fromNumber,
-		private string $webhookSecret,
-		private ?string $sourceId = null,
-	) {
-	}//end __construct()
+	protected const MESSAGE_ID_KEY = 'messageId';
 
 	/**
-	 * Send a single SMS via CM.com.
+	 * The CM.com send payload for one message.
 	 *
 	 * @param string $toNumber Recipient E.164.
 	 * @param string $body Plain-text body.
 	 *
-	 * @return array{externalMessageId: string, vendor: string} Provider id.
-	 *
-	 * @throws TransientSmsProviderException On 5xx / network.
-	 * @throws PermanentSmsProviderException On 4xx / config.
-	 *
-	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#1.3
+	 * @return array<string, mixed>
 	 */
-	public function send(string $toNumber, string $body): array {
-		$payload = [
+	protected function payloadFor(string $toNumber, string $body): array {
+		return [
 			'from' => $this->fromNumber,
 			'to' => [$toNumber],
 			'body' => $body,
 		];
-
-		$result = $this->dispatchViaLeaf(
-			source: (string)($this->sourceId ?? ''),
-			body: $payload,
-			path: self::SEND_PATH,
-		);
-		$id = (string)($result['messageId'] ?? ($result['externalMessageId'] ?? ''));
-
-		return [
-			'externalMessageId' => $id,
-			'vendor' => $this->getVendor(),
-		];
-	}//end send()
-
-	/**
-	 * Verify the CM.com signature header.
-	 *
-	 * @param string $rawBody Raw body.
-	 * @param string $signature Header.
-	 *
-	 * @return bool True when authentic.
-	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
-	 */
-	public function verifySignature(string $rawBody, string $signature): bool {
-		if ($this->webhookSecret === '' || $signature === '') {
-			return false;
-		}
-
-		$expected = hash_hmac('sha256', $rawBody, $this->webhookSecret);
-		return hash_equals($expected, $signature);
-	}//end verifySignature()
+	}//end payloadFor()
 
 	/**
 	 * Vendor key.

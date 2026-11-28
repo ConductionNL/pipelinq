@@ -21,15 +21,16 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\Export\ExportExecutionService;
-use OCA\Pipelinq\Service\Export\ExportRunService;
+use OCA\Pipelinq\Kernel\Contracts\ExportExecutionServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ExportRunServiceInterface;
+use OCA\Pipelinq\Service\SystemServiceAccount;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -37,7 +38,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Background worker that executes pending export runs.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004
  */
 class ExportWorkerJob extends TimedJob {
 	/**
@@ -59,15 +60,17 @@ class ExportWorkerJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory (required by TimedJob).
-	 * @param ExportRunService $runs The run service.
-	 * @param ExportExecutionService $execution The run executor.
+	 * @param ExportRunServiceInterface $runs The run service.
+	 * @param ExportExecutionServiceInterface $execution The run executor.
 	 * @param LoggerInterface $logger The logger.
+	 * @param SystemServiceAccount $systemAccount The account the run records are written as when nobody is signed in.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private ExportRunService $runs,
-		private ExportExecutionService $execution,
+		private ExportRunServiceInterface $runs,
+		private ExportExecutionServiceInterface $execution,
 		private LoggerInterface $logger,
+		private SystemServiceAccount $systemAccount,
 	) {
 		parent::__construct(time: $time);
 		$this->setInterval(seconds: self::INTERVAL);
@@ -82,36 +85,85 @@ class ExportWorkerJob extends TimedJob {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-02
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-02
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
 	 */
 	protected function run(mixed $argument): void {
-		try {
-			$pending = $this->runs->listRuns(filters: ['status' => 'pending']);
-		} catch (\Throwable $e) {
-			$this->logger->error('ExportWorkerJob: failed to list pending runs', ['error' => $e->getMessage()]);
+		// Cron runs with nobody signed in; the run records are updated as the
+		// system account. A mailed report still reads its rows as each recipient.
+		$this->systemAccount->runAsCurrentOrSystem(fn () => $this->drain());
+	}//end run()
+
+	/**
+	 * Drain up to BATCH pending runs, as the acting account.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
+	 */
+	private function drain(): void {
+		$pending = $this->pendingRuns();
+		if ($pending === null) {
 			return;
 		}
 
+		$processed = $this->executeBatch(pending: $pending);
+
+		if ($processed > 0) {
+			$this->logger->info('ExportWorkerJob: processed pending export runs', ['count' => $processed]);
+		}
+	}//end drain()
+
+	/**
+	 * The pending export runs; null (logged) when they cannot be listed.
+	 *
+	 * @return iterable<array<string, mixed>>|null The pending runs.
+	 */
+	private function pendingRuns(): iterable|null {
+		try {
+			return $this->runs->listRuns(filters: ['status' => 'pending']);
+		} catch (\Throwable $e) {
+			$this->logger->error('ExportWorkerJob: failed to list pending runs', ['error' => $e->getMessage()]);
+			return null;
+		}
+	}//end pendingRuns()
+
+	/**
+	 * Execute up to one batch of pending runs; a failed run is logged and still counted.
+	 *
+	 * @param iterable<array<string, mixed>> $pending The pending runs.
+	 *
+	 * @return int The number of runs processed.
+	 */
+	private function executeBatch(iterable $pending): int {
 		$processed = 0;
 		foreach ($pending as $run) {
 			if ($processed >= self::BATCH) {
 				break;
 			}
 
-			try {
-				$this->execution->executeRun(run: $run);
-			} catch (\Throwable $e) {
-				$this->logger->error(
-					'ExportWorkerJob: run execution failed',
-					['runId' => ($run['id'] ?? $run['uuid'] ?? ''), 'error' => $e->getMessage()]
-				);
-			}
-
+			$this->executeOne(run: $run);
 			$processed++;
-		}//end foreach
-
-		if ($processed > 0) {
-			$this->logger->info('ExportWorkerJob: processed pending export runs', ['count' => $processed]);
 		}
-	}//end run()
+
+		return $processed;
+	}//end executeBatch()
+
+	/**
+	 * Execute one run, logging a failure.
+	 *
+	 * @param array<string, mixed> $run The export run.
+	 *
+	 * @return void
+	 */
+	private function executeOne(array $run): void {
+		try {
+			$this->execution->executeRun(run: $run);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'ExportWorkerJob: run execution failed',
+				['runId' => ($run['id'] ?? $run['uuid'] ?? ''), 'error' => $e->getMessage()]
+			);
+		}
+	}//end executeOne()
 }//end class

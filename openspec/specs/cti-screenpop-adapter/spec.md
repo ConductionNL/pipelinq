@@ -6,7 +6,9 @@ status: done
 
 ## Purpose
 Integrates pipelinq with telephony platforms so inbound calls screen-pop the caller's CRM record and phone fields offer one-click click-to-dial. Every call creates a contactmoment with disposition workflow, recording metadata, and agent presence sync, via a pluggable per-platform adapter (CallVoip, RingCentral, Asterisk) with verified webhooks, plus admin configuration and an event log.
+
 ## Requirements
+
 ### Requirement: Inbound Screen-Pop on Call Answer (REQ-CTI-001)
 
 @e2e exclude every scenario here is triggered by an inbound `answered` webhook delivered by a telephony platform, and the CI instance provisions none: tests/e2e/ci-seed.sh installs only pipelinq + openregister and no CallVoip/RingCentral/Asterisk endpoint exists to deliver one. The agent-facing surfaces the scenarios describe are additionally unreachable — src/modals/ScreenPopModal.vue (the multi-match chooser) and src/modals/NewContactIntakeModal.vue (the no-match intake form) BOTH exist but are imported and registered by NO other component in src/, so no route mounts either of them, and `screenPop()` in src/services/ctiApi.js is called from nowhere in src/, leaving only the raw `POST /api/cti/screen-pop` endpoint. Verify with `grep -rn "ScreenPopModal\|NewContactIntakeModal\|screenPop(" src/`, which returns only those files' own definitions. Reported as a product gap rather than asserted. The lookup and the E.164 normalisation the scenarios turn on are asserted by tests/Unit/Service/CtiContactMatcherTest.php (testNullNumberReturnsEmpty, testMissingRegisterReturnsEmpty) and tests/Unit/Service/PhoneNormaliserTest.php (testNationalLeadingZeroBecomesE164, testE164PassesThrough).
@@ -111,7 +113,7 @@ The system MUST normalise all phone numbers to E.164 format for reliable contact
 
 ### Requirement: Click-to-Dial Outbound (REQ-CTI-003)
 
-@e2e exclude the phone icon these scenarios hang on has no entry point: src/components/CtiClickToDialButton.vue is imported and registered by NO other component, page or manifest entry in src/ (the remaining `click-to-dial` mentions in src/ are the API client src/services/ctiApi.js, the admin toggle in src/views/settings/CtiSettings.vue and a doc comment in src/views/settings/CtiPage.vue — none of them a render site), so no contact / deal / customer-360 / request view renders it and a browser cannot hover, click or observe a disabled state anywhere. Reported as a product gap rather than asserted. Behind the missing button, origination is an outbound call to a PBX the CI instance does not provision; the adapter dispatch it would take is asserted by tests/Unit/Service/CtiAdapterRegistryTest.php (testBuiltInsRegistered, testGetThrowsForUnknown, testCustomAdapterCanBeRegistered).
+@e2e exclude origination is an outbound call to a PBX the CI instance does not provision, and the phone icon only shows for an agent with a configured platform and an extension reported in `ctiAgentPresence`. The icon is `src/components/CtiClickToDialButton.vue`, mounted beside the phone number of the client contact strip (`ContactLinks`) and on each phone row of the Channels tab (`ContactChannelsSection`), and asserted by tests/vitest/clickToDialBesidePhone.spec.js; the line it reads is asserted by tests/Unit/Service/Cti/DialLineReaderTest.php, and the adapter dispatch by tests/Unit/Service/CtiAdapterRegistryTest.php (testBuiltInsRegistered, testGetThrowsForUnknown, testCustomAdapterCanBeRegistered).
 
 Phone number fields throughout Pipelinq MUST support one-click call initiation.
 
@@ -537,3 +539,21 @@ event log. The legacy standalone routes MUST remain reachable for deep links.
 - WHEN the link is followed
 - THEN the CTI event-log view MUST render
 
+### Requirement: The agent chooses the escalation queue at wrap-up
+
+The configured escalation queues (app config `cti_escalation_queues`, each `{ id, label, groupId }`) MUST be listed by `GET /api/cti/escalation-queues` and offered in the wrap-up dialog when the outcome is Escalated. A disposition with outcome `escalated` and a `queue` MUST create the follow-up task assigned to that queue's group (`assigneeGroupId`). An unknown `queue` MUST be rejected with 400. Without a `queue`, the first configured queue MUST be used.
+
+#### Scenario: The chosen queue receives the follow-up
+- GIVEN the queues "Vergunningen, tweede lijn" (group `zuiddrecht-tweede-lijn-vergunningen`) and "Belastingen, tweede lijn"
+- WHEN an agent closes a call as Escalated and chooses "Vergunningen, tweede lijn"
+- THEN a `followUpTask` is created with `assigneeGroupId` `zuiddrecht-tweede-lijn-vergunningen`
+
+#### Scenario: An unknown queue is refused
+- GIVEN the same queues
+- WHEN a disposition arrives with outcome `escalated` and queue `nope`
+- THEN the endpoint answers 400 and creates no task
+
+#### Scenario: The dialog lists the queues
+- GIVEN the queues above
+- WHEN the wrap-up dialog opens and the agent picks Escalated
+- THEN "Escalatiewachtrij (optioneel)" lists both queues by label

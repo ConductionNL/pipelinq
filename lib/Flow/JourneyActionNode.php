@@ -30,25 +30,26 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Flow;
 
-use OCA\OpenRegister\Service\Flow\IFlowNode;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
+use OCA\OpenRegister\Service\Flow\ICallFlowNode;
 use OCA\OpenRegister\Service\Flow\IFlowNodeConfigKeys;
-use OCA\Pipelinq\Service\Marketing\JourneyStepRunner;
+use OCA\Pipelinq\Kernel\Contracts\JourneyStepRunnerInterface;
 use OCP\IURLGenerator;
 use UnexpectedValueException;
 
 /**
  * JourneyActionNode: run one journey's action for the items the flow carries.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+ * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
  */
-class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
+class JourneyActionNode implements ICallFlowNode, IFlowNodeConfigKeys {
 
 	/**
 	 * The app-namespaced type identifier.
@@ -60,13 +61,13 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	/**
 	 * Constructor.
 	 *
-	 * @param JourneyStepRunner $runner The gate and the action.
+	 * @param JourneyStepRunnerInterface $runner The gate and the action.
 	 * @param IURLGenerator $urls URL generator, for the palette icon.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function __construct(
-		private JourneyStepRunner $runner,
+		private JourneyStepRunnerInterface $runner,
 		private IURLGenerator $urls,
 	) {
 	}//end __construct()
@@ -76,7 +77,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return string The type identifier.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function getId(): string {
 		return self::NODE_ID;
@@ -87,7 +88,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return string The display name.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function getDisplayName(): string {
 		return 'Journey action';
@@ -98,7 +99,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return string The description.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function getDescription(): string {
 		return 'Send the journey\'s mailing or create its task, after the consent gate.';
@@ -109,7 +110,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return string The icon URL.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function getIcon(): string {
 		return $this->urls->getAbsoluteURL($this->urls->imagePath('pipelinq', 'app.svg'));
@@ -122,7 +123,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return bool Whether it is available.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function isAvailableForScope(int $scope): bool {
 		unset($scope);
@@ -134,7 +135,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @return array<int, string> The accepted keys.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function configKeys(): array {
 		return ['journey'];
@@ -149,7 +150,7 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 *
 	 * @throws UnexpectedValueException When no journey is named.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	public function validateConfig(array $config): void {
 		if (trim((string)($config['journey'] ?? '')) === '') {
@@ -165,17 +166,18 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 	 * the items would make a later node read something a marketer never
 	 * authored.
 	 *
-	 * @param array<int, array<string, mixed>> $items The input items.
-	 * @param array<string, mixed> $config The step's authored configuration.
-	 * @param array<string, mixed> $context Run-level metadata.
+	 * @param FlowNodeCall $call The items, the step config and the run context.
 	 *
 	 * @return array<int, array<string, mixed>> The items, unchanged.
 	 *
 	 * @throws UnexpectedValueException When the step was never validated.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
+	 * @spec openspec/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-refuses-a-send-without-consent-and-names-the-contact
 	 */
-	public function execute(array $items, array $config, array $context): array {
+	public function execute(FlowNodeCall $call): array {
+		$items = $call->items;
+		$config = $call->config;
+		$context = $call->context;
 		// Re-checked here on purpose: validateConfig() only runs when a flow
 		// is SAVED, and a seeded or imported flow reaches this method having
 		// never passed through that path.
@@ -184,22 +186,37 @@ class JourneyActionNode implements IFlowNode, IFlowNodeConfigKeys {
 		$journeyId = trim((string)($config['journey'] ?? ''));
 		$flowRunUuid = (string)($context['runUuid'] ?? ($context['uuid'] ?? ''));
 
+		foreach ($this->subjectsOf(items: $items) as $subject) {
+			$this->runner->run(journeyId: $journeyId, subject: $subject, flowRunUuid: $flowRunUuid);
+		}
+
+		return $items;
+	}//end execute()
+
+	/**
+	 * The subject the journey runs for, per item; one empty subject when there are no items.
+	 *
+	 * @param array<int, array<string, mixed>> $items The input items.
+	 *
+	 * @return list<array<string, mixed>> The subjects.
+	 */
+	private function subjectsOf(array $items): array {
 		if ($items === []) {
 			// A scheduled journey fires with nothing attached. Its audience
 			// segment is the audience, and the runner resolves it.
-			$this->runner->run(journeyId: $journeyId, subject: [], flowRunUuid: $flowRunUuid);
-			return $items;
+			return [[]];
 		}
 
+		$subjects = [];
 		foreach ($items as $item) {
 			$subject = ($item['json'] ?? []);
 			if (is_array($subject) === false) {
 				$subject = [];
 			}
 
-			$this->runner->run(journeyId: $journeyId, subject: $subject, flowRunUuid: $flowRunUuid);
+			$subjects[] = $subject;
 		}
 
-		return $items;
-	}//end execute()
+		return $subjects;
+	}//end subjectsOf()
 }//end class

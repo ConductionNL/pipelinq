@@ -25,7 +25,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
  */
 
 declare(strict_types=1);
@@ -33,8 +33,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\PartyKindRegistryService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\PartyKindRegistryServiceInterface;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -44,7 +46,7 @@ use Throwable;
 /**
  * Repair step: seed the party kinds the fleet already uses.
  *
- * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+ * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
  */
 class SeedPartyKinds implements IRepairStep {
 	/**
@@ -97,20 +99,52 @@ class SeedPartyKinds implements IRepairStep {
 			'maxPerRecord' => 0,
 			'active' => true,
 		],
+		[
+			'code' => 'burger',
+			'label' => 'Burger',
+			'description' => 'A resident the organisation serves: what kind of party a client is.',
+			'identityShapes' => ['naturalPerson'],
+			'maxPerRecord' => 0,
+			'active' => true,
+		],
+		[
+			'code' => 'bedrijf',
+			'label' => 'Bedrijf',
+			'description' => 'A business the organisation serves: what kind of party a client is.',
+			'identityShapes' => ['organization'],
+			'maxPerRecord' => 0,
+			'active' => true,
+		],
 	];
+
+	/**
+	 * The record type under which a client's own kind is chosen. The client
+	 * form offers the kinds this acceptance names; an administrator adds a
+	 * kind to the vocabulary and to this acceptance, and no release is needed.
+	 *
+	 * @var string
+	 */
+	public const CLIENT_KIND_RECORD_TYPE = 'pipelinq:client:kind';
+
+	/**
+	 * The kinds a client is offered until an administrator changes the acceptance.
+	 *
+	 * @var array<int, string>
+	 */
+	private const CLIENT_KINDS = ['burger', 'bedrijf'];
 
 	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config, holding the schema ids.
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
-	 * @param PartyKindRegistryService $registry Reads the kinds already declared.
+	 * @param PartyKindRegistryServiceInterface $registry Reads the kinds already declared.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private ObjectServiceInterface $objectService,
-		private PartyKindRegistryService $registry,
+		private PartyKindRegistryServiceInterface $registry,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -120,7 +154,7 @@ class SeedPartyKinds implements IRepairStep {
 	 *
 	 * @return string Name.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function getName(): string {
 		return 'Seed the party kinds the fleet already uses';
@@ -135,7 +169,7 @@ class SeedPartyKinds implements IRepairStep {
 	 *
 	 * @return array<int, array<string, mixed>> The kinds to write.
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function missingKinds(array $existingCodes): array {
 		return array_values(
@@ -153,11 +187,11 @@ class SeedPartyKinds implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/party-kinds-accepted-per-case-type/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
+	 * @spec openspec/specs/party-kind-registry/spec.md#requirement-pipelinq-shall-hold-the-vocabulary-of-party-kinds-req-pkr-001
 	 */
 	public function run(IOutput $output): void {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'partyKind_schema', '');
+		$register = $this->appConfig->getValueString(AppIdentity::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'partyKind_schema', '');
 		if ($register === '' || $schema === '') {
 			$output->info('Party kind registry not configured — skipping the seed.');
 			return;
@@ -170,10 +204,9 @@ class SeedPartyKinds implements IRepairStep {
 			try {
 				$this->objectService->saveObject(
 					object: $kind,
-					register: $register,
-					schema: $schema,
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 					_rbac: false,
-					_multitenancy: false,
+					_multitenancy: false
 				);
 				$seeded++;
 			} catch (Throwable $e) {
@@ -187,5 +220,40 @@ class SeedPartyKinds implements IRepairStep {
 		$output->info(
 			sprintf('Party kinds: %d seeded, %d already declared.', $seeded, (count(self::KINDS) - count($missing)))
 		);
+
+		$this->seedClientAcceptance(register: $register, output: $output);
 	}//end run()
+
+	/**
+	 * Declare which kinds a client is offered, once: an acceptance an
+	 * administrator has written or changed is never touched again.
+	 *
+	 * @param string  $register The register id.
+	 * @param IOutput $output   Output.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/client-management/spec.md#requirement-a-client-records-what-kind-of-party-it-is
+	 */
+	private function seedClientAcceptance(string $register, IOutput $output): void {
+		$schema = $this->appConfig->getValueString(AppIdentity::APP_ID, 'partyKindAcceptance_schema', '');
+		if ($schema === '' || $this->registry->acceptanceFor(recordType: self::CLIENT_KIND_RECORD_TYPE) !== null) {
+			return;
+		}
+
+		try {
+			$this->objectService->saveObject(
+				object: ['recordType' => self::CLIENT_KIND_RECORD_TYPE, 'kinds' => self::CLIENT_KINDS],
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+				_rbac: false,
+				_multitenancy: false
+			);
+			$output->info('Party kinds: the kinds a client is offered are declared.');
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'SeedPartyKinds: could not declare the kinds a client is offered',
+				['exception' => $e->getMessage()]
+			);
+		}
+	}//end seedClientAcceptance()
 }//end class

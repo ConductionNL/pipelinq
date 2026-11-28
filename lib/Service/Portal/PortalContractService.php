@@ -20,12 +20,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-003
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-003
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
+
+use OCA\Pipelinq\Kernel\Contracts\PortalContractServiceInterface;
 
 /**
  * Per-customer contract read facade.
@@ -35,7 +37,7 @@ namespace OCA\Pipelinq\Service\Portal;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalContractService extends AbstractPortalReadFacade {
+class PortalContractService extends AbstractPortalReadFacade implements PortalContractServiceInterface {
 	/**
 	 * {@inheritDoc}
 	 *
@@ -57,14 +59,21 @@ class PortalContractService extends AbstractPortalReadFacade {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * The sales contract names its parties in `contactRef` and `clientRef`;
+	 * `contact` and `client` are read only when those are absent. Reading
+	 * only the bare names, as before, matched no stored contract, so no
+	 * client ever saw one in the portal.
+	 *
 	 * @param array<string, mixed> $object The raw contract.
 	 *
 	 * @return array{0: string|null, 1: string|null} The [contactId, clientId].
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-sees-their-own-invoices-contracts-orders-and-quotes
 	 */
 	protected function ownerIds(array $object): array {
 		return [
-			$this->readId(value: ($object['contact'] ?? null)),
-			$this->readId(value: ($object['client'] ?? null)),
+			$this->readId(value: ($object['contactRef'] ?? $object['contact'] ?? null)),
+			$this->readId(value: ($object['clientRef'] ?? $object['client'] ?? null)),
 		];
 	}//end ownerIds()
 

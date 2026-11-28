@@ -21,13 +21,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-010
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-010
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\Contracts\PortalExportServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IL10N;
 
@@ -42,7 +43,7 @@ use OCP\IL10N;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalExportService {
+class PortalExportService implements PortalExportServiceInterface {
 	/**
 	 * Export download-link validity in minutes (30 days).
 	 *
@@ -112,16 +113,14 @@ class PortalExportService {
 	}//end buildExport()
 
 	/**
-	 * Request an export: build it, mint a 30-day signed link, email it.
+	 * Request an export: mint a 30-day signed link and mail it to the account,
+	 * so the client gets the link by email as well as in the answer.
 	 *
 	 * @param array<string, mixed> $account The authenticated account.
 	 * @param string $tenantId The tenant id.
 	 *
 	 * @return array{downloadUrl: string, expiresAt: int} The download descriptor.
-	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
-	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
-	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
-	 *   audit are all unspecified
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-downloads-everything-the-portal-holds-about-them
 	 */
 	public function requestExport(array $account, string $tenantId): array {
 		$accountId = (string)($account['@self']['id'] ?? $account['id'] ?? $account['uuid'] ?? '');
@@ -132,10 +131,11 @@ class PortalExportService {
 			ttlMinutes: self::TTL_MINUTES
 		);
 
-		$this->mail->send(
-			(string)($account['email'] ?? ''),
-			$this->l10n->t('Your data export is ready'),
-			$this->l10n->t('Your data export is ready to download. The link is valid for 30 days.')
+		$this->mail->sendDownloadLink(
+			recipient: (string)($account['email'] ?? ''),
+			subject: $this->l10n->t('Your data export is ready'),
+			intro: $this->l10n->t('Your data export is ready to download. The link is valid for 30 days.'),
+			token: (string)$signed['token']
 		);
 
 		$this->audit->log(accountId: $accountId, tenantId: $tenantId, eventType: 'data-export-requested', outcome: 'success');

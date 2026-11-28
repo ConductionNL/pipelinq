@@ -1,0 +1,20 @@
+{
+    "$comment": "ticket-handover-history (REQ-THH-001): a handover carries a note for the colleague. Written together with the new assignee by TicketAssignController::passOn in one save, so OpenRegister's audit trail holds both in the same entry and the History tab's assignee rule shows the note under 'Passed to <assignee> by <actor>'. Hidden from the data widget and the Edit form: it is the note of the latest handover only, and reads as part of the history, not as a field of the ticket. ticket 1.9.0 -> 1.10.0.",
+    "components": {
+        "schemas": {
+            "ticket": {
+                "slug": "ticket",
+                "version": "1.10.0",
+                "properties": {
+                    "handoverNote": {
+                        "type": "string",
+                        "title": "Handover note",
+                        "description": "What the colleague a ticket was passed to should know, written with the handover. Shown under the handover in the History tab; empty when the latest handover had no note.",
+                        "maxLength": 1000,
+                        "visible": false
+                    }
+                }
+            }
+        }
+    }
+}

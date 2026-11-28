@@ -101,4 +101,35 @@ class SystemServiceAccountTest extends TestCase {
 		$this->assertSame($system, $seen);
 		$this->assertNull($active);
 	}//end testRestoresThePreviousUserWhenTheWorkThrows()
+
+	/**
+	 * runAsSystem puts the system account in front even when someone is signed in, and restores them after.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/website-forms-submit-into-tickets/tasks.md#task-1.3
+	 */
+	public function testRunAsSystemReplacesTheSignedInUserAndRestoresThem(): void {
+		$system   = $this->createMock(originalClassName: IUser::class);
+		$visitor  = $this->createMock(originalClassName: IUser::class);
+		$users    = $this->createMock(originalClassName: IUserManager::class);
+		$users->method('get')->willReturn($system);
+
+		$active  = $visitor;
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturnCallback(function () use (&$active) {
+			return $active;
+		});
+		$session->method('setVolatileActiveUser')->willReturnCallback(function (?IUser $user) use (&$active): void {
+			$active = $user;
+		});
+
+		$account = new SystemServiceAccount(userManager: $users, userSession: $session, random: $this->createMock(originalClassName: ISecureRandom::class));
+		$seen    = $account->runAsSystem(function () use (&$active) {
+			return $active;
+		});
+
+		$this->assertSame(expected: $system, actual: $seen);
+		$this->assertSame(expected: $visitor, actual: $active);
+	}//end testRunAsSystemReplacesTheSignedInUserAndRestoresThem()
 }//end class

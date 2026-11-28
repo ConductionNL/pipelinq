@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
  */
 
 declare(strict_types=1);
@@ -31,9 +31,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
-use OCA\Pipelinq\Service\Export\CronExpressionHelper;
-use OCA\Pipelinq\Service\Export\ExportJobService;
-use OCA\Pipelinq\Service\Export\ExportRunService;
+use OCA\Pipelinq\Kernel\Contracts\CronExpressionHelperInterface;
+use OCA\Pipelinq\Kernel\Contracts\ExportJobServiceInterface;
+use OCA\Pipelinq\Kernel\Contracts\ExportRunServiceInterface;
+use OCA\Pipelinq\Service\SystemServiceAccount;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -41,7 +42,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Creates pending runs for due, enabled export jobs.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
+ * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
  */
 class ExportSchedulerJob extends TimedJob {
 	/**
@@ -52,20 +53,29 @@ class ExportSchedulerJob extends TimedJob {
 	private const INTERVAL = 60;
 
 	/**
+	 * How far back a tick looks for a missed minute, in seconds.
+	 *
+	 * @var int
+	 */
+	private const CATCH_UP_WINDOW = 86400;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory (required by TimedJob).
-	 * @param ExportJobService $jobs The job service.
-	 * @param ExportRunService $runs The run service.
-	 * @param CronExpressionHelper $cron The cron helper.
+	 * @param ExportJobServiceInterface $jobs The job service.
+	 * @param ExportRunServiceInterface $runs The run service.
+	 * @param CronExpressionHelperInterface $cron The cron helper.
 	 * @param LoggerInterface $logger The logger.
+	 * @param SystemServiceAccount $systemAccount The account the run records are written as when nobody is signed in.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private ExportJobService $jobs,
-		private ExportRunService $runs,
-		private CronExpressionHelper $cron,
+		private ExportJobServiceInterface $jobs,
+		private ExportRunServiceInterface $runs,
+		private CronExpressionHelperInterface $cron,
 		private LoggerInterface $logger,
+		private SystemServiceAccount $systemAccount,
 	) {
 		parent::__construct(time: $time);
 		$this->setInterval(seconds: self::INTERVAL);
@@ -80,10 +90,27 @@ class ExportSchedulerJob extends TimedJob {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
+	 * @spec openspec/changes/archive/2026-06-14-bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
 	 */
 	protected function run(mixed $argument): void {
-		$now = new DateTimeImmutable();
+		$now = (new DateTimeImmutable())->setTimestamp($this->time->getTime());
+
+		// Cron runs with nobody signed in, and OpenRegister refuses an anonymous
+		// create: the pending run is written as the system account.
+		$this->systemAccount->runAsCurrentOrSystem(fn () => $this->enqueueDue(now: $now));
+	}//end run()
+
+	/**
+	 * Enqueue a pending run per due enabled job, as the acting account.
+	 *
+	 * @param DateTimeImmutable $now The tick's moment.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/report-periods-and-delivery/spec.md#requirement-a-scheduled-report-can-be-delivered-by-mail-req-rpd-002
+	 */
+	private function enqueueDue(DateTimeImmutable $now): void {
 
 		try {
 			$jobs = $this->jobs->listJobs();
@@ -94,31 +121,83 @@ class ExportSchedulerJob extends TimedJob {
 
 		$enqueued = 0;
 		foreach ($jobs as $job) {
-			if (($job['enabled'] ?? false) !== true) {
+			if ($this->isScheduledNow(job: $job, now: $now) === false) {
 				continue;
 			}
 
-			$cron = (string)($job['scheduleCron'] ?? '');
-			if ($this->cron->isDue(expression: $cron, when: $now) === false) {
-				continue;
-			}
-
-			try {
-				$watermarkFrom = $this->resolveWatermarkFrom(job: $job);
-				$this->runs->createPendingRun(job: $job, watermarkFrom: $watermarkFrom);
+			if ($this->enqueue(job: $job) === true) {
 				$enqueued++;
-			} catch (\Throwable $e) {
-				$this->logger->error(
-					'ExportSchedulerJob: failed to enqueue run',
-					['jobId' => ($job['id'] ?? $job['uuid'] ?? ''), 'error' => $e->getMessage()]
-				);
 			}
-		}//end foreach
+		}
 
 		if ($enqueued > 0) {
 			$this->logger->info('ExportSchedulerJob: enqueued export runs', ['count' => $enqueued]);
 		}
-	}//end run()
+	}//end enqueueDue()
+
+	/**
+	 * Whether the job is enabled and its schedule fired since the previous tick.
+	 *
+	 * @param array<string, mixed> $job The job.
+	 * @param DateTimeImmutable    $now The current tick.
+	 *
+	 * @return bool
+	 */
+	private function isScheduledNow(array $job, DateTimeImmutable $now): bool {
+		if (($job['enabled'] ?? false) !== true) {
+			return false;
+		}
+
+		$cron = (string)($job['scheduleCron'] ?? '');
+		return $this->isDueSinceLastTick(cron: $cron, now: $now);
+	}//end isScheduledNow()
+
+	/**
+	 * Create the job's pending run; a failure is logged and does not stop the tick.
+	 *
+	 * @param array<string, mixed> $job The job.
+	 *
+	 * @return bool Whether a run was enqueued.
+	 */
+	private function enqueue(array $job): bool {
+		try {
+			$watermarkFrom = $this->resolveWatermarkFrom(job: $job);
+			$this->runs->createPendingRun(job: $job, watermarkFrom: $watermarkFrom);
+			return true;
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'ExportSchedulerJob: failed to enqueue run',
+				['jobId' => ($job['id'] ?? $job['uuid'] ?? ''), 'error' => $e->getMessage()]
+			);
+			return false;
+		}
+	}//end enqueue()
+
+	/**
+	 * Whether the schedule fired in a minute since the previous tick.
+	 *
+	 * Cron does not always tick every minute, so matching only the current
+	 * minute misses a schedule whose minute fell between two ticks. Each
+	 * tick therefore covers the minutes after the previous tick up to now
+	 * (at most CATCH_UP_WINDOW back), and enqueues one run however many of
+	 * them matched. Without a previous tick only the current minute counts,
+	 * so a new job does not fire for its whole history.
+	 *
+	 * @param string $cron The job's cron expression.
+	 * @param DateTimeImmutable $now The current tick.
+	 *
+	 * @return bool
+	 */
+	private function isDueSinceLastTick(string $cron, DateTimeImmutable $now): bool {
+		$previous = $this->getLastRun();
+		if ($previous <= 0 || $previous >= $now->getTimestamp()) {
+			return $this->cron->isDue(expression: $cron, when: $now);
+		}
+
+		$since = $now->setTimestamp(max($previous, ($now->getTimestamp() - self::CATCH_UP_WINDOW)));
+		$next = $this->cron->nextRunAfter(expression: $cron, from: $since, horizonDays: 2);
+		return $next !== null && $next <= $now;
+	}//end isDueSinceLastTick()
 
 	/**
 	 * Resolve the incremental watermark start from the last succeeded run.

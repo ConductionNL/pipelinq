@@ -1,0 +1,65 @@
+{
+    "$comment": "PqLead: a lead keeps the value its lines add up to (calculatedValue, written by the line roll-up) beside the value shown. When the value was typed over it, valueOverridden is true and the lead page offers Use calculated value. lead 1.6.0 -> 1.7.0.",
+    "components": {
+        "schemas": {
+            "lead": {
+                "slug": "lead",
+                "version": "1.7.0",
+                "configuration": {
+                    "x-openregister-calculations": {
+                        "valueOverridden": {
+                            "type": "boolean",
+                            "materialise": true,
+                            "expression": {
+                                "and": [
+                                    {
+                                        "gt": [
+                                            {
+                                                "coalesce": [
+                                                    {
+                                                        "prop": "calculatedValue"
+                                                    },
+                                                    0
+                                                ]
+                                            },
+                                            0
+                                        ]
+                                    },
+                                    {
+                                        "ne": [
+                                            {
+                                                "coalesce": [
+                                                    {
+                                                        "prop": "value"
+                                                    },
+                                                    0
+                                                ]
+                                            },
+                                            {
+                                                "prop": "calculatedValue"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "properties": {
+                    "calculatedValue": {
+                        "type": "number",
+                        "title": "Calculated from the lines",
+                        "description": "The sum of the product lines. Written when a line changes; you cannot change it by hand.",
+                        "readOnly": true
+                    },
+                    "valueOverridden": {
+                        "type": "boolean",
+                        "title": "Value typed by hand",
+                        "description": "The value differs from what the product lines add up to.",
+                        "readOnly": true
+                    }
+                }
+            }
+        }
+    }
+}

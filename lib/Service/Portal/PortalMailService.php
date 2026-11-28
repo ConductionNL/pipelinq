@@ -20,13 +20,14 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/customer-portal/specs.md#REQ-001
+ * @spec openspec/changes/archive/2026-06-14-customer-portal/specs.md#REQ-001
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Portal;
 
+use OCA\Pipelinq\Kernel\AppIdentity;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
@@ -79,11 +80,47 @@ class PortalMailService {
 		string $subject,
 		string $intro,
 	): bool {
-		$link = $this->urlGenerator->getAbsoluteURL($route) . '?token=' . rawurlencode($token);
-		$body = $intro . "\n\n" . $link . "\n\n" . $this->l10n->t('If you did not request this, you can ignore this email.');
-
-		return $this->send(recipient: $recipient, subject: $subject, body: $body);
+		return $this->send(recipient: $recipient, subject: $subject, body: $this->tokenLinkBody(intro: $intro, link: [$route, $token]));
 	}//end sendTokenLink()
+
+	/**
+	 * Send a mail that carries a signed download link to a portal document.
+	 *
+	 * The link is the absolute address of the portal's document download
+	 * route; the signed token is all it needs, so it opens from the mail
+	 * without a portal session.
+	 *
+	 * @param string $recipient The recipient email.
+	 * @param string $subject   The localised subject.
+	 * @param string $intro     The localised intro line.
+	 * @param string $token     The signed download token.
+	 *
+	 * @return bool True when the message was accepted for delivery.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/customer-portal/spec.md#requirement-a-client-downloads-everything-the-portal-holds-about-them
+	 */
+	public function sendDownloadLink(string $recipient, string $subject, string $intro, string $token): bool {
+		$url = $this->urlGenerator->linkToRouteAbsolute(
+			AppIdentity::APP_ID . '.portalDocument.download',
+			['token' => $token]
+		);
+
+		return $this->send(recipient: $recipient, subject: $subject, body: $intro . "\n\n" . $url);
+	}//end sendDownloadLink()
+
+	/**
+	 * The body of a tokenised action link mail: the intro, the link and the ignore line.
+	 *
+	 * @param string                      $intro The localised intro line.
+	 * @param array{0: string, 1: string} $link  The frontend route and the plaintext token.
+	 *
+	 * @return string The plain-text body.
+	 */
+	private function tokenLinkBody(string $intro, array $link): string {
+		$url = $this->urlGenerator->getAbsoluteURL($link[0]) . '?token=' . rawurlencode($link[1]);
+
+		return $intro . "\n\n" . $url . "\n\n" . $this->l10n->t('If you did not request this, you can ignore this email.');
+	}//end tokenLinkBody()
 
 	/**
 	 * Send a plain informational message.
@@ -103,16 +140,28 @@ class PortalMailService {
 			return false;
 		}
 
+		return $this->delivered(recipient: $recipient, content: ['subject' => $subject, 'body' => $body]);
+	}//end send()
+
+	/**
+	 * Hand a plain-text mail to the mailer; a failure is logged and answers false.
+	 *
+	 * @param string                                $recipient The valid recipient email.
+	 * @param array{subject: string, body: string} $content   The localised subject and plain-text body.
+	 *
+	 * @return bool True when accepted for delivery.
+	 */
+	private function delivered(string $recipient, array $content): bool {
 		try {
 			$message = $this->mailer->createMessage();
 			$message->setTo([$recipient]);
-			$message->setSubject($subject);
-			$message->setPlainBody($body);
+			$message->setSubject($content['subject']);
+			$message->setPlainBody($content['body']);
 			$failed = $this->mailer->send($message);
 			return empty($failed) === true;
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq portal: mail send failed', ['exception' => $e->getMessage()]);
 			return false;
 		}
-	}//end send()
+	}//end delivered()
 }//end class

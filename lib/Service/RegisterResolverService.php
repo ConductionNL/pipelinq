@@ -27,7 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Kernel\Contracts\RegisterResolverServiceInterface;
 use OCP\IAppConfig;
 
 /**
@@ -44,9 +45,9 @@ use OCP\IAppConfig;
  * config value. All logical names currently resolve to the same instance-scoped
  * `register` id, preserving the prior behaviour exactly.
  *
- * @spec openspec/changes/pipelinq-or-register-resolver/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-05-31-pipelinq-or-register-resolver/tasks.md#task-1.1
  */
-class RegisterResolverService {
+class RegisterResolverService implements RegisterResolverServiceInterface {
 	/**
 	 * The app-config key holding the register id.
 	 *
@@ -88,7 +89,7 @@ class RegisterResolverService {
 	 * @return string The configured register id, or an empty string when the
 	 *                app has not been configured with a register yet.
 	 *
-	 * @spec openspec/changes/pipelinq-or-register-resolver/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-05-31-pipelinq-or-register-resolver/tasks.md#task-1.1
 	 */
 	public function resolve(string $logicalName = 'default'): string {
 		if (array_key_exists($logicalName, $this->cache) === true) {
@@ -96,7 +97,7 @@ class RegisterResolverService {
 		}
 
 		$registerId = $this->appConfig->getValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::REGISTER_CONFIG_KEY,
 			''
 		);

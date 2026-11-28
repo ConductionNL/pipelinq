@@ -29,6 +29,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \OCA\Pipelinq\Service\ConfigFileLoaderService
+ * @uses \OCA\Pipelinq\Service\ConfigFragmentValue
  */
 class RegisterCarriesNoExampleDataTest extends TestCase {
 	/**
@@ -53,6 +54,10 @@ class RegisterCarriesNoExampleDataTest extends TestCase {
 		'segment',
 		'skill',
 		'slaPolicy',
+		// The three website forms conduction-website posts to. Today's allowlist
+		// was the same three keys hard-coded in every install; as published
+		// webForm records they keep that parity (decision 179, Q-pipelinq-d179-1).
+		'webForm',
 	];
 
 	/**

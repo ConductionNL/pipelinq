@@ -231,11 +231,13 @@ fi
 # describes. It went unnoticed because most specs never click behind the
 # overlay; one that opens a row and then reads its sidebar does.
 #
-# There is no `integrations` step any more: Shillinq and XWiki are detected,
-# never typed (pipelinq-setup-wizard-review), so nothing here sets a URL.
-post_json "${APP_BASE}/api/setup/config" '{"receipt_company_name":"CI Test Organisation"}'
+# The `pos` and `integrations` steps are optional too, and SetupController
+# marks each done once one of its fields is set (`receipt_email_sender` for the
+# till, `billing_handoff_manager_group` for the integrations step). Shillinq and
+# XWiki are still detected, never typed, so no URL is set here.
+post_json "${APP_BASE}/api/setup/config" '{"receipt_company_name":"CI Test Organisation","receipt_email_sender":"kassa@example.com","billing_handoff_manager_group":"admin"}'
 if [ "$POST_CODE" != "200" ]; then
-	echo "::error::Could not complete the organisation setup step (HTTP ${POST_CODE}). An unmet optional step makes CnAppRoot cover the shell with the wizard in every fresh browser context."
+	echo "::error::Could not complete the organisation, till and integrations setup steps (HTTP ${POST_CODE}). An unmet optional step makes CnAppRoot cover the shell with the wizard in every fresh browser context."
 	exit 1
 fi
 

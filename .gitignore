@@ -10,6 +10,8 @@
 
 # Build artifacts
 /js/
+# nextcloud-vue's stylesheet, copied by webpack.config.js (LibraryStylesheetCopy)
+/css/nextcloud-vue.css
 
 # Documentation
 /docs/node_modules/
@@ -27,6 +29,7 @@
 .phpunit.result.cache
 /coverage/
 /coverage-frontend/
+/coverage-vitest/
 /phpmetrics/
 /quality-reports/
 /phpqa/
@@ -53,7 +56,8 @@
 Thumbs.db
 
 # Claude Code
-.claude/worktrees/
+/.claude/*
+!/.claude/commands/
 
 # Agent/test scratch and tool caches — generated, never source.
 # Added by the 2026-08-25 fleet hygiene sweep (ADR-100 Decision 2).

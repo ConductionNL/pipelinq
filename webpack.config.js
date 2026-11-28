@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
+const fs = require('fs')
 const path = require('path')
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
@@ -87,6 +88,23 @@ webpackConfig.entry = {
 	portal: {
 		import: path.join(__dirname, 'src', 'portal.js'),
 		filename: appId + '-portal.js',
+	},
+	// requests-web-chat-and-bot: the line a website pastes, and the chat window
+	// it frames. Both stand alone (no shared chunks, see splitChunks below): the
+	// embed runs on somebody else's page, the window in a frame of it.
+	webChat: {
+		import: path.join(__dirname, 'src', 'webChat', 'embed.js'),
+		filename: appId + '-web-chat.js',
+	},
+	webChatWindow: {
+		import: path.join(__dirname, 'src', 'webChat', 'window.js'),
+		filename: appId + '-web-chat-window.js',
+	},
+	// The Outlook add-in's task pane (contact-moments-mail-add-in). Plain DOM,
+	// no Vue: it runs inside Outlook, outside the Nextcloud shell.
+	mailAddIn: {
+		import: path.join(__dirname, 'src', 'mailAddIn.js'),
+		filename: appId + '-mailAddIn.js',
 	},
 }
 
@@ -234,7 +252,8 @@ webpackConfig.optimization = {
 	...(webpackConfig.optimization || {}),
 	splitChunks: {
 		...(webpackConfig.optimization?.splitChunks || {}),
-		chunks: 'all',
+		// The web chat entries stand alone: their pages load no shared chunk.
+		chunks: (chunk) => !['webChat', 'webChatWindow'].includes(chunk.name),
 		cacheGroups: {
 			default: false,
 			defaultVendors: false,
@@ -266,27 +285,30 @@ webpackConfig.optimization = {
 }
 
 if (!isDev) {
-	// Minify with esbuild instead of Terser in production. Terser parses every
-	// chunk into a full JS AST held in the Node heap and runs `CPU cores - 1`
-	// parallel workers; across these large entrypoints the build peaked at ~12 GB
-	// in ~33s. esbuild minifies in native (Go) code with a tiny heap footprint and
-	// is ~10-100x faster, at the cost of only ~1-2% larger output. We reuse
-	// terser-webpack-plugin purely as the wiring and swap its engine to the
-	// built-in esbuild minifier.
+	// Minify with swc in production. Terser parsed every chunk in JavaScript and
+	// cost minutes and gigabytes here; esbuild (used until 25 Nov 2026) is fast
+	// but its transform API never removes unused declarations, so webpack's
+	// unused-export marking was thrown away and every library shipped whole:
+	// all 7,447 @mdi/js icons sat in the main chunk and in each dashboard-widget
+	// entry because @nextcloud/dialogs imports a handful of them by name. swc
+	// minifies in native code AND drops what webpack marked unused (main
+	// 7.2 MB -> 4.4 MB, a widget entry 4.7 MB -> 1.9 MB, all js 67 -> 43 MB;
+	// PERF-HANDOFF pipelinq main bundle). Legal comments (/*! ..., @license,
+	// @preserve) stay in the bundle, as before, so the MIT/AGPL attribution
+	// our dependencies require ships with the code.
 	webpackConfig.optimization.minimizer = [
 		new TerserPlugin({
-			minify: TerserPlugin.esbuildMinify,
-			// esbuild parallelizes internally (in Go), so terser-webpack-plugin's
-			// default `cpus-1` Node worker processes only add memory overhead.
-			// Disabling them lowers peak build RAM with no real speed cost.
+			minify: TerserPlugin.swcMinify,
+			// swc parallelizes internally; terser-webpack-plugin's worker
+			// processes would only add memory.
 			parallel: false,
-			// esbuild minify options (NOT terserOptions). Keep legal/license
-			// comments at end-of-file so MIT/AGPL attribution required by our
-			// deps survives minification. (esbuild's sidecar-emitting 'linked'
-			// mode is unavailable here — terser-webpack-plugin drives esbuild via
-			// its transform API, which rejects 'linked'/'external'.)
+			extractComments: false,
 			terserOptions: {
-				legalComments: 'eof',
+				compress: true,
+				mangle: true,
+				format: {
+					comments: 'some',
+				},
 			},
 		}),
 	]
@@ -296,5 +318,25 @@ if (!isDev) {
 	// process — the dominant memory consumer here. Disable it for the build.
 	webpackConfig.cache = false
 }
+
+// nextcloud-vue's stylesheet goes to css/nextcloud-vue.css, which every page
+// loading the -shared-nc-vue chunk links (templates/index.php, portal.php,
+// settings/admin.php, AbstractPipelinqWidget::load()) instead of the bundles
+// inserting ~1.1 MB of CSS text: a linked sheet stays parsed between page
+// loads. The file is what '@conduction/nextcloud-vue/css/index.css' @imports.
+class LibraryStylesheetCopy {
+
+	apply(compiler) {
+		compiler.hooks.afterEmit.tap('LibraryStylesheetCopy', () => {
+			const entry = require.resolve('@conduction/nextcloud-vue/css/index.css')
+			const imported = /@import\s+['"]([^'"]+)['"]/.exec(fs.readFileSync(entry, 'utf8'))
+			const source = imported ? path.resolve(path.dirname(entry), imported[1]) : entry
+			fs.mkdirSync(path.join(__dirname, 'css'), { recursive: true })
+			fs.copyFileSync(source, path.join(__dirname, 'css', 'nextcloud-vue.css'))
+		})
+	}
+
+}
+webpackConfig.plugins.push(new LibraryStylesheetCopy())
 
 module.exports = webpackConfig

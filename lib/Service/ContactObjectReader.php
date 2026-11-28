@@ -1,0 +1,164 @@
+<?php
+
+/**
+ * Pipelinq ContactObjectReader.
+ *
+ * Reads a Pipelinq client or contact from its register for a contacts sync.
+ *
+ * @category Service
+ * @package  OCA\Pipelinq\Service
+ *
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @version GIT: <git_id>
+ *
+ * @link https://github.com/ConductionNL/pipelinq
+ *
+ * @spec openspec/specs/contacts-sync/spec.md
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Service;
+
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\Pipelinq\Kernel\AppIdentity;
+use OCA\Pipelinq\Util\ResultToArray;
+use OCP\IAppConfig;
+use Psr\Log\LoggerInterface;
+
+/**
+ * Reads a client or contact object as an array.
+ *
+ * @spec openspec/specs/contacts-sync/spec.md
+ */
+class ContactObjectReader {
+	use ResultToArray;
+
+	/**
+	 * Allowed object types for vCard sync.
+	 *
+	 * Only these values may be used to construct an IAppConfig key, preventing
+	 * an unvalidated caller-supplied $objectType from reaching arbitrary keys.
+	 *
+	 * @var string[]
+	 */
+	public const OBJECT_TYPES = ['client', 'contact'];
+
+	/**
+	 * Constructor.
+	 *
+	 * @param IAppConfig $appConfig The app config.
+	 * @param RegisterResolverService $registerResolver The register resolver.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		private IAppConfig $appConfig,
+		private RegisterResolverService $registerResolver,
+		private readonly ObjectServiceInterface $objectService,
+		private LoggerInterface $logger,
+	) {
+	}//end __construct()
+
+	/**
+	 * Fetch a Pipelinq object by type and ID.
+	 *
+	 * @param string $objectType The object type (client or contact).
+	 * @param string $objectId The object ID.
+	 *
+	 * @return ?array The serialized object data or null on failure.
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md
+	 */
+	public function fetch(string $objectType, string $objectId): ?array {
+		if (in_array($objectType, self::OBJECT_TYPES, true) === false) {
+			$this->logger->warning('ContactVcardService: invalid objectType', ['objectType' => $objectType]);
+			return null;
+		}
+
+		$target = $this->syncTarget(objectType: $objectType);
+		if ($target === null) {
+			return null;
+		}
+
+		return $this->findForSync(objectId: $objectId, target: $target);
+	}//end fetch()
+
+	/**
+	 * One page of the clients or contacts the acting user may read.
+	 *
+	 * @param string $objectType The object type (client or contact).
+	 * @param int    $limit      The page size.
+	 * @param int    $offset     How many objects to pass over.
+	 *
+	 * @return list<array<string, mixed>>|null The objects, or null when the type is not allowed or not configured.
+	 *
+	 * @spec openspec/changes/archive/2026-11-26-example-set-zuiddrecht/tasks.md#task-2.5
+	 */
+	public function page(string $objectType, int $limit, int $offset): ?array {
+		if (in_array($objectType, self::OBJECT_TYPES, true) === false) {
+			return null;
+		}
+
+		$target = $this->syncTarget(objectType: $objectType);
+		if ($target === null) {
+			return null;
+		}
+
+		[$registerId, $schemaId] = $target;
+		$found = $this->objectService->findAll(
+			['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => $limit, 'offset' => $offset]
+		);
+
+		return array_map(fn (mixed $result): array => $this->serializeResult(result: $result), array_values($found));
+	}//end page()
+
+	/**
+	 * The contact register and the object type's schema; null (logged) when either is not configured.
+	 *
+	 * @param string $objectType The object type.
+	 *
+	 * @return array{0: string, 1: string}|null The register and schema ids.
+	 */
+	private function syncTarget(string $objectType): array|null {
+		$registerId = $this->registerResolver->resolve('contact');
+		$schemaId = $this->appConfig->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
+
+		if ($registerId === '' || $schemaId === '') {
+			$this->logger->warning('Pipelinq: Cannot sync -- register or schema not configured');
+			return null;
+		}
+
+		return [$registerId, $schemaId];
+	}//end syncTarget()
+
+	/**
+	 * Fetch the object and serialise it; null (logged) when the fetch fails.
+	 *
+	 * @param string $objectId The object id.
+	 * @param array{0: string, 1: string} $target The register and schema ids.
+	 *
+	 * @return array<string, mixed>|null The object data.
+	 */
+	private function findForSync(string $objectId, array $target): array|null {
+		[$registerId, $schemaId] = $target;
+		try {
+			$object = $this->objectService->find(
+				$objectId,
+				new ObjectFindOptions(register: $registerId, schema: $schemaId)
+			);
+		} catch (\Exception $e) {
+			$this->logger->error('Pipelinq: Failed to fetch object for sync', ['exception' => $e->getMessage()]);
+			return null;
+		}
+
+		return $this->serializeResult(result: $object);
+	}//end findForSync()
+}//end class

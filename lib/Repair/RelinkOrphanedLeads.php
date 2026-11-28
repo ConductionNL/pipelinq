@@ -17,30 +17,30 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use OCA\Pipelinq\Service\OrphanedLeadRepairService;
+use OCA\Pipelinq\Kernel\Contracts\OrphanedLeadRepairServiceInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 
 /**
  * Repair step: move leads off deleted pipelines.
  *
- * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
  */
 class RelinkOrphanedLeads implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param OrphanedLeadRepairService $service Does the work.
+	 * @param OrphanedLeadRepairServiceInterface $service Does the work.
 	 */
 	public function __construct(
-		private readonly OrphanedLeadRepairService $service,
+		private readonly OrphanedLeadRepairServiceInterface $service,
 	) {
 	}//end __construct()
 
@@ -49,7 +49,7 @@ class RelinkOrphanedLeads implements IRepairStep {
 	 *
 	 * @return string The name.
 	 *
-	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+	 * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
 	 */
 	public function getName(): string {
 		return 'Move leads off deleted pipelines onto the default pipeline';
@@ -62,7 +62,7 @@ class RelinkOrphanedLeads implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+	 * @spec openspec/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
 	 */
 	public function run(IOutput $output): void {
 		$counts = $this->service->repair();

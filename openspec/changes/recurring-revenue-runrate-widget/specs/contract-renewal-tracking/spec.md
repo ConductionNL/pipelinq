@@ -43,6 +43,14 @@ is a plain cross-app OpenRegister read.
 - THEN the tile MUST display €0 (the true aggregate)
 - AND MUST NOT fall back to a locally-computed `contract`-based number
 
+#### Scenario: MRR card reflects contract changes
+
+- GIVEN the recurring-revenue tile shows a run-rate of €2,000
+- WHEN a new recurring contract of €500 per month becomes active as a recurring `SalesOrderLine` in shillinq
+- THEN the tile MUST show €2,500 on next load
+
+---
+
 ## REMOVED Requirements
 
 ### Requirement: Renewals Due Widget

@@ -1,0 +1,4 @@
+{
+	"about": "Known WCAG 2.1 A/AA violations on the back office sample, each with the change that fixes it. The axe sweep fails on a violation not listed here and on a listed one that no longer occurs. The four controls of keyboard-accessible-click-toggles were fixed before this list was first written, so it starts empty.",
+	"issues": []
+}

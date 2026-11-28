@@ -17,13 +17,36 @@
   - an account with no followers recorded shows no rate rather than a zero
   - that would read as "nobody engaged".
   -
-  - @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+  - @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
   -->
 <template>
 	<div class="social-performance" data-testid="social-performance">
 		<h2>{{ t('pipelinq', 'Social performance') }}</h2>
 
 		<NcNoteCard v-if="error" type="error">{{ error }}</NcNoteCard>
+
+		<!-- The date and the follower count sit on a second line to fit the
+			table, so their order is offered here; the headers sort the rest. -->
+		<div class="social-performance__sort">
+			<NcSelect
+				:modelValue="sortKey"
+				:options="sortOptions"
+				:inputLabel="t('pipelinq', 'Sort')"
+				:clearable="false"
+				label="label"
+				:reduce="(o) => o.value"
+				data-testid="social-performance-sort"
+				@update:modelValue="(key) => onSort({ key, order: sortOrder })" />
+			<NcSelect
+				:modelValue="sortOrder"
+				:options="orderOptions"
+				:inputLabel="t('pipelinq', 'Sort order')"
+				:clearable="false"
+				label="label"
+				:reduce="(o) => o.value"
+				data-testid="social-performance-order"
+				@update:modelValue="(order) => onSort({ key: sortKey, order })" />
+		</div>
 
 		<!-- CnDataTable renders its headers before the rows arrive, so the page
 			still paints before the one request that fills it. It only reports
@@ -59,7 +82,7 @@
 
 <script>
 import { CnDataTable } from '@conduction/nextcloud-vue'
-import { NcNoteCard } from '@nextcloud/vue'
+import { NcNoteCard, NcSelect } from '@nextcloud/vue'
 import { fetchPerformance } from '../../services/socialApi.js'
 import { networkIcon } from '../../services/socialNetworkIcons.js'
 import {
@@ -73,6 +96,7 @@ export default {
 	components: {
 		CnDataTable,
 		NcNoteCard,
+		NcSelect,
 	},
 
 	data() {
@@ -89,15 +113,16 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<object>} The columns, every one sortable.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		columns() {
 			return [
-				{ key: 'network', label: t('pipelinq', 'Network'), sortable: true },
 				{
-					key: 'publishedAt',
-					label: t('pipelinq', 'Published'),
+					key: 'network',
+					label: t('pipelinq', 'Network'),
 					sortable: true,
+					cellClass: 'cn-cell--wrap',
+					secondary: (row) => this.formatDate(row.publishedAt),
 				},
 				{ key: 'views', label: t('pipelinq', 'Views'), sortable: true },
 				{ key: 'likes', label: t('pipelinq', 'Likes'), sortable: true },
@@ -108,15 +133,48 @@ export default {
 				},
 				{ key: 'shares', label: t('pipelinq', 'Shares'), sortable: true },
 				{
-					key: 'followerCount',
-					label: t('pipelinq', 'Followers'),
-					sortable: true,
-				},
-				{
 					key: 'engagementRate',
 					label: t('pipelinq', 'Engagement rate'),
 					sortable: true,
+					secondary: (row) =>
+						t('pipelinq', 'Followers: {count}', {
+							count: row.followerCount,
+						}),
 				},
+			]
+		},
+
+		/**
+		 * Every order the page offers: the six table columns plus the
+		 * publication date and the follower count shown on their second lines.
+		 *
+		 * @return {Array<{value: string, label: string}>} The sort choices.
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 */
+		sortOptions() {
+			const extra = {
+				network: [
+					{ value: 'publishedAt', label: t('pipelinq', 'Published') },
+				],
+
+				shares: [
+					{ value: 'followerCount', label: t('pipelinq', 'Followers') },
+				],
+			}
+			return this.columns.flatMap((column) => [
+				{ value: column.key, label: column.label },
+				...(extra[column.key] || []),
+			])
+		},
+
+		/**
+		 * @return {Array<{value: string, label: string}>} The two directions.
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 */
+		orderOptions() {
+			return [
+				{ value: 'asc', label: t('pipelinq', 'Ascending') },
+				{ value: 'desc', label: t('pipelinq', 'Descending') },
 			]
 		},
 
@@ -125,7 +183,7 @@ export default {
 		 * sorts on the number it shows. `source` keeps the row as the server sent it.
 		 *
 		 * @return {Array<object>} The table rows.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		tableRows() {
 			return this.rows.map((row) => ({
@@ -150,7 +208,7 @@ export default {
 		 * directions, as the server's ranking does: it has nothing to say yet.
 		 *
 		 * @return {Array<object>} The sorted rows.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		sortedRows() {
 			if (!this.sortKey) {
@@ -185,7 +243,7 @@ export default {
 	methods: {
 		/**
 		 * @param {object} event The table's `{key, order}` sort event.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		onSort(event) {
 			this.sortKey = event?.key || null
@@ -198,7 +256,7 @@ export default {
 		 * @param {string} network The network.
 		 * @return {object} Its icon component.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		networkIcon(network) {
 			return networkIcon(network)
@@ -210,7 +268,7 @@ export default {
 		 * @param {string} value An ISO timestamp.
 		 * @return {string} It in the reader's locale, or as stored when unreadable.
 		 *
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		formatDate(value) {
 			const date = new Date(value)
@@ -220,7 +278,7 @@ export default {
 		/**
 		 * @param {string} network The network.
 		 * @return {string} Its label.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		networkLabel(network) {
 			return networkLimits(network).label
@@ -229,7 +287,7 @@ export default {
 		/**
 		 * @param {object} row A ranking row.
 		 * @return {string} The engagement rate, or a hyphen.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		rate(row) {
 			return formatEngagementRate(row)
@@ -239,7 +297,7 @@ export default {
 		 * One request, after the page has already rendered.
 		 *
 		 * @return {Promise<void>} Resolves once the rows are in.
-		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
+		 * @spec openspec/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		async load() {
 			this.loading = true
@@ -270,6 +328,12 @@ export default {
 
 .social-performance h2 {
 	margin: 0;
+}
+
+.social-performance__sort {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
 }
 
 .social-performance__network {

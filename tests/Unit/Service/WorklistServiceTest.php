@@ -32,11 +32,16 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use InvalidArgumentException;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Service\WorklistService;
+use OCA\Pipelinq\Service\Worklist\WorkScope;
 use OCP\IAppConfig;
+use OCP\IGroup;
+use OCP\IGroupManager;
 use OCP\IL10N;
+use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -72,6 +77,7 @@ class WorklistServiceTest extends TestCase {
 	 * @param array<string, array<int, array<string, mixed>>> $byCollection Per-collection fixture rows.
 	 * @param bool $registerMissing Force the app-config `register` empty.
 	 * @param bool $throwFromObjectService Force the fake to throw on findAll.
+	 * @param WorkScope|null $workScope The scope resolver; default one where nobody manages a team.
 	 *
 	 * @return WorklistService
 	 */
@@ -79,6 +85,7 @@ class WorklistServiceTest extends TestCase {
 		array $byCollection = [],
 		bool $registerMissing = false,
 		bool $throwFromObjectService = false,
+		?WorkScope $workScope = null,
 	): WorklistService {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
@@ -140,7 +147,12 @@ class WorklistServiceTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(
 			static function (string $text, array $parameters = []): string {
-				return $text;
+				return vsprintf($text, $parameters);
+			}
+		);
+		$l10n->method('n')->willReturnCallback(
+			static function (string $singular, string $plural, int $count): string {
+				return str_replace('%n', (string)$count, ($count === 1 ? $singular : $plural));
 			}
 		);
 
@@ -152,6 +164,7 @@ class WorklistServiceTest extends TestCase {
 		// (unconfigured register / OR failure -> empty row set, never a throw).
 		$this->ticketCalls = [];
 		$ticketService = $this->createMock(TicketService::class);
+		$ticketService->method('getObjectService')->willReturn($this->objectService);
 		$ticketService->method('getRegisterId')->willReturn($registerMissing === true ? '' : 'register-1');
 		$ticketService->method('getSchemaId')->willReturn('ticket_schema');
 		$ticketService->method('isConfigured')->willReturn($registerMissing === false);
@@ -179,8 +192,134 @@ class WorklistServiceTest extends TestCase {
 			l10n: $l10n,
 			logger: $logger,
 			ticketService: $ticketService,
-			objectService: $this->objectService,
+			workScope: $workScope ?? $this->workScope(),
 		);
+	}
+
+	/**
+	 * A scope resolver over one team manager group `leads` holding the given
+	 * members, with `admin` as the only Nextcloud administrator.
+	 *
+	 * @param array<int, string> $members The UIDs in the `leads` group.
+	 *
+	 * @return WorkScope
+	 */
+	private function workScope(array $members = []): WorkScope {
+		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
+		$setting = '';
+		if ($members !== []) {
+			$setting = 'leads';
+		}
+
+		$appConfig->method('getValueString')->willReturn($setting);
+
+		$users = array_map(
+			function (string $uid): IUser {
+				$user = $this->createMock(originalClassName: IUser::class);
+				$user->method('getUID')->willReturn($uid);
+				return $user;
+			},
+			$members
+		);
+		$group = $this->createMock(originalClassName: IGroup::class);
+		$group->method('getUsers')->willReturn($users);
+
+		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturnCallback(static fn (string $uid): bool => $uid === 'admin');
+		$groupManager->method('isInGroup')->willReturnCallback(
+			static fn (string $uid, string $gid): bool => $gid === 'leads' && in_array($uid, $members, true)
+		);
+		$groupManager->method('get')->willReturn($group);
+
+		return new WorkScope(appConfig: $appConfig, groupManager: $groupManager);
+	}
+
+	/**
+	 * The assignee filters of the lead queries the last built service ran.
+	 *
+	 * @return array<int, string|null> One assignee per lead query; null for a query without one.
+	 */
+	private function leadQueryAssignees(): array {
+		$assignees = [];
+		foreach ($this->objectService->calls as $config) {
+			if (($config['filters']['schema'] ?? '') === 'lead_schema') {
+				$assignees[] = $config['filters']['assignee'] ?? null;
+			}
+		}
+
+		return $assignees;
+	}
+
+	/**
+	 * The team scope reads the work of every member of the manager's team,
+	 * and each member's tickets with that member as assignee (REQ-MW-180).
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testTeamScopeListsTheWorkOfEveryMember(): void {
+		$service = $this->buildService(
+			byCollection: ['lead_schema' => [['id' => 'lead-1', 'title' => 'Deal', 'stage' => 'New']]],
+			workScope: $this->workScope(members: ['manager', 'bob', 'carol']),
+		);
+
+		$result = $service->getMine(userId: 'manager', scope: WorkScope::TEAM);
+
+		$this->assertSame(expected: ['bob', 'carol', 'manager'], actual: $this->leadQueryAssignees());
+		$ticketAssignees = array_values(array_unique(array_map(static fn (array $call): string => $call['filters']['assignee'], $this->ticketCalls)));
+		$this->assertSame(expected: ['bob', 'carol', 'manager'], actual: $ticketAssignees);
+		// The fake answers every query with the same lead, once per member.
+		$this->assertSame(expected: 3, actual: $result['leadCount']);
+	}
+
+	/**
+	 * A manager narrows the team to one member; a user outside the team is refused.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testTeamScopeNarrowsToOneMember(): void {
+		$service = $this->buildService(workScope: $this->workScope(members: ['manager', 'bob']));
+
+		$service->getMine(userId: 'manager', scope: WorkScope::TEAM, member: 'bob');
+		$this->assertSame(expected: ['bob'], actual: $this->leadQueryAssignees());
+
+		$this->expectException(exception: InvalidArgumentException::class);
+		$service->getMine(userId: 'manager', scope: WorkScope::TEAM, member: 'mallory');
+	}
+
+	/**
+	 * An administrator's organisation scope asks for everyone's work: no assignee filter.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testOrganisationScopeDropsTheAssigneeFilter(): void {
+		$service = $this->buildService();
+
+		$service->getMine(userId: 'admin', scope: WorkScope::ORGANISATION);
+
+		$this->assertSame(expected: [null], actual: $this->leadQueryAssignees());
+		foreach ($this->ticketCalls as $call) {
+			$this->assertArrayNotHasKey(key: 'assignee', array: $call['filters']);
+		}
+	}
+
+	/**
+	 * A user in no manager group cannot ask for the team's work.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testAnAgentCannotAskForTheTeamScope(): void {
+		$service = $this->buildService();
+
+		$this->expectException(exception: InvalidArgumentException::class);
+		$service->getMine(userId: 'alice', scope: WorkScope::TEAM);
 	}
 
 	/**
@@ -615,4 +754,239 @@ class WorklistServiceTest extends TestCase {
 		$this->expectExceptionMessage('Worklist query failed');
 		$service->getMine(userId: 'alice');
 	}
+
+	/**
+	 * My work's lists hold every kind of work: a ticket, a lead and a
+	 * follow-up task, each sorted into its list and filtered by the lens.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testItemsMixTicketsLeadsAndTasksPerList(): void {
+		$service = $this->buildService([
+			'lead_schema' => [['id' => 'l1', 'title' => 'Catering', 'expectedCloseDate' => self::iso('-1 day'), 'stage' => 'Offerte']],
+			'ticket_schema:request' => [
+				['id' => 't1', 'title' => 'Afvalpas', 'ticketType' => 'request', 'status' => 'in_progress', 'slaDeadline' => self::iso('-1 day')],
+				['id' => 't2', 'title' => 'Klaar', 'ticketType' => 'request', 'status' => 'resolved'],
+				['id' => 't3', 'title' => 'Geluidsoverlast', 'ticketType' => 'request', 'status' => 'awaiting_customer'],
+			],
+			'task_schema' => [['id' => 'k1', 'subject' => 'Terugbellen', 'deadline' => self::iso('+3 days'), 'status' => 'open']],
+		]);
+
+		$today = $service->items(userId: 'pieter', view: ['bucket' => 'answer-today']);
+		self::assertSame(['l1', 't1'], array_column($today['items'], 'id'));
+		self::assertSame(['lead', 'request'], array_column($today['items'], 'kind'));
+
+		self::assertSame(expected: ['k1'], actual: array_column($service->items(userId: 'pieter', view: ['bucket' => 'waiting-on-me'])['items'], 'id'));
+		self::assertSame(expected: 'Terugbellen', actual: $service->items(userId: 'pieter', view: ['bucket' => 'waiting-on-me'])['items'][0]['title']);
+		$waiting = $service->items(userId: 'pieter', view: ['bucket' => 'waiting-on-customer']);
+		self::assertSame(expected: ['t3'], actual: array_column($waiting['items'], 'id'));
+		self::assertSame(expected: ['t1', 't3'], actual: array_column($service->items(userId: 'pieter', view: ['lens' => 'tickets'])['items'], 'id'));
+	}//end testItemsMixTicketsLeadsAndTasksPerList()
+
+	/**
+	 * The header sentence counts the work by kind and what is due today.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testSummaryCountsTheWorkByKind(): void {
+		$service = $this->buildService([
+			'lead_schema' => [['id' => 'l1', 'title' => 'Catering', 'expectedCloseDate' => self::iso('+9 days')]],
+			'ticket_schema:request' => [
+				['id' => 't1', 'title' => 'Afvalpas', 'ticketType' => 'request', 'status' => 'in_progress', 'slaDeadline' => self::iso('-1 day')],
+				['id' => 't2', 'title' => 'Straatfeest', 'ticketType' => 'request', 'status' => 'new', 'slaDeadline' => self::iso('+2 days')],
+			],
+		]);
+
+		self::assertSame('three items are with you: two tickets and one lead; one must be answered today', $service->summary(userId: 'pieter'));
+		self::assertSame('Nothing is with you right now', $this->buildService([])->summary(userId: 'pieter'));
+	}//end testSummaryCountsTheWorkByKind()
+
+	/**
+	 * Three kinds are listed with commas and a final "and"; nothing due today adds no clause.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testSummaryListsThreeKinds(): void {
+		$service = $this->buildService([
+			'lead_schema' => [['id' => 'l1', 'title' => 'Catering', 'expectedCloseDate' => self::iso('+9 days')]],
+			'ticket_schema:request' => [['id' => 't1', 'title' => 'Afvalpas', 'ticketType' => 'request', 'status' => 'new', 'slaDeadline' => self::iso('+5 days')]],
+			'task_schema' => [
+				['id' => 'k1', 'subject' => 'Terugbellen', 'deadline' => self::iso('+3 days'), 'status' => 'open'],
+				['id' => 'k2', 'subject' => 'Mailen', 'deadline' => self::iso('+4 days'), 'status' => 'open'],
+			],
+		]);
+
+		self::assertSame('four items are with you: one ticket, one lead and two follow-ups', $service->summary(userId: 'pieter'));
+	}//end testSummaryListsThreeKinds()
+
+	/**
+	 * Above twenty the count stays in digits.
+	 *
+	 * @spec openspec/specs/my-work/spec.md#requirement-my-work-lists-all-my-items-in-one-list
+	 *
+	 * @return void
+	 */
+	public function testSummaryWritesCountsAboveTwentyInDigits(): void {
+		$tickets = [];
+		for ($index = 0; $index < 21; $index++) {
+			$tickets[] = ['id' => 't' . $index, 'title' => 'T' . $index, 'ticketType' => 'request', 'status' => 'new'];
+		}
+
+		self::assertSame(
+			'21 items are with you: 21 tickets',
+			$this->buildService(['ticket_schema:request' => $tickets])->summary(userId: 'pieter')
+		);
+	}//end testSummaryWritesCountsAboveTwentyInDigits()
+
+	/**
+	 * The week figures read every work ticket type of the user, scoped to the
+	 * assignee, and count this week's answers (REQ-MW-090).
+	 *
+	 * @return void
+	 */
+	public function testWeekStatsCountTheUsersAnswersOfThisWeek(): void {
+		$answered = [
+			'status' => 'resolved',
+			'occurredAt' => self::iso('now'),
+			'resolvedAt' => self::iso('now'),
+			'slaDeadline' => self::iso('+1 day'),
+		];
+		$service = $this->buildService(byCollection: [
+			'ticket_schema:request' => [$answered, ['status' => 'in_progress']],
+			'ticket_schema:complaint' => [$answered + ['priority' => 'high']],
+			'ticket_schema:interaction' => [['status' => 'converted', 'resolvedAt' => self::iso('now')]],
+		]);
+
+		$stats = $service->getWeekStats(userId: 'pieter');
+
+		$this->assertSame(2, $stats['answered']);
+		$this->assertSame(2, $stats['answeredToday']);
+		$this->assertSame(100, $stats['withinDeadline']);
+		$this->assertSame(0.0, $stats['averageAnswerDays']);
+		$this->assertSame(1, $stats['converted']);
+		$this->assertSame('mine', $stats['scope']);
+		$this->assertSame(
+			['request', 'complaint', 'interaction', 'melding'],
+			array_column($this->ticketCalls, 'ticketType')
+		);
+		foreach ($this->ticketCalls as $call) {
+			$this->assertSame(['assignee' => 'pieter'], $call['filters']);
+		}
+	}//end testWeekStatsCountTheUsersAnswersOfThisWeek()
+
+	/**
+	 * The priority and pipeline filters narrow the items: only urgent and
+	 * high work is listed, and a pipeline drops the other pipeline's leads
+	 * while tickets and follow-ups stay.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-priority-and-pipeline-filters-req-mw-200
+	 *
+	 * @return void
+	 */
+	public function testItemsHonourThePriorityAndPipelineFilters(): void {
+		$service = $this->buildService(byCollection: [
+			'lead_schema' => [
+				['id' => 'l1', 'title' => 'Catering', 'priority' => 'urgent', 'pipeline' => 'sales', 'stage' => 'Offerte'],
+				['id' => 'l2', 'title' => 'Beurs', 'priority' => 'low', 'pipeline' => 'events', 'stage' => 'Offerte'],
+			],
+			'ticket_schema:request' => [
+				['id' => 't1', 'title' => 'Afvalpas', 'ticketType' => 'request', 'status' => 'in_progress', 'priority' => 'high'],
+			],
+			'task_schema' => [['id' => 'k1', 'subject' => 'Terugbellen', 'status' => 'open']],
+		]);
+
+		$ids = static fn (array $result): array => array_column($result['items'], 'id');
+
+		$urgentHigh = $ids($service->items(userId: 'pieter', view: ['priority' => 'urgent,high', 'sort' => 'newest']));
+		sort($urgentHigh);
+		self::assertSame(expected: ['l1', 't1'], actual: $urgentHigh);
+
+		$sales = $ids($service->items(userId: 'pieter', view: ['pipeline' => 'sales']));
+		sort($sales);
+		self::assertSame(expected: ['k1', 'l1', 't1'], actual: $sales);
+	}//end testItemsHonourThePriorityAndPipelineFilters()
+
+	/**
+	 * The team scope of the items reads each member's leads, tickets and
+	 * follow-ups (a follow-up names its assignee `assigneeUserId`).
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testItemsInTheTeamScopeReadEveryMember(): void {
+		$service = $this->buildService(workScope: $this->workScope(members: ['manager', 'bob']));
+
+		$service->items(userId: 'manager', view: ['scope' => 'team']);
+
+		$this->assertSame(expected: ['bob', 'manager'], actual: $this->leadQueryAssignees());
+		$taskAssignees = [];
+		foreach ($this->objectService->calls as $config) {
+			if (($config['filters']['schema'] ?? '') === 'task_schema') {
+				$taskAssignees[] = $config['filters']['assigneeUserId'];
+			}
+		}
+
+		$this->assertSame(expected: ['bob', 'manager'], actual: $taskAssignees);
+	}//end testItemsInTheTeamScopeReadEveryMember()
+
+	/**
+	 * The organisation scope of the items asks for every follow-up, not only one assignee's.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testItemsInTheOrganisationScopeDropTheAssignee(): void {
+		$service = $this->buildService();
+
+		$service->items(userId: 'admin', view: ['scope' => 'organisation']);
+
+		foreach ($this->objectService->calls as $config) {
+			$this->assertArrayNotHasKey(key: 'assignee', array: $config['filters']);
+			$this->assertArrayNotHasKey(key: 'assigneeUserId', array: $config['filters']);
+		}
+	}//end testItemsInTheOrganisationScopeDropTheAssignee()
+
+	/**
+	 * The week figures of the team scope count the tickets of every member.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testWeekStatsInTheTeamScopeReadEveryMember(): void {
+		$service = $this->buildService(workScope: $this->workScope(members: ['manager', 'bob']));
+
+		$stats = $service->getWeekStats(userId: 'manager', scope: 'team');
+
+		$assignees = array_values(array_unique(array_map(static fn (array $call): string => $call['filters']['assignee'], $this->ticketCalls)));
+		$this->assertSame(expected: ['bob', 'manager'], actual: $assignees);
+		$this->assertSame(expected: 'team', actual: $stats['scope']);
+	}//end testWeekStatsInTheTeamScopeReadEveryMember()
+
+	/**
+	 * A scope the user may not choose is refused before anything is read.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-my-work-roadmap/specs/my-work/spec.md#requirement-role-based-content-req-mw-180
+	 *
+	 * @return void
+	 */
+	public function testWeekStatsRefuseAnotherScope(): void {
+		$service = $this->buildService();
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('Unknown scope');
+		try {
+			$service->getWeekStats(userId: 'pieter', scope: 'team');
+		} finally {
+			$this->assertSame([], $this->ticketCalls);
+		}
+	}//end testWeekStatsRefuseAnotherScope()
 }

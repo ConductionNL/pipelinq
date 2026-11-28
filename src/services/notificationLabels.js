@@ -20,7 +20,7 @@
  * The translator is passed in, so the module stays free of a Nextcloud
  * runtime and the l10n check still sees every string as a literal.
  *
- * @spec openspec/changes/simple-tour-and-readable-labels/specs/notifications/spec.md
+ * @spec openspec/specs/notifications/spec.md
  */
 
 /**
@@ -28,7 +28,7 @@
  *
  * @param {function(string, string): string} t The translator.
  * @return {Object<string, string>} Translated labels, keyed `<schema>.<rule>`.
- * @spec openspec/changes/simple-tour-and-readable-labels/specs/notifications/spec.md
+ * @spec openspec/specs/notifications/spec.md
  */
 export function notificationLabels(t) {
 	return {
@@ -40,6 +40,9 @@ export function notificationLabels(t) {
 		'lead.leadUpdated': t('pipelinq', 'A lead assigned to me changes'),
 		'ticket.newTicket': t('pipelinq', 'A new ticket comes in'),
 		'ticket.ticketUpdated': t('pipelinq', 'A ticket assigned to me changes'),
+		'ticket.chatWaiting': t('pipelinq', 'A website chat waits for a colleague'),
+		'ticket.incomingCall': t('pipelinq', 'A call comes in for me or my sales team'),
+		'ticket.incomingEmail': t('pipelinq', 'An email comes in for me or my sales team'),
 		'crmTask.taskCompleted': t('pipelinq', 'A task assigned to me is completed'),
 		'crmTask.taskExpired': t('pipelinq', 'A task assigned to me expires'),
 		'crmTask.taskUpdated': t('pipelinq', 'A task assigned to me changes'),

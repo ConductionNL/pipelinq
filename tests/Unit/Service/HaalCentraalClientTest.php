@@ -1,13 +1,11 @@
 <?php
 
 /**
- * Unit tests for HaalCentraalClient (config + cert helpers + OR-first re-point).
+ * Unit tests for HaalCentraalClient: the lookup through integriq's source.
  *
- * The full legacy lookup/token-grant transport requires an IClient mock that
- * returns configurable IResponse instances; the OAuth-unconfigured + cert paths
- * are covered here, plus the OR-first BRP leaf re-point: OR-200 (with meta →
- * audit fields), OR-200 zero-results (not-found), OR-503/absent fallback to the
- * legacy path, and the BSN-never-logged invariant on both paths.
+ * A 200 with meta (the audit fields), a 200 with zero results (not found), a
+ * failed lookup without integriq or when the source does not answer (no
+ * direct call to Haal Centraal), and the BSN-never-logged invariant.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
@@ -20,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#9.2
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md
  * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
  */
 
@@ -33,14 +31,13 @@ use OCA\Pipelinq\Service\HaalCentraalException;
 use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
-use OCP\IAppConfig;
+use OCP\App\IAppManager;
 use OCP\IURLGenerator;
-use OCP\Security\ICrypto;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 /**
- * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
+ * @spec openspec/specs/bsn-validatie-en-brp-lookup/spec.md#REQ-BSN-003
  * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
  */
 class HaalCentraalClientTest extends TestCase {
@@ -52,61 +49,50 @@ class HaalCentraalClientTest extends TestCase {
 	private const DEMO_BSN = '123456782';
 
 	/**
-	 * isConfigured returns false when any required key is missing.
+	 * Without integriq no BRP lookup can be made.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#requirement-brp-person-lookup-goes-through-integriq-only
 	 */
-	public function testIsConfiguredFalseWhenUnset(): void {
-		$client = $this->buildClient(values: []);
-		self::assertFalse($client->isConfigured());
-	}//end testIsConfiguredFalseWhenUnset()
+	public function testIsConfiguredFalseWithoutIntegriq(): void {
+		self::assertFalse(condition: $this->buildClient(integriq: false)->isConfigured());
+	}//end testIsConfiguredFalseWithoutIntegriq()
 
 	/**
-	 * isConfigured returns true when all four required keys are set.
+	 * With integriq installed a lookup can be made; pipelinq holds no connection keys.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#requirement-brp-person-lookup-goes-through-integriq-only
 	 */
-	public function testIsConfiguredTrueWhenAllSet(): void {
-		$client = $this->buildClient(
-			values: [
-				'brp.client_id' => 'demo-client',
-				'brp.client_secret_encrypted' => 'cipher',
-				'brp.cert_path' => '/etc/brp/cert.pem',
-				'brp.key_path' => '/etc/brp/key.pem',
-			]
-		);
-		self::assertTrue($client->isConfigured());
-	}//end testIsConfiguredTrueWhenAllSet()
+	public function testIsConfiguredTrueWithIntegriq(): void {
+		self::assertTrue(condition: $this->buildClient()->isConfigured());
+	}//end testIsConfiguredTrueWithIntegriq()
 
 	/**
-	 * Cert expiry returns null when cert path is unset.
-	 *
-	 * @return void
-	 */
-	public function testGetCertificateExpiryReturnsNullWhenUnset(): void {
-		$client = $this->buildClient(values: []);
-		self::assertNull($client->getCertificateExpiry());
-	}//end testGetCertificateExpiryReturnsNullWhenUnset()
-
-	/**
-	 * Lookup throws a HaalCentraalException with 503 when OAuth credentials are
-	 * missing AND the OR leaf is unavailable (legacy fallback hits the missing
-	 * OAuth config). Proves the safe-partial fallback still reaches the legacy
-	 * path when OR is absent.
+	 * Without integriq the lookup fails with the message that names integriq,
+	 * and nothing is called: no leaf, no direct Haal Centraal call.
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-03
+	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#scenario-without-integriq-a-lookup-fails-and-says-why
 	 */
-	public function testLookupThrowsWhenUnconfigured(): void {
-		// OR leaf throws (absent) → falls back to legacy → OAuth unconfigured → throws.
+	public function testLookupFailsWithoutIntegriqAndCallsNothing(): void {
 		$httpClient = $this->createMock(IClient::class);
-		$httpClient->method('get')->willThrowException(new \RuntimeException('OR absent'));
+		$httpClient->expects(self::never())->method('get');
+		$httpClient->expects(self::never())->method('post');
 
-		$client = $this->buildClient(values: [], httpClient: $httpClient);
-		$this->expectException(HaalCentraalException::class);
-		$client->lookupPersoon(self::DEMO_BSN);
-	}//end testLookupThrowsWhenUnconfigured()
+		$client = $this->buildClient(httpClient: $httpClient, integriq: false);
+
+		try {
+			$client->lookupPersoon(self::DEMO_BSN);
+			self::fail(message: 'expected HaalCentraalException without integriq');
+		} catch (HaalCentraalException $e) {
+			self::assertSame(expected: HaalCentraalClient::NO_SOURCE_MESSAGE, actual: $e->getMessage());
+			self::assertSame(expected: HaalCentraalClient::NO_SOURCE_STATUS, actual: $e->getStatusCode());
+		}
+	}//end testLookupFailsWithoutIntegriqAndCallsNothing()
 
 	/**
 	 * OR-first happy path: when the OpenRegister BRP leaf returns 200 with a
@@ -162,7 +148,7 @@ class HaalCentraalClientTest extends TestCase {
 		);
 
 		$logger = $this->createMock(LoggerInterface::class);
-		$client = $this->buildClient(values: [], httpClient: $httpClient, logger: $logger);
+		$client = $this->buildClient(httpClient: $httpClient, logger: $logger);
 
 		$person = $client->lookupPersoon(self::DEMO_BSN);
 
@@ -185,6 +171,56 @@ class HaalCentraalClientTest extends TestCase {
 		self::assertSame('HaalCentraal-BRP-v2.0', $person['sourceSystem']);
 		self::assertSame('Hoofdstraat', $person['residence']['straat']);
 	}//end testLookupUsesOpenRegisterLeafWithMeta()
+
+	/**
+	 * A source in mock mode answers all its people to any BSN: the lookup
+	 * reads the person whose BSN it asked for (integriq's mock knows the
+	 * Zuiddrecht residents after its first test person).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/brp-lookup/spec.md#requirement-the-lookup-reads-the-person-it-asked-for
+	 */
+	public function testLookupReadsThePersonWhoseBsnItAskedFor(): void {
+		$other = $this->sampleRawPerson();
+		$asked = $this->sampleRawPerson();
+		$asked['burgerservicenummer'] = self::DEMO_BSN;
+		$asked['name']['surname'] = 'de Vries';
+		$response = $this->createMock(IResponse::class);
+		$response->method('getStatusCode')->willReturn(200);
+		$response->method('getBody')->willReturn(json_encode(['results' => [$other, $asked], 'total' => 2]));
+		$httpClient = $this->createMock(IClient::class);
+		$httpClient->method('get')->willReturn($response);
+
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$person = $this->buildClient(httpClient: $httpClient, logger: $logger)->lookupPersoon(self::DEMO_BSN);
+
+		self::assertSame('de Vries', $person['surname']);
+	}//end testLookupReadsThePersonWhoseBsnItAskedFor()
+
+	/**
+	 * HaalCentraal Personen v2 spells the name in Dutch (`naam`); the lookup
+	 * reads it as it reads the English shape.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/brp-lookup/spec.md#requirement-the-lookup-reads-the-person-it-asked-for
+	 */
+	public function testLookupReadsTheDutchNameShape(): void {
+		$raw = $this->sampleRawPerson();
+		unset($raw['name']);
+		$raw['naam'] = ['voornamen' => 'Sanne', 'voorletters' => 'S.', 'voorvoegsel' => 'de', 'geslachtsnaam' => 'Vries'];
+		$response = $this->createMock(IResponse::class);
+		$response->method('getStatusCode')->willReturn(200);
+		$response->method('getBody')->willReturn(json_encode(['results' => [$raw], 'total' => 1]));
+		$httpClient = $this->createMock(IClient::class);
+		$httpClient->method('get')->willReturn($response);
+
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$person = $this->buildClient(httpClient: $httpClient, logger: $logger)->lookupPersoon(self::DEMO_BSN);
+
+		self::assertSame(['Sanne', 'de', 'Vries'], [$person['givenNames'], $person['namePrefix'], $person['surname']]);
+	}//end testLookupReadsTheDutchNameShape()
 
 	/**
 	 * OR-first + null meta correlation: the leaf may relay a null correlationId
@@ -212,7 +248,7 @@ class HaalCentraalClientTest extends TestCase {
 		$httpClient = $this->createMock(IClient::class);
 		$httpClient->method('get')->willReturn($response);
 
-		$client = $this->buildClient(values: [], httpClient: $httpClient);
+		$client = $this->buildClient(httpClient: $httpClient);
 		$person = $client->lookupPersoon(self::DEMO_BSN);
 
 		self::assertIsArray($person);
@@ -246,7 +282,7 @@ class HaalCentraalClientTest extends TestCase {
 			}
 		);
 
-		$client = $this->buildClient(values: [], httpClient: $httpClient);
+		$client = $this->buildClient(httpClient: $httpClient);
 		$result = $client->lookupPersoon(self::DEMO_BSN);
 
 		self::assertNull($result, 'empty OR results must map to not-found (null)');
@@ -254,52 +290,47 @@ class HaalCentraalClientTest extends TestCase {
 	}//end testLookupOpenRegisterLeafEmptyResultsIsNotFound()
 
 	/**
-	 * OR-first safe-partial fallback: when the OR leaf is unavailable (503 /
-	 * connection refused / absent surfaces as a client exception on get()),
-	 * lookupPersoon falls back to the legacy OAuth2 + mTLS direct path. Here we
-	 * leave the legacy OAuth config empty so the fallback provably reaches the
-	 * legacy code (which then throws the unconfigured 503) — proving the legacy
-	 * leg runs unchanged.
+	 * No fallback: when integriq's source does not answer (503, connection
+	 * refused), the lookup fails with the message that names integriq and no
+	 * direct call to Haal Centraal is made.
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
+	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#requirement-brp-person-lookup-goes-through-integriq-only
 	 */
-	public function testLookupFallsBackToLegacyWhenLeafUnavailable(): void {
-		$legacyReached = false;
-
+	public function testLookupFailsWhenTheSourceDoesNotAnswer(): void {
 		$httpClient = $this->createMock(IClient::class);
-		$httpClient->method('get')->willReturnCallback(
-			static function (string $uri, array $options = []): IResponse {
-				if (str_contains($uri, 'integrations/brp/person') === true) {
-					throw new \RuntimeException('OR source unavailable (503)');
-				}
+		$httpClient->method('get')->willThrowException(new \RuntimeException('source unavailable (503)'));
+		$httpClient->expects(self::never())->method('post');
 
-				throw new \RuntimeException('unexpected GET');
-			}
-		);
-		// The legacy path's first network action is the OAuth token POST — but
-		// it is gated by the unconfigured-credentials check, which throws before
-		// any POST. We assert the legacy leg was entered via the exception type.
-		$httpClient->method('post')->willReturnCallback(
-			static function () use (&$legacyReached): IResponse {
-				$legacyReached = true;
-				throw new \RuntimeException('should not reach POST when unconfigured');
-			}
-		);
-
-		$client = $this->buildClient(values: [], httpClient: $httpClient);
+		$client = $this->buildClient(httpClient: $httpClient);
 
 		try {
 			$client->lookupPersoon(self::DEMO_BSN);
-			self::fail('expected HaalCentraalException from the legacy fallback path');
+			self::fail(message: 'expected HaalCentraalException when the source does not answer');
 		} catch (HaalCentraalException $e) {
-			// Legacy path reached: unconfigured OAuth → 503 (the legacy contract).
-			self::assertSame(503, $e->getStatusCode(), 'legacy fallback must surface its own 503');
+			self::assertSame(expected: HaalCentraalClient::NO_SOURCE_MESSAGE, actual: $e->getMessage());
+			self::assertSame(expected: 503, actual: $e->getStatusCode());
 		}
+	}//end testLookupFailsWhenTheSourceDoesNotAnswer()
 
-		self::assertFalse($legacyReached, 'unconfigured legacy path throws before any POST (unchanged behaviour)');
-	}//end testLookupFallsBackToLegacyWhenLeafUnavailable()
+	/**
+	 * A non-200 answer from the leaf fails the lookup the same way.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/brp-monitor-moves-to-integriq/specs/brp-lookup/spec.md#requirement-brp-person-lookup-goes-through-integriq-only
+	 */
+	public function testLookupFailsOnANon200Answer(): void {
+		$response = $this->createMock(originalClassName: IResponse::class);
+		$response->method('getStatusCode')->willReturn(502);
+		$httpClient = $this->createMock(originalClassName: IClient::class);
+		$httpClient->method('get')->willReturn($response);
+
+		$this->expectException(exception: HaalCentraalException::class);
+		$this->expectExceptionMessage(message: HaalCentraalClient::NO_SOURCE_MESSAGE);
+		$this->buildClient(httpClient: $httpClient)->lookupPersoon(self::DEMO_BSN);
+	}//end testLookupFailsOnANon200Answer()
 
 	/**
 	 * The raw BSN must NEVER appear in any log message/context on the OR path.
@@ -335,7 +366,7 @@ class HaalCentraalClientTest extends TestCase {
 		$logger->method('warning')->willReturnCallback($recorder);
 		$logger->method('error')->willReturnCallback($recorder);
 
-		$client = $this->buildClient(values: [], httpClient: $httpClient, logger: $logger);
+		$client = $this->buildClient(httpClient: $httpClient, logger: $logger);
 		$client->lookupPersoon(self::DEMO_BSN);
 
 		foreach ($captured as [$message, $context]) {
@@ -345,14 +376,14 @@ class HaalCentraalClientTest extends TestCase {
 	}//end testRawBsnNeverLoggedOnOpenRegisterPath()
 
 	/**
-	 * The raw BSN must NEVER appear in any log when the OR leaf fails and the
-	 * legacy fallback is taken (debug "falling back" line uses the masked BSN).
+	 * The raw BSN must NEVER appear in any log when the source fails and the
+	 * lookup is refused (the debug and warning lines use the masked BSN).
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
 	 */
-	public function testRawBsnNeverLoggedOnFallbackPath(): void {
+	public function testRawBsnNeverLoggedOnAFailedLookup(): void {
 		$httpClient = $this->createMock(IClient::class);
 		$httpClient->method('get')->willThrowException(new \RuntimeException('OR down'));
 
@@ -366,21 +397,21 @@ class HaalCentraalClientTest extends TestCase {
 		$logger->method('warning')->willReturnCallback($recorder);
 		$logger->method('error')->willReturnCallback($recorder);
 
-		$client = $this->buildClient(values: [], httpClient: $httpClient, logger: $logger);
+		$client = $this->buildClient(httpClient: $httpClient, logger: $logger);
 
 		try {
 			$client->lookupPersoon(self::DEMO_BSN);
 		} catch (HaalCentraalException $e) {
-			// Expected — unconfigured legacy fallback.
+			// Expected: no working source.
 			unset($e);
 		}
 
-		self::assertNotEmpty($captured, 'expected at least the fallback debug log line');
+		self::assertNotEmpty(actual: $captured, message: 'expected the failure log lines');
 		foreach ($captured as [$message, $context]) {
 			self::assertStringNotContainsString(self::DEMO_BSN, $message, 'raw BSN leaked into log message');
 			self::assertStringNotContainsString(self::DEMO_BSN, json_encode($context), 'raw BSN leaked into log context');
 		}
-	}//end testRawBsnNeverLoggedOnFallbackPath()
+	}//end testRawBsnNeverLoggedOnAFailedLookup()
 
 	/**
 	 * A representative raw HaalCentraal HAL+JSON person, as the OR leaf relays
@@ -416,25 +447,15 @@ class HaalCentraalClientTest extends TestCase {
 	}//end sampleRawPerson()
 
 	/**
-	 * Build a client with a stubbed IAppConfig that returns the given values.
+	 * Build a client over the given HTTP client, with or without integriq.
 	 *
-	 * @param array<string,string> $values App-config key→value
-	 *                                     map.
-	 * @param IClient|null $httpClient Optional HTTP client mock.
-	 * @param LoggerInterface|null $logger Optional logger mock.
+	 * @param IClient|null         $httpClient Optional HTTP client mock.
+	 * @param LoggerInterface|null $logger     Optional logger mock.
+	 * @param bool                 $integriq   Whether integriq is installed.
 	 *
 	 * @return HaalCentraalClient
 	 */
-	private function buildClient(array $values, ?IClient $httpClient = null, ?LoggerInterface $logger = null): HaalCentraalClient {
-		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig
-			->method('getValueString')
-			->willReturnCallback(
-				static function (string $app, string $key, string $default = '') use ($values) {
-					return $values[$key] ?? $default;
-				}
-			);
-
+	private function buildClient(?IClient $httpClient = null, ?LoggerInterface $logger = null, bool $integriq = true): HaalCentraalClient {
 		$clientService = $this->createMock(IClientService::class);
 		if ($httpClient !== null) {
 			$clientService->method('newClient')->willReturn($httpClient);
@@ -445,11 +466,16 @@ class HaalCentraalClientTest extends TestCase {
 			static fn (string $path): string => 'http://localhost' . $path
 		);
 
-		return new HaalCentraalClient($clientService,
-			$appConfig,
-			$this->createMock(ICrypto::class),
-			($logger ?? $this->createMock(LoggerInterface::class)),
-			$urlGenerator,
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
+		$appManager->method('isInstalled')->willReturnCallback(
+			static fn (string $app): bool => ($app === 'integriq' && $integriq === true)
+		);
+
+		return new HaalCentraalClient(
+			clientService: $clientService,
+			logger: ($logger ?? $this->createMock(originalClassName: LoggerInterface::class)),
+			urlGenerator: $urlGenerator,
+			appManager: $appManager,
 		);
 	}//end buildClient()
 }//end class
