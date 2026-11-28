@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+ * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use Throwable;
 /**
  * Sends connection status reports to integriq.
  *
- * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+ * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
  */
 class ConnectionReportService implements ConnectionReportServiceInterface {
 
@@ -144,7 +144,7 @@ class ConnectionReportService implements ConnectionReportServiceInterface {
 	 *
 	 * @return bool True when the report was dispatched.
 	 *
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function report(string $key, string $status, string $message = ''): bool {
 		if ($this->isUndeclared(key: $key, status: $status) === true) {
@@ -231,7 +231,7 @@ class ConnectionReportService implements ConnectionReportServiceInterface {
 	 *
 	 * @return bool True when the report was dispatched.
 	 *
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function reportCtiCheck(array $outcome): bool {
 		$platform = trim((string)($outcome['platform'] ?? ''));
@@ -263,7 +263,7 @@ class ConnectionReportService implements ConnectionReportServiceInterface {
 	 *
 	 * @return array<int, string> The connection keys a report was dispatched for.
 	 *
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function reportSocialReadiness(array $readiness): array {
 		$sent = [];
@@ -322,7 +322,7 @@ class ConnectionReportService implements ConnectionReportServiceInterface {
 	 *
 	 * @return string|null The class name to instantiate, or null when absent.
 	 *
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	protected function resolveEventClass(string $eventClass): ?string {
 		$qualified = '\\' . $eventClass;

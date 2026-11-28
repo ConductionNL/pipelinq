@@ -261,7 +261,7 @@ export default {
 		 * as a `kind: 'handler'` entry.
 		 *
 		 * @return {Record<string, object>}
-		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
+		 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
 		 */
 		appRegistry() {
 			const handlers = {
