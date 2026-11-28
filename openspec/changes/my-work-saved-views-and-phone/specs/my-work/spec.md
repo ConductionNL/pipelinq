@@ -30,7 +30,7 @@ My work SHALL show a "Saved views" panel, as on board `PqMijnWerk`, listing the 
 
 **Feature tier**: MVP
 
-On top of REQ-MOB-002 (one column, today first, no horizontal scroll, already built), My work at a width below 768 px SHALL show the type filters as a row of chips with their counts, as on board `PqMobiel` ("All 9", "Tickets 7", "Leads 1", "Follow-ups 1"). Group headers MUST stay at the top of the scroll area while their group scrolls, with their count visible. Every control MUST keep a touch target of at least 44 by 44 px (WCAG 2.5.5). When quick actions (REQ-MW-100) are present they MUST fold into one "Actions" button in the header, as on board `PqMobiel`.
+On top of REQ-MOB-002 (one column, today first, no horizontal scroll, already built), My work at a width below 768 px SHALL show the type filters as a row of chips with their counts, as on board `PqMobiel` ("All 9", "Tickets 7", "Leads 1", "Follow-ups 1"). Group headers MUST stay at the top of the scroll area while their group scrolls. Every control MUST keep at least the size board `PqMobiel` draws (34 px pills, a 40 px Actions button), well above the 24 px of WCAG 2.5.8. When quick actions (REQ-MW-100) are present they MUST fold into one "Actions" button in the header, as on board `PqMobiel`, and the header MUST hold nothing else beside the title.
 
 #### Scenario: Chips with counts
 - **GIVEN** the agent has 7 tickets, 1 lead and 1 follow-up

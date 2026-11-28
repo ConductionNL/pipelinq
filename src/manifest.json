@@ -11237,6 +11237,7 @@
 							},
 							"groupBy": "dueGroup",
 							"groupLook": "cards",
+							"stickyGroupHeadings": true,
 							"groupTones": { "late": "error" },
 							"groupOrder": [
 								"late",
