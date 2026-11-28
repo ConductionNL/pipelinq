@@ -51,5 +51,8 @@
   - The documented URL and its `?callId=` parameter are covered by a test
     that constructs the link the way a consuming app would
   - `npm test` and `composer check:strict` pass
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+  - `docs/Integrations/kcc-agent-panel-link.md`: the route, the `?callId=` parameter and how a consuming app builds it with `@nextcloud/router` (`?callId={callId}` as a placeholder, since `generateUrl()` appends no query); the spec scenario now names that form
+  - `src/services/agentPanelLink.js`: `agentPanelUrl()` builds the same link for pipelinq's own pages, `focusedCallId()` reads it back for the panel (Task 2); a blank or over-long id is ignored
+- [x] Test
+  - `tests/vitest/kccAgentPanel.spec.js`: builds the link with the real router the way the doc says, opens it and reads the focused call back; no `callId` means the newest active call; reserved characters survive; the doc names the link
