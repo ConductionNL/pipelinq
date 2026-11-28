@@ -165,7 +165,7 @@ class CtiControllerTest extends TestCase {
 	/**
 	 * Test connection reports its outcome and answers it unchanged.
 	 *
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 *
 	 * @return void
 	 */
@@ -185,7 +185,7 @@ class CtiControllerTest extends TestCase {
 	/**
 	 * A non-admin is refused before any check runs, so nothing is reported.
 	 *
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 *
 	 * @return void
 	 */
@@ -207,7 +207,7 @@ class CtiControllerTest extends TestCase {
 	/**
 	 * A save that stored something runs the check once and reports it.
 	 *
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 *
 	 * @return void
 	 */
@@ -228,7 +228,7 @@ class CtiControllerTest extends TestCase {
 	/**
 	 * A save that stored nothing reports nothing: there is no new platform to check.
 	 *
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 *
 	 * @return void
 	 */

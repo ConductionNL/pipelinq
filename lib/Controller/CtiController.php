@@ -441,7 +441,7 @@ class CtiController extends Controller {
 	 * @return JSONResponse The saved configuration.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function updateConfig(): JSONResponse {
 		$uid = $this->privilege->actingUserId();
@@ -505,7 +505,7 @@ class CtiController extends Controller {
 	 * @return JSONResponse Test outcome.
 	 *
 	 * @spec openspec/changes/archive/2026-06-14-cti-screenpop-adapter/tasks.md#task-4.1
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function testConnection(): JSONResponse {
 		$uid = $this->privilege->actingUserId();

@@ -45,7 +45,7 @@ interface ConnectionReportServiceInterface {
 	 *
 	 * @return bool True when the report was dispatched.
 	 *
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function reportCtiCheck(array $outcome): bool;
 
@@ -56,7 +56,7 @@ interface ConnectionReportServiceInterface {
 	 *
 	 * @return array<int, string> The connection keys a report was dispatched for.
 	 *
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function reportSocialReadiness(array $readiness): array;
 }//end interface

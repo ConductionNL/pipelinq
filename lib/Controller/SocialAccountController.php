@@ -92,7 +92,7 @@ class SocialAccountController extends Controller {
 	 * @return JSONResponse `{data[], readiness{}}`.
 	 *
 	 * @spec openspec/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
-	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 * @spec openspec/changes/archive/2026-11-28-adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
