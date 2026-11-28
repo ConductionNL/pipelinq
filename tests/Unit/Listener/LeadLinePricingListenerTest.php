@@ -20,8 +20,10 @@ use OCA\Pipelinq\Kernel\Contracts\CallerObjectReaderInterface;
 use OCA\Pipelinq\Kernel\Contracts\ProductCatalogServiceInterface;
 use OCA\Pipelinq\Listener\LeadLinePricingListener;
 use OCA\Pipelinq\Service\LinePricing\LeadLinePricer;
+use OCA\Pipelinq\Service\LinePricing\LeadLineVariantCheck;
 use OCA\Pipelinq\Tests\Unit\Service\PosCart\PosSaleStore;
 use OCP\IAppConfig;
+use OCP\IL10N;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,6 +31,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @covers \OCA\Pipelinq\Listener\LeadLinePricingListener
  * @uses   \OCA\Pipelinq\Service\LinePricing\LeadLinePricer
+ * @uses   \OCA\Pipelinq\Service\LinePricing\LeadLineVariantCheck
  */
 class LeadLinePricingListenerTest extends TestCase {
 
@@ -72,6 +75,40 @@ class LeadLinePricingListenerTest extends TestCase {
 	}//end testAnEditComparesWithTheStoredLine()
 
 	/**
+	 * A line that names a variant code its product lacks is refused before it
+	 * is priced: the resolver is never asked and nothing is merged.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#29.1
+	 */
+	public function testAnUnknownVariantCodeIsRefusedBeforePricing(): void {
+		$event = new ObjectCreatingEvent(PosSaleStore::makeEntity(object: ['lead' => 'l-1', 'product' => 'p-1', 'variantSku' => 'WS-L'], schema: 'lp'));
+
+		$this->listener(resolves: false)->handle(event: $event);
+
+		$this->assertTrue(condition: $event->isPropagationStopped());
+		$this->assertSame(expected: 'This product has no variant with the code WS-L', actual: $event->getErrors()['message']);
+		$this->assertSame(expected: [], actual: $event->getModifiedData());
+	}//end testAnUnknownVariantCodeIsRefusedBeforePricing()
+
+	/**
+	 * A line for a variant the product carries is priced.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#29.1
+	 */
+	public function testAKnownVariantCodeIsPriced(): void {
+		$event = new ObjectCreatingEvent(PosSaleStore::makeEntity(object: ['lead' => 'l-1', 'product' => 'p-1', 'variantSku' => 'WS-M'], schema: 'lp'));
+
+		$this->listener(resolves: true)->handle(event: $event);
+
+		$this->assertFalse(condition: $event->isPropagationStopped());
+		$this->assertSame(expected: 95.0, actual: $event->getModifiedData()['unitPrice']);
+	}//end testAKnownVariantCodeIsPriced()
+
+	/**
 	 * Another schema is left alone.
 	 *
 	 * @return void
@@ -113,7 +150,7 @@ class LeadLinePricingListenerTest extends TestCase {
 			}
 		);
 		$reader = $this->createMock(originalClassName: CallerObjectReaderInterface::class);
-		$reader->method('read')->willReturn(['id' => 'x']);
+		$reader->method('read')->willReturn(['id' => 'x', 'variants' => [['sku' => 'WS-M']]]);
 		$catalog = $this->createMock(originalClassName: ProductCatalogServiceInterface::class);
 		$expectation = $this->never();
 		if ($resolves === true) {
@@ -123,6 +160,13 @@ class LeadLinePricingListenerTest extends TestCase {
 		$catalog->expects($expectation)->method('resolveEffectivePrice')
 			->willReturn(['unitPrice' => 95.0, 'source' => 'price-list', 'priceListTitle' => 'Overheid 2027']);
 
-		return new LeadLinePricingListener(pricer: new LeadLinePricer(catalog: $catalog, reader: $reader), appConfig: $appConfig);
+		$l10n = $this->createMock(originalClassName: IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text, array $args = []): string => vsprintf($text, $args));
+
+		return new LeadLinePricingListener(
+			pricer: new LeadLinePricer(catalog: $catalog, reader: $reader),
+			appConfig: $appConfig,
+			variants: new LeadLineVariantCheck(reader: $reader, l10n: $l10n)
+		);
 	}//end listener()
 }//end class

@@ -1,0 +1,38 @@
+{
+    "$comment": "specify-capability-rows 29.1: a lead line can name one of its product's variants by code (variantSku), which the price resolver prices (ProductCatalogService::resolveEffectivePrice) and LeadLinePricer already reads; the line form sends it with the product and quantity and asks again when it changes. LeadLinePricingListener refuses a code the product does not carry (LeadLineVariantCheck). Sorted after the price-resolve fragment so the lists it replaces (when) are the merged ones: lead 1.9.0 -> 1.10.0, leadProduct 1.4.0 -> 1.5.0.",
+    "components": {
+        "schemas": {
+            "lead": {
+                "slug": "lead",
+                "version": "1.10.0",
+                "properties": {
+                    "lines": {
+                        "addFrom": {
+                            "resolve": {
+                                "body": {
+                                    "variantSku": "@row.variantSku"
+                                },
+                                "when": [
+                                    "quantity",
+                                    "variantSku"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "leadProduct": {
+                "slug": "leadProduct",
+                "version": "1.5.0",
+                "properties": {
+                    "variantSku": {
+                        "type": "string",
+                        "title": "Variant code",
+                        "description": "The code of the product's variant this line is for. Empty means the product itself.",
+                        "maxLength": 64
+                    }
+                }
+            }
+        }
+    }
+}

@@ -10287,7 +10287,10 @@ OC.L10N.register(
         "Next occurrence": "Volgende keer",
         "The task made when this repeating task came due.": "De taak die werd gemaakt toen deze herhalende taak moest zijn afgerond.",
         "Previous occurrence": "Vorige keer",
-        "The repeating task this task was made from.": "De herhalende taak waarvan deze taak is gemaakt."
+        "The repeating task this task was made from.": "De herhalende taak waarvan deze taak is gemaakt.",
+        "This product has no variant with the code %s": "Dit product heeft geen variant met de code %s",
+        "Variant code": "Variantcode",
+        "The code of the product's variant this line is for. Empty means the product itself.": "De code van de variant van het product waar deze regel over gaat. Leeg betekent het product zelf."
     },
     "nplurals=2; plural=(n != 1);"
 )
