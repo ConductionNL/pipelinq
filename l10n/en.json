@@ -10382,6 +10382,9 @@
         "Messages: paused, the read budget is used up": "Messages: paused, the read budget is used up",
         "Messages: receiving": "Messages: receiving",
         "Messages: reconnect needed": "Messages: reconnect needed",
-        "Messages: waiting on Meta": "Messages: waiting on Meta"
+        "Messages: waiting on Meta": "Messages: waiting on Meta",
+        "This product has no variant with the code %s": "This product has no variant with the code %s",
+        "Variant code": "Variant code",
+        "The code of the product's variant this line is for. Empty means the product itself.": "The code of the product's variant this line is for. Empty means the product itself."
     }
 }

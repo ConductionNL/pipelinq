@@ -240,6 +240,8 @@ class ListenerRegistrar {
 	 * @param IRegistrationContext $context The registration context.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#29.1
 	 */
 	private function registerNumberListeners(IRegistrationContext $context): void {
 		$context->registerEventListener(event: ObjectCreatingEvent::class, listener: TicketReferenceCreatingListener::class);
@@ -263,6 +265,8 @@ class ListenerRegistrar {
 		// A till line gets its VAT and total from the server before it is stored (till-server-priced-lines).
 		foreach ([ObjectCreatingEvent::class, ObjectUpdatingEvent::class] as $lineEvent) {
 			$context->registerEventListener(event: $lineEvent, listener: PosLinePricingListener::class);
+			// A lead line naming a variant code its product lacks is refused before it is priced (specify-capability-rows 29.1).
+			$context->registerEventListener(event: $lineEvent, listener: LeadLineVariantGuard::class);
 			// A lead line takes its price from the client's price lists unless it was typed (products-price-lists D3, D4).
 			$context->registerEventListener(event: $lineEvent, listener: LeadLinePricingListener::class);
 		}
