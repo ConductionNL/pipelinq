@@ -18,9 +18,24 @@ import lines from '../../lib/Settings/register.d/99-zzzzzz-quote-and-lead-lines.
 import resolveFragment from '../../lib/Settings/register.d/99-zzzzzzzzzzzzzzzzz-lead-line-price-resolve.json'
 import variantFragment from '../../lib/Settings/register.d/99-zzzzzzzzzzzzzzzzzzz-lead-line-variant.json'
 
-const isMap = (value) => value !== null && typeof value === 'object' && !Array.isArray(value)
+/**
+ * Whether a value is a JSON object rather than a list or a scalar.
+ *
+ * @param {*} value The value.
+ * @return {boolean} True for an object.
+ */
+function isMap(value) {
+	return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
 
-const merge = (base, override) => {
+/**
+ * Merge a fragment the way ConfigFileLoaderService does: objects recursively, lists and scalars replaced.
+ *
+ * @param {object} base The configuration so far.
+ * @param {object} override The fragment.
+ * @return {object} The merged configuration.
+ */
+function merge(base, override) {
 	const out = { ...base }
 	for (const [key, value] of Object.entries(override)) {
 		out[key] = isMap(value) && isMap(base?.[key]) ? merge(base[key], value) : value
