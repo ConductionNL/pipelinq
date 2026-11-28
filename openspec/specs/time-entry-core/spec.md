@@ -23,7 +23,7 @@ placement). Leaf id / referenceType `time-tracker`; wrapped NC app `timemanager`
 **Boundary**: capture only — approval, submission, period-locking and invoicing
 are handed to shillinq via `time-approval-workflow`.
 
-**OpenSpec changes**: [time-entry-core](../../changes/archive/2026-05-31-time-entry-core/) _(archived 2026-05-31)_
+**OpenSpec changes**: [time-entry-core](../../changes/archive/2026-05-31-time-entry-core/) _(archived 2026-05-31)_, [the-billing-time-entry-is-a-satellite](../../changes/archive/2026-11-28-the-billing-time-entry-is-a-satellite/) _(archived 2026-11-28)_
 
 @e2e exclude consumed-integration + manifest-config spec: Pipelinq builds no time subsystem — capture is delegated to the OpenRegister time-tracker leaf (CnTimeTrackerTab/Card, gated on NC timemanager). The scenarios assert src/manifest.json config (timemanager dependency, time-tracker sidebar tab / dashboard widget) and the absence of bespoke time/billing logic — verified by manifest assertions and source grep; the leaf's UI is owned and tested by the OpenRegister integration, and its rendering is gated on the timemanager app being installed (no stable fixture here).
 
@@ -119,3 +119,41 @@ are handed to shillinq (see the `time-approval-workflow` change).
   invoicing logic for time entries
 - **AND** those capabilities SHALL be delegated to shillinq per
   `time-approval-workflow`.
+
+### Requirement: The billing time entry is named for what it is (REQ-TEC-030)
+
+The schema SHALL be `billingTimeEntry`, not `timeEntry`: a schema slug is global per
+organisation, and humaniq and planninq declare a `timeEntry` too. The record is the billing side
+of a humaniq booking and SHALL carry a `timeEntry` reference to it, a plain uuid string without
+`$ref` (ADR-062 rule 7, cross-register). The app-config key `timeEntry_schema` SHALL NOT move.
+
+#### Scenario: The register declares the namespaced slug
+
+- **WHEN** the register fragments are read
+- **THEN** the schema key and its `slug` are both `billingTimeEntry`, and no
+  `timeEntry` schema is declared.
+
+#### Scenario: The billing line names the booking it bills
+
+- **WHEN** the merged `billingTimeEntry` is inspected
+- **THEN** it carries a `timeEntry` property of type string, format uuid, with
+  no `$ref`.
+
+### Requirement: The rename SHALL be migrated on an existing install (REQ-TEC-031)
+
+A repair step SHALL rename the schema row's slug in place, before `InitializeSettings` imports
+the register, because OpenRegister creates a new schema when `(application, slug)` misses and
+would orphan every existing object. It SHALL be idempotent, and SHALL refuse rather than guess
+when both slugs exist or the old slug is duplicated.
+
+#### Scenario: An existing install is renamed in place
+
+- **GIVEN** a schema row with slug `timeEntry` under application `pipelinq`
+- **WHEN** the repair step runs
+- **THEN** that row's slug is `billingTimeEntry` and its objects stay attached.
+
+#### Scenario: Both slugs present is refused
+
+- **GIVEN** rows carrying both slugs
+- **WHEN** the repair step runs
+- **THEN** no row is written and the refusal is logged.
