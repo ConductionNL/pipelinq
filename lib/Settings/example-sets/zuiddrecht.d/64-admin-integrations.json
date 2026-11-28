@@ -1,5 +1,5 @@
 {
-	"$comment": "pipelinq's admin settings in the Zuiddrecht set, integrations, marketing and portal tabs, as PqBeheerKoppelingen, PqBeheerMarketing and PqBeheerPortaal draw them: the Asterisk telephony link, the WhatsApp and SMS senders with their monthly budgets, and the service account their webhooks write as; the crawl source, Matomo and Search Console settings and the two mail transports; the three portal tenants, Mijn Zuiddrecht as the default one, with three portal accounts from the cast and their latest audit events. No secret is in the set: the telephony webhook secret, provider keys and the Matomo token live on their OpenConnector sources and the credential broker, and settings only name them. A tenant's live or concept state has no field, so it is not here.",
+	"$comment": "pipelinq's admin settings in the Zuiddrecht set, integrations, marketing and portal tabs, as PqBeheerKoppelingen, PqBeheerMarketing and PqBeheerPortaal draw them: the Asterisk telephony link, the WhatsApp and SMS senders with their monthly budgets, and the service account their webhooks write as; the crawl source, Matomo and Search Console settings and the two mail transports; the three portal tenants, Mijn Zuiddrecht as the default one, with three portal accounts from the cast and their latest audit events. No secret is in the set: the telephony webhook secret, provider keys and the Matomo token live on their OpenConnector sources and the credential broker, and settings only name them. Mijn Zuiddrecht and Mijn Westervliet are live; Ondernemersloket Oosterhaven is still a draft (Concept), as the overview's two live and one draft portals.",
 	"serviceAccounts": [
 		{
 			"key": "berichten",
@@ -180,6 +180,7 @@
 			"schema": "portalTenantConfig",
 			"data": {
 				"tenantId": "default",
+				"status": "live",
 				"displayName": "Mijn Zuiddrecht",
 				"brandPrimaryColor": "#c8102e",
 				"customDomain": "mijn.zuiddrecht.example",
@@ -201,6 +202,7 @@
 			"schema": "portalTenantConfig",
 			"data": {
 				"tenantId": "westervliet",
+				"status": "live",
 				"displayName": "Mijn Westervliet",
 				"brandPrimaryColor": "#00707a",
 				"customDomain": "mijn.westervliet.example",
@@ -218,6 +220,7 @@
 			"schema": "portalTenantConfig",
 			"data": {
 				"tenantId": "oosterhaven",
+				"status": "draft",
 				"displayName": "Ondernemersloket Oosterhaven",
 				"brandPrimaryColor": "#4a3f8f",
 				"customDomain": "loket.oosterhaven.example",
